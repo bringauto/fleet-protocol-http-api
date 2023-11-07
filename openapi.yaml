@@ -1,0 +1,264 @@
+openapi: 3.0.2
+
+
+info:
+  title: Fleet v2 HTTP API
+  version: 0.1.0
+  description: Development version of a the API
+
+
+servers:
+  - url: http://localhost:8080
+
+
+tags: 
+- name: car
+- name: device
+
+
+paths:
+  /cars:
+    get:
+      operationId: cars_available
+      description: It returns the list of available Cars.
+      tags: 
+        - car
+      responses:
+        '200':
+          description: A list of available cars. 
+          content:
+            list:
+              schema:
+                $ref: '#/components/schemas/Car'
+        '500':
+          description: Cannot display avaialble cars due to internal server error.
+
+
+  /{company-name}/{car-name}/available-devices:
+    get:
+      operationId: devices_available
+      description: Returns list of available devices.
+      tags: 
+        - car
+      responses:
+        '200':
+          description: A list of available devices. 
+          content:
+            list:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '500':
+          description: Cannot display available devices due to internal server error.
+      
+    parameters:
+      - $ref: '#/components/parameters/ModuleId'
+      - $ref: '#/components/parameters/CompanyName'
+      - $ref: '#/components/parameters/CarName'
+    
+
+  /{company-name}/{car-name}/status/{device-id}:
+    get:
+      operationId: list_statuses
+      description: It returns list of the Device Statuses.
+      tags: 
+      - device
+      responses:
+        '200':
+          description: A list of device statuses.
+          content:
+            list:
+              schema:
+                $ref: '#/components/schemas/Payload'
+        '500':
+          description: The statuses cannot be displayed due to internal server error.
+    post:
+      operationId: send_statuses
+      description: Add statuses received from the Device.
+      tags: 
+      - device
+      responses:
+        '200':
+          description: The statuses have been sent.
+        '500':
+          description: The statuses could not been sent due to internal server error.
+
+    parameters:
+      - $ref: '#/components/parameters/All'
+      - $ref: '#/components/parameters/Since'
+      - $ref: '#/components/parameters/CompanyName'
+      - $ref: '#/components/parameters/CarName'
+      - $ref: '#/components/parameters/DeviceId'
+
+
+  /{company-name}/{car-name}/command/{device-id}:
+    get:
+      operationId: list_commands
+      description: Returns list of the Device Commands.
+      tags: 
+      - device
+      responses:
+        '200':
+          description: A list of commands.
+          content:
+            list:
+              schema:
+                $ref: '#/components/schemas/Payload'
+      
+        '500':
+          description: The commands cannot be displayed due to internal server error.
+          
+    post:
+      operationId: send_commands
+      description: It adds new device Commands.
+      tags: 
+      - device
+      requestBody:
+        description: Commands to be executed by the device.
+        content:
+          list:
+            schema:
+              $ref: '#/components/schemas/Payload'
+
+      responses:
+        '200':
+          description: The commands have been sent.
+        '500':
+          description: The commands have not been sent due to internal server error.
+
+    parameters:
+      - $ref: '#/components/parameters/All'
+      - $ref: '#/components/parameters/Since'
+      - $ref: '#/components/parameters/CompanyName'
+      - $ref: '#/components/parameters/CarName'
+      - $ref: '#/components/parameters/DeviceId'
+
+
+components:
+  parameters:
+    All: 
+      name: all 
+      description: If set, the method returns a complete history of statuses/commands.
+      in: query
+      allowEmptyValue: true
+      schema: 
+        type: boolean
+      example: false
+
+    Since:
+      name: since
+      description: A Unix timestamp; if specified, the method returns all device statuses/commands inclusivelly older than value of specified timestamp.
+      in: query
+      allowEmptyValue: false 
+      schema: 
+        type: integer
+      example: 1699262836
+
+
+    ModuleId:
+      name: moduleId
+      description: An Id of module.
+      in: query
+      allowEmptyValue: true
+      schema: 
+        type: integer
+        minimum: 0
+      example: 785
+      
+    CompanyName:
+      name: company-name
+      description: Name of the car owner.
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+      example: "bringauto"
+
+    CarName:
+      name: car-name
+      description: name of the car.
+      in: path
+      required: true
+      schema: 
+        type: string
+        minLength: 1
+      example: piba09223
+
+    DeviceId:
+      name: device-id
+      description: The Id of the Device. 
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 0
+      example: 45
+
+
+  schemas:
+    Car:
+      description: The subject of control.
+      type: object
+      properties:
+        company_name:
+          type: string
+          minLength: 1
+          example: "bringauto"
+        car_name:
+          type: string
+          minLength: 1
+          example: piba09223
+    
+    Device: 
+      description: Physical device or program located on the car.
+      type: object 
+      properties: 
+        timestamp: 
+          type: integer 
+          minimum: 0 
+          example: 1699262836
+        id: 
+          $ref: '#/components/schemas/DeviceId'
+        payload:
+          $ref: '#/components/schemas/Payload'
+
+    DeviceId: 
+      description: The Id of a device. 
+      type: object
+      properties:
+        module_id: 
+          $ref: '#/components/schemas/Id'
+        type:
+          type: integer
+          minimum: 0
+          example: 1
+        role:
+          type: string
+          example: Warning LED
+        name: 
+          type: string
+          example: Left red LED
+
+    Payload: 
+      description: A message passed to device (command) or by device (status).
+      type: object
+      properties:
+        type: 
+          type: integer 
+          minimum: 0
+          example: 4
+        encoding:
+          type: string
+          example: BASE64
+        data:
+          type: object
+          example: 
+            main_text: The device is running.
+        
+                
+
+    Id: 
+      description: A general integer Id
+      type: integer 
+      minimum: 0 
+      example: 42
