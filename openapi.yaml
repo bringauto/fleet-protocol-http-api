@@ -41,6 +41,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Car'
+              example:
+                [{company-name: 'bringauto', car-name: 'piba0258'}]
         '500':
           description: Cannot display avaialble cars due to internal server error.
 
@@ -63,17 +65,14 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Device'
+              example:
+                [{timestamp: 7894656, id: 78, payload: {type: 7, encoding: BASE64, data: {}}}]
+        
         '500':
           description: Cannot display available devices due to internal server error.
 
     parameters:
-      - name: module-id
-        in: query
-        required: false
-        schema:
-          type: integer
-          minimum: 0
-        example: 3
+      - $ref: "#/components/parameters/ModuleId"
       
 
   /status/{device-id}:
@@ -184,7 +183,7 @@ components:
 
 
     ModuleId:
-      name: moduleId
+      name: module-id
       description: An Id of module.
       in: query
       allowEmptyValue: true
