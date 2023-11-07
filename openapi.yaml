@@ -9,6 +9,12 @@ info:
 
 servers:
   - url: http://localhost:8080
+  - url: http://localhost:8080/{company-name}/{car-name}
+    variables:
+      company-name:
+        default: "bringauto"
+      car-name:
+        default: "piba09223"
 
 
 tags: 
@@ -18,7 +24,10 @@ tags:
 
 paths:
   /cars:
+    servers:
+      - url: http://localhost:8080
     get:
+      x-openapi-router-controller: fleetv2_http_api.impl.car_controller
       operationId: cars_available
       description: It returns the list of available Cars.
       tags: 
@@ -27,37 +36,51 @@ paths:
         '200':
           description: A list of available cars. 
           content:
-            list:
+            application/json:
               schema:
-                $ref: '#/components/schemas/Car'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Car'
         '500':
           description: Cannot display avaialble cars due to internal server error.
 
 
-  /{company-name}/{car-name}/available-devices:
+  /available-devices:
+    servers:
+    - url: http://localhost:8080/{company-name}/{car-name}
     get:
+      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: devices_available
-      description: Returns list of available devices.
+      description: Returns list of available devices for the whole car or the 
       tags: 
-        - car
+        - device
       responses:
         '200':
           description: A list of available devices. 
           content:
-            list:
+            application/json:
               schema:
-                $ref: '#/components/schemas/Device'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
         '500':
           description: Cannot display available devices due to internal server error.
-      
-    parameters:
-      - $ref: '#/components/parameters/ModuleId'
-      - $ref: '#/components/parameters/CompanyName'
-      - $ref: '#/components/parameters/CarName'
-    
 
-  /{company-name}/{car-name}/status/{device-id}:
+    parameters:
+      - name: module-id
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+        example: 3
+      
+
+  /status/{device-id}:
+    servers:
+    - url: http://localhost:8080/{company-name}/{car-name}
     get:
+      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: list_statuses
       description: It returns list of the Device Statuses.
       tags: 
@@ -66,12 +89,15 @@ paths:
         '200':
           description: A list of device statuses.
           content:
-            list:
+            application/json:
               schema:
-                $ref: '#/components/schemas/Payload'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payload'
         '500':
           description: The statuses cannot be displayed due to internal server error.
     post:
+      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: send_statuses
       description: Add statuses received from the Device.
       tags: 
@@ -85,13 +111,14 @@ paths:
     parameters:
       - $ref: '#/components/parameters/All'
       - $ref: '#/components/parameters/Since'
-      - $ref: '#/components/parameters/CompanyName'
-      - $ref: '#/components/parameters/CarName'
       - $ref: '#/components/parameters/DeviceId'
 
 
-  /{company-name}/{car-name}/command/{device-id}:
+  /command/{device-id}:
+    servers:
+    - url: http://localhost:8080/{company-name}/{car-name}
     get:
+      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: list_commands
       description: Returns list of the Device Commands.
       tags: 
@@ -100,14 +127,17 @@ paths:
         '200':
           description: A list of commands.
           content:
-            list:
+            application/json:
               schema:
-                $ref: '#/components/schemas/Payload'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payload'
       
         '500':
           description: The commands cannot be displayed due to internal server error.
           
     post:
+      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: send_commands
       description: It adds new device Commands.
       tags: 
@@ -115,10 +145,11 @@ paths:
       requestBody:
         description: Commands to be executed by the device.
         content:
-          list:
+          application/json:
             schema:
-              $ref: '#/components/schemas/Payload'
-
+              type: array
+              items:
+                $ref: '#/components/schemas/Payload'
       responses:
         '200':
           description: The commands have been sent.
@@ -128,8 +159,6 @@ paths:
     parameters:
       - $ref: '#/components/parameters/All'
       - $ref: '#/components/parameters/Since'
-      - $ref: '#/components/parameters/CompanyName'
-      - $ref: '#/components/parameters/CarName'
       - $ref: '#/components/parameters/DeviceId'
 
 
@@ -163,26 +192,6 @@ components:
         type: integer
         minimum: 0
       example: 785
-      
-    CompanyName:
-      name: company-name
-      description: Name of the car owner.
-      in: path
-      required: true
-      schema:
-        type: string
-        minLength: 1
-      example: "bringauto"
-
-    CarName:
-      name: car-name
-      description: name of the car.
-      in: path
-      required: true
-      schema: 
-        type: string
-        minLength: 1
-      example: piba09223
 
     DeviceId:
       name: device-id
@@ -199,12 +208,15 @@ components:
     Car:
       description: The subject of control.
       type: object
+      required:
+        - company-name
+        - car-name
       properties:
-        company_name:
+        company-name:
           type: string
           minLength: 1
-          example: "bringauto"
-        car_name:
+          example: "bringauto"        
+        car-name:
           type: string
           minLength: 1
           example: piba09223
@@ -234,10 +246,10 @@ components:
           example: 1
         role:
           type: string
-          example: Warning LED
+          example: "Warning LED"
         name: 
           type: string
-          example: Left red LED
+          example: "Left red LED"
 
     Payload: 
       description: A message passed to device (command) or by device (status).

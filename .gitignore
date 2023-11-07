@@ -84,3 +84,5 @@ requirements.txt
 fleetv2_http_api
 !fleetv2_http_api/impl
 
+
+regen.sh
