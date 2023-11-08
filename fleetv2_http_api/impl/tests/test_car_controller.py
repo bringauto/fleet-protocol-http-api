@@ -6,7 +6,7 @@ import unittest
 from fleetv2_http_api.impl.car_controller import *
 
 
-class Test_Nothing(unittest.TestCase):
+class Test_Listing_Available_Cars(unittest.TestCase):
 
     def test_adding_and_retrieving_single_car(self):
         car = Car(company_name="test_company_123", car_name="test_car_456")
