@@ -81,7 +81,8 @@ git_push.sp
 requirements.txt
 .openapi-generator
 
-fleetv2_http_api
+
+fleetv2_http_api/*
 !fleetv2_http_api/impl
 
 
