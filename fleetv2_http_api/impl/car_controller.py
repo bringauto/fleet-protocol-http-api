@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 
+from typing import List, ClassVar, Optional
+import dataclasses
 from sqlalchemy import create_engine, insert, select, Engine
 from sqlalchemy.orm import Session, DeclarativeBase, Mapped, mapped_column
-import dataclasses
 
 
-from typing import List, ClassVar
 from ..controllers.car_controller import Car
 
 
@@ -24,7 +24,6 @@ def new_connection_source(
     return create_engine(url, *args, **kwargs)
 
 
-from typing import Optional
 _connection_source = Optional[Engine]
 
 
