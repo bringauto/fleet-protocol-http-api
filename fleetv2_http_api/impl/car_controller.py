@@ -1,42 +1,15 @@
 from __future__ import annotations
 
 
-from typing import List, ClassVar, Optional
+from typing import List, ClassVar
 import dataclasses
 
-from sqlalchemy import Engine, create_engine
-from sqlalchemy import create_engine, insert, select, delete
-from sqlalchemy.orm import Session, DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import insert, delete, select
+from sqlalchemy.orm import Session, Mapped, mapped_column
+from fleetv2_http_api.impl.db import Base, connection_source
 
 
 from ..controllers.car_controller import Car
-
-
-def new_connection_source(
-    dialect:str, 
-    dbapi:str, 
-    dblocation:str, 
-    username:str="", 
-    password:str="", 
-    *args,
-    **kwargs
-    )->Engine:
-
-    url = ('').join([dialect,'+',dbapi,"://",username,":",password,"@",dblocation])
-    return create_engine(url, *args, **kwargs)
-    
-
-_connection_source = Optional[Engine]
-
-
-def set_connection_source(source:Engine)->None:
-    global _connection_source
-    _connection_source = source
-    Base.metadata.create_all(source)
-
-
-class Base(DeclarativeBase):  
-    pass
 
 
 @dataclasses.dataclass
@@ -53,9 +26,8 @@ class CarBase(Base):
         return Car(car_name=base.name, company_name=base.owner)
 
 
-
-def cars_available()->List[Car]:  # noqa: E501
-    with Session(_connection_source ) as session:
+def cars_available()->List[Car]:
+    with Session(connection_source()) as session:
         result = session.execute(select(CarBase))
         cars:List[Car] = list()
         for row in result:
@@ -66,13 +38,13 @@ def cars_available()->List[Car]:  # noqa: E501
 
 def add_car(car:Car)->None:
     item = CarBase.from_model(car)
-    with _connection_source.begin() as conn:
+    with connection_source().begin() as conn:
         stmt = insert(CarBase.__table__)
         conn.execute(stmt, [item.__dict__])
 
 
 def _clear_cars()->None:
-    with _connection_source.begin() as conn:
+    with connection_source().begin() as conn:
         stmt = delete(CarBase.__table__)
         conn.execute(stmt)
     
