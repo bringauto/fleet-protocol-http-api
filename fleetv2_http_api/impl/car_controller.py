@@ -3,7 +3,9 @@ from __future__ import annotations
 
 from typing import List, ClassVar, Optional
 import dataclasses
-from sqlalchemy import create_engine, insert, select, Engine
+
+from sqlalchemy import Engine, create_engine
+from sqlalchemy import create_engine, insert, select, delete
 from sqlalchemy.orm import Session, DeclarativeBase, Mapped, mapped_column
 
 
@@ -22,7 +24,7 @@ def new_connection_source(
 
     url = ('').join([dialect,'+',dbapi,"://",username,":",password,"@",dblocation])
     return create_engine(url, *args, **kwargs)
-
+    
 
 _connection_source = Optional[Engine]
 
@@ -67,4 +69,10 @@ def add_car(car:Car)->None:
     with _connection_source.begin() as conn:
         stmt = insert(CarBase.__table__)
         conn.execute(stmt, [item.__dict__])
+
+
+def _clear_cars()->None:
+    with _connection_source.begin() as conn:
+        stmt = delete(CarBase.__table__)
+        conn.execute(stmt)
     

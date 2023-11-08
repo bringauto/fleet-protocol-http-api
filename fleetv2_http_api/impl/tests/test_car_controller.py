@@ -3,8 +3,8 @@ sys.path.append(".")
 
 
 import unittest
-from fleetv2_http_api.impl.car_controller import new_connection_source, add_car, cars_available, Car
-from fleetv2_http_api.impl.car_controller import set_connection_source
+from fleetv2_http_api.impl.car_controller import new_connection_source, set_connection_source
+from fleetv2_http_api.impl.car_controller import add_car, cars_available, _clear_cars, Car
 from sqlalchemy import text
 
 
@@ -27,6 +27,28 @@ class Test_Listing_Available_Cars(unittest.TestCase):
         add_car(car)
         self.assertListEqual(cars_available(), [car])
 
+
+class Test_PostgreSQL_Database(unittest.TestCase):
+
+    def setUp(self) -> None:
+        set_connection_source(
+            new_connection_source(
+                dialect="postgresql",
+                dbapi="psycopg",
+                dblocation="localhost:5432",
+                username="postgres",
+                password="1234"
+            )
+        )
+        _clear_cars()
+
+    def test_adding_and_retrieving_single_car(self):
+        car = Car(company_name="test_company_123", car_name="test_car_456")
+        add_car(car)
+        self.assertListEqual(cars_available(), [car])
+
+    def tearDown(self) -> None:
+        _clear_cars()
 
 
 if __name__=="__main__":
