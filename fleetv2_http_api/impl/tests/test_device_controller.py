@@ -52,8 +52,7 @@ class Test_Listing_Available_Devices(unittest.TestCase):
 
 
 from fleetv2_http_api.impl.device_controller import list_statuses, list_commands, send_commands, send_statuses
-from unittest.mock import patch, Mock
-import fleetv2_http_api.impl.device_controller
+from unittest.mock import patch
 
 
 class Test_Handling_Device_Messages(unittest.TestCase):
