@@ -107,6 +107,13 @@ class Test_Retrieving_Device_Messages(unittest.TestCase):
         cmds = list_commands(self.device_id, since=124)
         self.assertListEqual(cmds, [cmd_1, cmd_2])
 
+    def test_empty_list_is_returned_when_no_message_is_available(self):
+        self.assertListEqual(list_statuses(self.device_id), [])
+        self.assertListEqual(list_statuses(self.device_id, all=True), [])
+        self.assertListEqual(list_commands(self.device_id), [])
+        self.assertListEqual(list_commands(self.device_id, all=True), [])
+
+
 
 class Test_Sending_Device_Messages(unittest.TestCase):
 
