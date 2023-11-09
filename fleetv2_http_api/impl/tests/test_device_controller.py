@@ -95,6 +95,8 @@ class Test_Handling_Device_Messages(unittest.TestCase):
         self.assertEqual(statuses[1].payload, status_2)
         self.assertEqual(commands[0].payload, command_1)
 
+    
+
 
 if __name__=="__main__":
     unittest.main()

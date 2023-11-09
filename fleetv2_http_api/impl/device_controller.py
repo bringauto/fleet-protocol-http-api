@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 
-from typing import ClassVar, List, Optional, Callable
-import connexion
+from typing import ClassVar, List, Optional
 import dataclasses
 from sqlalchemy.orm import Session, Mapped, mapped_column
-from sqlalchemy import insert, delete, select
-from sqlalchemy import String, Integer, JSON, Enum
+from sqlalchemy import insert, select
+from sqlalchemy import String, Integer, JSON
 
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
 from fleetv2_http_api.models.device import Message, DeviceId
