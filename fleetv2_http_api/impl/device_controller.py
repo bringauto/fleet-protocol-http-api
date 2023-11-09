@@ -6,17 +6,18 @@ import connexion
 import dataclasses
 from sqlalchemy.orm import Session, Mapped, mapped_column
 from sqlalchemy import insert, delete, select
-from sqlalchemy import String, Integer, JSON
-
+from sqlalchemy import String, Integer, JSON, Enum
 
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
-from fleetv2_http_api.models.device import Device, DeviceId
+from fleetv2_http_api.models.device import Message, DeviceId
 from fleetv2_http_api.impl.db import connection_source, Base
 
 
+import enum
+
 
 @dataclasses.dataclass
-class DeviceBase(Base):
+class MessageBase(Base):
     __tablename__:ClassVar[str] = "device"
     timestamp:Mapped[int] = mapped_column(primary_key=True)
 
@@ -30,20 +31,20 @@ class DeviceBase(Base):
     payload_data:Mapped[dict] = mapped_column(JSON)
 
     @staticmethod
-    def from_model(model:Device)->DeviceBase:
-        return DeviceBase(
+    def from_model(model:Message)->MessageBase:
+        return MessageBase(
             timestamp=model.timestamp,
             module_id = model.id.module_id,
             device_type = model.id.type,
             device_role = model.id.role,
             device_name = model.id.name,
-            payload_type=model.payload.type,
+            payload_type = model.payload.type,  # type: ignore
             payload_encoding=model.payload.encoding,
             payload_data=model.payload.data # type: ignore
         )
 
-    def to_model(self)->Device:
-        return Device(
+    def to_model(self)->Message:
+        return Message(
             timestamp=self.timestamp,
             id = DeviceId(
                 module_id=self.module_id, 
@@ -55,14 +56,14 @@ class DeviceBase(Base):
         )
     
 
-def add_device(device:Device)->None:
-    devicebase = DeviceBase.from_model(device)
+def add_msg(*messages:Message)->None: 
     with connection_source().begin() as conn:
-        stmt = insert(DeviceBase.__table__) # type: ignore
-        conn.execute(stmt, devicebase.__dict__)
+        stmt = insert(MessageBase.__table__) # type: ignore
+        msg_base = [MessageBase.from_model(msg).__dict__ for msg in messages]
+        conn.execute(stmt, msg_base)
 
 
-def devices_available(module_id:Optional[int]=None)->List[Device]:  # noqa: E501
+def devices_available(module_id:Optional[int]=None)->List[DeviceId]:  # noqa: E501
     """devices_available
 
     Returns list of available devices for the whole car or a single module. # noqa: E501
@@ -74,15 +75,15 @@ def devices_available(module_id:Optional[int]=None)->List[Device]:  # noqa: E501
     """
     # if connexion.request.is_json:
     #     module_id =  object.from_dict(connexion.request.get_json())  # noqa: E501
-    devices:List[Device] = list()
+    devices:List[DeviceId] = list()
     with Session(connection_source()) as session:
         if module_id is not None:
-            result = session.execute(select(DeviceBase).where(DeviceBase.__table__.c.module_id == module_id))
+            result = session.execute(select(MessageBase).where(MessageBase.__table__.c.module_id == module_id))
         else:
-            result = session.execute(select(DeviceBase))
+            result = session.execute(select(MessageBase))
         for row in result:
-            devicebase:DeviceBase = row[0]
-            devices.append(devicebase.to_model())
+            devicebase:MessageBase = row[0]
+            devices.append(devicebase.to_model().id)
     
     if module_id is not None and devices==[]: 
         return [], 404 # type: ignore
@@ -90,7 +91,7 @@ def devices_available(module_id:Optional[int]=None)->List[Device]:  # noqa: E501
         return devices
 
 
-def list_commands(device_id, company_name, car_name, all=None, since=None):  # noqa: E501
+def list_commands(device_id:DeviceId, all=None, since=None):  # noqa: E501
     """list_commands
 
     Returns list of the Device Commands. # noqa: E501
@@ -108,10 +109,16 @@ def list_commands(device_id, company_name, car_name, all=None, since=None):  # n
 
     :rtype: Union[List[Payload], Tuple[List[Payload], int], Tuple[List[Payload], int, Dict[str, str]]
     """
-    return 'do some magic!'
+    commands:List[Message] = list()
+    with Session(connection_source()) as session:
+        result = session.execute(select(MessageBase).where(MessageBase.__table__.c.payload_type == 1))
+        for row in result:
+            base:MessageBase = row[0]
+            commands.append(base.to_model())
+        return commands
 
 
-def list_statuses(device_id, company_name, car_name, all=None, since=None):  # noqa: E501
+def list_statuses(device_id:DeviceId, all=None, since=None)->List[Message]:  # noqa: E501
     """list_statuses
 
     It returns list of the Device Statuses. # noqa: E501
@@ -129,10 +136,16 @@ def list_statuses(device_id, company_name, car_name, all=None, since=None):  # n
 
     :rtype: Union[List[Payload], Tuple[List[Payload], int], Tuple[List[Payload], int, Dict[str, str]]
     """
-    return 'do some magic!'
+    statuses:List[Message] = list()
+    with Session(connection_source()) as session:
+        result = session.execute(select(MessageBase).where(MessageBase.__table__.c.payload_type == 0))
+        for row in result:
+            base:MessageBase = row[0]
+            statuses.append(base.to_model())
+        return statuses
 
 
-def send_commands(device_id, company_name, car_name, all=None, since=None, payload=None):  # noqa: E501
+def send_commands(device_id, all=None, since=None, payload=None):  # noqa: E501
     """send_commands
 
     It adds new device Commands. # noqa: E501
@@ -157,7 +170,7 @@ def send_commands(device_id, company_name, car_name, all=None, since=None, paylo
     return 'do some magic!'
 
 
-def send_statuses(device_id, company_name, car_name, all=None, since=None):  # noqa: E501
+def send_statuses(device_id, all=None, since=None):  # noqa: E501
     """send_statuses
 
     Add statuses received from the Device. # noqa: E501
