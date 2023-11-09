@@ -74,19 +74,32 @@ def devices_available(module_id:Optional[int]=None)->List[DeviceId]:  # noqa: E5
 
 
 def list_commands(device_id:DeviceId, all=None, since=None):  # noqa: E501
-    commands:List[Message] = list()
-    with Session(connection_source()) as session:
-        result = session.execute(select(MessageBase).where(MessageBase.__table__.c.payload_type == 1))
-        for row in result:
-            base:MessageBase = row[0]
-            commands.append(base.to_model())
-        return commands
+    return __list_messages(1, device_id, all, since)
 
 
-def list_statuses(device_id:DeviceId, all=None, since=None)->List[Message]:  # noqa: E501
+def list_statuses(device_id:DeviceId, all=None, since:Optional[int]=None)->List[Message]:  # noqa: E501
+    return __list_messages(0, device_id, all, since)
+    
+
+from sqlalchemy import func, and_
+def __list_messages(type:int, device_id:DeviceId, all=None, since:Optional[int]=None)->List[Message]:  # noqa: E501
     statuses:List[Message] = list()
     with Session(connection_source()) as session:
-        result = session.execute(select(MessageBase).where(MessageBase.__table__.c.payload_type == 0))
+        query = select(MessageBase)
+        if all is not None:
+            query = query.where(MessageBase.__table__.c.payload_type == type)
+        elif since is not None:
+            query = query.where(and_(
+                MessageBase.__table__.c.payload_type == type,
+                MessageBase.__table__.c.timestamp <= since
+            ))
+        else:
+            query = \
+                query.where(MessageBase.__table__.c.payload_type == type)\
+                .group_by(MessageBase.timestamp)\
+                .having(func.max(MessageBase.timestamp))
+        
+        result = session.execute(query)
         for row in result:
             base:MessageBase = row[0]
             statuses.append(base.to_model())

@@ -55,26 +55,65 @@ from fleetv2_http_api.impl.device_controller import list_statuses, list_commands
 from unittest.mock import patch
 
 
-class Test_Handling_Device_Messages(unittest.TestCase):
+class Test_Retrieving_Device_Messages(unittest.TestCase):
 
     def setUp(self) -> None:
         set_connection_source("sqlite", "pysqlite", "/:memory:")
         self.status_type = 0
         self.command_type = 1
+        self.device_id = DeviceId(module_id=42, type=5, role="light", name="Left light")
 
     def test_listing_device_messages(self):
-        device_id = DeviceId(module_id=42, type=5, role="light", name="Left light")
         payload_1 = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
-        payload_2 = Payload(type=0, encoding="JSON", data={"message":"Device is fine"})
-        payload_3 = Payload(type=1, encoding="JSON", data={"message":"Device! Do something!"})
-        msg_1 = Message(timestamp=123456, id=device_id, payload=payload_1)
-        msg_2 = Message(timestamp=123457, id=device_id, payload=payload_2)
-        msg_3 = Message(timestamp=123458, id=device_id, payload=payload_3)
-        _add_msg(msg_1, msg_2, msg_3)
-        statuses = list_statuses(device_id)
-        commands = list_commands(device_id)
-        self.assertListEqual(statuses, [msg_1, msg_2])
-        self.assertListEqual(commands, [msg_3])
+        payload_2 = Payload(type=1, encoding="JSON", data={"message":"Device! Do something!"})
+        msg_1 = Message(timestamp=123456, id=self.device_id, payload=payload_1)
+        msg_2 = Message(timestamp=123458, id=self.device_id, payload=payload_2)
+        _add_msg(msg_1, msg_2)
+        statuses = list_statuses(self.device_id)
+        commands = list_commands(self.device_id)
+        self.assertListEqual(statuses, [msg_1])
+        self.assertListEqual(commands, [msg_2])
+
+    def test_listing_all_statuses_and_statuses_inclusively_older_than_given_timestamp(self):
+        payload_1 = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
+        payload_2 = Payload(type=0, encoding="JSON", data={"message":"Device is still running"})
+        payload_3 = Payload(type=0, encoding="JSON", data={"message":"Hooray! The device is running"})
+
+        status_1 = Message(timestamp=123, id=self.device_id, payload=payload_1)
+        status_2 = Message(timestamp=124, id=self.device_id, payload=payload_2)
+        status_3 = Message(timestamp=125, id=self.device_id, payload=payload_3)
+
+        _add_msg(status_1, status_2, status_3)
+        statuses = list_statuses(self.device_id, all=True)
+        self.assertListEqual(statuses, [status_1, status_2, status_3])
+
+        statuses = list_statuses(self.device_id, since=124)
+        self.assertListEqual(statuses, [status_1, status_2])
+
+
+    def test_listing_all_commands_and_commands_inclusively_older_than_given_timestamp(self):
+        payload_1 = Payload(type=1, encoding="JSON", data={"message":"Device is running"})
+        payload_2 = Payload(type=1, encoding="JSON", data={"message":"Device is still running"})
+        payload_3 = Payload(type=1, encoding="JSON", data={"message":"Hooray! The device is running"})
+
+        cmd_1 = Message(timestamp=123, id=self.device_id, payload=payload_1)
+        cmd_2 = Message(timestamp=124, id=self.device_id, payload=payload_2)
+        cmd_3 = Message(timestamp=125, id=self.device_id, payload=payload_3)
+
+        _add_msg(cmd_1, cmd_2, cmd_3)
+        cmds = list_commands(self.device_id, all=True)
+        self.assertListEqual(cmds, [cmd_1, cmd_2, cmd_3])
+
+        cmds = list_commands(self.device_id, since=124)
+        self.assertListEqual(cmds, [cmd_1, cmd_2])
+
+
+class Test_Sending_Device_Messages(unittest.TestCase):
+
+    def setUp(self) -> None:
+        set_connection_source("sqlite", "pysqlite", "/:memory:")
+        self.status_type = 0
+        self.command_type = 1
 
     @patch('fleetv2_http_api.impl.device_controller.timestamp')
     def test_sending_and_retrieving_device_messages(self, mock_timestamp):
@@ -88,14 +127,13 @@ class Test_Handling_Device_Messages(unittest.TestCase):
         send_statuses(device_id, payload=[status_1, status_2])
         send_commands(device_id, payload=[command_1])
 
-        statuses = list_statuses(device_id)
-        commands = list_commands(device_id)
+        statuses = list_statuses(device_id, all=True)
+        commands = list_commands(device_id, all=True)
 
         self.assertEqual(statuses[0].payload, status_1)
         self.assertEqual(statuses[1].payload, status_2)
         self.assertEqual(commands[0].payload, command_1)
 
-    
 
 
 if __name__=="__main__":
