@@ -87,15 +87,28 @@ def __list_messages(type:int, device_id:DeviceId, all=None, since:Optional[int]=
     with Session(connection_source()) as session:
         query = select(MessageBase)
         if all is not None:
-            query = query.where(MessageBase.__table__.c.payload_type == type)
+            query = query.where(and_(
+                MessageBase.__table__.c.payload_type == type, 
+                MessageBase.__table__.c.module_id == device_id.module_id,
+                MessageBase.__table__.c.device_type == device_id.type,
+                MessageBase.__table__.c.device_role == device_id.role,
+            ))
         elif since is not None:
             query = query.where(and_(
                 MessageBase.__table__.c.payload_type == type,
+                MessageBase.__table__.c.module_id == device_id.module_id,
+                MessageBase.__table__.c.device_type == device_id.type,
+                MessageBase.__table__.c.device_role == device_id.role,
                 MessageBase.__table__.c.timestamp <= since
             ))
         else:
             query = \
-                query.where(MessageBase.__table__.c.payload_type == type)\
+                query.where(and_(
+                    MessageBase.__table__.c.payload_type == type, 
+                    MessageBase.__table__.c.module_id == device_id.module_id,
+                    MessageBase.__table__.c.device_type == device_id.type,
+                    MessageBase.__table__.c.device_role == device_id.role,
+                ))\
                 .group_by(MessageBase.timestamp)\
                 .having(func.max(MessageBase.timestamp))
         

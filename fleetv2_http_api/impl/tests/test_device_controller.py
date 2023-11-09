@@ -61,7 +61,7 @@ class Test_Retrieving_Device_Messages(unittest.TestCase):
         set_connection_source("sqlite", "pysqlite", "/:memory:")
         self.status_type = 0
         self.command_type = 1
-        self.device_id = DeviceId(module_id=42, type=5, role="light", name="Left light")
+        self.device_id = DeviceId(module_id=42, type=5, role="left light", name="Light")
 
     def test_listing_device_messages(self):
         payload_1 = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
@@ -117,6 +117,21 @@ class Test_Retrieving_Device_Messages(unittest.TestCase):
         _add_msg(status_1)
         self.assertListEqual(list_statuses(self.device_id, since=123), [status_1])
         self.assertListEqual(list_statuses(self.device_id, since=122), [])
+
+    def test_obtained_messages_correspond_to_device_ids_specified_when_adding_the_messages(self):
+        other_device_id = DeviceId(
+            module_id=self.device_id.module_id, 
+            type=self.device_id.type, 
+            role="right light", 
+            name=self.device_id.name
+        )
+
+        payload = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
+        status_1 = Message(timestamp=123, id=self.device_id, payload=payload)
+        status_2 = Message(timestamp=123, id=other_device_id, payload=payload)
+        _add_msg(status_1, status_2)
+        self.assertListEqual(list_statuses(self.device_id, all=True), [status_1])
+        self.assertListEqual(list_statuses(other_device_id, all=True), [status_2])
 
 
 class Test_Sending_Device_Messages(unittest.TestCase):
