@@ -90,7 +90,6 @@ class Test_Retrieving_Device_Messages(unittest.TestCase):
         statuses = list_statuses(self.device_id, since=124)
         self.assertListEqual(statuses, [status_1, status_2])
 
-
     def test_listing_all_commands_and_commands_inclusively_older_than_given_timestamp(self):
         payload_1 = Payload(type=1, encoding="JSON", data={"message":"Device is running"})
         payload_2 = Payload(type=1, encoding="JSON", data={"message":"Device is still running"})
@@ -103,7 +102,6 @@ class Test_Retrieving_Device_Messages(unittest.TestCase):
         _add_msg(cmd_1, cmd_2, cmd_3)
         cmds = list_commands(self.device_id, all=True)
         self.assertListEqual(cmds, [cmd_1, cmd_2, cmd_3])
-
         cmds = list_commands(self.device_id, since=124)
         self.assertListEqual(cmds, [cmd_1, cmd_2])
 
@@ -113,6 +111,12 @@ class Test_Retrieving_Device_Messages(unittest.TestCase):
         self.assertListEqual(list_commands(self.device_id), [])
         self.assertListEqual(list_commands(self.device_id, all=True), [])
 
+    def test_empty_list_is_returned_when_no_message_is_older_than_timestamp(self):
+        payload_1 = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
+        status_1 = Message(timestamp=123, id=self.device_id, payload=payload_1)
+        _add_msg(status_1)
+        self.assertListEqual(list_statuses(self.device_id, since=123), [status_1])
+        self.assertListEqual(list_statuses(self.device_id, since=122), [])
 
 
 class Test_Sending_Device_Messages(unittest.TestCase):
