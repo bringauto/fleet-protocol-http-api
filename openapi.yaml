@@ -47,7 +47,7 @@ paths:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: devices_available
-      description: Returns list of available devices for the whole car or the 
+      description: Returns list of available devices for the whole car or a single module.
       tags: 
         - device
       responses:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 
-from typing import ClassVar
+from typing import ClassVar, List
 import connexion
 import dataclasses
 from sqlalchemy.orm import Session, Mapped, mapped_column
@@ -32,19 +32,26 @@ class DeviceBase(Base):
             payload_encoding=model.payload.encoding,
             payload_data=model.payload.data
         )
+
+    def to_model(self)->Device:
+        return Device(
+            timestamp=self.timestamp,
+            id = self.id,
+            payload=Payload(self.payload_type, self.payload_encoding, self.payload_data)
+        )
     
 
-def add_device(device:Device)->None:
+def add_device(company_name:str, car_name:str, device:Device)->None:
     devicebase = DeviceBase.from_model(device)
     with connection_source().begin() as conn:
         stmt = insert(DeviceBase.__table__)
         conn.execute(stmt, devicebase.__dict__)
 
 
-def devices_available(company_name:str, car_name:str, module_id:int=None):  # noqa: E501
+def devices_available(company_name:str, car_name:str, module_id:int=None)->List[Device]:  # noqa: E501
     """devices_available
 
-    Returns list of available devices for the whole car or the # noqa: E501
+    Returns list of available devices for the whole car or a single module. # noqa: E501
 
     :param company_name: Name of the company operating/running the car
     :type company_name: str
@@ -55,9 +62,15 @@ def devices_available(company_name:str, car_name:str, module_id:int=None):  # no
 
     :rtype: Union[List[Device], Tuple[List[Device], int], Tuple[List[Device], int, Dict[str, str]]
     """
-    if connexion.request.is_json:
-        module_id =  object.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+    # if connexion.request.is_json:
+    #     module_id =  object.from_dict(connexion.request.get_json())  # noqa: E501
+    devices:List[Device] = list()
+    with Session(connection_source()) as session:
+        result = session.execute(select(DeviceBase))
+        for row in result:
+            devicebase:DeviceBase = row[0]
+            devices.append(devicebase.to_model())
+    return devices
 
 
 def list_commands(device_id, company_name, car_name, all=None, since=None):  # noqa: E501

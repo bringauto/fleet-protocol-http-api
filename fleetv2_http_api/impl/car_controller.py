@@ -32,6 +32,7 @@ def cars_available()->List[Car]:
         cars:List[Car] = list()
         for row in result:
             carbase = row[0]
+            print(carbase)
             cars.append(CarBase.to_model(carbase))
         return cars
 
