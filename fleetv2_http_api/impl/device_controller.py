@@ -66,17 +66,6 @@ def add_msg(*messages:Message)->None:
 
 
 def devices_available(module_id:Optional[int]=None)->List[DeviceId]:  # noqa: E501
-    """devices_available
-
-    Returns list of available devices for the whole car or a single module. # noqa: E501
-
-    :param module_id: An Id of module.
-    :type module_id: dict | bytes
-
-    :rtype: Union[List[Device], Tuple[List[Device], int], Tuple[List[Device], int, Dict[str, str]]
-    """
-    # if connexion.request.is_json:
-    #     module_id =  object.from_dict(connexion.request.get_json())  # noqa: E501
     devices:List[DeviceId] = list()
     with Session(connection_source()) as session:
         if module_id is not None:
@@ -113,10 +102,9 @@ def list_statuses(device_id:DeviceId, all=None, since=None)->List[Message]:  # n
         return statuses
 
 
-def send_commands(device_id, all=None, since=None, payload=None):  # noqa: E501
-    if connexion.request.is_json:
-        payload = [Payload.from_dict(d) for d in connexion.request.get_json()]  # noqa: E501
-    return 'do some magic!'
+def send_commands(device_id, all=None, since=None, payload:List[Payload]=list()):  # noqa: E501
+    msgs = [Message(timestamp=timestamp(), id=device_id, payload=p) for p in payload]
+    add_msg(*msgs)
 
 
 def send_statuses(device_id:DeviceId, all=None, since=None, payload:List[Payload]=list()):  # noqa: E501

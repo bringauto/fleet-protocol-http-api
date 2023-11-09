@@ -78,17 +78,23 @@ class Test_Handling_Device_Messages(unittest.TestCase):
         self.assertListEqual(commands, [msg_3])
 
     @patch('fleetv2_http_api.impl.device_controller.timestamp')
-    def test_sending_and_retrieving_device_message(self, mock_timestamp):
+    def test_sending_and_retrieving_device_messages(self, mock_timestamp):
         device_id = DeviceId(module_id=42, type=4, role="light", name="Left light")
         status_1 = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
         status_2 = Payload(type=0, encoding="JSON", data={"message":"Device is still running"})
+        command_1 = Payload(type=1, encoding="JSON", data={"message":"Stop"})
         
-        mock_timestamp.side_effect = [123456, 123457]
+        mock_timestamp.side_effect = [123456, 123457, 123459]
 
         send_statuses(device_id, payload=[status_1, status_2])
+        send_commands(device_id, payload=[command_1])
+
         statuses = list_statuses(device_id)
+        commands = list_commands(device_id)
+
         self.assertEqual(statuses[0].payload, status_1)
         self.assertEqual(statuses[1].payload, status_2)
+        self.assertEqual(commands[0].payload, command_1)
 
 
 if __name__=="__main__":
