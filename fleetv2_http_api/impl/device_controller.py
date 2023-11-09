@@ -56,14 +56,6 @@ class MessageBase(Base):
             ),
             payload=Payload(self.payload_type, self.payload_encoding, self.payload_data)
         )
-    
-
-def add_msg(*messages:Message)->None: 
-    with connection_source().begin() as conn:
-        stmt = insert(MessageBase.__table__) # type: ignore
-        msg_base = [MessageBase.from_model(msg).__dict__ for msg in messages]
-        conn.execute(stmt, msg_base)
-
 
 def devices_available(module_id:Optional[int]=None)->List[DeviceId]:  # noqa: E501
     devices:List[DeviceId] = list()
@@ -104,9 +96,16 @@ def list_statuses(device_id:DeviceId, all=None, since=None)->List[Message]:  # n
 
 def send_commands(device_id, all=None, since=None, payload:List[Payload]=list()):  # noqa: E501
     msgs = [Message(timestamp=timestamp(), id=device_id, payload=p) for p in payload]
-    add_msg(*msgs)
+    _add_msg(*msgs)
 
 
 def send_statuses(device_id:DeviceId, all=None, since=None, payload:List[Payload]=list()):  # noqa: E501
     msgs = [Message(timestamp=timestamp(), id=device_id, payload=p) for p in payload]
-    add_msg(*msgs)
+    _add_msg(*msgs)
+
+
+def _add_msg(*messages:Message)->None: 
+    with connection_source().begin() as conn:
+        stmt = insert(MessageBase.__table__) # type: ignore
+        msg_base = [MessageBase.from_model(msg).__dict__ for msg in messages]
+        conn.execute(stmt, msg_base)

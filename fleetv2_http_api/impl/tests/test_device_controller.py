@@ -4,7 +4,7 @@ sys.path.append(".")
 
 import unittest
 from fleetv2_http_api.impl.db import set_connection_source
-from fleetv2_http_api.impl.device_controller import add_msg, devices_available
+from fleetv2_http_api.impl.device_controller import _add_msg, devices_available
 from fleetv2_http_api.models.device import Message, Payload, DeviceId
 
 
@@ -21,7 +21,7 @@ class Test_Listing_Available_Devices(unittest.TestCase):
     def test_adding_and_retrieve_single_device(self):
         device_id = DeviceId(42, 2, "light", "Left light")
         msg = Message(123456789, device_id, self.payload_example)
-        add_msg(msg)
+        _add_msg(msg)
         devices = devices_available()
         self.assertEqual(devices[0], device_id)
 
@@ -31,8 +31,8 @@ class Test_Listing_Available_Devices(unittest.TestCase):
 
         msg_1 = Message(123456789, device_1_id, self.payload_example)
         msg_2 = Message(123456789, device_2_id, self.payload_example)
-        add_msg(msg_1)
-        add_msg(msg_2)
+        _add_msg(msg_1)
+        _add_msg(msg_2)
         self.assertListEqual(devices_available(), [device_1_id, device_2_id])
 
     def test_adding_and_displaying_devices_in_multiuple_modules(self):
@@ -41,8 +41,8 @@ class Test_Listing_Available_Devices(unittest.TestCase):
 
         msg_1 = Message(123456789, device_1_id, self.payload_example)
         msg_2 = Message(123456789, device_2_id, self.payload_example)
-        add_msg(msg_1)
-        add_msg(msg_2)
+        _add_msg(msg_1)
+        _add_msg(msg_2)
         self.assertListEqual(devices_available(), [device_1_id, device_2_id])
         self.assertListEqual(devices_available(module_id=42), [device_1_id])
         self.assertListEqual(devices_available(module_id=43), [device_2_id])
@@ -71,7 +71,7 @@ class Test_Handling_Device_Messages(unittest.TestCase):
         msg_1 = Message(timestamp=123456, id=device_id, payload=payload_1)
         msg_2 = Message(timestamp=123457, id=device_id, payload=payload_2)
         msg_3 = Message(timestamp=123458, id=device_id, payload=payload_3)
-        add_msg(msg_1, msg_2, msg_3)
+        _add_msg(msg_1, msg_2, msg_3)
         statuses = list_statuses(device_id)
         commands = list_commands(device_id)
         self.assertListEqual(statuses, [msg_1, msg_2])
