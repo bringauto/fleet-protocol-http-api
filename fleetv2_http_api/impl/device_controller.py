@@ -1,32 +1,76 @@
+from __future__ import annotations
+
+
+from typing import ClassVar
 import connexion
-from typing import Dict
-from typing import Tuple
-from typing import Union
+import dataclasses
+from sqlalchemy.orm import Session, Mapped, mapped_column
+from sqlalchemy import insert, delete, select, JSON
+
 
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
-from fleetv2_http_api import util
+from fleetv2_http_api.models.device import Device
+from fleetv2_http_api.impl.db import connection_source, Base
 
 
-def devices_available(module_id=None):  # noqa: E501
+
+@dataclasses.dataclass
+class DeviceBase(Base):
+    __tablename__:ClassVar[str] = "device"
+    timestamp:Mapped[int] = mapped_column(primary_key=True)
+    id:Mapped[int] = mapped_column(primary_key=True)
+    payload_type:Mapped[int]
+    payload_encoding:Mapped[str]
+    payload_data:Mapped[dict] = mapped_column(JSON)
+
+    @staticmethod
+    def from_model(model:Device)->DeviceBase:
+        return DeviceBase(
+            timestamp=model.timestamp,
+            id = model.id,
+            payload_type=model.payload.type,
+            payload_encoding=model.payload.encoding,
+            payload_data=model.payload.data
+        )
+    
+
+def add_device(device:Device)->None:
+    devicebase = DeviceBase.from_model(device)
+    with connection_source().begin() as conn:
+        stmt = insert(DeviceBase.__table__)
+        conn.execute(stmt, devicebase.__dict__)
+
+
+def devices_available(company_name:str, car_name:str, module_id:int=None):  # noqa: E501
     """devices_available
 
     Returns list of available devices for the whole car or the # noqa: E501
 
-    :param module_id: 
-    :type module_id: int
+    :param company_name: Name of the company operating/running the car
+    :type company_name: str
+    :param car_name: Name of the the car
+    :type car_name: str
+    :param module_id: An Id of module.
+    :type module_id: dict | bytes
 
     :rtype: Union[List[Device], Tuple[List[Device], int], Tuple[List[Device], int, Dict[str, str]]
     """
+    if connexion.request.is_json:
+        module_id =  object.from_dict(connexion.request.get_json())  # noqa: E501
     return 'do some magic!'
 
 
-def list_commands(device_id, all=None, since=None):  # noqa: E501
+def list_commands(device_id, company_name, car_name, all=None, since=None):  # noqa: E501
     """list_commands
 
     Returns list of the Device Commands. # noqa: E501
 
     :param device_id: The Id of the Device.
     :type device_id: int
+    :param company_name: Name of the company operating/running the car
+    :type company_name: str
+    :param car_name: Name of the the car
+    :type car_name: str
     :param all: If set, the method returns a complete history of statuses/commands.
     :type all: bool
     :param since: A Unix timestamp; if specified, the method returns all device statuses/commands inclusivelly older than value of specified timestamp.
@@ -37,13 +81,17 @@ def list_commands(device_id, all=None, since=None):  # noqa: E501
     return 'do some magic!'
 
 
-def list_statuses(device_id, all=None, since=None):  # noqa: E501
+def list_statuses(device_id, company_name, car_name, all=None, since=None):  # noqa: E501
     """list_statuses
 
     It returns list of the Device Statuses. # noqa: E501
 
     :param device_id: The Id of the Device.
     :type device_id: int
+    :param company_name: Name of the company operating/running the car
+    :type company_name: str
+    :param car_name: Name of the the car
+    :type car_name: str
     :param all: If set, the method returns a complete history of statuses/commands.
     :type all: bool
     :param since: A Unix timestamp; if specified, the method returns all device statuses/commands inclusivelly older than value of specified timestamp.
@@ -54,13 +102,17 @@ def list_statuses(device_id, all=None, since=None):  # noqa: E501
     return 'do some magic!'
 
 
-def send_commands(device_id, all=None, since=None, payload=None):  # noqa: E501
+def send_commands(device_id, company_name, car_name, all=None, since=None, payload=None):  # noqa: E501
     """send_commands
 
     It adds new device Commands. # noqa: E501
 
     :param device_id: The Id of the Device.
     :type device_id: int
+    :param company_name: Name of the company operating/running the car
+    :type company_name: str
+    :param car_name: Name of the the car
+    :type car_name: str
     :param all: If set, the method returns a complete history of statuses/commands.
     :type all: bool
     :param since: A Unix timestamp; if specified, the method returns all device statuses/commands inclusivelly older than value of specified timestamp.
@@ -75,13 +127,17 @@ def send_commands(device_id, all=None, since=None, payload=None):  # noqa: E501
     return 'do some magic!'
 
 
-def send_statuses(device_id, all=None, since=None):  # noqa: E501
+def send_statuses(device_id, company_name, car_name, all=None, since=None):  # noqa: E501
     """send_statuses
 
     Add statuses received from the Device. # noqa: E501
 
     :param device_id: The Id of the Device.
     :type device_id: int
+    :param company_name: Name of the company operating/running the car
+    :type company_name: str
+    :param car_name: Name of the the car
+    :type car_name: str
     :param all: If set, the method returns a complete history of statuses/commands.
     :type all: bool
     :param since: A Unix timestamp; if specified, the method returns all device statuses/commands inclusivelly older than value of specified timestamp.
@@ -90,4 +146,3 @@ def send_statuses(device_id, all=None, since=None):  # noqa: E501
     :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
     """
     return 'do some magic!'
-
