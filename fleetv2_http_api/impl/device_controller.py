@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 
-from typing import ClassVar, List
+from typing import ClassVar, List, Optional
 import connexion
 import dataclasses
 from sqlalchemy.orm import Session, Mapped, mapped_column
-from sqlalchemy import insert, delete, select, JSON
+from sqlalchemy import insert, delete, select
+from sqlalchemy import String, Integer, JSON
 
 
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
-from fleetv2_http_api.models.device import Device
+from fleetv2_http_api.models.device import Device, DeviceId
 from fleetv2_http_api.impl.db import connection_source, Base
 
 
@@ -18,45 +19,54 @@ from fleetv2_http_api.impl.db import connection_source, Base
 class DeviceBase(Base):
     __tablename__:ClassVar[str] = "device"
     timestamp:Mapped[int] = mapped_column(primary_key=True)
-    id:Mapped[int] = mapped_column(primary_key=True)
-    payload_type:Mapped[int]
-    payload_encoding:Mapped[str]
+
+    module_id:Mapped[int] = mapped_column(primary_key=True)
+    device_type:Mapped[int] = mapped_column(primary_key=True)
+    device_role:Mapped[str] = mapped_column(primary_key=True)
+    device_name:Mapped[str] = mapped_column()
+
+    payload_type:Mapped[int] = mapped_column(Integer)
+    payload_encoding:Mapped[str] = mapped_column(String)
     payload_data:Mapped[dict] = mapped_column(JSON)
 
     @staticmethod
     def from_model(model:Device)->DeviceBase:
         return DeviceBase(
             timestamp=model.timestamp,
-            id = model.id,
+            module_id = model.id.module_id,
+            device_type = model.id.type,
+            device_role = model.id.role,
+            device_name = model.id.name,
             payload_type=model.payload.type,
             payload_encoding=model.payload.encoding,
-            payload_data=model.payload.data
+            payload_data=model.payload.data # type: ignore
         )
 
     def to_model(self)->Device:
         return Device(
             timestamp=self.timestamp,
-            id = self.id,
+            id = DeviceId(
+                module_id=self.module_id, 
+                type=self.device_type, 
+                role=self.device_role, 
+                name=self.device_name
+            ),
             payload=Payload(self.payload_type, self.payload_encoding, self.payload_data)
         )
     
 
-def add_device(company_name:str, car_name:str, device:Device)->None:
+def add_device(device:Device)->None:
     devicebase = DeviceBase.from_model(device)
     with connection_source().begin() as conn:
-        stmt = insert(DeviceBase.__table__)
+        stmt = insert(DeviceBase.__table__) # type: ignore
         conn.execute(stmt, devicebase.__dict__)
 
 
-def devices_available(company_name:str, car_name:str, module_id:int=None)->List[Device]:  # noqa: E501
+def devices_available(module_id:Optional[int]=None)->List[Device]:  # noqa: E501
     """devices_available
 
     Returns list of available devices for the whole car or a single module. # noqa: E501
 
-    :param company_name: Name of the company operating/running the car
-    :type company_name: str
-    :param car_name: Name of the the car
-    :type car_name: str
     :param module_id: An Id of module.
     :type module_id: dict | bytes
 
@@ -66,11 +76,18 @@ def devices_available(company_name:str, car_name:str, module_id:int=None)->List[
     #     module_id =  object.from_dict(connexion.request.get_json())  # noqa: E501
     devices:List[Device] = list()
     with Session(connection_source()) as session:
-        result = session.execute(select(DeviceBase))
+        if module_id is not None:
+            result = session.execute(select(DeviceBase).where(DeviceBase.__table__.c.module_id == module_id))
+        else:
+            result = session.execute(select(DeviceBase))
         for row in result:
             devicebase:DeviceBase = row[0]
             devices.append(devicebase.to_model())
-    return devices
+    
+    if module_id is not None and devices==[]: 
+        return [], 404 # type: ignore
+    else:
+        return devices
 
 
 def list_commands(device_id, company_name, car_name, all=None, since=None):  # noqa: E501

@@ -9,9 +9,10 @@ _connection_source = Optional[Engine]
 
 
 def connection_source()->Engine:
-    if _connection_source is None: raise Connection_Source_Not_Set
-    else: 
+    if isinstance(_connection_source, Engine): 
         return _connection_source
+    else: 
+        raise Connection_Source_Not_Set
 
 
 class Connection_Source_Not_Set(Exception): pass

@@ -32,7 +32,6 @@ def cars_available()->List[Car]:
         cars:List[Car] = list()
         for row in result:
             carbase = row[0]
-            print(carbase)
             cars.append(CarBase.to_model(carbase))
         return cars
 
@@ -40,12 +39,12 @@ def cars_available()->List[Car]:
 def add_car(car:Car)->None:
     item = CarBase.from_model(car)
     with connection_source().begin() as conn:
-        stmt = insert(CarBase.__table__)
+        stmt = insert(CarBase.__table__) # type: ignore
         conn.execute(stmt, [item.__dict__])
 
 
 def _clear_cars()->None:
     with connection_source().begin() as conn:
-        stmt = delete(CarBase.__table__)
+        stmt = delete(CarBase.__table__) # type: ignore
         conn.execute(stmt)
     

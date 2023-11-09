@@ -9,6 +9,14 @@ info:
 
 servers:
   - url: http://localhost:8080
+  - url: http://localhost:8080/{company-name}/{car-name}
+    variables:
+      company-name: 
+        default: bringauto
+        description: Name of the company
+      car-name:
+        default: carname 
+        description: Name of the car
 
 
 tags: 
@@ -41,7 +49,7 @@ paths:
           description: Cannot display avaialble cars due to internal server error.
 
 
-  /{company-name}/{car-name}/available-devices:
+  /available-devices:
     servers:
     - url: http://localhost:8080/{company-name}/{car-name}
     get:
@@ -66,11 +74,9 @@ paths:
 
     parameters:
       - $ref: "#/components/parameters/ModuleId"
-      - $ref: '#/components/parameters/CompanyName'
-      - $ref: '#/components/parameters/CarName'
       
 
-  /{company-name}/{car-name}/status/{device-id}:
+  /status/{device-id}:
     servers:
     - url: http://localhost:8080/{company-name}/{car-name}
     get:
@@ -106,11 +112,9 @@ paths:
       - $ref: '#/components/parameters/All'
       - $ref: '#/components/parameters/Since'
       - $ref: '#/components/parameters/DeviceId'
-      - $ref: '#/components/parameters/CompanyName'
-      - $ref: '#/components/parameters/CarName'
 
 
-  /{company-name}/{car-name}/command/{device-id}:
+  /command/{device-id}:
     servers:
     - url: http://localhost:8080/{company-name}/{car-name}
     get:
@@ -156,9 +160,6 @@ paths:
       - $ref: '#/components/parameters/All'
       - $ref: '#/components/parameters/Since'
       - $ref: '#/components/parameters/DeviceId'
-      - $ref: '#/components/parameters/CompanyName'
-      - $ref: '#/components/parameters/CarName'
-
 
 components:
   parameters:
@@ -170,28 +171,6 @@ components:
       schema: 
         type: boolean
       example: false
-
-    CompanyName: 
-      name: company-name 
-      description: Name of the company operating/running the car 
-      required: true
-      in: path 
-      allowEmptyValue:  false 
-      schema: 
-        type: string
-        pattern: '^[a-z0-9_]$'
-      example: 'test_company'
-
-    CarName: 
-      name: car-name 
-      description: Name of the the car 
-      required: true
-      in: path 
-      allowEmptyValue:  false 
-      schema: 
-        type: string
-        pattern: '^[a-z0-9_]$'
-      example: 'car_123'
 
     Since:
       name: since
