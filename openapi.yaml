@@ -107,6 +107,14 @@ paths:
           description: The statuses have been sent.
         '500':
           description: The statuses could not been sent due to internal server error.
+      requestBody:
+        description: Commands to be executed by the device.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Payload'
 
     parameters:
       - $ref: '#/components/parameters/All'

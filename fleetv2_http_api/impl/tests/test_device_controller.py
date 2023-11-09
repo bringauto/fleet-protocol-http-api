@@ -51,7 +51,11 @@ class Test_Listing_Available_Devices(unittest.TestCase):
         self.assertEqual(result_for_nonexistent_module, ([], 404))
 
 
-from fleetv2_http_api.impl.device_controller import list_statuses, list_commands
+from fleetv2_http_api.impl.device_controller import list_statuses, list_commands, send_commands, send_statuses
+from unittest.mock import patch, Mock
+import fleetv2_http_api.impl.device_controller
+
+
 class Test_Handling_Device_Messages(unittest.TestCase):
 
     def setUp(self) -> None:
@@ -60,7 +64,7 @@ class Test_Handling_Device_Messages(unittest.TestCase):
         self.command_type = 1
 
     def test_listing_device_messages(self):
-        device_id = DeviceId(module_id=42, type=self.status_type, role="light", name="Left light")
+        device_id = DeviceId(module_id=42, type=5, role="light", name="Left light")
         payload_1 = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
         payload_2 = Payload(type=0, encoding="JSON", data={"message":"Device is fine"})
         payload_3 = Payload(type=1, encoding="JSON", data={"message":"Device! Do something!"})
@@ -72,6 +76,19 @@ class Test_Handling_Device_Messages(unittest.TestCase):
         commands = list_commands(device_id)
         self.assertListEqual(statuses, [msg_1, msg_2])
         self.assertListEqual(commands, [msg_3])
+
+    @patch('fleetv2_http_api.impl.device_controller.timestamp')
+    def test_sending_and_retrieving_device_message(self, mock_timestamp):
+        device_id = DeviceId(module_id=42, type=4, role="light", name="Left light")
+        status_1 = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
+        status_2 = Payload(type=0, encoding="JSON", data={"message":"Device is still running"})
+        
+        mock_timestamp.side_effect = [123456, 123457]
+
+        send_statuses(device_id, payload=[status_1, status_2])
+        statuses = list_statuses(device_id)
+        self.assertEqual(statuses[0].payload, status_1)
+        self.assertEqual(statuses[1].payload, status_2)
 
 
 if __name__=="__main__":
