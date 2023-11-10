@@ -105,15 +105,15 @@ def __list_messages(type:int, device_id:DeviceId, all=None, since:Optional[int]=
     statuses:List[Message] = list()
     with Session(connection_source()) as session:
         table = MessageBase.__table__
-        query = select(MessageBase).where(table.c.payload_type == type)
+        selection = select(MessageBase).where(table.c.payload_type == type)
         if all is not None:
-            query = query.where(and_(
+            selection = selection.where(and_(
                 table.c.module_id == device_id.module_id,
                 table.c.device_type == device_id.type,
                 table.c.device_role == device_id.role,
             ))
         elif since is not None:
-            query = query.where(and_(
+            selection = selection.where(and_(
                 table.c.module_id == device_id.module_id,
                 table.c.device_type == device_id.type,
                 table.c.device_role == device_id.role,
@@ -124,9 +124,9 @@ def __list_messages(type:int, device_id:DeviceId, all=None, since:Optional[int]=
             extreme_func = func.max if type==0 else func.min
             extreme_value = session.query(extreme_func(table.c.timestamp)).\
                 where(table.c.payload_type == type).scalar()    
-            query = query.where(table.c.timestamp == extreme_value)
+            selection = selection.where(table.c.timestamp == extreme_value)
             
-        result = session.execute(query)
+        result = session.execute(selection)
         for row in result:
             base:MessageBase = row[0]
             statuses.append(base.to_model())
