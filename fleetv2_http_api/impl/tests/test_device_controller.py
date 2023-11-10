@@ -280,8 +280,8 @@ class Test_Records_Older_Than_One_Hour_Are_Automatically_Removed(unittest.TestCa
 
 
 if __name__=="__main__":
-    runner = unittest.TextTestRunner()
-    runner.run(Test_Records_Older_Than_One_Hour_Are_Automatically_Removed(
-        "test_statuses_older_than_one_hour_are_deleted_when_sending_statuses"
-    ))
-    # unittest.main()
+    # runner = unittest.TextTestRunner()
+    # runner.run(Test_Records_Older_Than_One_Hour_Are_Automatically_Removed(
+    #     "test_statuses_older_than_one_hour_are_deleted_when_sending_statuses"
+    # ))
+    unittest.main()
