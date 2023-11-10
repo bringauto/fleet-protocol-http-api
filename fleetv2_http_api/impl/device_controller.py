@@ -12,11 +12,13 @@ from fleetv2_http_api.models.device import Message, DeviceId
 from fleetv2_http_api.impl.db import connection_source, Base
 
 
+DATA_RETENTION_PERIOD_IN_MS = 3600000 # 1 hour
 
 from time import time as __time
 def timestamp()->int: 
     """Timestamp in milliseconds."""
     return int(__time()*1000)
+
 
 
 @dataclasses.dataclass
@@ -30,7 +32,7 @@ class MessageBase(Base):
     device_role:Mapped[str] = mapped_column(primary_key=True)
     device_name:Mapped[str] = mapped_column()
 
-    payload_type:Mapped[int] = mapped_column(Integer)
+    payload_type:Mapped[int] = mapped_column(Integer, primary_key=True)
     payload_encoding:Mapped[str] = mapped_column(String)
     payload_data:Mapped[dict] = mapped_column(JSON)
 
@@ -85,10 +87,12 @@ def available_devices(module_id:Optional[int]=None)->List[DeviceId]:  # noqa: E5
 
 
 def list_commands(device_id:DeviceId, all=None, since=None):  # noqa: E501
+    _remove_old_messages(timestamp())
     return __list_messages(1, device_id, all, since)
 
 
 def list_statuses(device_id:DeviceId, all=None, since:Optional[int]=None)->List[Message]:  # noqa: E501
+    _remove_old_messages(timestamp())
     return __list_messages(0, device_id, all, since)
 
 
@@ -141,3 +145,13 @@ def _add_msg(*messages:Message)->None:
         msg_base = MessageBase.from_models(*messages)
         data_list = [msg.__dict__ for msg in msg_base]
         conn.execute(stmt, data_list)
+
+
+from sqlalchemy import delete
+def _remove_old_messages(current_timestamp:int)->None:  
+    with connection_source().begin() as conn: 
+        oldest_timestamp_to_be_kept = current_timestamp-DATA_RETENTION_PERIOD_IN_MS
+        stmt = delete(MessageBase.__table__).where( # type: ignore
+            MessageBase.__table__.c.timestamp < oldest_timestamp_to_be_kept
+        ) 
+        conn.execute(stmt)

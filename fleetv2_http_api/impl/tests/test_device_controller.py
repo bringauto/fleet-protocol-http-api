@@ -4,7 +4,7 @@ sys.path.append(".")
 
 import unittest
 from fleetv2_http_api.impl.db import set_connection_source
-from fleetv2_http_api.impl.device_controller import _add_msg, available_devices
+from fleetv2_http_api.impl.device_controller import _add_msg, available_devices, timestamp
 from fleetv2_http_api.models.device import Message, Payload, DeviceId
 
 
@@ -84,34 +84,42 @@ class Test_Retrieving_Device_Messages(unittest.TestCase):
         self.command_type = 1
         self.device_id = DeviceId(module_id=42, type=5, role="left light", name="Light")
 
-    def test_by_default_only_the_NEWEST_STATUS_is_returned(self):
+    @patch('fleetv2_http_api.impl.device_controller.timestamp')
+    def test_by_default_only_the_NEWEST_STATUS_is_returned(self, mock_timestamp):
         payload = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
         msg_older = Message(timestamp=123456, id=self.device_id, payload=payload)
         msg_newer = Message(timestamp=123458, id=self.device_id, payload=payload)
         _add_msg(msg_older, msg_newer)
+        mock_timestamp.return_value = 123470
         statuses = list_statuses(self.device_id)
         self.assertListEqual(statuses, [msg_newer])
 
-    def test_by_default_only_the_OLDEST_COMMAND_is_returned(self):
+    @patch('fleetv2_http_api.impl.device_controller.timestamp')
+    def test_by_default_only_the_OLDEST_COMMAND_is_returned(self, mock_timestamp):
         payload = Payload(type=1, encoding="JSON", data={"message":"Device is running"})
         msg_older = Message(timestamp=123456, id=self.device_id, payload=payload)
         msg_newer = Message(timestamp=123458, id=self.device_id, payload=payload)
         _add_msg(msg_older, msg_newer)
+        mock_timestamp.return_value = 123470
         statuses = list_commands(self.device_id)
         self.assertListEqual(statuses, [msg_older])
 
-    def test_listing_device_messages(self):
+    @patch('fleetv2_http_api.impl.device_controller.timestamp')
+    def test_listing_device_messages(self, mock_timestamp):
         payload_1 = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
         payload_2 = Payload(type=1, encoding="JSON", data={"message":"Device! Do something!"})
         msg_1 = Message(timestamp=123456, id=self.device_id, payload=payload_1)
         msg_2 = Message(timestamp=123458, id=self.device_id, payload=payload_2)
         _add_msg(msg_1, msg_2)
+        mock_timestamp.return_value = 123470
+        mock_timestamp.return_value = 123470
         statuses = list_statuses(self.device_id)
         commands = list_commands(self.device_id)
         self.assertListEqual(statuses, [msg_1])
         self.assertListEqual(commands, [msg_2])
 
-    def test_listing_all_statuses_and_statuses_inclusively_older_than_given_timestamp(self):
+    @patch('fleetv2_http_api.impl.device_controller.timestamp')
+    def test_listing_all_statuses_and_statuses_inclusively_older_than_given_timestamp(self, mock_timestamp):
         payload_1 = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
         payload_2 = Payload(type=0, encoding="JSON", data={"message":"Device is still running"})
         payload_3 = Payload(type=0, encoding="JSON", data={"message":"Hooray! The device is running"})
@@ -121,13 +129,16 @@ class Test_Retrieving_Device_Messages(unittest.TestCase):
         status_3 = Message(timestamp=125, id=self.device_id, payload=payload_3)
 
         _add_msg(status_1, status_2, status_3)
+        mock_timestamp.return_value = 150
         statuses = list_statuses(self.device_id, all=True)
         self.assertListEqual(statuses, [status_1, status_2, status_3])
 
+        mock_timestamp.return_value = 150
         statuses = list_statuses(self.device_id, since=124)
         self.assertListEqual(statuses, [status_1, status_2])
 
-    def test_listing_all_commands_and_commands_inclusively_older_than_given_timestamp(self):
+    @patch('fleetv2_http_api.impl.device_controller.timestamp')
+    def test_listing_all_commands_and_commands_inclusively_older_than_given_timestamp(self, mock_timestamp):
         payload_1 = Payload(type=1, encoding="JSON", data={"message":"Device is running"})
         payload_2 = Payload(type=1, encoding="JSON", data={"message":"Device is still running"})
         payload_3 = Payload(type=1, encoding="JSON", data={"message":"Hooray! The device is running"})
@@ -137,8 +148,10 @@ class Test_Retrieving_Device_Messages(unittest.TestCase):
         cmd_3 = Message(timestamp=125, id=self.device_id, payload=payload_3)
 
         _add_msg(cmd_1, cmd_2, cmd_3)
+        mock_timestamp.return_value = 150
         cmds = list_commands(self.device_id, all=True)
         self.assertListEqual(cmds, [cmd_1, cmd_2, cmd_3])
+        mock_timestamp.return_value = 150
         cmds = list_commands(self.device_id, since=124)
         self.assertListEqual(cmds, [cmd_1, cmd_2])
 
@@ -148,10 +161,12 @@ class Test_Retrieving_Device_Messages(unittest.TestCase):
         self.assertListEqual(list_commands(self.device_id), [])
         self.assertListEqual(list_commands(self.device_id, all=True), [])
 
-    def test_empty_list_is_returned_when_no_message_is_older_than_timestamp(self):
+    @patch('fleetv2_http_api.impl.device_controller.timestamp')
+    def test_empty_list_is_returned_when_no_message_is_older_than_timestamp(self, mock_timestamp):
         payload_1 = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
         status_1 = Message(timestamp=123, id=self.device_id, payload=payload_1)
         _add_msg(status_1)
+        mock_timestamp.return_value = 150
         self.assertListEqual(list_statuses(self.device_id, since=123), [status_1])
         self.assertListEqual(list_statuses(self.device_id, since=122), [])
 
@@ -164,8 +179,8 @@ class Test_Retrieving_Device_Messages(unittest.TestCase):
         )
 
         payload = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
-        status_1 = Message(timestamp=123, id=self.device_id, payload=payload)
-        status_2 = Message(timestamp=123, id=other_device_id, payload=payload)
+        status_1 = Message(timestamp=timestamp(), id=self.device_id, payload=payload)
+        status_2 = Message(timestamp=timestamp(), id=other_device_id, payload=payload)
         _add_msg(status_1, status_2)
         self.assertListEqual(list_statuses(self.device_id, all=True), [status_1])
         self.assertListEqual(list_statuses(other_device_id, all=True), [status_2])
@@ -185,7 +200,8 @@ class Test_Sending_Device_Messages(unittest.TestCase):
         status_2 = Payload(type=0, encoding="JSON", data={"message":"Device is still running"})
         command_1 = Payload(type=1, encoding="JSON", data={"message":"Stop"})
         
-        mock_timestamp.side_effect = [123456, 123457, 123459]
+        mock_timestamp.return_value = 123456
+        mock_timestamp.return_value = 123458
 
         send_statuses(device_id, payload=[status_1, status_2])
         send_commands(device_id, payload=[command_1])
@@ -216,6 +232,33 @@ class Test_Sending_Device_Messages(unittest.TestCase):
         self.assertEqual(stored_statuses[0].timestamp, stored_statuses[1].timestamp)
 
     
+class Test_Records_Older_Than_One_Hour_Are_Automatically_Removed(unittest.TestCase):
+
+    @patch('fleetv2_http_api.impl.device_controller.timestamp')
+    def test_statuses_older_than_one_hour_are_deleted(self, mock_timestamp):
+        device_id = DeviceId(module_id=42, type=4, role="light", name="Left light")
+        status_payload = Payload(type=0, encoding="JSON", data={})
+        
+        STATUS_1_TIMESTAMP = 1000000
+        STATUS_2_TIMESTAMP = 1000000 + 1000
+        SMALLER_THAN_HOUR = 12300
+        ONE_HOUR = 3600000
+
+        status_1 = Message(timestamp=STATUS_1_TIMESTAMP, id=device_id, payload=status_payload)
+        status_2 = Message(timestamp=STATUS_2_TIMESTAMP, id=device_id, payload=status_payload)
+        _add_msg(status_1, status_2)
+
+        mock_timestamp.return_value = STATUS_1_TIMESTAMP + SMALLER_THAN_HOUR
+        self.assertListEqual(list_statuses(device_id, all=True), [status_1, status_2])
+
+        mock_timestamp.return_value = STATUS_1_TIMESTAMP + ONE_HOUR
+        self.assertListEqual(list_statuses(device_id, all=True), [status_1, status_2])
+    
+        mock_timestamp.return_value = STATUS_1_TIMESTAMP + ONE_HOUR + 1
+        self.assertListEqual(list_statuses(device_id, all=True), [status_2])
+
+        mock_timestamp.return_value = STATUS_2_TIMESTAMP + ONE_HOUR + 1
+        self.assertListEqual(list_statuses(device_id, all=True), [])
 
 
 if __name__=="__main__":
