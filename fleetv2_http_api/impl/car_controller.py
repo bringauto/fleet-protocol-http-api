@@ -36,7 +36,7 @@ def cars_available()->List[Car]:
         return cars
 
 
-def add_car(car:Car)->None:
+def _add_car(car:Car)->None:
     item = CarBase.from_model(car)
     with connection_source().begin() as conn:
         stmt = insert(CarBase.__table__) # type: ignore
@@ -47,4 +47,6 @@ def _clear_cars()->None:
     with connection_source().begin() as conn:
         stmt = delete(CarBase.__table__) # type: ignore
         conn.execute(stmt)
+
+
     
