@@ -217,7 +217,7 @@ class Test_Sending_Device_Messages(unittest.TestCase):
         device_id = DeviceId(module_id=42, type=4, role="light", name="Left light")
         cmd_1 = Payload(type=1, encoding="JSON", data={})
         cmd_2 = Payload(type=1, encoding="JSON", data={})
-        send_commands(device_id, payload=[cmd_1, cmd_2])
+        send_commands(device_id, [cmd_1, cmd_2])
         stored_commands = list_commands(device_id, all=True)
 
         self.assertEqual(stored_commands[0].timestamp, stored_commands[1].timestamp)
@@ -226,40 +226,62 @@ class Test_Sending_Device_Messages(unittest.TestCase):
         device_id = DeviceId(module_id=42, type=4, role="light", name="Left light")
         stat_1 = Payload(type=0, encoding="JSON", data={})
         stat_2 = Payload(type=0, encoding="JSON", data={})
-        send_statuses(device_id, payload=[stat_1, stat_2])
+        send_statuses(device_id, [stat_1, stat_2])
         stored_statuses = list_statuses(device_id, all=True)
 
         self.assertEqual(stored_statuses[0].timestamp, stored_statuses[1].timestamp)
 
     
+from fleetv2_http_api.impl.device_controller import _count_currently_stored_messages
 class Test_Records_Older_Than_One_Hour_Are_Automatically_Removed(unittest.TestCase):
 
+    def setUp(self) -> None:
+        set_connection_source("sqlite", "pysqlite", "/:memory:")
+        self.device_id = DeviceId(module_id=42, type=4, role="light", name="Left light")
+        self.status_payload = Payload(type=0, encoding="JSON", data={})
+
     @patch('fleetv2_http_api.impl.device_controller.timestamp')
-    def test_statuses_older_than_one_hour_are_deleted(self, mock_timestamp):
-        device_id = DeviceId(module_id=42, type=4, role="light", name="Left light")
-        status_payload = Payload(type=0, encoding="JSON", data={})
-        
+    def test_statuses_older_than_one_hour_are_deleted_when_listing_statuses(self, mock_timestamp):
         STATUS_1_TIMESTAMP = 1000000
         STATUS_2_TIMESTAMP = 1000000 + 1000
         SMALLER_THAN_HOUR = 12300
         ONE_HOUR = 3600000
 
-        status_1 = Message(timestamp=STATUS_1_TIMESTAMP, id=device_id, payload=status_payload)
-        status_2 = Message(timestamp=STATUS_2_TIMESTAMP, id=device_id, payload=status_payload)
+        status_1 = Message(timestamp=STATUS_1_TIMESTAMP, id=self.device_id, payload=self.status_payload)
+        status_2 = Message(timestamp=STATUS_2_TIMESTAMP, id=self.device_id, payload=self.status_payload)
         _add_msg(status_1, status_2)
 
         mock_timestamp.return_value = STATUS_1_TIMESTAMP + SMALLER_THAN_HOUR
-        self.assertListEqual(list_statuses(device_id, all=True), [status_1, status_2])
+        self.assertListEqual(list_statuses(self.device_id, all=True), [status_1, status_2])
 
         mock_timestamp.return_value = STATUS_1_TIMESTAMP + ONE_HOUR
-        self.assertListEqual(list_statuses(device_id, all=True), [status_1, status_2])
+        self.assertListEqual(list_statuses(self.device_id, all=True), [status_1, status_2])
     
         mock_timestamp.return_value = STATUS_1_TIMESTAMP + ONE_HOUR + 1
-        self.assertListEqual(list_statuses(device_id, all=True), [status_2])
+        self.assertListEqual(list_statuses(self.device_id, all=True), [status_2])
 
         mock_timestamp.return_value = STATUS_2_TIMESTAMP + ONE_HOUR + 1
-        self.assertListEqual(list_statuses(device_id, all=True), [])
+        self.assertListEqual(list_statuses(self.device_id, all=True), [])
+
+    @patch('fleetv2_http_api.impl.device_controller.timestamp')
+    def test_statuses_older_than_one_hour_are_deleted_when_sending_statuses(self, mock_timestamp):
+        ONE_HOUR = 3600000
+        STATUS_1_TIMESTAMP = 1000000
+        STATUS_2_TIMESTAMP = 1000000 + ONE_HOUR + 1
+
+        mock_timestamp.return_value = STATUS_1_TIMESTAMP
+        send_statuses(self.device_id, [self.status_payload])
+        self.assertEqual(_count_currently_stored_messages(), 1)
+
+        mock_timestamp.return_value = STATUS_2_TIMESTAMP
+        send_statuses(self.device_id, [self.status_payload])
+        self.assertEqual(_count_currently_stored_messages(), 1)
+        self.assertEqual(list_statuses(self.device_id, all=True)[0].timestamp, STATUS_2_TIMESTAMP)
 
 
 if __name__=="__main__":
-    unittest.main()
+    runner = unittest.TextTestRunner()
+    runner.run(Test_Records_Older_Than_One_Hour_Are_Automatically_Removed(
+        "test_statuses_older_than_one_hour_are_deleted_when_sending_statuses"
+    ))
+    # unittest.main()

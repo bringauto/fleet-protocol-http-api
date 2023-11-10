@@ -36,6 +36,10 @@ class MessageBase(Base):
     payload_encoding:Mapped[str] = mapped_column(String)
     payload_data:Mapped[dict] = mapped_column(JSON)
 
+    def __post_init__(self)->None:
+        assert(self.timestamp is not None)
+        assert(self.sent_order is not None)
+
     @staticmethod
     def from_model(model:Message, order:int=0)->MessageBase:
         return MessageBase(
@@ -129,13 +133,17 @@ def __list_messages(type:int, device_id:DeviceId, all=None, since:Optional[int]=
         return statuses
 
 
-def send_commands(device_id, all=None, since=None, payload:List[Payload]=list()):  # noqa: E501
-    msgs = [Message(timestamp=timestamp(), id=device_id, payload=p) for p in payload]
+def send_commands(device_id, payload:List[Payload]=list()):  # noqa: E501
+    tstamp = timestamp()
+    _remove_old_messages(tstamp)
+    msgs = [Message(timestamp=tstamp, id=device_id, payload=p) for p in payload]
     _add_msg(*msgs)
 
 
-def send_statuses(device_id:DeviceId, all=None, since=None, payload:List[Payload]=list()):  # noqa: E501
-    msgs = [Message(timestamp=timestamp(), id=device_id, payload=p) for p in payload]
+def send_statuses(device_id:DeviceId, payload:List[Payload]=list()):  # noqa: E501
+    tstamp = timestamp()
+    _remove_old_messages(tstamp)
+    msgs = [Message(timestamp=tstamp, id=device_id, payload=p) for p in payload]
     _add_msg(*msgs)
 
 
@@ -146,6 +154,9 @@ def _add_msg(*messages:Message)->None:
         data_list = [msg.__dict__ for msg in msg_base]
         conn.execute(stmt, data_list)
 
+def _count_currently_stored_messages()->int:
+    with Session(connection_source()) as session:
+        return session.query(MessageBase).count()
 
 from sqlalchemy import delete
 def _remove_old_messages(current_timestamp:int)->None:  

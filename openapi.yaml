@@ -96,6 +96,14 @@ paths:
                   $ref: '#/components/schemas/Payload'
         '500':
           description: The statuses cannot be displayed due to internal server error.
+    
+      parameters:
+        - $ref: '#/components/parameters/All'
+        - $ref: '#/components/parameters/Since'
+
+    parameters:
+      - $ref: '#/components/parameters/DeviceId'
+
     post:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: send_statuses
@@ -115,11 +123,6 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/Payload'
-
-    parameters:
-      - $ref: '#/components/parameters/All'
-      - $ref: '#/components/parameters/Since'
-      - $ref: '#/components/parameters/DeviceId'
 
 
   /command/{device-id}:
@@ -143,7 +146,14 @@ paths:
       
         '500':
           description: The commands cannot be displayed due to internal server error.
-          
+
+      parameters:
+        - $ref: '#/components/parameters/All'
+        - $ref: '#/components/parameters/Since'
+        
+    parameters:
+      - $ref: '#/components/parameters/DeviceId'
+
     post:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: send_commands
@@ -164,10 +174,6 @@ paths:
         '500':
           description: The commands have not been sent due to internal server error.
 
-    parameters:
-      - $ref: '#/components/parameters/All'
-      - $ref: '#/components/parameters/Since'
-      - $ref: '#/components/parameters/DeviceId'
 
 components:
   parameters:
