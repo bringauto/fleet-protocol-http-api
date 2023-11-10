@@ -219,12 +219,12 @@ components:
       properties:
         company-name:
           type: string
-          minLength: 1
-          example: "bringauto"        
+          example: "bringauto"
+          pattern: '^[a-z0-9_]+$'
         car-name:
           type: string
-          minLength: 1
           example: piba09223
+          pattern: '^[a-z0-9_]+$'
     
     Message: 
       description: Physical device or program located on the car.
