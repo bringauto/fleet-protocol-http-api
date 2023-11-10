@@ -22,7 +22,8 @@ def timestamp()->int:
 @dataclasses.dataclass
 class MessageBase(Base):
     __tablename__:ClassVar[str] = "device"
-    timestamp:Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    timestamp:Mapped[int] = mapped_column(primary_key=True)
+    sent_order:Mapped[int] = mapped_column(primary_key=True)
 
     module_id:Mapped[int] = mapped_column(primary_key=True)
     device_type:Mapped[int] = mapped_column(primary_key=True)
@@ -34,9 +35,10 @@ class MessageBase(Base):
     payload_data:Mapped[dict] = mapped_column(JSON)
 
     @staticmethod
-    def from_model(model:Message)->MessageBase:
+    def from_model(model:Message, order:int=0)->MessageBase:
         return MessageBase(
             timestamp=model.timestamp,
+            sent_order=order,
             module_id = model.id.module_id,
             device_type = model.id.type,
             device_role = model.id.role,
@@ -45,6 +47,13 @@ class MessageBase(Base):
             payload_encoding=model.payload.encoding,
             payload_data=model.payload.data # type: ignore
         )
+
+    @staticmethod
+    def from_models(*models:Message)->List[MessageBase]:
+        bases:List[MessageBase] = list()
+        for k in range(len(models)):
+            bases.append(MessageBase.from_model(models[k], k))
+        return bases
 
     def to_model(self)->Message:
         return Message(
@@ -130,5 +139,6 @@ def send_statuses(device_id:DeviceId, all=None, since=None, payload:List[Payload
 def _add_msg(*messages:Message)->None: 
     with connection_source().begin() as conn:
         stmt = insert(MessageBase.__table__) # type: ignore
-        msg_base = [MessageBase.from_model(msg).__dict__ for msg in messages]
-        conn.execute(stmt, msg_base)
+        msg_base = MessageBase.from_models(*messages)
+        data_list = [msg.__dict__ for msg in msg_base]
+        conn.execute(stmt, data_list)

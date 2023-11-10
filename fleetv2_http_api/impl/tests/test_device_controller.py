@@ -197,6 +197,16 @@ class Test_Sending_Device_Messages(unittest.TestCase):
         self.assertEqual(statuses[1].payload, status_2)
         self.assertEqual(commands[0].payload, command_1)
 
+    def test_commands_sent_to_device_at_once_share_common_timestamp(self):
+        device_id = DeviceId(module_id=42, type=4, role="light", name="Left light")
+        cmd_1 = Payload(type=1, encoding="JSON", data={})
+        cmd_2 = Payload(type=1, encoding="JSON", data={})
+        send_commands(device_id, payload=[cmd_1, cmd_2])
+        stored_commands = list_commands(device_id, all=True)
+
+        self.assertEqual(stored_commands[0].timestamp, stored_commands[1].timestamp)
+
+    
 
 
 if __name__=="__main__":
