@@ -14,7 +14,9 @@ from fleetv2_http_api.impl.db import connection_source, Base
 
 
 from time import time as __time
-def timestamp()->int: return int(__time()*1000)
+def timestamp()->int: 
+    """Timestamp in milliseconds."""
+    return int(__time()*1000)
 
 
 @dataclasses.dataclass

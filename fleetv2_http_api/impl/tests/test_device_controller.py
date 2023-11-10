@@ -8,6 +8,27 @@ from fleetv2_http_api.impl.device_controller import _add_msg, devices_available
 from fleetv2_http_api.models.device import Message, Payload, DeviceId
 
 
+
+class Test_Device_Id_Validity(unittest.TestCase):
+
+    def test_devide_id_validity(self):
+        id = DeviceId(module_id=42, type=2, role="light", name="Left light")
+        # module id cannot be negative
+        id.module_id = 43
+        self.assertEqual(id.module_id, 43)
+        with self.assertRaises(ValueError): id.module_id = -15
+        # type cannot be negative
+        id.type = 3
+        self.assertEqual(id.type, 3)
+        with self.assertRaises(ValueError): id.type = -7
+        # role must be nonempty, lowercase and without spaces
+        id.role = "new_role"
+        self.assertEqual(id.role, "new_role")
+        with self.assertRaises(ValueError): id.role = ""
+        with self.assertRaises(ValueError): id.role = "role with spaces"
+        with self.assertRaises(ValueError): id.role = "Role"
+
+
 class Test_Listing_Available_Devices(unittest.TestCase):
     
     def setUp(self) -> None:

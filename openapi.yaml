@@ -108,7 +108,7 @@ paths:
         '500':
           description: The statuses could not been sent due to internal server error.
       requestBody:
-        description: Commands to be executed by the device.
+        description: Statuses to be send by the device.
         content:
           application/json:
             schema:
@@ -225,7 +225,21 @@ components:
           type: string
           example: piba09223
           pattern: '^[a-z0-9_]+$'
-    
+
+    Module:
+      description: Car module, representing set of Device 
+      type: object 
+      required: 
+      - id
+      - device-list
+      properties: 
+        id: 
+          $ref: '#/components/schemas/Id'
+        device-list:
+          type: array
+          items: 
+            $ref: '#/components/schemas/DeviceId'
+
     Message: 
       description: Physical device or program located on the car.
       type: object 
@@ -251,7 +265,8 @@ components:
           example: 1
         role:
           type: string
-          example: "Warning LED"
+          example: "warning_led"
+          pattern: '^[a-z0-9_]+$'
         name: 
           type: string
           example: "Left red LED"
@@ -270,9 +285,7 @@ components:
         data:
           type: object
           example: 
-            main_text: The device is running.
-        
-                
+            main_text: The device is running.      
 
     Id: 
       description: A general integer Id
