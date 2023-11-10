@@ -272,16 +272,12 @@ class Test_Records_Older_Than_One_Hour_Are_Automatically_Removed(unittest.TestCa
         mock_timestamp.return_value = STATUS_1_TIMESTAMP
         send_statuses(self.device_id, [self.status_payload])
         self.assertEqual(_count_currently_stored_messages(), 1)
-
         mock_timestamp.return_value = STATUS_2_TIMESTAMP
+        
         send_statuses(self.device_id, [self.status_payload])
         self.assertEqual(_count_currently_stored_messages(), 1)
         self.assertEqual(list_statuses(self.device_id, all=True)[0].timestamp, STATUS_2_TIMESTAMP)
 
 
 if __name__=="__main__":
-    # runner = unittest.TextTestRunner()
-    # runner.run(Test_Records_Older_Than_One_Hour_Are_Automatically_Removed(
-    #     "test_statuses_older_than_one_hour_are_deleted_when_sending_statuses"
-    # ))
     unittest.main()
