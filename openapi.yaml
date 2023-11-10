@@ -246,7 +246,6 @@ components:
       properties: 
         timestamp: 
           type: integer 
-          minimum: 0 
           example: 1699262836
         id: 
           $ref: '#/components/schemas/DeviceId'
@@ -262,7 +261,7 @@ components:
         type:
           type: integer
           minimum: 0
-          example: 1
+          example: 4
         role:
           type: string
           example: "warning_led"
@@ -270,7 +269,7 @@ components:
         name: 
           type: string
           example: "Left red LED"
-
+          
     Payload: 
       description: A message passed to device (command) or by device (status).
       type: object

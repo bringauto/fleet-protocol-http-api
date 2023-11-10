@@ -81,39 +81,35 @@ def list_commands(device_id:DeviceId, all=None, since=None):  # noqa: E501
 
 def list_statuses(device_id:DeviceId, all=None, since:Optional[int]=None)->List[Message]:  # noqa: E501
     return __list_messages(0, device_id, all, since)
-    
+
 
 from sqlalchemy import func, and_
 def __list_messages(type:int, device_id:DeviceId, all=None, since:Optional[int]=None)->List[Message]:  # noqa: E501
     statuses:List[Message] = list()
     with Session(connection_source()) as session:
-        query = select(MessageBase)
+        query = select(MessageBase).where(MessageBase.__table__.c.payload_type == type)
         if all is not None:
             query = query.where(and_(
-                MessageBase.__table__.c.payload_type == type, 
                 MessageBase.__table__.c.module_id == device_id.module_id,
                 MessageBase.__table__.c.device_type == device_id.type,
                 MessageBase.__table__.c.device_role == device_id.role,
             ))
         elif since is not None:
             query = query.where(and_(
-                MessageBase.__table__.c.payload_type == type,
                 MessageBase.__table__.c.module_id == device_id.module_id,
                 MessageBase.__table__.c.device_type == device_id.type,
                 MessageBase.__table__.c.device_role == device_id.role,
                 MessageBase.__table__.c.timestamp <= since
             ))
         else:
-            query = \
-                query.where(and_(
-                    MessageBase.__table__.c.payload_type == type, 
-                    MessageBase.__table__.c.module_id == device_id.module_id,
-                    MessageBase.__table__.c.device_type == device_id.type,
-                    MessageBase.__table__.c.device_role == device_id.role,
-                ))\
-                .group_by(MessageBase.timestamp)\
-                .having(func.max(MessageBase.timestamp))
-        
+            if type==0: # return newest status
+                extreme_value = session.query(func.max(MessageBase.__table__.c.timestamp)).\
+                    where(MessageBase.__table__.c.payload_type == type).scalar()
+            else: # return oldest command
+                extreme_value = session.query(func.min(MessageBase.__table__.c.timestamp)).\
+                    where(MessageBase.__table__.c.payload_type == type).scalar()    
+            query = query.where(MessageBase.__table__.c.timestamp == extreme_value)
+            
         result = session.execute(query)
         for row in result:
             base:MessageBase = row[0]

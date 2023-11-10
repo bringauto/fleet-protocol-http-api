@@ -84,6 +84,22 @@ class Test_Retrieving_Device_Messages(unittest.TestCase):
         self.command_type = 1
         self.device_id = DeviceId(module_id=42, type=5, role="left light", name="Light")
 
+    def test_by_default_only_the_NEWEST_STATUS_is_returned(self):
+        payload = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
+        msg_older = Message(timestamp=123456, id=self.device_id, payload=payload)
+        msg_newer = Message(timestamp=123458, id=self.device_id, payload=payload)
+        _add_msg(msg_older, msg_newer)
+        statuses = list_statuses(self.device_id)
+        self.assertListEqual(statuses, [msg_newer])
+
+    def test_by_default_only_the_OLDEST_COMMAND_is_returned(self):
+        payload = Payload(type=1, encoding="JSON", data={"message":"Device is running"})
+        msg_older = Message(timestamp=123456, id=self.device_id, payload=payload)
+        msg_newer = Message(timestamp=123458, id=self.device_id, payload=payload)
+        _add_msg(msg_older, msg_newer)
+        statuses = list_commands(self.device_id)
+        self.assertListEqual(statuses, [msg_older])
+
     def test_listing_device_messages(self):
         payload_1 = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
         payload_2 = Payload(type=1, encoding="JSON", data={"message":"Device! Do something!"})
