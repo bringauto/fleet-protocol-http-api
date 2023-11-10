@@ -25,7 +25,7 @@ class CarBase(Base):
     def to_model(base:CarBase)->Car:
         return Car(car_name=base.name, company_name=base.owner)
 
-
+ 
 def cars_available()->List[Car]:
     with Session(connection_source()) as session:
         result = session.execute(select(CarBase))
