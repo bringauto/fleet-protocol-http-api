@@ -4,7 +4,7 @@ sys.path.append(".")
 
 import unittest
 from fleetv2_http_api.impl.db import set_connection_source
-from fleetv2_http_api.impl.device_controller import _add_msg, devices_available
+from fleetv2_http_api.impl.device_controller import _add_msg, available_devices
 from fleetv2_http_api.models.device import Message, Payload, DeviceId
 
 
@@ -43,7 +43,7 @@ class Test_Listing_Available_Devices(unittest.TestCase):
         device_id = DeviceId(42, 2, "light", "Left light")
         msg = Message(123456789, device_id, self.payload_example)
         _add_msg(msg)
-        devices = devices_available()
+        devices = available_devices()
         self.assertEqual(devices[0], device_id)
 
     def test_adding_and_retrieve_multiple_devices(self):
@@ -54,9 +54,9 @@ class Test_Listing_Available_Devices(unittest.TestCase):
         msg_2 = Message(123456789, device_2_id, self.payload_example)
         _add_msg(msg_1)
         _add_msg(msg_2)
-        self.assertListEqual(devices_available(), [device_1_id, device_2_id])
+        self.assertListEqual(available_devices(), [device_1_id, device_2_id])
 
-    def test_adding_and_displaying_devices_in_multiuple_modules(self):
+    def test_adding_and_displaying_devices_in_multiple_modules(self):
         device_1_id = DeviceId(module_id=42, type=0, role="light", name="Left light")
         device_2_id = DeviceId(module_id=43, type=0, role="light", name="Right light")
 
@@ -64,11 +64,11 @@ class Test_Listing_Available_Devices(unittest.TestCase):
         msg_2 = Message(123456789, device_2_id, self.payload_example)
         _add_msg(msg_1)
         _add_msg(msg_2)
-        self.assertListEqual(devices_available(), [device_1_id, device_2_id])
-        self.assertListEqual(devices_available(module_id=42), [device_1_id])
-        self.assertListEqual(devices_available(module_id=43), [device_2_id])
+        self.assertListEqual(available_devices(), [device_1_id, device_2_id])
+        self.assertListEqual(available_devices(module_id=42), [device_1_id])
+        self.assertListEqual(available_devices(module_id=43), [device_2_id])
 
-        result_for_nonexistent_module = devices_available(module_id=-58)
+        result_for_nonexistent_module = available_devices(module_id=-58)
         self.assertEqual(result_for_nonexistent_module, ([], 404))
 
 

@@ -58,7 +58,7 @@ class MessageBase(Base):
             payload=Payload(self.payload_type, self.payload_encoding, self.payload_data)
         )
 
-def devices_available(module_id:Optional[int]=None)->List[DeviceId]:  # noqa: E501
+def available_devices(module_id:Optional[int]=None)->List[DeviceId]:  # noqa: E501
     devices:List[DeviceId] = list()
     with Session(connection_source()) as session:
         if module_id is not None:

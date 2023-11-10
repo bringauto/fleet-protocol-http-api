@@ -54,7 +54,7 @@ paths:
     - url: http://localhost:8080/{company-name}/{car-name}
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
-      operationId: devices_available
+      operationId: available_devices
       description: Returns list of available devices for the whole car or a single module.
       tags: 
         - device
