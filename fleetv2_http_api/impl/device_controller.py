@@ -96,28 +96,27 @@ from sqlalchemy import func, and_
 def __list_messages(type:int, device_id:DeviceId, all=None, since:Optional[int]=None)->List[Message]:  # noqa: E501
     statuses:List[Message] = list()
     with Session(connection_source()) as session:
-        query = select(MessageBase).where(MessageBase.__table__.c.payload_type == type)
+        table = MessageBase.__table__
+        query = select(MessageBase).where(table.c.payload_type == type)
         if all is not None:
             query = query.where(and_(
-                MessageBase.__table__.c.module_id == device_id.module_id,
-                MessageBase.__table__.c.device_type == device_id.type,
-                MessageBase.__table__.c.device_role == device_id.role,
+                table.c.module_id == device_id.module_id,
+                table.c.device_type == device_id.type,
+                table.c.device_role == device_id.role,
             ))
         elif since is not None:
             query = query.where(and_(
-                MessageBase.__table__.c.module_id == device_id.module_id,
-                MessageBase.__table__.c.device_type == device_id.type,
-                MessageBase.__table__.c.device_role == device_id.role,
-                MessageBase.__table__.c.timestamp <= since
+                table.c.module_id == device_id.module_id,
+                table.c.device_type == device_id.type,
+                table.c.device_role == device_id.role,
+                table.c.timestamp <= since
             ))
         else:
-            if type==0: # return newest status
-                extreme_value = session.query(func.max(MessageBase.__table__.c.timestamp)).\
-                    where(MessageBase.__table__.c.payload_type == type).scalar()
-            else: # return oldest command
-                extreme_value = session.query(func.min(MessageBase.__table__.c.timestamp)).\
-                    where(MessageBase.__table__.c.payload_type == type).scalar()    
-            query = query.where(MessageBase.__table__.c.timestamp == extreme_value)
+            # return newest status or oldest command
+            extreme_func = func.max if type==0 else func.min
+            extreme_value = session.query(extreme_func(table.c.timestamp)).\
+                where(table.c.payload_type == type).scalar()    
+            query = query.where(table.c.timestamp == extreme_value)
             
         result = session.execute(query)
         for row in result:
