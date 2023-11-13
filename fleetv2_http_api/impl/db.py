@@ -45,7 +45,6 @@ def _new_connection_source(
     )->Engine:
 
     url = ('').join([dialect,'+',dbapi,"://",username,":",password,"@",dblocation])
-    print(f"New connection: {url}")
     return create_engine(url, *args, **kwargs)
 
 
@@ -59,7 +58,6 @@ def set_connection_source(
     **kwargs
     )->None:
 
-    print("Setting connection")
     source = _new_connection_source(dialect, dbapi, dblocation, username, password, *args, **kwargs)
     global _connection_source
     _connection_source = source
