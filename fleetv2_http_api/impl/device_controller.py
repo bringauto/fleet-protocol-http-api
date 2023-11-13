@@ -35,11 +35,7 @@ class MessageBase(Base):
     payload_type:Mapped[int] = mapped_column(Integer, primary_key=True)
     payload_encoding:Mapped[str] = mapped_column(String)
     payload_data:Mapped[dict] = mapped_column(JSON)
-
-    def __post_init__(self)->None:
-        assert(self.timestamp is not None)
-        assert(self.sent_order is not None)
-
+    
     @staticmethod
     def from_model(model:Message, order:int=0)->MessageBase:
         return MessageBase(
@@ -49,7 +45,7 @@ class MessageBase(Base):
             device_type = model.id.type,
             device_role = model.id.role,
             device_name = model.id.name,
-            payload_type = model.payload.type,  # type: ignore
+            payload_type = model.payload.type, 
             payload_encoding=model.payload.encoding,
             payload_data=model.payload.data # type: ignore
         )
