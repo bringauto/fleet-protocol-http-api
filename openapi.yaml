@@ -94,9 +94,9 @@ paths:
               $ref: '#/components/schemas/Car'
 
 
-  /available-devices:
+  /{car_name}/available-devices:
     servers:
-      - url: http://localhost:8080/{company_name}/{carName}
+      - url: http://localhost:8080/{company_name}
         variables:
           companyName: 
             default: companyname
@@ -126,9 +126,10 @@ paths:
 
     parameters:
       - $ref: "#/components/parameters/ModuleId"
+      - $ref: '#/components/parameters/CarName'
       
 
-  /status/{device-id}:
+  /{car_name}/status/{device-id}:
     servers:
       - url: http://localhost:8080/{company_name}
         variables:
@@ -160,6 +161,7 @@ paths:
 
     parameters:
       - $ref: '#/components/parameters/DeviceId'
+      - $ref: '#/components/parameters/CarName'
 
     post:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
@@ -182,9 +184,9 @@ paths:
                 $ref: '#/components/schemas/Payload'
 
 
-  /command/{device-id}:
+  /{car_name}/command/{device-id}:
     servers:
-      - url: http://localhost:8080/{company_name}/{carName}
+      - url: http://localhost:8080/{company_name}
         variables:
           companyName: 
             default: companyname
@@ -217,6 +219,7 @@ paths:
 
     parameters:
       - $ref: '#/components/parameters/DeviceId'
+      - $ref: '#/components/parameters/CarName'
 
     post:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
@@ -278,6 +281,15 @@ components:
         minimum: 0
       example: 45
 
+    CarName: 
+      name: car_name 
+      description: Name of the Car 
+      in: path 
+      required: true 
+      schema: 
+        type: integer 
+        pattern: "^[0-9a-z_]$"
+        example: auto_123
 
   schemas:
     Car:

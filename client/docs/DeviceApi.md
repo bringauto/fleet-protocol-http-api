@@ -4,15 +4,15 @@ All URIs are relative to *http://localhost:8080*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**available_devices**](DeviceApi.md#available_devices) | **GET** /available-devices | 
-[**list_commands**](DeviceApi.md#list_commands) | **GET** /command/{device-id} | 
-[**list_statuses**](DeviceApi.md#list_statuses) | **GET** /status/{device-id} | 
-[**send_commands**](DeviceApi.md#send_commands) | **POST** /command/{device-id} | 
-[**send_statuses**](DeviceApi.md#send_statuses) | **POST** /status/{device-id} | 
+[**available_devices**](DeviceApi.md#available_devices) | **GET** /{car_name}/available-devices | 
+[**list_commands**](DeviceApi.md#list_commands) | **GET** /{car_name}/command/{device-id} | 
+[**list_statuses**](DeviceApi.md#list_statuses) | **GET** /{car_name}/status/{device-id} | 
+[**send_commands**](DeviceApi.md#send_commands) | **POST** /{car_name}/command/{device-id} | 
+[**send_statuses**](DeviceApi.md#send_statuses) | **POST** /{car_name}/status/{device-id} | 
 
 
 # **available_devices**
-> List[DeviceId] available_devices(module_id=module_id)
+> List[DeviceId] available_devices(car_name, module_id=module_id)
 
 
 
@@ -39,10 +39,11 @@ configuration = http_api_client.Configuration(
 with http_api_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = http_api_client.DeviceApi(api_client)
+    car_name = 56 # int | Name of the Car
     module_id = 785 # object | An Id of module. (optional)
 
     try:
-        api_response = api_instance.available_devices(module_id=module_id)
+        api_response = api_instance.available_devices(car_name, module_id=module_id)
         print("The response of DeviceApi->available_devices:\n")
         pprint(api_response)
     except Exception as e:
@@ -55,6 +56,7 @@ with http_api_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
+ **car_name** | **int**| Name of the Car | 
  **module_id** | [**object**](.md)| An Id of module. | [optional] 
 
 ### Return type
@@ -79,7 +81,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **list_commands**
-> List[Payload] list_commands(device_id, all=all, since=since)
+> List[Payload] list_commands(device_id, car_name, all=all, since=since)
 
 
 
@@ -107,11 +109,12 @@ with http_api_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = http_api_client.DeviceApi(api_client)
     device_id = 45 # int | The Id of the Device.
+    car_name = 56 # int | Name of the Car
     all = false # bool | If set, the method returns a complete history of statuses/commands. (optional)
     since = 1699262836 # int | A Unix timestamp; if specified, the method returns all device statuses/commands inclusivelly older than value of specified timestamp. (optional)
 
     try:
-        api_response = api_instance.list_commands(device_id, all=all, since=since)
+        api_response = api_instance.list_commands(device_id, car_name, all=all, since=since)
         print("The response of DeviceApi->list_commands:\n")
         pprint(api_response)
     except Exception as e:
@@ -125,6 +128,7 @@ with http_api_client.ApiClient(configuration) as api_client:
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **device_id** | **int**| The Id of the Device. | 
+ **car_name** | **int**| Name of the Car | 
  **all** | **bool**| If set, the method returns a complete history of statuses/commands. | [optional] 
  **since** | **int**| A Unix timestamp; if specified, the method returns all device statuses/commands inclusivelly older than value of specified timestamp. | [optional] 
 
@@ -150,7 +154,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **list_statuses**
-> List[Payload] list_statuses(device_id, all=all, since=since)
+> List[Payload] list_statuses(device_id, car_name, all=all, since=since)
 
 
 
@@ -178,11 +182,12 @@ with http_api_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = http_api_client.DeviceApi(api_client)
     device_id = 45 # int | The Id of the Device.
+    car_name = 56 # int | Name of the Car
     all = false # bool | If set, the method returns a complete history of statuses/commands. (optional)
     since = 1699262836 # int | A Unix timestamp; if specified, the method returns all device statuses/commands inclusivelly older than value of specified timestamp. (optional)
 
     try:
-        api_response = api_instance.list_statuses(device_id, all=all, since=since)
+        api_response = api_instance.list_statuses(device_id, car_name, all=all, since=since)
         print("The response of DeviceApi->list_statuses:\n")
         pprint(api_response)
     except Exception as e:
@@ -196,6 +201,7 @@ with http_api_client.ApiClient(configuration) as api_client:
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **device_id** | **int**| The Id of the Device. | 
+ **car_name** | **int**| Name of the Car | 
  **all** | **bool**| If set, the method returns a complete history of statuses/commands. | [optional] 
  **since** | **int**| A Unix timestamp; if specified, the method returns all device statuses/commands inclusivelly older than value of specified timestamp. | [optional] 
 
@@ -221,7 +227,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **send_commands**
-> send_commands(device_id, payload=payload)
+> send_commands(device_id, car_name, payload=payload)
 
 
 
@@ -249,10 +255,11 @@ with http_api_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = http_api_client.DeviceApi(api_client)
     device_id = 45 # int | The Id of the Device.
+    car_name = 56 # int | Name of the Car
     payload = [http_api_client.Payload()] # List[Payload] | Commands to be executed by the device. (optional)
 
     try:
-        api_instance.send_commands(device_id, payload=payload)
+        api_instance.send_commands(device_id, car_name, payload=payload)
     except Exception as e:
         print("Exception when calling DeviceApi->send_commands: %s\n" % e)
 ```
@@ -264,6 +271,7 @@ with http_api_client.ApiClient(configuration) as api_client:
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **device_id** | **int**| The Id of the Device. | 
+ **car_name** | **int**| Name of the Car | 
  **payload** | [**List[Payload]**](Payload.md)| Commands to be executed by the device. | [optional] 
 
 ### Return type
@@ -288,7 +296,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **send_statuses**
-> send_statuses(device_id, payload=payload)
+> send_statuses(device_id, car_name, payload=payload)
 
 
 
@@ -316,10 +324,11 @@ with http_api_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = http_api_client.DeviceApi(api_client)
     device_id = 45 # int | The Id of the Device.
+    car_name = 56 # int | Name of the Car
     payload = [http_api_client.Payload()] # List[Payload] | Statuses to be send by the device. (optional)
 
     try:
-        api_instance.send_statuses(device_id, payload=payload)
+        api_instance.send_statuses(device_id, car_name, payload=payload)
     except Exception as e:
         print("Exception when calling DeviceApi->send_statuses: %s\n" % e)
 ```
@@ -331,6 +340,7 @@ with http_api_client.ApiClient(configuration) as api_client:
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **device_id** | **int**| The Id of the Device. | 
+ **car_name** | **int**| Name of the Car | 
  **payload** | [**List[Payload]**](Payload.md)| Statuses to be send by the device. | [optional] 
 
 ### Return type
