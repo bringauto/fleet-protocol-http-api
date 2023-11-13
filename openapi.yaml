@@ -94,16 +94,7 @@ paths:
               $ref: '#/components/schemas/Car'
 
 
-  /{car_name}/available-devices:
-    servers:
-      - url: http://localhost:8080/{company_name}
-        variables:
-          companyName: 
-            default: companyname
-            description: Name of the company
-          carName:
-            default: carname
-            description: Name of the car
+  /{company_name}/{car_name}/available-devices:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: available_devices
@@ -119,24 +110,37 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/DeviceId'
-
-        
         '500':
           description: Cannot display available devices due to internal server error.
+      
+      parameters:
+        - $ref: "#/components/parameters/ModuleId"
+
+    post: 
+      deprecated: true
+      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
+      operationId: add_device
+      description: Add a new device
+      tags: 
+        - device
+      responses:
+        '200':
+          description: New device added
+        '500':
+          description: Cannot add device due to internal server error.
+      requestBody:
+        description: New device
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceId'
 
     parameters:
-      - $ref: "#/components/parameters/ModuleId"
       - $ref: '#/components/parameters/CarName'
+      - $ref: '#/components/parameters/CompanyName'
       
 
-  /{car_name}/status/{device-id}:
-    servers:
-      - url: http://localhost:8080/{company_name}
-        variables:
-          companyName: 
-            default: companyname
-            description: Name of the company
-
+  /{company_name}/{car_name}/status/{device-id}:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: list_statuses
@@ -162,6 +166,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/DeviceId'
       - $ref: '#/components/parameters/CarName'
+      - $ref: '#/components/parameters/CompanyName'
 
     post:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
@@ -184,16 +189,7 @@ paths:
                 $ref: '#/components/schemas/Payload'
 
 
-  /{car_name}/command/{device-id}:
-    servers:
-      - url: http://localhost:8080/{company_name}
-        variables:
-          companyName: 
-            default: companyname
-            description: Name of the company
-          carName:
-            default: carname
-            description: Name of the car
+  /{company_name}/{car_name}/command/{device-id}:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: list_commands
@@ -220,6 +216,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/DeviceId'
       - $ref: '#/components/parameters/CarName'
+      - $ref: '#/components/parameters/CompanyName'
 
     post:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
@@ -277,9 +274,8 @@ components:
       in: path
       required: true
       schema:
-        type: integer
-        minimum: 0
-      example: 45
+        $ref: '#/components/schemas/DeviceId'
+      
 
     CarName: 
       name: car_name 
@@ -287,9 +283,20 @@ components:
       in: path 
       required: true 
       schema: 
-        type: integer 
-        pattern: "^[0-9a-z_]$"
+        type: string
+        pattern: "^[0-9a-z_]+$"
         example: auto_123
+
+    CompanyName: 
+      name: company_name
+      description: Name of the company
+      in: path 
+      required: true 
+      schema: 
+        type: string
+        pattern: "^[0-9a-z_]+$"
+        example: company_xyz
+  
 
   schemas:
     Car:
@@ -373,3 +380,15 @@ components:
       type: integer 
       minimum: 0 
       example: 42
+
+
+# Cleaning up the statuses/commands:
+# - every command and status has a TIMESTAMP and a KEY denoting a device, to/by which the command/status was sent
+# - on a regular basis (e.g., every minute), a part of commands/statuses is deleted, if their timestamp is less or equal to current timestamp minus some specified period (e.g., 1 hour)
+# - the method for posting new commands automatically detects, if a device key assigned to this new command also correspond to at least on status in the database - if not, the command is rejected
+# - it is possible, that some commands remain in the database, whose device key does not now belong to any status
+# - if after N minutes a new status is posted with the device key assigned, that was once assigned to other status (now deleted) in the database, 
+#   all the commands having the same device key assigned have to be deleted from the database. If the timestamp of such a command is GREATER, a warning should be raised/logged (it is an invalid timestamp value, 
+#   because, as mentioned previously, no command could have been added after deleting the last status with the given device key)
+
+

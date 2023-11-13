@@ -3,13 +3,15 @@ from __future__ import annotations
 
 from typing import ClassVar, List, Optional
 import dataclasses
-from sqlalchemy.orm import Session, Mapped, mapped_column
+from sqlalchemy.orm import Session, Mapped, mapped_column, relationship
 from sqlalchemy import insert, select
 from sqlalchemy import String, Integer, JSON
 
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
 from fleetv2_http_api.models.device import Message, DeviceId
 from fleetv2_http_api.impl.database_controller import connection_source, Base
+
+from fleetv2_http_api.impl.car_controller import CarBase
 
 
 DATA_RETENTION_PERIOD_IN_MS = 3600000 # 1 hour
@@ -20,10 +22,9 @@ def timestamp()->int:
     return int(__time()*1000)
 
 
-
 @dataclasses.dataclass
 class MessageBase(Base):
-    __tablename__:ClassVar[str] = "device"
+    __tablename__:ClassVar[str] = "message"
     timestamp:Mapped[int] = mapped_column(primary_key=True)
     sent_order:Mapped[int] = mapped_column(primary_key=True)
 
@@ -68,8 +69,48 @@ class MessageBase(Base):
             ),
             payload=Payload(self.payload_type, self.payload_encoding, self.payload_data)
         )
+    
 
-def available_devices(module_id:Optional[int]=None)->List[DeviceId]:  # noqa: E501
+@dataclasses.dataclass
+class DeviceBase(Base):
+    __tablename__:ClassVar[str] = "device"
+
+    module_id:Mapped[int] = mapped_column(primary_key=True)
+    device_type:Mapped[int] = mapped_column(primary_key=True)
+    device_role:Mapped[str] = mapped_column(primary_key=True)
+    device_name:Mapped[str] = mapped_column()
+
+    @staticmethod
+    def from_model(model:DeviceId)->DeviceBase:
+        return DeviceBase(
+            module_id=model.module_id,
+            device_type=model.type,
+            device_role=model.role,
+            device_name=model.name
+        ) # type: ignore
+
+    def to_model(self)->DeviceId:
+        return DeviceId(
+            module_id=self.module_id, 
+            type=self.device_type, 
+            role=self.device_role, 
+            name=self.device_name
+        )
+
+
+from typing import Dict
+def add_device(company_name:str, car_name:str, body:Optional[Dict]=None)->None: 
+    if body is None: return
+    else:
+        deviceid = DeviceId.from_dict(body)
+        item = DeviceBase.from_model(deviceid)
+        with connection_source().begin() as conn:
+            stmt = insert(DeviceBase.__table__) # type: ignore
+            conn.execute(stmt, [item.__dict__])
+
+
+def available_devices(company_name:str, car_name:str, module_id:Optional[int]=None)->List[DeviceId]:  # noqa: E501
+
     devices:List[DeviceId] = list()
     with Session(connection_source()) as session:
         if module_id is not None:
