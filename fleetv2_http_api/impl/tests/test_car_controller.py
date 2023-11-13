@@ -3,7 +3,7 @@ sys.path.append(".")
 
 
 import unittest
-from fleetv2_http_api.impl.db import set_connection_source, _new_connection_source
+from fleetv2_http_api.impl.db import set_connection_source
 from fleetv2_http_api.impl.car_controller import _add_car, cars_available, _clear_cars, Car
 
 

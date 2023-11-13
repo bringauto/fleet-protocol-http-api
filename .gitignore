@@ -89,3 +89,5 @@ fleetv2_http_api/*
 
 regen.sh
 manual*.py
+
+client
