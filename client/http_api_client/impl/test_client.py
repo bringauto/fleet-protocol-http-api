@@ -24,11 +24,15 @@ class Test_Operator(unittest.TestCase):
 
 
 	def test_adding_and_viewing_new_car(self)->None:
-		# self.client.api.add_car(Car(car_name="test_car", company_name="test_company"))
+		try:
+			self.client.api.add_car(Car(car_name="test_car", company_name="test_company"))
+		except: 
+			print("Car 'test_car' already exists in the database.")
 		self.assertTrue(
 			Car(car_name="test_car", company_name="test_company") in self.client.api.cars_available()
 		)
 
+	
 
 
 if __name__=="__main__":
