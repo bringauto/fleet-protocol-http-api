@@ -3,8 +3,8 @@ sys.path.append(".")
 
 
 import unittest
-from fleetv2_http_api.impl.db import set_connection_source, connection_source, unset_connection_source
-from fleetv2_http_api.impl.db import Connection_Source_Not_Set
+from fleetv2_http_api.impl.database_controller import set_connection_source, connection_source, unset_connection_source
+from fleetv2_http_api.impl.database_controller import Connection_Source_Not_Set
 from sqlalchemy import text
 
 
