@@ -33,5 +33,4 @@ class Client(ApiClient):
         )
 
         assert(request is not None)
-        print("Client requests connection")
         self.db_api.connect_to_database(connect_to_database_request=request)

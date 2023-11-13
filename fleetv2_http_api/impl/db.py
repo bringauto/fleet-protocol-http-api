@@ -57,8 +57,6 @@ def unset_connection_source()->None:
     _connection_source = None
 
 
-from fleetv2_http_api.models.connect_to_database_request import ConnectToDatabaseRequest
-
 def connect_to_database(body=None, *args, **kwargs)->None:
     rq = body
     if rq is not None:
