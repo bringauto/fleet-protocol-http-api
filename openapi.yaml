@@ -9,15 +9,6 @@ info:
 
 servers:
   - url: http://localhost:8080
-  - url: http://localhost:8080/{company_name}/{car_name}
-    variables:
-      company_name: 
-        default: bringauto
-        description: Name of the company
-      car_name:
-        default: carname 
-        description: Name of the car
-
 
 tags: 
 - name: car
@@ -27,10 +18,8 @@ tags:
 
 paths:
   /: 
-    servers:
-      - url: http://localhost:8080
     put:
-      x-openapi-router-controller: fleetv2_http_api.impl.db
+      x-openapi-router-controller: fleetv2_http_api.impl.database_controller
       operationId: connect_to_database
       description: Connects to database
       tags: 
@@ -65,8 +54,6 @@ paths:
                   example: '1234'
 
   /cars:
-    servers:
-      - url: http://localhost:8080
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.car_controller
       operationId: cars_available
@@ -109,7 +96,14 @@ paths:
 
   /available-devices:
     servers:
-    - url: http://localhost:8080/{company_name}/{car_name}
+      - url: http://localhost:8080/{company_name}/{carName}
+        variables:
+          companyName: 
+            default: companyname
+            description: Name of the company
+          carName:
+            default: carname
+            description: Name of the car
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: available_devices
@@ -136,7 +130,12 @@ paths:
 
   /status/{device-id}:
     servers:
-    - url: http://localhost:8080/{company_name}/{car_name}
+      - url: http://localhost:8080/{company_name}
+        variables:
+          companyName: 
+            default: companyname
+            description: Name of the company
+
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: list_statuses
@@ -185,7 +184,14 @@ paths:
 
   /command/{device-id}:
     servers:
-    - url: http://localhost:8080/{company_name}/{car_name}
+      - url: http://localhost:8080/{company_name}/{carName}
+        variables:
+          companyName: 
+            default: companyname
+            description: Name of the company
+          carName:
+            default: carname
+            description: Name of the car
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: list_commands

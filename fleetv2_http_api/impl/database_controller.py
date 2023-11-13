@@ -45,6 +45,7 @@ def _new_connection_source(
     )->Engine:
 
     url = ('').join([dialect,'+',dbapi,"://",username,":",password,"@",dblocation])
+    print(f"Connecting to {url}.")
     return create_engine(url, *args, **kwargs)
 
 
@@ -58,9 +59,11 @@ def set_connection_source(
     **kwargs
     )->None:
 
+
     source = _new_connection_source(dialect, dbapi, dblocation, username, password, *args, **kwargs)
     global _connection_source
     _connection_source = source
+    print(f"New connection source: {_connection_source}")
     assert(_connection_source is not None)
     Base.metadata.create_all(source)
     
