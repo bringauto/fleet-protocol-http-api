@@ -21,8 +21,6 @@ from pydantic import validate_arguments, ValidationError
 from typing_extensions import Annotated
 from pydantic import Field
 
-from typing import Optional
-
 from http_api_client.models.connect_to_database_request import ConnectToDatabaseRequest
 
 from http_api_client.api_client import ApiClient
@@ -46,7 +44,7 @@ class DatabaseApi:
         self.api_client = api_client
 
     @validate_arguments
-    def connect_to_database(self, connect_to_database_request : Annotated[Optional[ConnectToDatabaseRequest], Field(description="Login data")] = None, **kwargs) -> None:  # noqa: E501
+    def connect_to_database(self, connect_to_database_request : Annotated[ConnectToDatabaseRequest, Field(..., description="Login data")], **kwargs) -> None:  # noqa: E501
         """connect_to_database  # noqa: E501
 
         Connects to database  # noqa: E501
@@ -56,7 +54,7 @@ class DatabaseApi:
         >>> thread = api.connect_to_database(connect_to_database_request, async_req=True)
         >>> result = thread.get()
 
-        :param connect_to_database_request: Login data
+        :param connect_to_database_request: Login data (required)
         :type connect_to_database_request: ConnectToDatabaseRequest
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
@@ -76,7 +74,7 @@ class DatabaseApi:
         return self.connect_to_database_with_http_info(connect_to_database_request, **kwargs)  # noqa: E501
 
     @validate_arguments
-    def connect_to_database_with_http_info(self, connect_to_database_request : Annotated[Optional[ConnectToDatabaseRequest], Field(description="Login data")] = None, **kwargs) -> ApiResponse:  # noqa: E501
+    def connect_to_database_with_http_info(self, connect_to_database_request : Annotated[ConnectToDatabaseRequest, Field(..., description="Login data")], **kwargs) -> ApiResponse:  # noqa: E501
         """connect_to_database  # noqa: E501
 
         Connects to database  # noqa: E501
@@ -86,7 +84,7 @@ class DatabaseApi:
         >>> thread = api.connect_to_database_with_http_info(connect_to_database_request, async_req=True)
         >>> result = thread.get()
 
-        :param connect_to_database_request: Login data
+        :param connect_to_database_request: Login data (required)
         :type connect_to_database_request: ConnectToDatabaseRequest
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional

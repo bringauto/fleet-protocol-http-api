@@ -7,16 +7,20 @@ import unittest
 
 class Test_Operator(unittest.TestCase):
 
-	def test_message_from_the_server(self)->None:
-		op = Client("http://localhost:8080")
-		op.connect_to_database(
+	def setUp(self) -> None:
+		self.client = Client("http://localhost:8080")
+		self.client.connect_to_database(
 			dialect="postgresql",
 			dbapi="psycopg",
 			location="localhost:5432",
 			username="postgres",
 			password="1234"
         )
-		# # self.assertEqual(op.api.cars_available(), [])
+
+	def test_clients_can_get_list_of_cars_after_connecting_to_database(self)->None:
+		self.assertTrue(type(self.client.api.cars_available())==list)
+
+	
 
 
 if __name__=="__main__":

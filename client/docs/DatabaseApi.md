@@ -8,7 +8,7 @@ Method | HTTP request | Description
 
 
 # **connect_to_database**
-> connect_to_database(connect_to_database_request=connect_to_database_request)
+> connect_to_database(connect_to_database_request)
 
 
 
@@ -35,10 +35,10 @@ configuration = http_api_client.Configuration(
 with http_api_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = http_api_client.DatabaseApi(api_client)
-    connect_to_database_request = http_api_client.ConnectToDatabaseRequest() # ConnectToDatabaseRequest | Login data (optional)
+    connect_to_database_request = http_api_client.ConnectToDatabaseRequest() # ConnectToDatabaseRequest | Login data
 
     try:
-        api_instance.connect_to_database(connect_to_database_request=connect_to_database_request)
+        api_instance.connect_to_database(connect_to_database_request)
     except Exception as e:
         print("Exception when calling DatabaseApi->connect_to_database: %s\n" % e)
 ```
@@ -49,7 +49,7 @@ with http_api_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **connect_to_database_request** | [**ConnectToDatabaseRequest**](ConnectToDatabaseRequest.md)| Login data | [optional] 
+ **connect_to_database_request** | [**ConnectToDatabaseRequest**](ConnectToDatabaseRequest.md)| Login data | 
 
 ### Return type
 

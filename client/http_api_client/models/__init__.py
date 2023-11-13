@@ -15,6 +15,7 @@
 
 # import models into model package
 from http_api_client.models.car import Car
+from http_api_client.models.connect_to_database_request import ConnectToDatabaseRequest
 from http_api_client.models.device_id import DeviceId
 from http_api_client.models.message import Message
 from http_api_client.models.module import Module

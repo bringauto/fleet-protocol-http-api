@@ -2,5 +2,6 @@
 
 # import apis into api package
 from http_api_client.api.car_api import CarApi
+from http_api_client.api.database_api import DatabaseApi
 from http_api_client.api.device_api import DeviceApi
 

@@ -18,6 +18,7 @@ __version__ = "1.0.0"
 
 # import apis into sdk package
 from http_api_client.api.car_api import CarApi
+from http_api_client.api.database_api import DatabaseApi
 from http_api_client.api.device_api import DeviceApi
 
 # import ApiClient
@@ -33,6 +34,7 @@ from http_api_client.exceptions import ApiException
 
 # import models into sdk package
 from http_api_client.models.car import Car
+from http_api_client.models.connect_to_database_request import ConnectToDatabaseRequest
 from http_api_client.models.device_id import DeviceId
 from http_api_client.models.message import Message
 from http_api_client.models.module import Module

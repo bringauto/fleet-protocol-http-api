@@ -55,3 +55,17 @@ def set_connection_source(
 def unset_connection_source()->None:
     global _connection_source
     _connection_source = None
+
+
+from fleetv2_http_api.models.connect_to_database_request import ConnectToDatabaseRequest
+
+def connect_to_database(body=None, *args, **kwargs)->None:
+    rq = body
+    if rq is not None:
+        set_connection_source(
+            dialect=rq["dialect"], 
+            dbapi=rq["dbapi"], 
+            dblocation=rq["location"],
+            username=rq["username"],
+            password=rq["password"]
+        )

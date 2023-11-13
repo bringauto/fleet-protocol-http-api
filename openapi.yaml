@@ -22,9 +22,48 @@ servers:
 tags: 
 - name: car
 - name: device
+- name: database
 
 
 paths:
+  /: 
+    servers:
+      - url: http://localhost:8080
+    put:
+      x-openapi-router-controller: fleetv2_http_api.impl.db
+      operationId: connect_to_database
+      description: Connects to database
+      tags: 
+        - database
+      responses:
+        '200':
+          description: Connection is estabilished
+        '500':
+          description: Cannot connect due to internal server error.
+      requestBody:
+        description: Login data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dialect:
+                  type: string
+                  example: postgresql
+                dbapi:
+                  type: string
+                  example: psycopg
+                location:
+                  type: string
+                  example: localhost:8080
+                username:
+                  type: string
+                  example: username
+                password:
+                  type: string
+                  example: '1234'
+
   /cars:
     servers:
       - url: http://localhost:8080
@@ -150,7 +189,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/All'
         - $ref: '#/components/parameters/Since'
-        
+
     parameters:
       - $ref: '#/components/parameters/DeviceId'
 
