@@ -34,6 +34,14 @@ def cars_available()->List[Car]:
             carbase = row[0]
             cars.append(CarBase.to_model(carbase))
         return cars
+    
+
+
+from typing import Optional
+def add_car(body = None)->None:
+    if body is not None:
+        car = Car(car_name=body["car_name"], company_name=body["company_name"])
+        _add_car(car)
 
  
 def _add_car(car:Car)->None:

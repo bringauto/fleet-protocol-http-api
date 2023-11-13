@@ -9,12 +9,12 @@ info:
 
 servers:
   - url: http://localhost:8080
-  - url: http://localhost:8080/{company-name}/{car-name}
+  - url: http://localhost:8080/{company_name}/{car_name}
     variables:
-      company-name: 
+      company_name: 
         default: bringauto
         description: Name of the company
-      car-name:
+      car_name:
         default: carname 
         description: Name of the car
 
@@ -83,14 +83,33 @@ paths:
                 items:
                   $ref: '#/components/schemas/Car'
               example:
-                [{company-name: 'bringauto', car-name: 'piba0258'}]
+                [{company_name: 'bringauto', car_name: 'piba0258'}]
         '500':
           description: Cannot display avaialble cars due to internal server error.
+
+    post: 
+      deprecated: true
+      x-openapi-router-controller: fleetv2_http_api.impl.car_controller
+      operationId: add_car
+      description: Add a new car
+      tags: 
+        - car
+      responses:
+        '200':
+          description: New car added
+        '500':
+          description: Cannot add car due to internal server error.
+      requestBody:
+        description: New car
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Car'
 
 
   /available-devices:
     servers:
-    - url: http://localhost:8080/{company-name}/{car-name}
+    - url: http://localhost:8080/{company_name}/{car_name}
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: available_devices
@@ -117,7 +136,7 @@ paths:
 
   /status/{device-id}:
     servers:
-    - url: http://localhost:8080/{company-name}/{car-name}
+    - url: http://localhost:8080/{company_name}/{car_name}
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: list_statuses
@@ -166,7 +185,7 @@ paths:
 
   /command/{device-id}:
     servers:
-    - url: http://localhost:8080/{company-name}/{car-name}
+    - url: http://localhost:8080/{company_name}/{car_name}
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: list_commands
@@ -259,14 +278,14 @@ components:
       description: The subject of control.
       type: object
       required:
-        - company-name
-        - car-name
+        - company_name
+        - car_name
       properties:
-        company-name:
+        company_name:
           type: string
           example: "bringauto"
           pattern: '^[a-z0-9_]+$'
-        car-name:
+        car_name:
           type: string
           example: piba09223
           pattern: '^[a-z0-9_]+$'

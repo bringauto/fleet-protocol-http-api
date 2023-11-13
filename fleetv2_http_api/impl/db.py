@@ -17,14 +17,14 @@ def connect_to_database(body=None)->None:
         )
 
 
-_connection_source = Optional[Engine]
+_connection_source:Optional[Engine] = None
 
 
 def connection_source()->Engine:
     if isinstance(_connection_source, Engine): 
         return _connection_source
     else: 
-        raise Connection_Source_Not_Set
+        raise Connection_Source_Not_Set(_connection_source)
 
 
 class Connection_Source_Not_Set(Exception): pass
@@ -45,6 +45,7 @@ def _new_connection_source(
     )->Engine:
 
     url = ('').join([dialect,'+',dbapi,"://",username,":",password,"@",dblocation])
+    print(f"New connection: {url}")
     return create_engine(url, *args, **kwargs)
 
 
@@ -58,9 +59,11 @@ def set_connection_source(
     **kwargs
     )->None:
 
+    print("Setting connection")
     source = _new_connection_source(dialect, dbapi, dblocation, username, password, *args, **kwargs)
     global _connection_source
     _connection_source = source
+    assert(_connection_source is not None)
     Base.metadata.create_all(source)
     
 

@@ -115,7 +115,7 @@ class DeviceApi:
         """
 
         _hosts = [
-            'http://localhost:8080/{company-name}/{car-name}'
+            'http://localhost:8080/{company_name}/{car_name}'
         ]
         _host = _hosts[0]
         if kwargs.get('_host_index'):
@@ -277,7 +277,7 @@ class DeviceApi:
         """
 
         _hosts = [
-            'http://localhost:8080/{company-name}/{car-name}'
+            'http://localhost:8080/{company_name}/{car_name}'
         ]
         _host = _hosts[0]
         if kwargs.get('_host_index'):
@@ -447,7 +447,7 @@ class DeviceApi:
         """
 
         _hosts = [
-            'http://localhost:8080/{company-name}/{car-name}'
+            'http://localhost:8080/{company_name}/{car_name}'
         ]
         _host = _hosts[0]
         if kwargs.get('_host_index'):
@@ -613,7 +613,7 @@ class DeviceApi:
         """
 
         _hosts = [
-            'http://localhost:8080/{company-name}/{car-name}'
+            'http://localhost:8080/{company_name}/{car_name}'
         ]
         _host = _hosts[0]
         if kwargs.get('_host_index'):
@@ -775,7 +775,7 @@ class DeviceApi:
         """
 
         _hosts = [
-            'http://localhost:8080/{company-name}/{car-name}'
+            'http://localhost:8080/{company_name}/{car_name}'
         ]
         _host = _hosts[0]
         if kwargs.get('_host_index'):

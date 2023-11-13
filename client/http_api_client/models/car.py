@@ -25,9 +25,9 @@ class Car(BaseModel):
     """
     The subject of control.  # noqa: E501
     """
-    company_name: constr(strict=True) = Field(..., alias="company-name")
-    car_name: constr(strict=True) = Field(..., alias="car-name")
-    __properties = ["company-name", "car-name"]
+    company_name: constr(strict=True) = Field(...)
+    car_name: constr(strict=True) = Field(...)
+    __properties = ["company_name", "car_name"]
 
     @validator('company_name')
     def company_name_validate_regular_expression(cls, value):
@@ -79,8 +79,8 @@ class Car(BaseModel):
             return Car.parse_obj(obj)
 
         _obj = Car.parse_obj({
-            "company_name": obj.get("company-name"),
-            "car_name": obj.get("car-name")
+            "company_name": obj.get("company_name"),
+            "car_name": obj.get("car_name")
         })
         return _obj
 

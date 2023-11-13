@@ -12,8 +12,9 @@ class Client(ApiClient):
     def __init__(self, connect_to:str)->None:
         super().__init__()
         self.configuration.host = connect_to
-        self.db_api = DatabaseApi(self)
+        self.__db_api = DatabaseApi(self)
         self.api = CarApi(self)
+
 
     def connect_to_database(
             self, 
@@ -33,4 +34,9 @@ class Client(ApiClient):
         )
 
         assert(request is not None)
-        self.db_api.connect_to_database(connect_to_database_request=request)
+        self.__db_api.connect_to_database(connect_to_database_request=request)
+        
+
+
+    def register_new_car(self, car_name:str, company_name:str)->None:
+        pass

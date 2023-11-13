@@ -382,14 +382,14 @@ class Configuration:
                 'description': "No description provided",
             },
             {
-                'url': "http://localhost:8080/{company-name}/{car-name}",
+                'url': "http://localhost:8080/{company_name}/{car_name}",
                 'description': "No description provided",
                 'variables': {
-                    'company-name': {
+                    'company_name': {
                         'description': "Name of the company",
                         'default_value': "bringauto",
                         },
-                    'car-name': {
+                    'car_name': {
                         'description': "Name of the car",
                         'default_value': "carname",
                         }
