@@ -38,26 +38,6 @@ paths:
         '500':
           description: Cannot display avaialble cars due to internal server error.
 
-    post: 
-      deprecated: true
-      x-openapi-router-controller: fleetv2_http_api.impl.car_controller
-      operationId: add_car
-      description: Add a new car
-      tags: 
-        - car
-      responses:
-        '200':
-          description: New car added
-        '500':
-          description: Cannot add car due to internal server error.
-      requestBody:
-        description: New car
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Car'
-
-
   /{company_name}/{car_name}/available-devices:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
