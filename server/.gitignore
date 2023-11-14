@@ -67,12 +67,16 @@ target/
 
 .openapi-generator
 .openapi-generator-ignore
-.travis.ymal
 Dockerfile
 README.md
 requirements.txt
 test-requirements.txt
 tox.ini
+openapitools.json
+git_push.sh 
+.travis.yml 
+setup.py
+
 
 
 fleetv2_http_api
