@@ -10,25 +10,6 @@ tags:
 - name: device
 - name: database
 paths:
-  /:
-    put:
-      description: Connects to database
-      operationId: connect_to_database
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/connect_to_database_request'
-        description: Login data
-        required: true
-      responses:
-        "200":
-          description: Connection is estabilished
-        "500":
-          description: Cannot connect due to internal server error.
-      tags:
-      - database
-      x-openapi-router-controller: fleetv2_http_api.impl.database_controller
   /cars:
     get:
       description: It returns the list of available Cars.
@@ -591,27 +572,3 @@ components:
       minimum: 0
       title: Id
       type: integer
-    connect_to_database_request:
-      properties:
-        dialect:
-          example: postgresql
-          title: dialect
-          type: string
-        dbapi:
-          example: psycopg
-          title: dbapi
-          type: string
-        location:
-          example: localhost:8080
-          title: location
-          type: string
-        username:
-          example: username
-          title: username
-          type: string
-        password:
-          example: "1234"
-          title: password
-          type: string
-      title: connect_to_database_request
-      type: object

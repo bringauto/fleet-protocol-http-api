@@ -6,7 +6,7 @@ import dataclasses
 
 from sqlalchemy import insert, delete, select
 from sqlalchemy.orm import Session, Mapped, mapped_column
-from fleetv2_http_api.impl.database_controller import Base, connection_source
+from database_controller import Base, connection_source
 
 
 from ..controllers.car_controller import Car

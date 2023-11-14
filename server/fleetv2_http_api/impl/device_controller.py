@@ -3,16 +3,15 @@ from __future__ import annotations
 
 from typing import ClassVar, List, Optional
 import dataclasses
-from sqlalchemy.orm import Session, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Session, Mapped, mapped_column
 from sqlalchemy import insert, select
 from sqlalchemy import String, Integer, JSON
 
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Message
-from fleetv2_http_api.impl.database_controller import connection_source, Base
+from database_controller import connection_source, Base
 
-from fleetv2_http_api.impl.car_controller import CarBase
 
 
 DATA_RETENTION_PERIOD_IN_MS = 3600000 # 1 hour

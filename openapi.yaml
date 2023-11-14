@@ -17,42 +17,6 @@ tags:
 
 
 paths:
-  /: 
-    put:
-      x-openapi-router-controller: fleetv2_http_api.impl.database_controller
-      operationId: connect_to_database
-      description: Connects to database
-      tags: 
-        - database
-      responses:
-        '200':
-          description: Connection is estabilished
-        '500':
-          description: Cannot connect due to internal server error.
-      requestBody:
-        description: Login data
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                dialect:
-                  type: string
-                  example: postgresql
-                dbapi:
-                  type: string
-                  example: psycopg
-                location:
-                  type: string
-                  example: localhost:8080
-                username:
-                  type: string
-                  example: username
-                password:
-                  type: string
-                  example: '1234'
-
   /cars:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.car_controller
