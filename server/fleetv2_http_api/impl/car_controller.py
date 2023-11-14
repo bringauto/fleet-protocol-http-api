@@ -26,14 +26,18 @@ class CarBase(Base):
         return Car(car_name=base.name, company_name=base.owner)
 
  
-def cars_available()->List[Car]:
+def available_cars()->List[Car]:
     with Session(connection_source()) as session:
         result = session.execute(select(CarBase))
         cars:List[Car] = list()
         for row in result:
             carbase = row[0]
-            cars.append(CarBase.to_model(carbase))
+            car_info = CarBase.to_model(carbase)
+            cars.append(_serialized_car_info(car_info))
         return cars
 
+
+def _serialized_car_info(car:Car)->str:
+    return f"{car.company_name}_{car.car_name}"
 
     

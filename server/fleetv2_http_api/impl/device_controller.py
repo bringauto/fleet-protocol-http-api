@@ -28,6 +28,9 @@ class MessageBase(Base):
     timestamp:Mapped[int] = mapped_column(primary_key=True)
     sent_order:Mapped[int] = mapped_column(primary_key=True)
 
+    company_name:Mapped[str] = mapped_column(primary_key=True)
+    car_name:Mapped[str] = mapped_column(primary_key=True)
+
     module_id:Mapped[int] = mapped_column(primary_key=True)
     device_type:Mapped[int] = mapped_column(primary_key=True)
     device_role:Mapped[str] = mapped_column(primary_key=True)
@@ -38,10 +41,14 @@ class MessageBase(Base):
     payload_data:Mapped[dict] = mapped_column(JSON)
     
     @staticmethod
-    def from_model(model:Message, order:int=0)->MessageBase:
+    def from_model(company_name:str, car_name:str, model:Message, order:int=0)->MessageBase:
         return MessageBase(
             timestamp=model.timestamp,
             sent_order=order,
+
+            company_name=company_name,
+            car_name=car_name,
+
             module_id = model.id.module_id,
             device_type = model.id.type,
             device_role = model.id.role,
@@ -52,10 +59,10 @@ class MessageBase(Base):
         )
 
     @staticmethod
-    def from_models(*models:Message)->List[MessageBase]:
+    def from_models(company_name:str, car_name:str, *models:Message)->List[MessageBase]:
         bases:List[MessageBase] = list()
         for k in range(len(models)):
-            bases.append(MessageBase.from_model(models[k], k))
+            bases.append(MessageBase.from_model(company_name, car_name, models[k], k))
         return bases
 
     def to_model(self)->Message:
@@ -96,35 +103,36 @@ class DeviceBase(Base):
             role=self.device_role, 
             name=self.device_name
         )
-
-
-from typing import Dict
-def add_device(company_name:str, car_name:str, body:Optional[Dict]=None)->None: 
-    if body is None: return
-    else:
-        deviceid = DeviceId.from_dict(body)
-        item = DeviceBase.from_model(deviceid)
-        with connection_source().begin() as conn:
-            stmt = insert(DeviceBase.__table__) # type: ignore
-            conn.execute(stmt, [item.__dict__])
-
+    
 
 def available_devices(company_name:str, car_name:str, module_id:Optional[int]=None)->List[DeviceId]:  # noqa: E501
-
-    devices:List[DeviceId] = list()
+    device_ids:List[DeviceId] = list()
     with Session(connection_source()) as session:
         if module_id is not None:
-            result = session.execute(select(MessageBase).where(MessageBase.__table__.c.module_id == module_id))
+            result = session.execute(
+                select(MessageBase).where(
+                    MessageBase.__table__.c.module_id == module_id,
+                    MessageBase.__table__.c.company_name == company_name,
+                    MessageBase.__table__.c.car_name == car_name
+                )
+            )
         else:
-            result = session.execute(select(MessageBase))
+            result = session.execute(
+                select(MessageBase).where(
+                    MessageBase.__table__.c.company_name == company_name,
+                    MessageBase.__table__.c.car_name == car_name
+                )
+            )
         for row in result:
             devicebase:MessageBase = row[0]
-            devices.append(devicebase.to_model().id)
+            serialized_id = _serialized_device_id(devicebase.to_model().id)
+            device_ids.append(serialized_id)
+
+    return device_ids
     
-    if module_id is not None and devices==[]: 
-        return [], 404 # type: ignore
-    else:
-        return devices
+
+def _serialized_device_id(device_id:DeviceId)->str:
+    return f"{device_id.module_id}_{device_id.type}_{device_id.role}"
 
 
 def list_commands(device_id:DeviceId, all=None, since=None):  # noqa: E501
@@ -174,26 +182,23 @@ def send_commands(device_id, payload:List[Payload]=list()):  # noqa: E501
     tstamp = timestamp()
     _remove_old_messages(tstamp)
     msgs = [Message(timestamp=tstamp, id=device_id, payload=p) for p in payload]
-    _add_msg(*msgs)
+    __send_messages_to_database(*msgs)
 
 
-def send_statuses(device_id:DeviceId, payload:List[Payload]=list()):  # noqa: E501
+def send_statuses(company_name:str, car_name:str, device_id:DeviceId, payload:List[Payload]=list()):  # noqa: E501
     tstamp = timestamp()
-    _remove_old_messages(tstamp)
-    msgs = [Message(timestamp=tstamp, id=device_id, payload=p) for p in payload]
-    _add_msg(*msgs)
+    statuses:List[Message] = list()
+    for p in payload: statuses.append(Message(tstamp, device_id, p))
+    __send_messages_to_database(company_name, car_name, *statuses)
 
 
-def _add_msg(*messages:Message)->None: 
+def __send_messages_to_database(company_name:str, car_name:str, *messages:Message)->None: 
     with connection_source().begin() as conn:
         stmt = insert(MessageBase.__table__) # type: ignore
-        msg_base = MessageBase.from_models(*messages)
+        msg_base = MessageBase.from_models(company_name, car_name, *messages)
         data_list = [msg.__dict__ for msg in msg_base]
         conn.execute(stmt, data_list)
 
-def _count_currently_stored_messages()->int:
-    with Session(connection_source()) as session:
-        return session.query(MessageBase).count()
 
 from sqlalchemy import delete
 def _remove_old_messages(current_timestamp:int)->None:  

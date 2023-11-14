@@ -20,7 +20,7 @@ paths:
   /cars:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.car_controller
-      operationId: cars_available
+      operationId: available_cars
       description: It returns the list of available Cars.
       tags: 
         - car
@@ -80,9 +80,9 @@ paths:
               $ref: '#/components/schemas/DeviceId'
 
     parameters:
-      - $ref: '#/components/parameters/CarName'
       - $ref: '#/components/parameters/CompanyName'
-      
+      - $ref: '#/components/parameters/CarName'
+
 
   /{company_name}/{car_name}/status/{device-id}:
     get:
@@ -108,9 +108,10 @@ paths:
         - $ref: '#/components/parameters/Since'
 
     parameters:
-      - $ref: '#/components/parameters/DeviceId'
-      - $ref: '#/components/parameters/CarName'
       - $ref: '#/components/parameters/CompanyName'
+      - $ref: '#/components/parameters/CarName'
+      - $ref: '#/components/parameters/DeviceId'
+
 
     post:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
@@ -158,9 +159,9 @@ paths:
         - $ref: '#/components/parameters/Since'
 
     parameters:
-      - $ref: '#/components/parameters/DeviceId'
-      - $ref: '#/components/parameters/CarName'
       - $ref: '#/components/parameters/CompanyName'
+      - $ref: '#/components/parameters/CarName'
+      - $ref: '#/components/parameters/DeviceId'
 
     post:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller

@@ -4,11 +4,11 @@ All URIs are relative to *http://localhost:8080*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**cars_available**](CarApi.md#cars_available) | **GET** /cars | 
+[**available_cars**](CarApi.md#available_cars) | **GET** /cars | 
 
 
-# **cars_available**
-> List[Car] cars_available()
+# **available_cars**
+> List[Car] available_cars()
 
 
 
@@ -37,11 +37,11 @@ with http_api_client.ApiClient(configuration) as api_client:
     api_instance = http_api_client.CarApi(api_client)
 
     try:
-        api_response = api_instance.cars_available()
-        print("The response of CarApi->cars_available:\n")
+        api_response = api_instance.available_cars()
+        print("The response of CarApi->available_cars:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling CarApi->cars_available: %s\n" % e)
+        print("Exception when calling CarApi->available_cars: %s\n" % e)
 ```
 
 
