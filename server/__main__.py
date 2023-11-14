@@ -19,13 +19,33 @@ import sys
 sys.path.append("server")
 
 
-from server.fleetv2_http_api.__main__ import main as orig_main
+from fleetv2_http_api.__main__ import main as run_server
+from server.database.database_controller import set_connection_source
 
 
-def main()->None:
-    orig_main()
+def connect_to_database()->None:
+    set_connection_source(
+        dialect="postgresql",
+        dbapi="psycopg",
+        dblocation="localhost:5432",
+        username="postgres",
+        password="1234"
+    )
+
+
+import time
+from apscheduler.schedulers.background import BackgroundScheduler
+def __print_current_time()->None:
+    print(time.time())
+
+
+def schedule_message_cleanup()->None:
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(func=__print_current_time, trigger="interval", seconds=1)
+    scheduler.start()
 
 
 if __name__ == '__main__':
-    print("\n\nStarting the server\n\n")
-    main()
+    connect_to_database()
+    # schedule_message_cleanup()
+    run_server()

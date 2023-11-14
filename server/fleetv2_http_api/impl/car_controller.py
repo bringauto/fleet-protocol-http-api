@@ -6,7 +6,7 @@ import dataclasses
 
 from sqlalchemy import insert, delete, select
 from sqlalchemy.orm import Session, Mapped, mapped_column
-from database_controller import Base, connection_source
+from database.database_controller import Base, connection_source
 
 
 from ..controllers.car_controller import Car

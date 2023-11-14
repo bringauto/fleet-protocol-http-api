@@ -10,7 +10,7 @@ from sqlalchemy import String, Integer, JSON
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Message
-from database_controller import connection_source, Base
+from database.database_controller import connection_source, Base
 
 
 

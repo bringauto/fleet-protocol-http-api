@@ -3,7 +3,7 @@ sys.path.append("server")
 
 
 import unittest
-from database_controller import set_connection_source
+from database.database_controller import set_connection_source
 from fleetv2_http_api.impl.device_controller import _add_msg, available_devices, timestamp
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Message, Payload
