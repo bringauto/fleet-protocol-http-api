@@ -109,7 +109,6 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertEqual(statuses[0].payload, self.status_payload_example)
 
-
     def test_sent_commands(self)->None:
         device_id = DeviceId(module_id=42, type=7, role="testing_device_x", name="Testing Device")
         send_statuses(
@@ -138,9 +137,11 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
             payload=[self.command_payload_example]
         )
         self.assertEqual(response[1], 404)
+
+
+
     
 
-# from fleetv2_http_api.impl.device_controller import list_statuses, list_commands, send_commands, send_statuses
 # from unittest.mock import patch
 
 

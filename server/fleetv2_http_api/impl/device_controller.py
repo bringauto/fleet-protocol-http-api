@@ -10,7 +10,6 @@ from sqlalchemy import String, Integer, JSON
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Message
-from fleetv2_http_api.impl.car_controller import Car
 from database.database_controller import connection_source, Base, timestamp, DATA_RETENTION_PERIOD_IN_MS
 from database.device_ids import store_device_id_if_new, device_ids
 
