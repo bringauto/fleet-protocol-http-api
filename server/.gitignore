@@ -64,3 +64,20 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+
+
+.dockerignore
+Dockerfile
+git_push.sh 
+setup.py 
+test-requirements.txt 
+requirements.txt 
+tox.ini 
+README.md 
+.travis.yml
+.openapi-generator
+openapitools.json
+
+
+fleetv2_http_api
+!fleetv2_http_api/impl
