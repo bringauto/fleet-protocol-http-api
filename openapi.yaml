@@ -32,9 +32,10 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Car'
+                  type: string
+                  pattern: "^[a-z0-9_]+$"
               example:
-                [{company_name: 'bringauto', car_name: 'piba0258'}]
+                ['company_xy_car_123', 'bringauto_piba0258']
         '500':
           description: Cannot display avaialble cars due to internal server error.
 
@@ -54,11 +55,15 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/DeviceId'
+        '404':
+          description: Either company or car name specified in the url was not found.
         '500':
           description: Cannot display available devices due to internal server error.
       
       parameters:
-        - $ref: "#/components/parameters/ModuleId"
+      - $ref: '#/components/parameters/CompanyName'
+      - $ref: '#/components/parameters/CarName'
+      - $ref: "#/components/parameters/ModuleId"
 
 
   /{company_name}/{car_name}/status/{device-id}:
@@ -226,36 +231,6 @@ components:
   
 
   schemas:
-    Car:
-      description: The subject of control.
-      type: object
-      required:
-        - company_name
-        - car_name
-      properties:
-        company_name:
-          type: string
-          example: "bringauto"
-          pattern: '^[a-z0-9_]+$'
-        car_name:
-          type: string
-          example: piba09223
-          pattern: '^[a-z0-9_]+$'
-
-    Module:
-      description: Car module, representing set of Device 
-      type: object 
-      required: 
-      - id
-      - device-list
-      properties: 
-        id: 
-          $ref: '#/components/schemas/Id'
-        device-list:
-          type: array
-          items: 
-            $ref: '#/components/schemas/DeviceId'
-
     Message: 
       description: Physical device or program located on the car.
       type: object 

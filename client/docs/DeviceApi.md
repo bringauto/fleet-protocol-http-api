@@ -12,7 +12,7 @@ Method | HTTP request | Description
 
 
 # **available_devices**
-> List[DeviceId] available_devices(module_id=module_id)
+> List[DeviceId] available_devices(company_name, car_name, module_id=module_id)
 
 
 
@@ -39,10 +39,12 @@ configuration = http_api_client.Configuration(
 with http_api_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = http_api_client.DeviceApi(api_client)
+    company_name = 'company_xyz' # str | Name of the company
+    car_name = 'auto_123' # str | Name of the Car
     module_id = 785 # object | An Id of module. (optional)
 
     try:
-        api_response = api_instance.available_devices(module_id=module_id)
+        api_response = api_instance.available_devices(company_name, car_name, module_id=module_id)
         print("The response of DeviceApi->available_devices:\n")
         pprint(api_response)
     except Exception as e:
@@ -55,6 +57,8 @@ with http_api_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
+ **company_name** | **str**| Name of the company | 
+ **car_name** | **str**| Name of the Car | 
  **module_id** | [**object**](.md)| An Id of module. | [optional] 
 
 ### Return type
@@ -74,6 +78,7 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | A list of available devices. |  -  |
+**404** | Either company or car name specified in the url was not found. |  -  |
 **500** | Cannot display available devices due to internal server error. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

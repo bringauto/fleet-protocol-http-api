@@ -8,7 +8,7 @@ Method | HTTP request | Description
 
 
 # **available_cars**
-> List[Car] available_cars()
+> List[str] available_cars()
 
 
 
@@ -20,7 +20,6 @@ It returns the list of available Cars.
 import time
 import os
 import http_api_client
-from http_api_client.models.car import Car
 from http_api_client.rest import ApiException
 from pprint import pprint
 
@@ -51,7 +50,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**List[Car]**](Car.md)
+**List[str]**
 
 ### Authorization
 
