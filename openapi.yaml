@@ -275,7 +275,12 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/DeviceId'
-      
+      example: 
+        module_id: 42
+        type: 8
+        role: device_role
+        name: 'Device Name'
+
 
     CarName: 
       name: car_name 
@@ -383,12 +388,24 @@ components:
 
 
 # Cleaning up the statuses/commands:
-# - every command and status has a TIMESTAMP and a KEY denoting a device, to/by which the command/status was sent
-# - on a regular basis (e.g., every minute), a part of commands/statuses is deleted, if their timestamp is less or equal to current timestamp minus some specified period (e.g., 1 hour)
-# - the method for posting new commands automatically detects, if a device key assigned to this new command also correspond to at least on status in the database - if not, the command is rejected
-# - it is possible, that some commands remain in the database, whose device key does not now belong to any status
-# - if after N minutes a new status is posted with the device key assigned, that was once assigned to other status (now deleted) in the database, 
-#   all the commands having the same device key assigned have to be deleted from the database. If the timestamp of such a command is GREATER, a warning should be raised/logged (it is an invalid timestamp value, 
-#   because, as mentioned previously, no command could have been added after deleting the last status with the given device key)
+#
+# - every command and status has a TIMESTAMP and a KEY denoting a device, 
+#   to/by which the command/status was sent
+#
+# - on a regular basis (e.g., every minute), a part of commands/statuses is deleted, 
+#   if their timestamp is less or equal to current timestamp minus some specified period (e.g., 1 hour)
+#
+# - the method for posting new commands automatically detects, if a device key assigned 
+#   to this new command also correspond to at least on status in the database. 
+#   If not, the command is rejected
+#
+# - it is possible, that some commands remain in the database, whose device key does not now belong 
+#   to any status
+#
+# - if after N minutes a new status is posted with the device key assigned, that was once assigned 
+#   to other status (now deleted) in the database, all the commands having the same device key assigned
+#   have to be deleted from the database. If the timestamp of such a command is GREATER, a warning 
+#   should be raised/logged (it is an invalid timestamp value, because, as mentioned previously, 
+#   no command could have been added after deleting the last status with the given device key)
 
 
