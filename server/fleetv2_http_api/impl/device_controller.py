@@ -30,28 +30,58 @@ def available_devices(company_name:str, car_name:str, module_id:Optional[int]=No
         return __available_devices_for_module(car, module_id)
 
 
-def list_commands(device_id:DeviceId, all=None, since=None):  # noqa: E501
-    return __list_messages(1, device_id, all, since)
+def list_commands(
+    company_name:str, 
+    car_name:str, 
+    device_id:DeviceId, 
+    all=None, 
+    since=None
+    )->Tuple[List[Message], int]:  # noqa: E501
+
+    commands =  __list_messages(company_name, car_name, 1, device_id, all, since)
+    if commands: return commands, 200
+    else: return [], 404
 
 
-def list_statuses(device_id:DeviceId, all=None, since:Optional[int]=None)->List[Message]:  # noqa: E501
-    return __list_messages(0, device_id, all, since)
+def list_statuses(
+    company_name:str, 
+    car_name:str, 
+    device_id:DeviceId, 
+    all=None, 
+    since:Optional[int]=None
+    )->Tuple[List[Message], int]:  # noqa: E501
+
+    statuses = __list_messages(company_name, car_name, 0, device_id, all, since)
+    if statuses: return statuses, 200
+    else: return [], 404
 
 
 from sqlalchemy import func, and_
-def __list_messages(type:int, device_id:DeviceId, all=None, since:Optional[int]=None)->List[Message]:  # noqa: E501
+def __list_messages(
+    company_name:str, 
+    car_name:str, 
+    type:int, 
+    device_id:DeviceId, 
+    all=None, 
+    since:Optional[int]=None
+    )->List[Message]:  # noqa: E501
+    
     statuses:List[Message] = list()
     with Session(connection_source()) as session:
         table = MessageBase.__table__
         selection = select(MessageBase).where(table.c.payload_type == type)
         if all is not None:
             selection = selection.where(and_(
+                table.c.company_name == company_name,
+                table.c.car_name == car_name,
                 table.c.module_id == device_id.module_id,
                 table.c.device_type == device_id.type,
                 table.c.device_role == device_id.role,
             ))
         elif since is not None:
             selection = selection.where(and_(
+                table.c.company_name == company_name,
+                table.c.car_name == car_name,
                 table.c.module_id == device_id.module_id,
                 table.c.device_type == device_id.type,
                 table.c.device_role == device_id.role,
@@ -61,7 +91,11 @@ def __list_messages(type:int, device_id:DeviceId, all=None, since:Optional[int]=
             # return newest status or oldest command
             extreme_func = func.max if type==0 else func.min
             extreme_value = session.query(extreme_func(table.c.timestamp)).\
-                where(table.c.payload_type == type).scalar()    
+                where(
+                    table.c.company_name == company_name,
+                    table.c.car_name == car_name,
+                    table.c.payload_type == type
+                ).scalar()    
             selection = selection.where(table.c.timestamp == extreme_value)
             
         result = session.execute(selection)
@@ -69,7 +103,7 @@ def __list_messages(type:int, device_id:DeviceId, all=None, since:Optional[int]=
             base:MessageBase = row[0]
             statuses.append(base.to_model())
         return statuses
-
+    
 
 def send_commands(company_name:str, car_name:str, device_id:DeviceId, payload:List[Payload]=list())->Tuple[str, int]:  # noqa: E501
     car = _serialized_car_info(company_name, car_name)
@@ -82,6 +116,7 @@ def send_commands(company_name:str, car_name:str, device_id:DeviceId, payload:Li
         _remove_old_messages(tstamp)
         commands = [Message(timestamp=tstamp, id=device_id, payload=p) for p in payload]
         __send_messages_to_database(company_name, car_name, *commands)
+        return "", 200
 
 
 def send_statuses(company_name:str, car_name:str, device_id:DeviceId, payload:List[Payload]=list())->Tuple[str,int]:  # noqa: E501
