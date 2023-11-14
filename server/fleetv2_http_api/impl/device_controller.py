@@ -10,16 +10,7 @@ from sqlalchemy import String, Integer, JSON
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Message
-from database.database_controller import connection_source, Base
-
-
-
-DATA_RETENTION_PERIOD_IN_MS = 3600000 # 1 hour
-
-from time import time as __time
-def timestamp()->int: 
-    """Timestamp in milliseconds."""
-    return int(__time()*1000)
+from database.database_controller import connection_source, Base, timestamp
 
 
 @dataclasses.dataclass
