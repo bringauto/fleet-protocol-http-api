@@ -9,7 +9,7 @@ from fleetv2_http_api.impl.device_controller import available_devices, available
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Payload
 
-from fleetv2_http_api.impl.device_controller import send_statuses, send_commands
+from fleetv2_http_api.impl.device_controller import send_statuses, send_commands, list_statuses
 from fleetv2_http_api.impl.device_controller import _serialized_device_id, _serialized_car_info
 from database.device_ids import clear_device_ids
 
@@ -91,7 +91,19 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
         )
         clear_device_ids()
 
-    def test_commands_send_to_nonexistent_device_return_404_error(self)->None:
+    def test_listing_sent_statuses(self)->None:
+        device_id = DeviceId(module_id=42, type=7, role="testing_device_x", name="Testing Device")
+        send_statuses(
+            company_name="test_company", 
+            car_name="test_car", 
+            device_id=device_id, 
+            payload=[self.payload_example]
+        )
+        statuses = list_statuses(device_id)
+        self.assertEqual(len(statuses), 1)
+        self.assertEqual(statuses[0].payload, self.payload_example)
+
+    def test_commands_send_to_nonexistent_device_return_404_code(self)->None:
         not_connected_device_id = DeviceId(module_id=42, type=7, role="test_device_x", name="Not_Connected_Device")
         response = send_commands(
             company_name="test_company", 
@@ -101,7 +113,6 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
         )
         self.assertEqual(response[1], 404)
     
-
 
 # from fleetv2_http_api.impl.device_controller import list_statuses, list_commands, send_commands, send_statuses
 # from unittest.mock import patch

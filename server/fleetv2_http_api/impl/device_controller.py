@@ -31,12 +31,10 @@ def available_devices(company_name:str, car_name:str, module_id:Optional[int]=No
 
 
 def list_commands(device_id:DeviceId, all=None, since=None):  # noqa: E501
-    _remove_old_messages(timestamp())
     return __list_messages(1, device_id, all, since)
 
 
 def list_statuses(device_id:DeviceId, all=None, since:Optional[int]=None)->List[Message]:  # noqa: E501
-    _remove_old_messages(timestamp())
     return __list_messages(0, device_id, all, since)
 
 
