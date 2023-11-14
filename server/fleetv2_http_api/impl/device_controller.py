@@ -53,8 +53,66 @@ def list_statuses(
     statuses = __list_messages(company_name, car_name, 0, device_id, all, since)
     if statuses: return statuses, 200
     else: return [], 404
+    
+
+def send_commands(company_name:str, car_name:str, device_id:DeviceId, payload:List[Payload]=list())->Tuple[str, int]:  # noqa: E501
+    car = _serialized_car_info(company_name, car_name)
+    if car not in device_ids():
+        return "", 404
+    elif device_id.module_id not in device_ids()[car]:
+        return "", 404
+    else:
+        tstamp = timestamp()
+        _remove_old_messages(tstamp)
+        commands = [Message(timestamp=tstamp, id=device_id, payload=p) for p in payload]
+        __send_messages_to_database(company_name, car_name, *commands)
+        return "", 200
 
 
+def send_statuses(company_name:str, car_name:str, device_id:DeviceId, payload:List[Payload]=list())->Tuple[str,int]:  # noqa: E501
+    tstamp = timestamp()
+    statuses:List[Message] = list()
+    for p in payload: 
+        statuses.append(Message(tstamp, device_id, p))
+    __send_messages_to_database(company_name, car_name, *statuses)
+    store_device_id_if_new(
+        car_info = _serialized_car_info(company_name, car_name), 
+        module_id = device_id.module_id, 
+        serialized_device_id = _serialized_device_id(device_id)
+    )
+    return "", 200
+
+
+
+from sqlalchemy import delete
+def _remove_old_messages(current_timestamp:int)->None:  
+    with connection_source().begin() as conn: 
+        oldest_timestamp_to_be_kept = current_timestamp-DATA_RETENTION_PERIOD_IN_MS
+        stmt = delete(MessageBase.__table__).where( # type: ignore
+            MessageBase.__table__.c.timestamp < oldest_timestamp_to_be_kept
+        ) 
+        conn.execute(stmt)
+
+def _serialized_car_info(company_name:str, car_name:str)->str:
+    return f"{company_name}_{car_name}"
+
+def _serialized_device_id(device_id:DeviceId)->str:
+    return f"{device_id.module_id}_{device_id.type}_{device_id.role}"
+
+
+
+def __all_available_devices(car_info:str)->List[str]:
+    device_id_list:List[str] = list()
+    for module_devices in device_ids()[car_info].values():
+        device_id_list.extend(module_devices)
+    return device_id_list
+
+def __available_devices_for_module(car_info:str, module_id:int)->List[str]:
+    if not module_id in device_ids()[car_info]: 
+        return [], 404 # type: ignore
+    else: 
+        return device_ids()[car_info][module_id]
+    
 from sqlalchemy import func, and_
 def __list_messages(
     company_name:str, 
@@ -102,35 +160,6 @@ def __list_messages(
             base:MessageBase = row[0]
             statuses.append(base.to_model())
         return statuses
-    
-
-def send_commands(company_name:str, car_name:str, device_id:DeviceId, payload:List[Payload]=list())->Tuple[str, int]:  # noqa: E501
-    car = _serialized_car_info(company_name, car_name)
-    if car not in device_ids():
-        return "", 404
-    elif device_id.module_id not in device_ids()[car]:
-        return "", 404
-    else:
-        tstamp = timestamp()
-        _remove_old_messages(tstamp)
-        commands = [Message(timestamp=tstamp, id=device_id, payload=p) for p in payload]
-        __send_messages_to_database(company_name, car_name, *commands)
-        return "", 200
-
-
-def send_statuses(company_name:str, car_name:str, device_id:DeviceId, payload:List[Payload]=list())->Tuple[str,int]:  # noqa: E501
-    tstamp = timestamp()
-    statuses:List[Message] = list()
-    for p in payload: 
-        statuses.append(Message(tstamp, device_id, p))
-    __send_messages_to_database(company_name, car_name, *statuses)
-    store_device_id_if_new(
-        car_info = _serialized_car_info(company_name, car_name), 
-        module_id = device_id.module_id, 
-        serialized_device_id = _serialized_device_id(device_id)
-    )
-    return "", 200
-
 
 def __send_messages_to_database(company_name:str, car_name:str, *messages:Message)->None: 
     with connection_source().begin() as conn:
@@ -138,39 +167,6 @@ def __send_messages_to_database(company_name:str, car_name:str, *messages:Messag
         msg_base = MessageBase.from_models(company_name, car_name, *messages)
         data_list = [msg.__dict__ for msg in msg_base]
         conn.execute(stmt, data_list)
-
-
-from sqlalchemy import delete
-def _remove_old_messages(current_timestamp:int)->None:  
-    with connection_source().begin() as conn: 
-        oldest_timestamp_to_be_kept = current_timestamp-DATA_RETENTION_PERIOD_IN_MS
-        stmt = delete(MessageBase.__table__).where( # type: ignore
-            MessageBase.__table__.c.timestamp < oldest_timestamp_to_be_kept
-        ) 
-        conn.execute(stmt)
-
-
-
-def _serialized_car_info(company_name:str, car_name:str)->str:
-    return f"{company_name}_{car_name}"
-
-def _serialized_device_id(device_id:DeviceId)->str:
-    return f"{device_id.module_id}_{device_id.type}_{device_id.role}"
-
-
-
-def __all_available_devices(car_info:str)->List[str]:
-    device_id_list:List[str] = list()
-    for module_devices in device_ids()[car_info].values():
-        device_id_list.extend(module_devices)
-    return device_id_list
-
-def __available_devices_for_module(car_info:str, module_id:int)->List[str]:
-    if not module_id in device_ids()[car_info]: 
-        return [], 404 # type: ignore
-    else: 
-        return device_ids()[car_info][module_id]
-
 
 
 @dataclasses.dataclass
