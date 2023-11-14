@@ -21,9 +21,11 @@ sys.path.append("server")
 
 from fleetv2_http_api.__main__ import main as run_server
 from server.database.database_controller import set_connection_source
+from server.database.device_ids import clear_device_ids
 
 
 def connect_to_database()->None:
+    clear_device_ids()
     set_connection_source(
         dialect="postgresql",
         dbapi="psycopg",

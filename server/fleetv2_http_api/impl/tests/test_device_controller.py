@@ -4,11 +4,14 @@ sys.path.append("server")
 
 import unittest
 from database.database_controller import set_connection_source
-from fleetv2_http_api.impl.car_controller import available_cars, _serialized_car_info, Car
-from fleetv2_http_api.impl.device_controller import available_devices, timestamp
+from fleetv2_http_api.impl.car_controller import Car
+from fleetv2_http_api.impl.device_controller import available_devices, available_cars
 from fleetv2_http_api.models.device_id import DeviceId
-from fleetv2_http_api.models.message import Message, Payload
+from fleetv2_http_api.models.message import Payload
 
+from fleetv2_http_api.impl.device_controller import send_statuses, send_commands
+from fleetv2_http_api.impl.device_controller import _serialized_device_id, _serialized_car_info
+from database.device_ids import clear_device_ids
 
 
 class Test_Device_Id_Validity(unittest.TestCase):
@@ -31,10 +34,7 @@ class Test_Device_Id_Validity(unittest.TestCase):
         with self.assertRaises(ValueError): id.role = "Role"
 
 
-from fleetv2_http_api.impl.device_controller import send_statuses
-from fleetv2_http_api.impl.device_controller import _serialized_device_id
-
-class Test_Listing_Available_Devices(unittest.TestCase):
+class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
     
     def setUp(self) -> None:
         set_connection_source("sqlite","pysqlite","/:memory:")
@@ -43,12 +43,13 @@ class Test_Listing_Available_Devices(unittest.TestCase):
             encoding="JSON", 
             data={"message":"Device is running"}
         )
+        clear_device_ids()
 
     def test_device_is_considered_available_if_at_least_one_status_is_in_the_database(self):
         device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Test Device 1")
-        self.assertListEqual(
+        self.assertEqual(
             available_devices("test_company", "test_car"), 
-            []
+            ([], 404)
         )
         send_statuses(
             company_name="test_company", 
@@ -61,55 +62,33 @@ class Test_Listing_Available_Devices(unittest.TestCase):
             available_devices("test_company", "test_car"), 
             [_serialized_device_id(device_id)]
         )
-        self.assertListEqual(
+        self.assertEqual(
             available_devices("other_company", "some_car"), 
-            []
+            ([], 404)
         )
     
-    def __test_car_is_considered_available_if_at_least_one_of_its_devices_are_available(self):
+    def test_car_is_considered_available_if_at_least_one_of_its_devices_are_available(self):
         self.assertListEqual(available_cars(), [])
         device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Test Device 1")
-        send_statuses(
+        response = send_statuses(
             company_name="test_company", 
             car_name="test_car", 
             device_id=device_id, 
             payload=[self.payload_example]
         )
-        car_info = Car("test_company", "test_car")
-        self.assertListEqual(available_cars(), [_serialized_car_info(car_info)])
+        self.assertEqual(response, 200)
+        self.assertListEqual(available_cars(), [_serialized_car_info("test_company", "test_car")])
 
-        
-    # def test_adding_and_retrieve_single_device(self):
-    #     device_id = DeviceId(42, 2, "light", "Left light")
-    #     msg = Message(123456789, device_id, self.payload_example)
-    #     _add_msg(msg)
-    #     devices = available_devices(company_name="some_company", car_name="some_car")
-    #     self.assertEqual(devices[0], device_id)
 
-    # def test_adding_and_retrieve_multiple_devices(self):
-    #     device_1_id = DeviceId(42, 2, "light", "Left light")
-    #     device_2_id= DeviceId(43, 2, "light", "Right light")
-
-    #     msg_1 = Message(123456789, device_1_id, self.payload_example)
-    #     msg_2 = Message(123456789, device_2_id, self.payload_example)
-    #     _add_msg(msg_1)
-    #     _add_msg(msg_2)
-    #     self.assertListEqual(available_devices(company_name="some_company", car_name="some_car"), [device_1_id, device_2_id])
-
-#     def test_adding_and_displaying_devices_in_multiple_modules(self):
-#         device_1_id = DeviceId(module_id=42, type=0, role="light", name="Left light")
-#         device_2_id = DeviceId(module_id=43, type=0, role="light", name="Right light")
-
-#         msg_1 = Message(123456789, device_1_id, self.payload_example)
-#         msg_2 = Message(123456789, device_2_id, self.payload_example)
-#         _add_msg(msg_1)
-#         _add_msg(msg_2)
-#         self.assertListEqual(available_devices(company_name="some_company", car_name="some_car"), [device_1_id, device_2_id])
-#         self.assertListEqual(available_devices(company_name="some_company", car_name="some_car",module_id=42), [device_1_id])
-#         self.assertListEqual(available_devices(company_name="some_company", car_name="some_car",module_id=43), [device_2_id])
-
-#         result_for_nonexistent_module = available_devices(company_name="some_company", car_name="some_car",module_id=-58)
-#         self.assertEqual(result_for_nonexistent_module, ([], 404))
+    def test_commands_send_to_nonexistent_device_return_404_error(self)->None:
+        not_connected_device_id = DeviceId(module_id=42, type=7, role="test_device_x", name="Not_Connected_Device")
+        response = send_commands(
+            company_name="test_company", 
+            car_name="test_car", 
+            device_id=not_connected_device_id, 
+            payload=[self.payload_example]
+        )
+        self.assertEqual(response[1], 404)
 
 
 # from fleetv2_http_api.impl.device_controller import list_statuses, list_commands, send_commands, send_statuses

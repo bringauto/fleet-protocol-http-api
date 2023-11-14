@@ -19,7 +19,7 @@ tags:
 paths:
   /cars:
     get:
-      x-openapi-router-controller: fleetv2_http_api.impl.car_controller
+      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: available_cars
       description: It returns the list of available Cars.
       tags: 
@@ -59,29 +59,6 @@ paths:
       
       parameters:
         - $ref: "#/components/parameters/ModuleId"
-
-    post: 
-      deprecated: true
-      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
-      operationId: add_device
-      description: Add a new device
-      tags: 
-        - device
-      responses:
-        '200':
-          description: New device added
-        '500':
-          description: Cannot add device due to internal server error.
-      requestBody:
-        description: New device
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DeviceId'
-
-    parameters:
-      - $ref: '#/components/parameters/CompanyName'
-      - $ref: '#/components/parameters/CarName'
 
 
   /{company_name}/{car_name}/status/{device-id}:
