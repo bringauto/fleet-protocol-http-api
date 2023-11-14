@@ -4,7 +4,6 @@ sys.path.append("server")
 
 import unittest
 from database.database_controller import set_connection_source
-from fleetv2_http_api.impl.car_controller import Car
 from fleetv2_http_api.impl.device_controller import available_devices, available_cars
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Payload
