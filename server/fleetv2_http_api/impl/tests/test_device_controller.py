@@ -76,9 +76,20 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
             device_id=device_id, 
             payload=[self.payload_example]
         )
-        self.assertEqual(response, 200)
+        self.assertEqual(response[1], 200)
         self.assertListEqual(available_cars(), [_serialized_car_info("test_company", "test_car")])
 
+
+class Test_Sending_And_Listing_Messages(unittest.TestCase):
+
+    def setUp(self) -> None:
+        set_connection_source("sqlite","pysqlite","/:memory:")
+        self.payload_example = Payload(
+            type=0, 
+            encoding="JSON", 
+            data={"message":"Device is running"}
+        )
+        clear_device_ids()
 
     def test_commands_send_to_nonexistent_device_return_404_error(self)->None:
         not_connected_device_id = DeviceId(module_id=42, type=7, role="test_device_x", name="Not_Connected_Device")
@@ -89,6 +100,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
             payload=[self.payload_example]
         )
         self.assertEqual(response[1], 404)
+    
 
 
 # from fleetv2_http_api.impl.device_controller import list_statuses, list_commands, send_commands, send_statuses
