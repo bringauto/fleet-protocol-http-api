@@ -5,7 +5,8 @@ sys.path.append(".")
 import unittest
 from fleetv2_http_api.impl.database_controller import set_connection_source
 from fleetv2_http_api.impl.device_controller import _add_msg, available_devices, timestamp
-from fleetv2_http_api.models.device import Message, Payload, DeviceId
+from fleetv2_http_api.models.device_id import DeviceId
+from fleetv2_http_api.models.message import Message, Payload
 
 
 

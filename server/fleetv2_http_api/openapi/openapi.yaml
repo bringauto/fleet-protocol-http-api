@@ -1,0 +1,617 @@
+openapi: 3.0.2
+info:
+  description: Development version of a the API
+  title: Fleet v2 HTTP API
+  version: 0.1.0
+servers:
+- url: http://localhost:8080
+tags:
+- name: car
+- name: device
+- name: database
+paths:
+  /:
+    put:
+      description: Connects to database
+      operationId: connect_to_database
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/connect_to_database_request'
+        description: Login data
+        required: true
+      responses:
+        "200":
+          description: Connection is estabilished
+        "500":
+          description: Cannot connect due to internal server error.
+      tags:
+      - database
+      x-openapi-router-controller: fleetv2_http_api.impl.database_controller
+  /cars:
+    get:
+      description: It returns the list of available Cars.
+      operationId: cars_available
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+              - company_name: bringauto
+                car_name: piba0258
+              schema:
+                items:
+                  $ref: '#/components/schemas/Car'
+                type: array
+          description: A list of available cars.
+        "500":
+          description: Cannot display avaialble cars due to internal server error.
+      tags:
+      - car
+      x-openapi-router-controller: fleetv2_http_api.impl.car_controller
+    post:
+      deprecated: true
+      description: Add a new car
+      operationId: add_car
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Car'
+        description: New car
+      responses:
+        "200":
+          description: New car added
+        "500":
+          description: Cannot add car due to internal server error.
+      tags:
+      - car
+      x-openapi-router-controller: fleetv2_http_api.impl.car_controller
+  /{company_name}/{car_name}/available-devices:
+    get:
+      description: Returns list of available devices for the whole car or a single
+        module.
+      operationId: available_devices
+      parameters:
+      - description: Name of the Car
+        explode: false
+        in: path
+        name: car_name
+        required: true
+        schema:
+          example: auto_123
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: Name of the company
+        explode: false
+        in: path
+        name: company_name
+        required: true
+        schema:
+          example: company_xyz
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - allowEmptyValue: true
+        description: An Id of module.
+        example: 785
+        explode: true
+        in: query
+        name: module-id
+        required: false
+        schema:
+          minimum: 0
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/DeviceId'
+                type: array
+          description: A list of available devices.
+        "500":
+          description: Cannot display available devices due to internal server error.
+      tags:
+      - device
+      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
+    post:
+      deprecated: true
+      description: Add a new device
+      operationId: add_device
+      parameters:
+      - description: Name of the Car
+        explode: false
+        in: path
+        name: car_name
+        required: true
+        schema:
+          example: auto_123
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: Name of the company
+        explode: false
+        in: path
+        name: company_name
+        required: true
+        schema:
+          example: company_xyz
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceId'
+        description: New device
+      responses:
+        "200":
+          description: New device added
+        "500":
+          description: Cannot add device due to internal server error.
+      tags:
+      - device
+      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
+  /{company_name}/{car_name}/command/{device-id}:
+    get:
+      description: Returns list of the Device Commands.
+      operationId: list_commands
+      parameters:
+      - description: The Id of the Device.
+        example:
+          module_id: 42
+          type: 8
+          role: device_role
+          name: Device Name
+        explode: false
+        in: path
+        name: device-id
+        required: true
+        schema:
+          $ref: '#/components/schemas/DeviceId'
+        style: simple
+      - description: Name of the Car
+        explode: false
+        in: path
+        name: car_name
+        required: true
+        schema:
+          example: auto_123
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: Name of the company
+        explode: false
+        in: path
+        name: company_name
+        required: true
+        schema:
+          example: company_xyz
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - allowEmptyValue: true
+        description: "If set, the method returns a complete history of statuses/commands."
+        example: false
+        explode: true
+        in: query
+        name: all
+        required: false
+        schema:
+          type: boolean
+        style: form
+      - allowEmptyValue: false
+        description: "A Unix timestamp; if specified, the method returns all device\
+          \ statuses/commands inclusivelly older than value of specified timestamp."
+        example: 1699262836
+        explode: true
+        in: query
+        name: since
+        required: false
+        schema:
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Payload'
+                type: array
+          description: A list of commands.
+        "500":
+          description: The commands cannot be displayed due to internal server error.
+      tags:
+      - device
+      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
+    post:
+      description: It adds new device Commands.
+      operationId: send_commands
+      parameters:
+      - description: The Id of the Device.
+        example:
+          module_id: 42
+          type: 8
+          role: device_role
+          name: Device Name
+        explode: false
+        in: path
+        name: device-id
+        required: true
+        schema:
+          $ref: '#/components/schemas/DeviceId'
+        style: simple
+      - description: Name of the Car
+        explode: false
+        in: path
+        name: car_name
+        required: true
+        schema:
+          example: auto_123
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: Name of the company
+        explode: false
+        in: path
+        name: company_name
+        required: true
+        schema:
+          example: company_xyz
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: '#/components/schemas/Payload'
+              type: array
+        description: Commands to be executed by the device.
+      responses:
+        "200":
+          description: The commands have been sent.
+        "500":
+          description: The commands have not been sent due to internal server error.
+      tags:
+      - device
+      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
+  /{company_name}/{car_name}/status/{device-id}:
+    get:
+      description: It returns list of the Device Statuses.
+      operationId: list_statuses
+      parameters:
+      - description: The Id of the Device.
+        example:
+          module_id: 42
+          type: 8
+          role: device_role
+          name: Device Name
+        explode: false
+        in: path
+        name: device-id
+        required: true
+        schema:
+          $ref: '#/components/schemas/DeviceId'
+        style: simple
+      - description: Name of the Car
+        explode: false
+        in: path
+        name: car_name
+        required: true
+        schema:
+          example: auto_123
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: Name of the company
+        explode: false
+        in: path
+        name: company_name
+        required: true
+        schema:
+          example: company_xyz
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - allowEmptyValue: true
+        description: "If set, the method returns a complete history of statuses/commands."
+        example: false
+        explode: true
+        in: query
+        name: all
+        required: false
+        schema:
+          type: boolean
+        style: form
+      - allowEmptyValue: false
+        description: "A Unix timestamp; if specified, the method returns all device\
+          \ statuses/commands inclusivelly older than value of specified timestamp."
+        example: 1699262836
+        explode: true
+        in: query
+        name: since
+        required: false
+        schema:
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Payload'
+                type: array
+          description: A list of device statuses.
+        "500":
+          description: The statuses cannot be displayed due to internal server error.
+      tags:
+      - device
+      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
+    post:
+      description: Add statuses received from the Device.
+      operationId: send_statuses
+      parameters:
+      - description: The Id of the Device.
+        example:
+          module_id: 42
+          type: 8
+          role: device_role
+          name: Device Name
+        explode: false
+        in: path
+        name: device-id
+        required: true
+        schema:
+          $ref: '#/components/schemas/DeviceId'
+        style: simple
+      - description: Name of the Car
+        explode: false
+        in: path
+        name: car_name
+        required: true
+        schema:
+          example: auto_123
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: Name of the company
+        explode: false
+        in: path
+        name: company_name
+        required: true
+        schema:
+          example: company_xyz
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: '#/components/schemas/Payload'
+              type: array
+        description: Statuses to be send by the device.
+      responses:
+        "200":
+          description: The statuses have been sent.
+        "500":
+          description: The statuses could not been sent due to internal server error.
+      tags:
+      - device
+      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
+components:
+  parameters:
+    All:
+      allowEmptyValue: true
+      description: "If set, the method returns a complete history of statuses/commands."
+      example: false
+      explode: true
+      in: query
+      name: all
+      required: false
+      schema:
+        type: boolean
+      style: form
+    Since:
+      allowEmptyValue: false
+      description: "A Unix timestamp; if specified, the method returns all device\
+        \ statuses/commands inclusivelly older than value of specified timestamp."
+      example: 1699262836
+      explode: true
+      in: query
+      name: since
+      required: false
+      schema:
+        type: integer
+      style: form
+    ModuleId:
+      allowEmptyValue: true
+      description: An Id of module.
+      example: 785
+      explode: true
+      in: query
+      name: module-id
+      required: false
+      schema:
+        minimum: 0
+      style: form
+    DeviceId:
+      description: The Id of the Device.
+      example:
+        module_id: 42
+        type: 8
+        role: device_role
+        name: Device Name
+      explode: false
+      in: path
+      name: device-id
+      required: true
+      schema:
+        $ref: '#/components/schemas/DeviceId'
+      style: simple
+    CarName:
+      description: Name of the Car
+      explode: false
+      in: path
+      name: car_name
+      required: true
+      schema:
+        example: auto_123
+        pattern: "^[0-9a-z_]+$"
+        type: string
+      style: simple
+    CompanyName:
+      description: Name of the company
+      explode: false
+      in: path
+      name: company_name
+      required: true
+      schema:
+        example: company_xyz
+        pattern: "^[0-9a-z_]+$"
+        type: string
+      style: simple
+  schemas:
+    Car:
+      description: The subject of control.
+      example:
+        car_name: piba09223
+        company_name: bringauto
+      properties:
+        company_name:
+          example: bringauto
+          pattern: "^[a-z0-9_]+$"
+          title: company_name
+          type: string
+        car_name:
+          example: piba09223
+          pattern: "^[a-z0-9_]+$"
+          title: car_name
+          type: string
+      required:
+      - car_name
+      - company_name
+      title: Car
+      type: object
+    Module:
+      description: "Car module, representing set of Device"
+      properties:
+        id:
+          description: A general integer Id
+          example: 42
+          minimum: 0
+          title: Id
+          type: integer
+        device-list:
+          items:
+            $ref: '#/components/schemas/DeviceId'
+          type: array
+      required:
+      - device-list
+      - id
+      type: object
+    Message:
+      description: Physical device or program located on the car.
+      properties:
+        timestamp:
+          example: 1699262836
+          type: integer
+        id:
+          $ref: '#/components/schemas/DeviceId'
+        payload:
+          $ref: '#/components/schemas/Payload'
+      type: object
+    DeviceId:
+      description: The Id of a device.
+      example:
+        module_id: 42
+        role: warning_led
+        name: Left red LED
+        type: 4
+      properties:
+        module_id:
+          description: A general integer Id
+          example: 42
+          minimum: 0
+          title: Id
+          type: integer
+        type:
+          example: 4
+          minimum: 0
+          title: type
+          type: integer
+        role:
+          example: warning_led
+          pattern: "^[a-z0-9_]+$"
+          title: role
+          type: string
+        name:
+          example: Left red LED
+          title: name
+          type: string
+      title: DeviceId
+      type: object
+    Payload:
+      description: A message passed to device (command) or by device (status).
+      example:
+        data:
+          main_text: The device is running.
+        type: 4
+        encoding: BASE64
+      properties:
+        type:
+          example: 4
+          minimum: 0
+          title: type
+          type: integer
+        encoding:
+          example: BASE64
+          title: encoding
+          type: string
+        data:
+          example:
+            main_text: The device is running.
+          title: data
+          type: object
+      title: Payload
+      type: object
+    Id:
+      description: A general integer Id
+      example: 42
+      minimum: 0
+      title: Id
+      type: integer
+    connect_to_database_request:
+      properties:
+        dialect:
+          example: postgresql
+          title: dialect
+          type: string
+        dbapi:
+          example: psycopg
+          title: dbapi
+          type: string
+        location:
+          example: localhost:8080
+          title: location
+          type: string
+        username:
+          example: username
+          title: username
+          type: string
+        password:
+          example: "1234"
+          title: password
+          type: string
+      title: connect_to_database_request
+      type: object

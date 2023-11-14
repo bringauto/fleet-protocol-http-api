@@ -8,7 +8,8 @@ from sqlalchemy import insert, select
 from sqlalchemy import String, Integer, JSON
 
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
-from fleetv2_http_api.models.device import Message, DeviceId
+from fleetv2_http_api.models.device_id import DeviceId
+from fleetv2_http_api.models.message import Message
 from fleetv2_http_api.impl.database_controller import connection_source, Base
 
 from fleetv2_http_api.impl.car_controller import CarBase
