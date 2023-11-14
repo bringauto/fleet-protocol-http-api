@@ -139,8 +139,6 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
 
 
 from unittest.mock import patch
-from fleetv2_http_api.models.message import Message
-
 class Test_Statuses_In_Time(unittest.TestCase):
 
     COMPANY_1_NAME = "company_1"
@@ -156,28 +154,33 @@ class Test_Statuses_In_Time(unittest.TestCase):
     @patch('fleetv2_http_api.impl.device_controller.timestamp')
     def test_by_default_only_the_NEWEST_STATUS_is_returned_and_if_all_is_specified_all_statuses_are_returned(self, mock_timestamp):
         payload = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
-        mock_timestamp.return_value = 10
-        send_statuses(self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id, [payload])
-        mock_timestamp.return_value = 20
-        send_statuses(self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id, [payload])
-        mock_timestamp.return_value = 37
-        send_statuses(self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id, [payload])
+        args = self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id
 
-        statuses, code = list_statuses(self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id)
+        mock_timestamp.return_value = 10
+        send_statuses(*args, [payload])
+        mock_timestamp.return_value = 20
+        send_statuses(*args, [payload])
+        mock_timestamp.return_value = 37
+        send_statuses(*args, [payload])
+
+        statuses, code = list_statuses(*args)
         self.assertEqual(len(statuses), 1)
         self.assertEqual(statuses[0].timestamp, 37)
 
         # any value passed as 'all' attribute makes the list_statuses to return all the statuses
-        statuses, code = list_statuses(self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id, all=True)
+        statuses, code = list_statuses(*args, all=True)
         self.assertEqual(len(statuses), 3)
         self.assertEqual(statuses[0].timestamp, 10)
         self.assertEqual(statuses[1].timestamp, 20)
         self.assertEqual(statuses[2].timestamp, 37)
 
-        statuses, code = list_statuses(self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id, since=20)
+        statuses, code = list_statuses(*args, since=20)
         self.assertEqual(len(statuses), 2)
         self.assertEqual(statuses[0].timestamp, 10)
         self.assertEqual(statuses[1].timestamp, 20)
+    
+        statuses, code = list_statuses(*args, since=5)
+        self.assertEqual(len(statuses), 0)
 
 
     @patch('fleetv2_http_api.impl.device_controller.timestamp')
@@ -185,104 +188,36 @@ class Test_Statuses_In_Time(unittest.TestCase):
         status_payload = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
         command_payload = Payload(type=1, encoding="JSON", data={"message":"Beep"})
 
-        mock_timestamp.return_value = 10
-        send_statuses(self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id, [status_payload])
-        mock_timestamp.return_value = 20
-        send_commands(self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id, [command_payload])
-        mock_timestamp.return_value = 30
-        send_commands(self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id, [command_payload])
-        mock_timestamp.return_value = 45
-        send_commands(self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id, [command_payload])
+        args = self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id
 
-        commands, code = list_commands(self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id)
+        mock_timestamp.return_value = 10
+        send_statuses(*args, [status_payload])
+        mock_timestamp.return_value = 20
+        send_commands(*args, [command_payload])
+        mock_timestamp.return_value = 30
+        send_commands(*args, [command_payload])
+        mock_timestamp.return_value = 45
+        send_commands(*args, [command_payload])
+
+        commands, code = list_commands(*args)
         self.assertEqual(len(commands), 1)
         self.assertEqual(commands[0].timestamp, 20)
 
-        commands, code = list_commands(self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id, all=True)
+        commands, code = list_commands(*args, all=True)
         self.assertEqual(len(commands), 3)
         self.assertEqual(commands[0].timestamp, 20)
         self.assertEqual(commands[1].timestamp, 30)
         self.assertEqual(commands[2].timestamp, 45)
 
-        commands, code = list_commands(self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id, since=30)
+        commands, code = list_commands(*args, since=30)
         self.assertEqual(len(commands), 2)
         self.assertEqual(commands[0].timestamp, 20)
         self.assertEqual(commands[1].timestamp, 30)
 
-
-        
-
-#     @patch('fleetv2_http_api.impl.device_controller.timestamp')
-#     def test_empty_list_is_returned_when_no_message_is_older_than_timestamp(self, mock_timestamp):
-#         payload_1 = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
-#         status_1 = Message(timestamp=123, id=self.device_id, payload=payload_1)
-#         _add_msg(status_1)
-#         mock_timestamp.return_value = 150
-#         self.assertListEqual(list_statuses(self.device_id, since=123), [status_1])
-#         self.assertListEqual(list_statuses(self.device_id, since=122), [])
-
-#     def test_obtained_messages_correspond_to_device_ids_specified_when_adding_the_messages(self):
-#         other_device_id = DeviceId(
-#             module_id=self.device_id.module_id, 
-#             type=self.device_id.type, 
-#             role="right light", 
-#             name=self.device_id.name
-#         )
-
-#         payload = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
-#         status_1 = Message(timestamp=timestamp(), id=self.device_id, payload=payload)
-#         status_2 = Message(timestamp=timestamp(), id=other_device_id, payload=payload)
-#         _add_msg(status_1, status_2)
-#         self.assertListEqual(list_statuses(self.device_id, all=True), [status_1])
-#         self.assertListEqual(list_statuses(other_device_id, all=True), [status_2])
+        commands, code = list_commands(*args, since=5)
+        self.assertEqual(len(commands), 0)
 
 
-# class Test_Sending_Device_Messages(unittest.TestCase):
-
-#     def setUp(self) -> None:
-#         set_connection_source("sqlite", "pysqlite", "/:memory:")
-#         self.status_type = 0
-#         self.command_type = 1
-
-#     @patch('fleetv2_http_api.impl.device_controller.timestamp')
-#     def test_sending_and_retrieving_device_messages(self, mock_timestamp):
-#         device_id = DeviceId(module_id=42, type=4, role="light", name="Left light")
-#         status_1 = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
-#         status_2 = Payload(type=0, encoding="JSON", data={"message":"Device is still running"})
-#         command_1 = Payload(type=1, encoding="JSON", data={"message":"Stop"})
-        
-#         mock_timestamp.return_value = 123456
-#         mock_timestamp.return_value = 123458
-
-#         send_statuses(device_id, payload=[status_1, status_2])
-#         send_commands(device_id, payload=[command_1])
-
-#         statuses = list_statuses(device_id, all=True)
-#         commands = list_commands(device_id, all=True)
-
-#         self.assertEqual(statuses[0].payload, status_1)
-#         self.assertEqual(statuses[1].payload, status_2)
-#         self.assertEqual(commands[0].payload, command_1)
-
-#     def test_commands_sent_to_device_at_once_share_common_timestamp(self):
-#         device_id = DeviceId(module_id=42, type=4, role="light", name="Left light")
-#         cmd_1 = Payload(type=1, encoding="JSON", data={})
-#         cmd_2 = Payload(type=1, encoding="JSON", data={})
-#         send_commands(device_id, [cmd_1, cmd_2])
-#         stored_commands = list_commands(device_id, all=True)
-
-#         self.assertEqual(stored_commands[0].timestamp, stored_commands[1].timestamp)
-
-#     def test_statuses_sent_to_device_at_once_share_common_timestamp(self):
-#         device_id = DeviceId(module_id=42, type=4, role="light", name="Left light")
-#         stat_1 = Payload(type=0, encoding="JSON", data={})
-#         stat_2 = Payload(type=0, encoding="JSON", data={})
-#         send_statuses(device_id, [stat_1, stat_2])
-#         stored_statuses = list_statuses(device_id, all=True)
-
-#         self.assertEqual(stored_statuses[0].timestamp, stored_statuses[1].timestamp)
-
-    
 # from fleetv2_http_api.impl.device_controller import _count_currently_stored_messages
 # class Test_Records_Older_Than_One_Hour_Are_Automatically_Removed(unittest.TestCase):
 
