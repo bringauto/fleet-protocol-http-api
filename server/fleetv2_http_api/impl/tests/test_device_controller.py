@@ -90,7 +90,7 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
             data={"message":"Device is running"}
         )
         self.command_payload_example = Payload(
-            type=0, 
+            type=1, 
             encoding="JSON", 
             data={"message":"Beep"}
         )
@@ -109,22 +109,25 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertEqual(statuses[0].payload, self.status_payload_example)
 
-    # def test_sent_commands(self)->None:
-    #     device_id = DeviceId(module_id=42, type=7, role="testing_device_x", name="Testing Device")
-    #     send_statuses(
-    #         company_name="test_company", 
-    #         car_name="test_car", 
-    #         device_id=device_id, 
-    #         payload=[self.status_payload_example]
-    #     )
-    #     send_commands(
-    #         company_name="test_company", 
-    #         car_name="test_car", 
-    #         device_id=device_id, 
-    #         payload=[self.command_payload_example]
-    #     )
-    #     commands = list_commands(device_id)
-    #     self.assertEqual(len(statuses), 1)
+
+    def test_sent_commands(self)->None:
+        device_id = DeviceId(module_id=42, type=7, role="testing_device_x", name="Testing Device")
+        send_statuses(
+            company_name="test_company", 
+            car_name="test_car", 
+            device_id=device_id, 
+            payload=[self.status_payload_example]
+        )
+        send_commands(
+            company_name="test_company", 
+            car_name="test_car", 
+            device_id=device_id, 
+            payload=[self.command_payload_example]
+        )
+        commands, code = list_commands("test_company","test_car", device_id)
+        self.assertEqual(code, 200)
+        self.assertEqual(len(commands), 1)
+        self.assertEqual(commands[0].payload, self.command_payload_example)
 
     def test_commands_send_to_nonexistent_device_return_404_code(self)->None:
         not_connected_device_id = DeviceId(module_id=42, type=7, role="test_device_x", name="Not_Connected_Device")
