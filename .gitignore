@@ -6,3 +6,5 @@ regen.sh
 restart.sh
 test_client.sh
 test_server.sh
+
+.openapi-generator-ignore
