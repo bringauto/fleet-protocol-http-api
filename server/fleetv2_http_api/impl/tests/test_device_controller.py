@@ -127,7 +127,7 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
         self.assertEqual(len(commands), 1)
         self.assertEqual(commands[0].payload, self.command_payload_example)
 
-    def test_commands_send_to_nonexistent_device_return_404_code(self)->None:
+    def test_sending_commands_sent_to_nonexistent_device_returns_code_404(self)->None:
         not_connected_device_id = DeviceId(module_id=42, type=7, role="test_device_x", name="Not_Connected_Device")
         response = send_commands(
             company_name="test_company", 
