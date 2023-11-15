@@ -12,6 +12,8 @@ from fleetv2_http_api.impl.device_controller import send_statuses, send_commands
 from fleetv2_http_api.impl.device_controller import _serialized_device_id, _serialized_car_info
 from database.device_ids import clear_device_ids
 
+from database.message_types import STATUS_TYPE, COMMAND_TYPE
+
 
 class Test_Device_Id_Validity(unittest.TestCase):
 
@@ -38,7 +40,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
     def setUp(self) -> None:
         set_connection_source("sqlite","pysqlite","/:memory:")
         self.payload_example = Payload(
-            type=0, 
+            type=STATUS_TYPE, 
             encoding="JSON", 
             data={"message":"Device is running"}
         )
@@ -84,12 +86,12 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
     def setUp(self) -> None:
         set_connection_source("sqlite","pysqlite","/:memory:")
         self.status_payload_example = Payload(
-            type=0, 
+            type=STATUS_TYPE, 
             encoding="JSON", 
             data={"message":"Device is running"}
         )
         self.command_payload_example = Payload(
-            type=1, 
+            type=COMMAND_TYPE, 
             encoding="JSON", 
             data={"message":"Beep"}
         )
@@ -147,8 +149,6 @@ class Test_Statuses_In_Time(unittest.TestCase):
 
     def setUp(self) -> None:
         set_connection_source("sqlite", "pysqlite", "/:memory:")
-        self.status_type = 0
-        self.command_type = 1
         self.device_id = DeviceId(module_id=42, type=5, role="left light", name="Light")
 
     @patch('fleetv2_http_api.impl.device_controller.timestamp')
@@ -185,8 +185,8 @@ class Test_Statuses_In_Time(unittest.TestCase):
 
     @patch('database.time._time_in_ms')
     def test_by_default_only_the_OLDEST_COMMAND_is_returned(self, mock_timestamp):
-        status_payload = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
-        command_payload = Payload(type=1, encoding="JSON", data={"message":"Beep"})
+        status_payload = Payload(type=STATUS_TYPE, encoding="JSON", data={"message":"Device is running"})
+        command_payload = Payload(type=COMMAND_TYPE, encoding="JSON", data={"message":"Beep"})
 
         args = self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id
 
@@ -228,16 +228,14 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
 
     def setUp(self) -> None:
         set_connection_source("sqlite", "pysqlite", "/:memory:")
-        self.status_type = 0
-        self.command_type = 1
         self.device_id = DeviceId(module_id=42, type=5, role="left light", name="Light")
         clear_device_ids()
 
 
     @patch('database.time._time_in_ms')
     def test_cleaning_up_commands(self, mock_timestamp):
-        status_payload = Payload(type=0, encoding="JSON", data={"message":"Device is conected"})
-        command_payload = Payload(type=1, encoding="JSON", data={"message":"Beep"})
+        status_payload = Payload(type=STATUS_TYPE, encoding="JSON", data={"message":"Device is conected"})
+        command_payload = Payload(type=COMMAND_TYPE, encoding="JSON", data={"message":"Beep"})
         args = self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id
 
         mock_timestamp.return_value = 0
@@ -251,59 +249,23 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         self.assertEqual(len(list_commands(*args, all=True)[0]), 2)
 
         mock_timestamp.return_value += DATA_RETENTION_PERIOD
-        remove_old_messages()
+        remove_old_messages(mock_timestamp.return_value)
 
         self.assertEqual(len(list_statuses(*args, all=True)[0]), 0)
         self.assertEqual(len(list_commands(*args, all=True)[0]), 1)
-            
-
-
-# from fleetv2_http_api.impl.device_controller import _count_currently_stored_messages
-# class Test_Records_Older_Than_One_Hour_Are_Automatically_Removed(unittest.TestCase):
-
-#     def setUp(self) -> None:
-#         set_connection_source("sqlite", "pysqlite", "/:memory:")
-#         self.device_id = DeviceId(module_id=42, type=4, role="light", name="Left light")
-#         self.status_payload = Payload(type=0, encoding="JSON", data={})
-
-#     @patch('fleetv2_http_api.impl.device_controller.timestamp')
-#     def test_statuses_older_than_one_hour_are_deleted_when_listing_statuses(self, mock_timestamp):
-#         STATUS_1_TIMESTAMP = 1000000
-#         STATUS_2_TIMESTAMP = 1000000 + 1000
-#         SMALLER_THAN_HOUR = 12300
-#         ONE_HOUR = 3600000
-
-#         status_1 = Message(timestamp=STATUS_1_TIMESTAMP, id=self.device_id, payload=self.status_payload)
-#         status_2 = Message(timestamp=STATUS_2_TIMESTAMP, id=self.device_id, payload=self.status_payload)
-#         _add_msg(status_1, status_2)
-
-#         mock_timestamp.return_value = STATUS_1_TIMESTAMP + SMALLER_THAN_HOUR
-#         self.assertListEqual(list_statuses(self.device_id, all=True), [status_1, status_2])
-
-#         mock_timestamp.return_value = STATUS_1_TIMESTAMP + ONE_HOUR
-#         self.assertListEqual(list_statuses(self.device_id, all=True), [status_1, status_2])
-    
-#         mock_timestamp.return_value = STATUS_1_TIMESTAMP + ONE_HOUR + 1
-#         self.assertListEqual(list_statuses(self.device_id, all=True), [status_2])
-
-#         mock_timestamp.return_value = STATUS_2_TIMESTAMP + ONE_HOUR + 1
-#         self.assertListEqual(list_statuses(self.device_id, all=True), [])
-
-#     @patch('fleetv2_http_api.impl.device_controller.timestamp')
-#     def test_statuses_older_than_one_hour_are_deleted_when_sending_statuses(self, mock_timestamp):
-#         ONE_HOUR = 3600000
-#         STATUS_1_TIMESTAMP = 1000000
-#         STATUS_2_TIMESTAMP = 1000000 + ONE_HOUR + 1
-
-#         mock_timestamp.return_value = STATUS_1_TIMESTAMP
-#         send_statuses(self.device_id, [self.status_payload])
-#         self.assertEqual(_count_currently_stored_messages(), 1)
-#         mock_timestamp.return_value = STATUS_2_TIMESTAMP
         
-#         send_statuses(self.device_id, [self.status_payload])
-#         self.assertEqual(_count_currently_stored_messages(), 1)
-#         self.assertEqual(list_statuses(self.device_id, all=True)[0].timestamp, STATUS_2_TIMESTAMP)
+        mock_timestamp.return_value += 5 
+        
+        # the following status is considered to be the FIRST status for given device and after sending it, 
+        # all commands previously sent to this device have to be removed
+
+        # send_statuses(*args, [status_payload])
+        # self.assertEqual(len(list_statuses(*args, all=True)[0]), 1)
+        # self.assertEqual(len(list_commands(*args, all=True)[0]), 0)
+
 
 
 if __name__=="__main__":
+    # runner = unittest.TextTestRunner()
+    # runner.run(Test_Cleaning_Up_Commands("test_cleaning_up_commands"))
     unittest.main()

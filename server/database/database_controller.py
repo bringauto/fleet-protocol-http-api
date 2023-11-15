@@ -5,6 +5,7 @@ import dataclasses
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from sqlalchemy import Integer, String, JSON, select, insert
+from database.message_types import STATUS_TYPE, COMMAND_TYPE
 
 
 def connect_to_database(body=None)->None:
@@ -202,14 +203,64 @@ def list_messages(
     
 
 from sqlalchemy import delete
-from database.time import timestamp
-DATA_RETENTION_PERIOD = 3600000
+def cleanup_device_commands(
+    current_timestamp:int, 
+    company_name:str,
+    car_name:str,
+    module_id:int,
+    device_type:int,
+    device_role:str
+    )->None: 
 
-def remove_old_messages()->None:  
-    current_timestamp = timestamp()
+    with connection_source().begin() as conn: 
+        stmt = delete(MessageBase.__table__).where( # type: ignore
+            MessageBase.__table__.c.payload_type == COMMAND_TYPE,
+            MessageBase.__table__.c.company_name == company_name,
+            MessageBase.__table__.c.car_name == car_name,   
+            MessageBase.__table__.c.module_id == module_id,
+            MessageBase.__table__.c.device_type == device_type,
+            MessageBase.__table__.c.device_role == device_role,
+        ) 
+        conn.execute(stmt)
+
+
+DATA_RETENTION_PERIOD = 3600000
+def remove_old_messages(current_timestamp:int)->None:  
     with connection_source().begin() as conn: 
         oldest_timestamp_to_be_kept = current_timestamp-DATA_RETENTION_PERIOD
         stmt = delete(MessageBase.__table__).where( # type: ignore
             MessageBase.__table__.c.timestamp < oldest_timestamp_to_be_kept
         ) 
         conn.execute(stmt)
+    clean_up_disconnected_cars()
+
+    
+from database.device_ids import device_ids
+def clean_up_disconnected_cars()->None:
+    car_devices = device_ids()
+    for car in car_devices:
+        __clean_up_disconnected_devices(car)
+
+
+def __clean_up_disconnected_devices(car:str)->None:
+    devices_per_module = device_ids()[car]
+    # for module_id in devices_per_module:
+    #     with Session(connection_source()) as session: 
+    #         count = session.query(func.count(MessageBase.__table__.c.))
+    
+
+    # __tablename__:ClassVar[str] = "message"
+    # timestamp:Mapped[int] = mapped_column(primary_key=True)
+    # sent_order:Mapped[int] = mapped_column(primary_key=True)
+
+    # company_name:Mapped[str] = mapped_column(primary_key=True)
+    # car_name:Mapped[str] = mapped_column(primary_key=True)
+
+    # module_id:Mapped[int] = mapped_column(primary_key=True)
+    # device_type:Mapped[int] = mapped_column(primary_key=True)
+    # device_role:Mapped[str] = mapped_column(primary_key=True)
+    # device_name:Mapped[str] = mapped_column()
+
+    # payload_type:Mapped[int] = mapped_column(Integer, primary_key=True)
+    # payload_encoding:Mapped[str] = mapped_column(String)
+    # payload_data:Mapped[dict] = mapped_column(JSON)

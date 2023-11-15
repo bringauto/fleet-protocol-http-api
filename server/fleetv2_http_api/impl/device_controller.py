@@ -10,6 +10,8 @@ from database.database_controller import list_messages, send_messages_to_databas
 from database.device_ids import store_device_id_if_new, device_ids
 from database.time import timestamp
 
+from database.message_types import STATUS_TYPE, COMMAND_TYPE
+
 
 def __message_from_db(message_db:Message_DB)->Message:
     return Message(
@@ -53,7 +55,7 @@ def list_commands(
     commands = [__message_from_db(m) for m in list_messages(
         company_name=company_name,
         car_name=car_name,
-        message_type=1,
+        message_type=COMMAND_TYPE,
         module_id=device_id.module_id,
         device_type=device_id.type,
         device_role=device_id.role,
@@ -74,7 +76,7 @@ def list_statuses(
     statuses = [__message_from_db(m) for m in list_messages(
         company_name=company_name,
         car_name=car_name,
-        message_type=0,
+        message_type=STATUS_TYPE,
         module_id=device_id.module_id,
         device_type=device_id.type,
         device_role=device_id.role,
@@ -99,7 +101,7 @@ def send_commands(company_name:str, car_name:str, device_id:DeviceId, payload:Li
                 device_type=device_id.type,
                 device_role=device_id.role,
                 device_name=device_id.name,
-                message_type=1,
+                message_type=COMMAND_TYPE,
                 payload_encoding=p.encoding,
                 payload_data=p.data # type: ignore
             ) 
@@ -118,7 +120,7 @@ def send_statuses(company_name:str, car_name:str, device_id:DeviceId, payload:Li
             device_type=device_id.type,
             device_role=device_id.role,
             device_name=device_id.name,
-            message_type=0,
+            message_type=STATUS_TYPE,
             payload_encoding=p.encoding,
             payload_data=p.data # type: ignore
         ) 
@@ -126,11 +128,23 @@ def send_statuses(company_name:str, car_name:str, device_id:DeviceId, payload:Li
     ]
 
     send_messages_to_database(company_name, car_name, *statuses_to_db)
-    store_device_id_if_new(
+
+    first_status_was_sent = store_device_id_if_new(
         car_info = _serialized_car_info(company_name, car_name), 
         module_id = device_id.module_id, 
         serialized_device_id = _serialized_device_id(device_id)
     )
+
+    if first_status_was_sent: 
+        __handle_first_status(
+            current_timestamp = tstamp, 
+            company_name = company_name, 
+            car_name = car_name, 
+            module_id = device_id.module_id, 
+            device_type = device_id.type,
+            device_role = device_id.role
+        )
+
     return "", 200
 
 
@@ -154,4 +168,23 @@ def __available_devices_for_module(car_info:str, module_id:int)->List[str]:
     else: 
         return device_ids()[car_info][module_id]
 
+
+from database.database_controller import cleanup_device_commands
+def __handle_first_status(
+    current_timestamp:int, 
+    company_name:str,
+    car_name:str,
+    module_id:int,
+    device_type:int,
+    device_role:str
+    )->None:
+
+    cleanup_device_commands(
+        current_timestamp = current_timestamp, 
+        company_name = company_name,
+        car_name = car_name,
+        module_id = module_id,
+        device_type = device_type,
+        device_role = device_role
+    )
 
