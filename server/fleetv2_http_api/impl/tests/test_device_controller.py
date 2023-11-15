@@ -12,7 +12,7 @@ from fleetv2_http_api.impl.device_controller import send_statuses, send_commands
 from fleetv2_http_api.impl.device_controller import _serialized_device_id, _serialized_car_info
 from database.device_ids import clear_device_ids
 
-from database.enums import MessageType, EncodingType
+from enums import MessageType, EncodingType
 
 
 class Test_Device_Id_Validity(unittest.TestCase):

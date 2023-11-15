@@ -10,7 +10,7 @@ from database.database_controller import list_messages, send_messages_to_databas
 from database.device_ids import store_device_id_if_new, device_ids
 from database.time import timestamp
 
-from database.enums import MessageType
+from enums import MessageType
 
 
 def __message_from_db(message_db:Message_DB)->Message:
