@@ -204,25 +204,64 @@ def list_messages(
     
 
 from sqlalchemy import delete
-def cleanup_device_commands(
+def cleanup_device_commands_and_warn_before_future_commands(
     current_timestamp:int, 
     company_name:str,
     car_name:str,
     module_id:int,
     device_type:int,
     device_role:str
-    )->None: 
+    )->List[str]: 
 
+    table = MessageBase.__table__
     with connection_source().begin() as conn: 
-        stmt = delete(MessageBase.__table__).where( # type: ignore
-            MessageBase.__table__.c.payload_type == COMMAND_TYPE,
-            MessageBase.__table__.c.company_name == company_name,
-            MessageBase.__table__.c.car_name == car_name,   
-            MessageBase.__table__.c.module_id == module_id,
-            MessageBase.__table__.c.device_type == device_type,
-            MessageBase.__table__.c.device_role == device_role,
-        ) 
-        conn.execute(stmt)
+        stmt = delete(table).where( # type: ignore
+            table.c.payload_type == COMMAND_TYPE,
+            table.c.company_name == company_name,
+            table.c.car_name == car_name,   
+            table.c.module_id == module_id,
+            table.c.device_type == device_type,
+            table.c.device_role == device_role,
+        ).returning(
+            table.c.timestamp,
+            table.c.company_name,
+            table.c.car_name,   
+            table.c.module_id,
+            table.c.device_type,
+            table.c.device_role,
+            table.c.payload_data
+        )
+        result = conn.execute(stmt)
+        future_command_warnings:List[str] = []
+        for row in result:
+            if row[0]>current_timestamp: 
+                future_command_warnings.append(future_command_warning(
+                    timestamp=row[0], 
+                    company_name=row[1], 
+                    car_name=row[2], 
+                    module_id=row[3],
+                    device_type=row[4],
+                    device_role=row[5],
+                    payload_data=row[6]
+                ))
+        return future_command_warnings
+
+
+from typing import Any
+def future_command_warning(
+    timestamp:int, 
+    company_name:str, 
+    car_name:str, 
+    module_id:int, 
+    device_type:int,
+    device_role:str,
+    payload_data:Any
+    )->str:
+
+    return "Warning: Removing command existing before first status was sent, " \
+           "but with newer timestamp\n:" \
+           f"timestamp: {timestamp}, company:{company_name}, car:{car_name}, module id:{module_id}, " \
+           f"device type: {device_type}, device_role: {device_role}, payload: {payload_data}."
 
 
 DATA_RETENTION_PERIOD = 3600000
@@ -236,14 +275,15 @@ def remove_old_messages(current_timestamp:int)->None:
     clean_up_disconnected_cars()
 
     
-from database.device_ids import device_ids, clean_up_empty_device_dict_items
+from database.device_ids import device_ids, clean_up_disconnected_cars_and_modules
 def clean_up_disconnected_cars()->None:
     device_dict = device_ids()
     for company in device_dict:
         for car in device_dict[company]:
             for module_id in device_dict[company][car]:
                 __clean_up_disconnected_devices(company, car, module_id)
-    clean_up_empty_device_dict_items()          
+    clean_up_disconnected_cars_and_modules()          
+
 
 def __clean_up_disconnected_devices(company:str, car:str, module_id:int)->None:
     module_devices = device_ids()[company][car][module_id]

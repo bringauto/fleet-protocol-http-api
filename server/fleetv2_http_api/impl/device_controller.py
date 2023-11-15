@@ -126,7 +126,7 @@ def send_commands(company_name:str, car_name:str, device_id:DeviceId, payload:Li
         return "", 200
 
 
-def send_statuses(company_name:str, car_name:str, device_id:DeviceId, payload:List[Payload]=list())->Tuple[str,int]:  # noqa: E501
+def send_statuses(company_name:str, car_name:str, device_id:DeviceId, payload:List[Payload]=list())->Tuple[str|List[str],int]:  # noqa: E501
     tstamp = timestamp()
     statuses_to_db = [
         Message_DB(
@@ -152,14 +152,14 @@ def send_statuses(company_name:str, car_name:str, device_id:DeviceId, payload:Li
     )
 
     if first_status_was_sent: 
-        __handle_first_status(
+        return __handle_first_status_and_return_warnings(
             current_timestamp = tstamp, 
             company_name = company_name, 
             car_name = car_name, 
             module_id = device_id.module_id, 
             device_type = device_id.type,
             device_role = device_id.role
-        )
+        ), 200
 
     return "", 200
 
@@ -185,17 +185,17 @@ def __available_devices_for_module(company_name:str, car_name:str, module_id:int
         return device_ids()[company_name][car_name][module_id]
 
 
-from database.database_controller import cleanup_device_commands
-def __handle_first_status(
+from database.database_controller import cleanup_device_commands_and_warn_before_future_commands
+def __handle_first_status_and_return_warnings(
     current_timestamp:int, 
     company_name:str,
     car_name:str,
     module_id:int,
     device_type:int,
     device_role:str
-    )->None:
+    )->List[str]:
 
-    cleanup_device_commands(
+    return cleanup_device_commands_and_warn_before_future_commands(
         current_timestamp = current_timestamp, 
         company_name = company_name,
         car_name = car_name,

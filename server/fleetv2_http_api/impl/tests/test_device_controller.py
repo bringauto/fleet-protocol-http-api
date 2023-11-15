@@ -219,6 +219,7 @@ class Test_Statuses_In_Time(unittest.TestCase):
 
 
 from database.database_controller import DATA_RETENTION_PERIOD, remove_old_messages
+from database.database_controller import future_command_warning
 class Test_Cleaning_Up_Commands(unittest.TestCase):
 
     COMPANY_1_NAME = "company_1"
@@ -230,42 +231,73 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         set_connection_source("sqlite", "pysqlite", "/:memory:")
         self.device_id = DeviceId(module_id=42, type=5, role="left light", name="Light")
         clear_device_ids()
+        self.status_payload = Payload(type=STATUS_TYPE, encoding="JSON", data={"message":"Device is conected"})
+        self.command_payload = Payload(type=COMMAND_TYPE, encoding="JSON", data={"message":"Beep"})
+        self.args = self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id
 
 
     @patch('database.time._time_in_ms')
     def test_cleaning_up_commands(self, mock_timestamp):
-        status_payload = Payload(type=STATUS_TYPE, encoding="JSON", data={"message":"Device is conected"})
-        command_payload = Payload(type=COMMAND_TYPE, encoding="JSON", data={"message":"Beep"})
-        args = self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id
-
         mock_timestamp.return_value = 0
-        send_statuses(*args, [status_payload])
+        send_statuses(*self.args, [self.status_payload])
         mock_timestamp.return_value += 10
-        send_commands(*args, [command_payload])
+        send_commands(*self.args, [self.command_payload])
         mock_timestamp.return_value += 10
-        send_commands(*args, [command_payload])
+        send_commands(*self.args, [self.command_payload])
 
-        self.assertEqual(len(list_statuses(*args, all=True)[0]), 1)
-        self.assertEqual(len(list_commands(*args, all=True)[0]), 2)
+        self.assertEqual(len(list_statuses(*self.args, all=True)[0]), 1)
+        self.assertEqual(len(list_commands(*self.args, all=True)[0]), 2)
 
         mock_timestamp.return_value += DATA_RETENTION_PERIOD
         remove_old_messages(mock_timestamp.return_value)
 
-        self.assertEqual(len(list_statuses(*args, all=True)[0]), 0)
-        self.assertEqual(len(list_commands(*args, all=True)[0]), 1)
+        self.assertEqual(len(list_statuses(*self.args, all=True)[0]), 0)
+        self.assertEqual(len(list_commands(*self.args, all=True)[0]), 1)
         
         mock_timestamp.return_value += 5 
         
         # the following status is considered to be the FIRST status for given device and after sending it, 
         # all commands previously sent to this device have to be removed
-
-        send_statuses(*args, [status_payload])
-        self.assertEqual(len(list_statuses(*args, all=True)[0]), 1)
-        self.assertEqual(len(list_commands(*args, all=True)[0]), 0)
-
+        send_statuses(*self.args, [self.status_payload])
+        self.assertEqual(len(list_statuses(*self.args, all=True)[0]), 1)
+        self.assertEqual(len(list_commands(*self.args, all=True)[0]), 0)
 
 
-if __name__=="__main__":
-    # runner = unittest.TextTestRunner()
-    # runner.run(Test_Cleaning_Up_Commands("test_cleaning_up_commands"))
-    unittest.main()
+    @patch('database.time._time_in_ms')
+    def test_cleaning_up_command_with_newer_timestamp_relative_to_the_first_status_raises_warning(self, mock_timestamp):
+        mock_timestamp.return_value = 0
+        send_statuses(*self.args, [self.status_payload])
+
+        mock_timestamp.return_value = DATA_RETENTION_PERIOD + 30
+        send_commands(*self.args, [self.command_payload])
+        # the following timestamp is invalid as it is set to the future relative to the next (FIRST) status
+        mock_timestamp.return_value = DATA_RETENTION_PERIOD + 100
+        send_commands(*self.args, [self.command_payload])
+
+        remove_old_messages(DATA_RETENTION_PERIOD + 10)
+        self.assertEqual(len(list_statuses(*self.args, all=True)[0]), 0)
+        self.assertEqual(len(list_commands(*self.args, all=True)[0]), 2)
+
+        mock_timestamp.return_value = DATA_RETENTION_PERIOD + 50
+        warnings, code = send_statuses(*self.args, [self.status_payload])
+        self.assertEqual(len(list_statuses(*self.args, all=True)[0]), 1)
+        self.assertEqual(len(list_commands(*self.args, all=True)[0]), 0) 
+
+        assert(type(warnings) is list)
+        self.assertListEqual(
+            warnings,
+            [
+                future_command_warning(
+                    timestamp=DATA_RETENTION_PERIOD + 100,
+                    company_name=self.COMPANY_1_NAME,
+                    car_name=self.CAR_A_NAME,
+                    module_id=self.device_id.module_id,
+                    device_type=self.device_id.type,
+                    device_role=self.device_id.role,
+                    payload_data=self.command_payload.data
+                )
+            ]
+        )
+
+
+if __name__=="__main__": unittest.main()

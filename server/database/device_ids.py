@@ -18,7 +18,7 @@ def clear_device_ids()->None:
 def remove_device_id(company_name:str, car_name:str, module_id:int, serialized_device_id:str)->None:
     __device_ids[company_name][car_name][module_id].remove(serialized_device_id)
 
-def clean_up_empty_device_dict_items()->None:
+def clean_up_disconnected_cars_and_modules()->None:
     for company_name in __device_ids:
         for car_name in __device_ids[company_name]:
             empty_modules = [module_id for module_id in __device_ids[company_name][car_name].keys() if __device_ids[company_name][car_name]==[]]
