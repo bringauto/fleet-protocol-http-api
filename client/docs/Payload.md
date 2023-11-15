@@ -7,7 +7,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **type** | **int** |  | [optional] 
 **encoding** | **int** |  | [optional] 
-**data** | **object** |  | [optional] 
+**data** | [**PayloadData**](PayloadData.md) |  | [optional] 
 
 ## Example
 

@@ -272,9 +272,12 @@ components:
           type: integer
           example: 1
         data:
-          type: object
-          example: 
-            main_text: The device is running.      
+          oneOf:
+            - type: object
+              example: 
+                main_text: "Payload text"
+            - type: string
+              example: SSBhbSB0aGUgYmVzdA==
 
     Id: 
       description: A general integer Id

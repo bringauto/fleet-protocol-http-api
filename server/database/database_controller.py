@@ -5,7 +5,7 @@ import dataclasses
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from sqlalchemy import Integer, String, JSON, select, insert, BigInteger
-from database.enums import MessageType, EncodingType
+from database.enums import MessageType
 from database.device_ids import remove_device_id
 
 
