@@ -66,18 +66,17 @@ target/
 .ipynb_checkpoints
 
 
-.dockerignore
-Dockerfile
-git_push.sh 
-setup.py 
-test-requirements.txt 
-requirements.txt 
-tox.ini 
-README.md 
-.travis.yml
 .openapi-generator
+.travis.yml
+Dockerfile
+git_push.sh
 openapitools.json
-
+README.md
+setup.py
+requirements.txt
+test-requirements.txt
+tox.ini
+.dockerignore 
 
 fleetv2_http_api
 !fleetv2_http_api/impl

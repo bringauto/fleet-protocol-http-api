@@ -12,7 +12,7 @@ from database.time import timestamp
 
 from enums import MessageType
 
-
+  
 def __message_from_db(message_db:Message_DB)->Message:
     return Message(
         timestamp=message_db.timestamp,
