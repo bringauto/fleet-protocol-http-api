@@ -8,7 +8,7 @@ from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Message
 from database.database_controller import list_messages, send_messages_to_database, Message_DB
 from database.device_ids import store_device_id_if_new, device_ids
-from database.tstamp import timestamp
+from database.time import timestamp
 
 
 def __message_from_db(message_db:Message_DB)->Message:

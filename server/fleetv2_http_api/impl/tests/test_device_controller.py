@@ -192,11 +192,11 @@ class Test_Statuses_In_Time(unittest.TestCase):
 
         mock_timestamp.return_value = 10
         send_statuses(*args, [status_payload])
-        mock_timestamp.return_value = 20
+        mock_timestamp.return_value += 10
         send_commands(*args, [command_payload])
-        mock_timestamp.return_value = 30
+        mock_timestamp.return_value += 10
         send_commands(*args, [command_payload])
-        mock_timestamp.return_value = 45
+        mock_timestamp.return_value += 15
         send_commands(*args, [command_payload])
 
         commands, code = list_commands(*args)
@@ -218,7 +218,38 @@ class Test_Statuses_In_Time(unittest.TestCase):
         self.assertEqual(len(commands), 0)
 
 
+from database.time import DATA_RETENTION_PERIOD
+class Test_Cleaning_Up_Commands(unittest.TestCase):
 
+    COMPANY_1_NAME = "company_1"
+    CAR_A_NAME = "car_A"
+    CAR_B_NAME = "car_B"
+
+
+    def setUp(self) -> None:
+        set_connection_source("sqlite", "pysqlite", "/:memory:")
+        self.status_type = 0
+        self.command_type = 1
+        self.device_id = DeviceId(module_id=42, type=5, role="left light", name="Light")
+        # clear_device_ids()
+
+
+    @patch('fleetv2_http_api.impl.device_controller.timestamp')
+    def test_cleaning_up_commands(self, mock_timestamp):
+        status_payload = Payload(type=0, encoding="JSON", data={"message":"Device is conected"})
+        command_payload = Payload(type=1, encoding="JSON", data={"message":"Beep"})
+        args = self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id
+
+        mock_timestamp.return_value = 0
+        send_statuses(*args, [status_payload])
+        mock_timestamp.return_value += 10
+        send_commands(*args, [command_payload])
+
+        commands, code = list_commands(*args, all=True)
+        self.assertEqual(len(commands), 1)
+
+        mock_timestamp.return_value += DATA_RETENTION_PERIOD
+        
 
 
 # from fleetv2_http_api.impl.device_controller import _count_currently_stored_messages

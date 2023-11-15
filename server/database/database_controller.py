@@ -5,7 +5,7 @@ import dataclasses
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from sqlalchemy import Integer, String, JSON, select, insert
-from database.tstamp import DATA_RETENTION_PERIOD_IN_MS
+from database.time import DATA_RETENTION_PERIOD
 
 
 def connect_to_database(body=None)->None:
