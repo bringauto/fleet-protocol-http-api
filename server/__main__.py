@@ -19,7 +19,7 @@ import sys
 sys.path.append("server")
 
 
-from fleetv2_http_api.__main__ import main as run_server
+from fleetv2_http.__main__ import main as run_server
 from database.database_controller import set_connection_source, remove_old_messages
 from database.device_ids import clear_device_ids
 from database.time import timestamp

@@ -4,7 +4,7 @@
 kill $(fuser 8080/tcp)
 
 pushd server
-npx @openapitools/openapi-generator-cli generate -g python-flask -i ../openapi.yaml -o . -p=packageName=fleetv2_http_api
+npx @openapitools/openapi-generator-cli generate -g python-flask -i ../openapi.yaml -o . -p=packageName=fleetv2_http
 popd
 
 pushd client
