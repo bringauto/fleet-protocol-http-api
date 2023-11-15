@@ -183,7 +183,7 @@ class Test_Statuses_In_Time(unittest.TestCase):
         self.assertEqual(len(statuses), 0)
 
 
-    @patch('fleetv2_http_api.impl.device_controller.timestamp')
+    @patch('database.time._time_in_ms')
     def test_by_default_only_the_OLDEST_COMMAND_is_returned(self, mock_timestamp):
         status_payload = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
         command_payload = Payload(type=1, encoding="JSON", data={"message":"Beep"})
@@ -218,7 +218,7 @@ class Test_Statuses_In_Time(unittest.TestCase):
         self.assertEqual(len(commands), 0)
 
 
-from database.time import DATA_RETENTION_PERIOD
+from database.database_controller import DATA_RETENTION_PERIOD, remove_old_messages
 class Test_Cleaning_Up_Commands(unittest.TestCase):
 
     COMPANY_1_NAME = "company_1"
@@ -231,10 +231,10 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         self.status_type = 0
         self.command_type = 1
         self.device_id = DeviceId(module_id=42, type=5, role="left light", name="Light")
-        # clear_device_ids()
+        clear_device_ids()
 
 
-    @patch('fleetv2_http_api.impl.device_controller.timestamp')
+    @patch('database.time._time_in_ms')
     def test_cleaning_up_commands(self, mock_timestamp):
         status_payload = Payload(type=0, encoding="JSON", data={"message":"Device is conected"})
         command_payload = Payload(type=1, encoding="JSON", data={"message":"Beep"})
@@ -244,12 +244,18 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         send_statuses(*args, [status_payload])
         mock_timestamp.return_value += 10
         send_commands(*args, [command_payload])
+        mock_timestamp.return_value += 10
+        send_commands(*args, [command_payload])
 
-        commands, code = list_commands(*args, all=True)
-        self.assertEqual(len(commands), 1)
+        self.assertEqual(len(list_statuses(*args, all=True)[0]), 1)
+        self.assertEqual(len(list_commands(*args, all=True)[0]), 2)
 
         mock_timestamp.return_value += DATA_RETENTION_PERIOD
-        
+        remove_old_messages()
+
+        self.assertEqual(len(list_statuses(*args, all=True)[0]), 0)
+        self.assertEqual(len(list_commands(*args, all=True)[0]), 1)
+            
 
 
 # from fleetv2_http_api.impl.device_controller import _count_currently_stored_messages

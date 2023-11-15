@@ -1,7 +1,10 @@
-DATA_RETENTION_PERIOD = 3600000 # 1 hour
 
-from time import time as __time
+from time import time
+
+def _time_in_ms()->int:
+    """Time in miliseconds."""
+    return int(time()*1000)
+
 def timestamp()->int: 
     """Timestamp in milliseconds."""
-    return int(__time()*1000)
-
+    return _time_in_ms()

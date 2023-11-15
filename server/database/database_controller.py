@@ -5,7 +5,6 @@ import dataclasses
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from sqlalchemy import Integer, String, JSON, select, insert
-from database.time import DATA_RETENTION_PERIOD
 
 
 def connect_to_database(body=None)->None:
@@ -200,3 +199,17 @@ def list_messages(
             base:MessageBase = row[0]
             statuses.append(base.to_model())
         return statuses
+    
+
+from sqlalchemy import delete
+from database.time import timestamp
+DATA_RETENTION_PERIOD = 3600000
+
+def remove_old_messages()->None:  
+    current_timestamp = timestamp()
+    with connection_source().begin() as conn: 
+        oldest_timestamp_to_be_kept = current_timestamp-DATA_RETENTION_PERIOD
+        stmt = delete(MessageBase.__table__).where( # type: ignore
+            MessageBase.__table__.c.timestamp < oldest_timestamp_to_be_kept
+        ) 
+        conn.execute(stmt)
