@@ -66,7 +66,7 @@ paths:
       - $ref: "#/components/parameters/ModuleId"
 
 
-  /{company_name}/{car_name}/status/{device-id}:
+  /{company_name}/{car_name}/status/{device_id}:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: list_statuses
@@ -116,7 +116,7 @@ paths:
                 $ref: '#/components/schemas/Payload'
 
 
-  /{company_name}/{car_name}/command/{device-id}:
+  /{company_name}/{car_name}/command/{device_id}:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: list_commands
@@ -196,7 +196,7 @@ components:
       example: 785
 
     DeviceId:
-      name: device-id
+      name: device_id
       description: The Id of the Device. 
       in: path
       required: true
@@ -267,11 +267,10 @@ components:
       properties:
         type: 
           type: integer 
-          minimum: 0
           example: 4
         encoding:
-          type: string
-          example: BASE64
+          type: integer
+          example: 1
         data:
           type: object
           example: 

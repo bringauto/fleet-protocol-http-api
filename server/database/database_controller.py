@@ -5,7 +5,7 @@ import dataclasses
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from sqlalchemy import Integer, String, JSON, select, insert, BigInteger
-from database.message_types import STATUS_TYPE, COMMAND_TYPE
+from database.enums import MessageType, EncodingType
 from database.device_ids import remove_device_id
 
 
@@ -94,7 +94,7 @@ class MessageBase(Base):
     device_name:Mapped[str] = mapped_column(String)
 
     payload_type:Mapped[int] = mapped_column(Integer, primary_key=True)
-    payload_encoding:Mapped[str] = mapped_column(String)
+    payload_encoding:Mapped[int] = mapped_column(Integer)
     payload_data:Mapped[dict] = mapped_column(JSON)
     
     @staticmethod
@@ -144,7 +144,7 @@ class Message_DB:
     device_role:str
     device_name:str
     message_type:int
-    payload_encoding:str
+    payload_encoding:int
     payload_data:Dict[str,str]
 
 
@@ -220,7 +220,7 @@ def cleanup_device_commands_and_warn_before_future_commands(
     table = MessageBase.__table__
     with use_connection_source().begin() as conn: 
         stmt = delete(table).where( # type: ignore
-            table.c.payload_type == COMMAND_TYPE,
+            table.c.payload_type == MessageType.COMMAND_TYPE,
             table.c.company_name == company_name,
             table.c.car_name == car_name,   
             table.c.module_id == module_id,
@@ -268,8 +268,6 @@ def future_command_warning(
            f"device type: {device_type}, device_role: {device_role}, payload: {payload_data}."
 
 
-# DATA_RETENTION_PERIOD = 3600000
-
 DATA_RETENTION_PERIOD = 5000
 
 def remove_old_messages(current_timestamp:int)->None:  
@@ -299,7 +297,7 @@ def __clean_up_disconnected_devices(company:str, car:str, module_id:int)->None:
         with Session(use_connection_source()) as session: 
             table = MessageBase.__table__
             select_stmt = select(MessageBase).where(
-                table.c.payload_type == STATUS_TYPE,
+                table.c.payload_type == MessageType.STATUS_TYPE,
                 table.c.company_name == company,
                 table.c.car_name == car,
                 table.c.module_id == module_id,

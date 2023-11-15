@@ -6,7 +6,7 @@ A message passed to device (command) or by device (status).
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **type** | **int** |  | [optional] 
-**encoding** | **str** |  | [optional] 
+**encoding** | **int** |  | [optional] 
 **data** | **object** |  | [optional] 
 
 ## Example

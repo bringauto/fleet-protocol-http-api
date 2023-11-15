@@ -5,10 +5,10 @@ All URIs are relative to *http://localhost:8080*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**available_devices**](DeviceApi.md#available_devices) | **GET** /{company_name}/{car_name}/available-devices | 
-[**list_commands**](DeviceApi.md#list_commands) | **GET** /{company_name}/{car_name}/command/{device-id} | 
-[**list_statuses**](DeviceApi.md#list_statuses) | **GET** /{company_name}/{car_name}/status/{device-id} | 
-[**send_commands**](DeviceApi.md#send_commands) | **POST** /{company_name}/{car_name}/command/{device-id} | 
-[**send_statuses**](DeviceApi.md#send_statuses) | **POST** /{company_name}/{car_name}/status/{device-id} | 
+[**list_commands**](DeviceApi.md#list_commands) | **GET** /{company_name}/{car_name}/command/{device_id} | 
+[**list_statuses**](DeviceApi.md#list_statuses) | **GET** /{company_name}/{car_name}/status/{device_id} | 
+[**send_commands**](DeviceApi.md#send_commands) | **POST** /{company_name}/{car_name}/command/{device_id} | 
+[**send_statuses**](DeviceApi.md#send_statuses) | **POST** /{company_name}/{car_name}/status/{device_id} | 
 
 
 # **available_devices**

@@ -10,7 +10,7 @@ from database.database_controller import list_messages, send_messages_to_databas
 from database.device_ids import store_device_id_if_new, device_ids
 from database.time import timestamp
 
-from database.message_types import STATUS_TYPE, COMMAND_TYPE
+from database.enums import MessageType
 
 
 def __message_from_db(message_db:Message_DB)->Message:
@@ -64,7 +64,7 @@ def list_commands(
     commands = [__message_from_db(m) for m in list_messages(
         company_name=company_name,
         car_name=car_name,
-        message_type=COMMAND_TYPE,
+        message_type=MessageType.COMMAND_TYPE,
         module_id=device_id.module_id,
         device_type=device_id.type,
         device_role=device_id.role,
@@ -86,7 +86,7 @@ def list_statuses(
     statuses = [__message_from_db(m) for m in list_messages(
         company_name=company_name,
         car_name=car_name,
-        message_type=STATUS_TYPE,
+        message_type=MessageType.STATUS_TYPE,
         module_id=device_id.module_id,
         device_type=device_id.type,
         device_role=device_id.role,
@@ -116,7 +116,7 @@ def send_commands(company_name:str, car_name:str, device_id:DeviceId, payload:Li
                 device_type=device_id.type,
                 device_role=device_id.role,
                 device_name=device_id.name,
-                message_type=COMMAND_TYPE,
+                message_type=MessageType.COMMAND_TYPE,
                 payload_encoding=p.encoding,
                 payload_data=p.data # type: ignore
             ) 
@@ -135,7 +135,7 @@ def send_statuses(company_name:str, car_name:str, device_id:DeviceId, payload:Li
             device_type=device_id.type,
             device_role=device_id.role,
             device_name=device_id.name,
-            message_type=STATUS_TYPE,
+            message_type=MessageType.STATUS_TYPE,
             payload_encoding=p.encoding,
             payload_data=p.data # type: ignore
         ) 

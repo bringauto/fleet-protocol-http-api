@@ -12,7 +12,7 @@ from fleetv2_http_api.impl.device_controller import send_statuses, send_commands
 from fleetv2_http_api.impl.device_controller import _serialized_device_id, _serialized_car_info
 from database.device_ids import clear_device_ids
 
-from database.message_types import STATUS_TYPE, COMMAND_TYPE
+from database.enums import MessageType, EncodingType
 
 
 class Test_Device_Id_Validity(unittest.TestCase):
@@ -40,8 +40,8 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
     def setUp(self) -> None:
         set_connection_source("sqlite","pysqlite","/:memory:")
         self.payload_example = Payload(
-            type=STATUS_TYPE, 
-            encoding="JSON", 
+            type=MessageType.STATUS_TYPE, 
+            encoding=EncodingType.JSON, 
             data={"message":"Device is running"}
         )
         clear_device_ids()
@@ -86,13 +86,13 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
     def setUp(self) -> None:
         set_connection_source("sqlite","pysqlite","/:memory:")
         self.status_payload_example = Payload(
-            type=STATUS_TYPE, 
-            encoding="JSON", 
+            type=MessageType.STATUS_TYPE, 
+            encoding=EncodingType.JSON, 
             data={"message":"Device is running"}
         )
         self.command_payload_example = Payload(
-            type=COMMAND_TYPE, 
-            encoding="JSON", 
+            type=MessageType.COMMAND_TYPE, 
+            encoding=EncodingType.JSON, 
             data={"message":"Beep"}
         )
         clear_device_ids()
@@ -153,7 +153,7 @@ class Test_Statuses_In_Time(unittest.TestCase):
 
     @patch('fleetv2_http_api.impl.device_controller.timestamp')
     def test_by_default_only_the_NEWEST_STATUS_is_returned_and_if_all_is_specified_all_statuses_are_returned(self, mock_timestamp):
-        payload = Payload(type=0, encoding="JSON", data={"message":"Device is running"})
+        payload = Payload(type=0, encoding=EncodingType.JSON, data={"message":"Device is running"})
         args = self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id
 
         mock_timestamp.return_value = 10
@@ -185,8 +185,8 @@ class Test_Statuses_In_Time(unittest.TestCase):
 
     @patch('database.time._time_in_ms')
     def test_by_default_only_the_OLDEST_COMMAND_is_returned(self, mock_timestamp):
-        status_payload = Payload(type=STATUS_TYPE, encoding="JSON", data={"message":"Device is running"})
-        command_payload = Payload(type=COMMAND_TYPE, encoding="JSON", data={"message":"Beep"})
+        status_payload = Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is running"})
+        command_payload = Payload(type=MessageType.COMMAND_TYPE, encoding=EncodingType.JSON, data={"message":"Beep"})
 
         args = self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id
 
@@ -231,8 +231,8 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         set_connection_source("sqlite", "pysqlite", "/:memory:")
         self.device_id = DeviceId(module_id=42, type=5, role="left light", name="Light")
         clear_device_ids()
-        self.status_payload = Payload(type=STATUS_TYPE, encoding="JSON", data={"message":"Device is conected"})
-        self.command_payload = Payload(type=COMMAND_TYPE, encoding="JSON", data={"message":"Beep"})
+        self.status_payload = Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is conected"})
+        self.command_payload = Payload(type=MessageType.COMMAND_TYPE, encoding=EncodingType.JSON, data={"message":"Beep"})
         self.args = self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id
 
 
