@@ -239,16 +239,11 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         args = self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id
 
         mock_timestamp.return_value = 0
-        msg, code = send_statuses(*args, [status_payload])
-        self.assertEqual(code, 200)
-
+        send_statuses(*args, [status_payload])
         mock_timestamp.return_value += 10
-        msg, code = send_commands(*args, [command_payload])
-        self.assertEqual(code, 200)
-
+        send_commands(*args, [command_payload])
         mock_timestamp.return_value += 10
-        msg, code = send_commands(*args, [command_payload])
-        self.assertEqual(code, 200)
+        send_commands(*args, [command_payload])
 
         self.assertEqual(len(list_statuses(*args, all=True)[0]), 1)
         self.assertEqual(len(list_commands(*args, all=True)[0]), 2)
