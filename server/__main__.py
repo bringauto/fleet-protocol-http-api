@@ -20,9 +20,38 @@ sys.path.append("server")
 
 
 from fleetv2_http_api.__main__ import main as run_server
-from server.database.database_controller import set_connection_source
-from server.database.device_ids import clear_device_ids
+from database.database_controller import set_connection_source, remove_old_messages
+from database.device_ids import clear_device_ids
+from fleetv2_http_api.impl.device_controller import available_cars, list_statuses, DeviceId, send_statuses, Payload
+from database.time import timestamp
 
+
+from apscheduler.schedulers.background import BackgroundScheduler
+
+device_id = DeviceId(module_id=42, type=4, role="test_device", name="Test Device")
+payload = Payload(type=0, encoding="JSON", data={"message": "Device is alive"})
+
+
+def __clean_up_and_list_statuses()->None:
+    remove_old_messages(current_timestamp=timestamp())
+    # print(list_statuses("test_company", "test_car", device_id, all)[0])
+    print(available_cars())
+    print()
+
+def __send_statuses()->None:
+    send_statuses("test_company", "test_car", device_id, [payload])
+
+
+
+
+def schedule_message_cleanup()->None:
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(
+        func=__clean_up_and_list_statuses, 
+        trigger="interval", 
+        seconds=1
+    )
+    scheduler.start()
 
 def connect_to_database()->None:
     clear_device_ids()
@@ -35,19 +64,9 @@ def connect_to_database()->None:
     )
 
 
-import time
-from apscheduler.schedulers.background import BackgroundScheduler
-def __print_current_time()->None:
-    print(time.time())
-
-
-def schedule_message_cleanup()->None:
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(func=__print_current_time, trigger="interval", seconds=1)
-    scheduler.start()
-
-
 if __name__ == '__main__':
     connect_to_database()
-    # schedule_message_cleanup()
+    schedule_message_cleanup()
+    __send_statuses()
     run_server()
+

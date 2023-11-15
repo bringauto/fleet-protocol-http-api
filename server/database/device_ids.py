@@ -21,7 +21,7 @@ def remove_device_id(company_name:str, car_name:str, module_id:int, serialized_d
 def clean_up_disconnected_cars_and_modules()->None:
     for company_name in __device_ids:
         for car_name in __device_ids[company_name]:
-            empty_modules = [module_id for module_id in __device_ids[company_name][car_name].keys() if __device_ids[company_name][car_name]==[]]
+            empty_modules = [module_id for module_id in __device_ids[company_name][car_name].keys() if __device_ids[company_name][car_name][module_id]==[]]
             for module_id in empty_modules:
                 __device_ids[company_name][car_name].pop(module_id)
 

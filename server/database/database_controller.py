@@ -4,7 +4,7 @@ from typing import Optional, List, ClassVar
 import dataclasses
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
-from sqlalchemy import Integer, String, JSON, select, insert
+from sqlalchemy import Integer, String, JSON, select, insert, BigInteger
 from database.message_types import STATUS_TYPE, COMMAND_TYPE
 from database.device_ids import remove_device_id
 
@@ -24,7 +24,11 @@ def connect_to_database(body=None)->None:
 _connection_source:Optional[Engine] = None
 
 
-def connection_source()->Engine:
+def connection_source()->Engine|None:
+    return _connection_source
+
+
+def use_connection_source()->Engine:
     if isinstance(_connection_source, Engine): 
         return _connection_source
     else: 
@@ -78,16 +82,16 @@ class Base(DeclarativeBase):
 @dataclasses.dataclass
 class MessageBase(Base):
     __tablename__:ClassVar[str] = "message"
-    timestamp:Mapped[int] = mapped_column(primary_key=True)
-    sent_order:Mapped[int] = mapped_column(primary_key=True)
+    timestamp:Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    sent_order:Mapped[int] = mapped_column(Integer, primary_key=True)
 
-    company_name:Mapped[str] = mapped_column(primary_key=True)
-    car_name:Mapped[str] = mapped_column(primary_key=True)
+    company_name:Mapped[str] = mapped_column(String, primary_key=True)
+    car_name:Mapped[str] = mapped_column(String, primary_key=True)
 
-    module_id:Mapped[int] = mapped_column(primary_key=True)
-    device_type:Mapped[int] = mapped_column(primary_key=True)
-    device_role:Mapped[str] = mapped_column(primary_key=True)
-    device_name:Mapped[str] = mapped_column()
+    module_id:Mapped[int] = mapped_column(Integer, primary_key=True)
+    device_type:Mapped[int] = mapped_column(Integer, primary_key=True)
+    device_role:Mapped[str] = mapped_column(String, primary_key=True)
+    device_name:Mapped[str] = mapped_column(String)
 
     payload_type:Mapped[int] = mapped_column(Integer, primary_key=True)
     payload_encoding:Mapped[str] = mapped_column(String)
@@ -115,7 +119,7 @@ class MessageBase(Base):
     def from_models(company_name:str, car_name:str, *models:Message_DB)->List[MessageBase]:
         bases:List[MessageBase] = list()
         for k in range(len(models)):
-            bases.append(MessageBase.from_model(company_name, car_name, models[k], k))
+            bases.append(MessageBase.from_model(company_name, car_name, message = models[k], order=k))
         return bases
 
     def to_model(self)->Message_DB:
@@ -145,7 +149,7 @@ class Message_DB:
 
 
 def send_messages_to_database(company_name:str, car_name:str, *messages:Message_DB)->None: 
-    with connection_source().begin() as conn:
+    with use_connection_source().begin() as conn:
         stmt = insert(MessageBase.__table__) # type: ignore
         msg_base = MessageBase.from_models(company_name, car_name, *messages)
         data_list = [msg.__dict__ for msg in msg_base]
@@ -165,7 +169,7 @@ def list_messages(
     )->List[Message_DB]:  # noqa: E501
     
     statuses:List[Message_DB] = list()
-    with Session(connection_source()) as session:
+    with Session(use_connection_source()) as session:
         table = MessageBase.__table__
         selection = select(MessageBase).where(table.c.payload_type == message_type)
         if all is not None:
@@ -214,7 +218,7 @@ def cleanup_device_commands_and_warn_before_future_commands(
     )->List[str]: 
 
     table = MessageBase.__table__
-    with connection_source().begin() as conn: 
+    with use_connection_source().begin() as conn: 
         stmt = delete(table).where( # type: ignore
             table.c.payload_type == COMMAND_TYPE,
             table.c.company_name == company_name,
@@ -264,9 +268,12 @@ def future_command_warning(
            f"device type: {device_type}, device_role: {device_role}, payload: {payload_data}."
 
 
-DATA_RETENTION_PERIOD = 3600000
+# DATA_RETENTION_PERIOD = 3600000
+
+DATA_RETENTION_PERIOD = 5000
+
 def remove_old_messages(current_timestamp:int)->None:  
-    with connection_source().begin() as conn: 
+    with use_connection_source().begin() as conn: 
         oldest_timestamp_to_be_kept = current_timestamp-DATA_RETENTION_PERIOD
         stmt = delete(MessageBase.__table__).where( # type: ignore
             MessageBase.__table__.c.timestamp < oldest_timestamp_to_be_kept
@@ -289,7 +296,7 @@ def __clean_up_disconnected_devices(company:str, car:str, module_id:int)->None:
     module_devices = device_ids()[company][car][module_id]
     for serialized_device_id in module_devices:
         _, device_type, device_role = _deserialize_device_id(serialized_device_id)
-        with Session(connection_source()) as session: 
+        with Session(use_connection_source()) as session: 
             table = MessageBase.__table__
             select_stmt = select(MessageBase).where(
                 table.c.payload_type == STATUS_TYPE,
@@ -305,6 +312,6 @@ def __clean_up_disconnected_devices(company:str, car:str, module_id:int)->None:
 
 
 from typing import Tuple
-def _deserialize_device_id(serialized_id:str)->Tuple[str,str,str]:
+def _deserialize_device_id(serialized_id:str)->Tuple[int,int,str]:
     module_id, device_type, device_role = serialized_id.split("_",2)
-    return module_id, device_type, device_role
+    return int(module_id), int(device_type), device_role

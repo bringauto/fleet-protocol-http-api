@@ -268,6 +268,15 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         mock_timestamp.return_value = 0
         send_statuses(*self.args, [self.status_payload])
 
+        self.assertEqual(
+            available_devices(self.COMPANY_1_NAME, self.CAR_A_NAME), 
+            [_serialized_device_id(self.device_id)]
+        )
+        self.assertEqual(
+            available_cars(), 
+            [_serialized_car_info(self.COMPANY_1_NAME, self.CAR_A_NAME)]
+        )
+
         mock_timestamp.return_value = DATA_RETENTION_PERIOD + 30
         send_commands(*self.args, [self.command_payload])
         # the following timestamp is invalid as it is set to the future relative to the next (FIRST) status
@@ -275,8 +284,12 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         send_commands(*self.args, [self.command_payload])
 
         remove_old_messages(DATA_RETENTION_PERIOD + 10)
+
         self.assertEqual(len(list_statuses(*self.args, all=True)[0]), 0)
         self.assertEqual(len(list_commands(*self.args, all=True)[0]), 2)
+
+        self.assertEqual(available_devices(self.COMPANY_1_NAME, self.CAR_A_NAME)[0], [])
+        self.assertEqual(available_cars(), [])
 
         mock_timestamp.return_value = DATA_RETENTION_PERIOD + 50
         warnings, code = send_statuses(*self.args, [self.status_payload])
@@ -300,4 +313,5 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         )
 
 
-if __name__=="__main__": unittest.main()
+if __name__=="__main__": 
+    unittest.main()
