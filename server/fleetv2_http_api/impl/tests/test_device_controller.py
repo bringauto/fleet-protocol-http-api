@@ -239,11 +239,16 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         args = self.COMPANY_1_NAME, self.CAR_A_NAME, self.device_id
 
         mock_timestamp.return_value = 0
-        send_statuses(*args, [status_payload])
+        msg, code = send_statuses(*args, [status_payload])
+        self.assertEqual(code, 200)
+
         mock_timestamp.return_value += 10
-        send_commands(*args, [command_payload])
+        msg, code = send_commands(*args, [command_payload])
+        self.assertEqual(code, 200)
+
         mock_timestamp.return_value += 10
-        send_commands(*args, [command_payload])
+        msg, code = send_commands(*args, [command_payload])
+        self.assertEqual(code, 200)
 
         self.assertEqual(len(list_statuses(*args, all=True)[0]), 1)
         self.assertEqual(len(list_commands(*args, all=True)[0]), 2)
@@ -259,9 +264,9 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         # the following status is considered to be the FIRST status for given device and after sending it, 
         # all commands previously sent to this device have to be removed
 
-        # send_statuses(*args, [status_payload])
-        # self.assertEqual(len(list_statuses(*args, all=True)[0]), 1)
-        # self.assertEqual(len(list_commands(*args, all=True)[0]), 0)
+        send_statuses(*args, [status_payload])
+        self.assertEqual(len(list_statuses(*args, all=True)[0]), 1)
+        self.assertEqual(len(list_commands(*args, all=True)[0]), 0)
 
 
 

@@ -6,6 +6,7 @@ from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from sqlalchemy import Integer, String, JSON, select, insert
 from database.message_types import STATUS_TYPE, COMMAND_TYPE
+from database.device_ids import remove_device_id
 
 
 def connect_to_database(body=None)->None:
@@ -235,32 +236,35 @@ def remove_old_messages(current_timestamp:int)->None:
     clean_up_disconnected_cars()
 
     
-from database.device_ids import device_ids
+from database.device_ids import device_ids, clean_up_empty_device_dict_items
 def clean_up_disconnected_cars()->None:
-    car_devices = device_ids()
-    for car in car_devices:
-        __clean_up_disconnected_devices(car)
+    device_dict = device_ids()
+    for company in device_dict:
+        for car in device_dict[company]:
+            for module_id in device_dict[company][car]:
+                __clean_up_disconnected_devices(company, car, module_id)
+    clean_up_empty_device_dict_items()          
+
+def __clean_up_disconnected_devices(company:str, car:str, module_id:int)->None:
+    module_devices = device_ids()[company][car][module_id]
+    for serialized_device_id in module_devices:
+        _, device_type, device_role = _deserialize_device_id(serialized_device_id)
+        with Session(connection_source()) as session: 
+            table = MessageBase.__table__
+            select_stmt = select(MessageBase).where(
+                table.c.payload_type == STATUS_TYPE,
+                table.c.company_name == company,
+                table.c.car_name == car,
+                table.c.module_id == module_id,
+                table.c.device_type == device_type,
+                table.c.device_role == device_role,
+            )
+            selection = session.execute(select_stmt)
+            if selection.first() is None:
+                remove_device_id(company, car, module_id, serialized_device_id)
 
 
-def __clean_up_disconnected_devices(car:str)->None:
-    devices_per_module = device_ids()[car]
-    # for module_id in devices_per_module:
-    #     with Session(connection_source()) as session: 
-    #         count = session.query(func.count(MessageBase.__table__.c.))
-    
-
-    # __tablename__:ClassVar[str] = "message"
-    # timestamp:Mapped[int] = mapped_column(primary_key=True)
-    # sent_order:Mapped[int] = mapped_column(primary_key=True)
-
-    # company_name:Mapped[str] = mapped_column(primary_key=True)
-    # car_name:Mapped[str] = mapped_column(primary_key=True)
-
-    # module_id:Mapped[int] = mapped_column(primary_key=True)
-    # device_type:Mapped[int] = mapped_column(primary_key=True)
-    # device_role:Mapped[str] = mapped_column(primary_key=True)
-    # device_name:Mapped[str] = mapped_column()
-
-    # payload_type:Mapped[int] = mapped_column(Integer, primary_key=True)
-    # payload_encoding:Mapped[str] = mapped_column(String)
-    # payload_data:Mapped[dict] = mapped_column(JSON)
+from typing import Tuple
+def _deserialize_device_id(serialized_id:str)->Tuple[str,str,str]:
+    module_id, device_type, device_role = serialized_id.split("_",2)
+    return module_id, device_type, device_role

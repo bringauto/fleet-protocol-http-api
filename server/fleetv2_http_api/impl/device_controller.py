@@ -31,17 +31,26 @@ def __message_from_db(message_db:Message_DB)->Message:
 
     
 def available_cars()->List[str]:
-    return list(device_ids().keys())
+    cars:List[str] = list()
+    device_dict = device_ids()
+    for company_name in device_dict:
+        for car_name in device_dict[company_name]:
+            cars.append(_serialized_car_info(company_name, car_name))
+    return cars
 
 
 def available_devices(company_name:str, car_name:str, module_id:Optional[int]=None)->List[str]:  # noqa: E501
-    car = _serialized_car_info(company_name, car_name)
-    if car not in device_ids(): 
+    device_dict = device_ids()
+    if company_name not in device_dict:
         return [], 404 # type: ignore
+    
+    elif car_name not in device_dict[company_name]:
+        return [], 404 # type: ignore
+    
     if module_id is None: 
-        return __all_available_devices(car)
+        return __all_available_devices(company_name, car_name)
     else: 
-        return __available_devices_for_module(car, module_id)
+        return __available_devices_for_module(company_name, car_name, module_id)
 
 
 def list_commands(
@@ -59,7 +68,8 @@ def list_commands(
         module_id=device_id.module_id,
         device_type=device_id.type,
         device_role=device_id.role,
-        all=all, since=since
+        all=all, 
+        since=since
     )]
     if commands: return commands, 200
     else: return [], 404
@@ -80,17 +90,22 @@ def list_statuses(
         module_id=device_id.module_id,
         device_type=device_id.type,
         device_role=device_id.role,
-        all=all, since=since
+        all=all, 
+        since=since
     )]
     if statuses: return statuses, 200
     else: return [], 404
     
 
 def send_commands(company_name:str, car_name:str, device_id:DeviceId, payload:List[Payload]=list())->Tuple[str, int]:  # noqa: E501
-    car = _serialized_car_info(company_name, car_name)
-    if car not in device_ids():
-        return "", 404
-    elif device_id.module_id not in device_ids()[car]:
+    device_dict = device_ids()
+    if company_name not in device_dict:
+        return [], 404 # type: ignore
+    
+    elif car_name not in device_dict[company_name]:
+        return [], 404 # type: ignore
+    
+    elif device_id.module_id not in device_dict[company_name][car_name]:
         return "", 404
     else:
         tstamp = timestamp()
@@ -130,7 +145,8 @@ def send_statuses(company_name:str, car_name:str, device_id:DeviceId, payload:Li
     send_messages_to_database(company_name, car_name, *statuses_to_db)
 
     first_status_was_sent = store_device_id_if_new(
-        car_info = _serialized_car_info(company_name, car_name), 
+        company_name = company_name,
+        car_name = car_name,
         module_id = device_id.module_id, 
         serialized_device_id = _serialized_device_id(device_id)
     )
@@ -156,17 +172,17 @@ def _serialized_device_id(device_id:DeviceId)->str:
 
 
 
-def __all_available_devices(car_info:str)->List[str]:
+def __all_available_devices(company_name:str, car_name:str)->List[str]:
     device_id_list:List[str] = list()
-    for module_devices in device_ids()[car_info].values():
+    for module_devices in device_ids()[company_name][car_name].values():
         device_id_list.extend(module_devices)
     return device_id_list
 
-def __available_devices_for_module(car_info:str, module_id:int)->List[str]:
-    if not module_id in device_ids()[car_info]: 
+def __available_devices_for_module(company_name:str, car_name:str, module_id:int)->List[str]:
+    if not module_id in device_ids()[company_name][car_name]: 
         return [], 404 # type: ignore
     else: 
-        return device_ids()[car_info][module_id]
+        return device_ids()[company_name][car_name][module_id]
 
 
 from database.database_controller import cleanup_device_commands
