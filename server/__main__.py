@@ -25,6 +25,8 @@ from database.device_ids import clear_device_ids
 from database.time import timestamp
 
 
+from fleetv2_http_api.impl.device_controller import available_cars
+
 from apscheduler.schedulers.background import BackgroundScheduler
 
 
@@ -52,10 +54,19 @@ def schedule_message_cleanup()->None:
 
 def __clean_up_messages()->None:
     remove_old_messages(current_timestamp=timestamp())
+    print(available_cars())
 
+
+from fleetv2_http_api.impl.device_controller import DeviceId, Payload, send_statuses
+from enums import MessageType, EncodingType
+def __post_statuses()->None:
+    device_id = DeviceId(module_id=42, type=4, role="test_device", name="Test Device")
+    payload = Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={})
+
+    send_statuses("company", "test_car", device_id, [payload])
 
 if __name__ == '__main__':
     connect_to_database()
     schedule_message_cleanup()
+    __post_statuses()
     run_server()
-
