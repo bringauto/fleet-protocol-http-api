@@ -17,6 +17,9 @@ def connection_source()->Engine|None:
 
 
 def get_connection_source()->Engine:
+    """Return the SQLAlchemy engine object used to connect to the database and
+    raise exception if the engine object was not set yet.
+    """
     if isinstance(_connection_source, Engine): 
         return _connection_source
     else: 
@@ -77,6 +80,7 @@ class Base(DeclarativeBase):
 
 @dataclasses.dataclass
 class MessageBase(Base):
+    """Object defining message table inside the database."""
     __tablename__:ClassVar[str] = "message"
     __data_retention_period_in_seconds:ClassVar[int] = 10000
 
@@ -99,17 +103,17 @@ class MessageBase(Base):
     @classmethod
     @property
     def data_retention_period_s(cls)->int: 
-        """Returns the data retention period in seconds"""
+        """Return the data retention period in seconds"""
         return cls.__data_retention_period_in_seconds
     
     @classmethod
     @property
     def data_retention_period_ms(cls)->int: 
-        """Returns the data retention period in milliseconds"""
+        """Return the data retention period in milliseconds"""
         return cls.__data_retention_period_in_seconds*1000
 
     @classmethod
-    def set_data_retention_period(cls, seconds:int)->None: 
+    def set_data_retention_period(cls, seconds:int)->None:
         cls.__data_retention_period_in_seconds = seconds
     
     @staticmethod
@@ -153,6 +157,7 @@ class MessageBase(Base):
 from typing import Dict
 @dataclasses.dataclass
 class Message_DB:
+    """Object defining the structure of messages sent to and retrieved from the database."""
     timestamp:int
     module_id:int
     device_type:int
@@ -181,7 +186,13 @@ def list_messages(
     device_role:str,
     all=None, 
     since:Optional[int]=None
-    )->List[Message_DB]:  # noqa: E501
+    )->List[Message_DB]:  # noqa: 
+    
+    """Return a list of messages of the given type, optionally filtered by the given parameters.
+    If all is not None, then all messages of the given type are returned.
+    Otherwise, if since is not None, then all messages of the given type with a timestamp less than or equal to since are returned.
+    Otherwise, the newest status or oldest command is returned.
+    """
     
     statuses:List[Message_DB] = list()
     with Session(get_connection_source()) as session:
@@ -232,6 +243,13 @@ def cleanup_device_commands_and_warn_before_future_commands(
     device_role:str
     )->List[str]: 
 
+    """Remove all device commands assigned to a device before the first status was sent.
+
+    All such commands ought to have timestamp less than or equal to the timestamp of the first status.
+
+    If any commands have a timestamp greater than the timestamp of the first status, then return a warning.
+
+    """
     table = MessageBase.__table__
     with get_connection_source().begin() as conn: 
         stmt = delete(table).where( # type: ignore
@@ -277,6 +295,9 @@ def future_command_warning(
     payload_data:Any
     )->str:
 
+    """Construct a warning message for a command with a timestamp greater 
+    than the timestamp of the first status.
+    """
     return "Warning: Removing command existing before first status was sent, " \
            "but with newer timestamp\n:" \
            f"timestamp: {timestamp}, company:{company_name}, car:{car_name}, module id:{module_id}, " \
@@ -284,6 +305,9 @@ def future_command_warning(
 
 
 def remove_old_messages(current_timestamp:int)->None:  
+    """Remove all messages with a timestamp older than the current timestamp 
+    minus the data retention period.
+    """
     with get_connection_source().begin() as conn: 
         oldest_timestamp_to_be_kept = current_timestamp - MessageBase.data_retention_period_ms
         stmt = delete(MessageBase.__table__).where( # type: ignore
@@ -297,6 +321,9 @@ from database.device_ids import device_ids, clean_up_disconnected_cars_and_modul
 
 import copy
 def clean_up_disconnected_cars()->None:
+    """Remove all car keys from the device_ids dictionary that do not have any modules.
+    Then remove all companies that do not have any cars left.
+    """
     device_dict = copy.deepcopy(device_ids())
     for company in device_dict:
         for car in device_dict[company]:
@@ -306,6 +333,7 @@ def clean_up_disconnected_cars()->None:
 
 
 def __clean_up_disconnected_devices(company:str, car:str, module_id:int)->None:
+    """Remove all device ids from the device_ids dictionary that do not have any messages."""
     module_devices = device_ids()[company][car][module_id]
     for serialized_device_id in module_devices:
         _, device_type, device_role = _deserialize_device_id(serialized_device_id)
@@ -326,5 +354,7 @@ def __clean_up_disconnected_devices(company:str, car:str, module_id:int)->None:
 
 from typing import Tuple
 def _deserialize_device_id(serialized_id:str)->Tuple[int,int,str]:
+    """Split the serialized device id into its component parts.
+    """
     module_id, device_type, device_role = serialized_id.split("_",2)
     return int(module_id), int(device_type), device_role
