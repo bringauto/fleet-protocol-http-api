@@ -20,7 +20,7 @@ sys.path.append("server")
 
 
 from fleetv2_http_api.__main__ import main as run_server
-from database.database_controller import set_connection_source, remove_old_messages
+from database.database_controller import set_db_connection, remove_old_messages, set_message_retention_period
 from database.device_ids import clear_device_ids
 from database.time import timestamp
 
@@ -30,26 +30,32 @@ from fleetv2_http_api.impl.device_controller import available_cars
 from apscheduler.schedulers.background import BackgroundScheduler
 
 
-def connect_to_database()->None:
+import json
+from typing import Any, Dict
+
+
+
+def connect_to_database(db_server_config:Dict[str,Any])->None:
     clear_device_ids()
-    set_connection_source(
-        dialect="postgresql",
-        dbapi="psycopg",
-        dblocation="localhost:5432",
-        username="postgres",
-        password="1234"
+    set_db_connection(
+        dialect = db_server_config["dialect"],
+        dbapi = db_server_config["api"],
+        dblocation = str(db_server_config["host"]) + ":" + str(db_server_config["port"]),
+        username = db_server_config["username"],
+        password = db_server_config["password"]
     )
 
 
 scheduler = BackgroundScheduler()
 
 
-def schedule_jobs()->None:
+def setup_database_jobs(db_cleanup_config:Dict[str,int])->None:
     global scheduler
+    set_message_retention_period(db_cleanup_config["retention_period"])
     scheduler.add_job(
         func=__clean_up_messages, 
         trigger="interval", 
-        seconds=1,
+        seconds=db_cleanup_config["cleanup_period"],
     )
 
     scheduler.add_job(
@@ -85,7 +91,8 @@ def __post_statuses()->None:
 
 
 if __name__ == '__main__':
-    connect_to_database()
-    schedule_jobs()
+    config:Dict[str,Any] = json.load(open("config.json"))
+    connect_to_database(config["database"]["server"])
+    setup_database_jobs(config["database"]["cleanup"]["timing_in_seconds"])
     __post_statuses()
     run_server()

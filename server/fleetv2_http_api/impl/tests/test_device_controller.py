@@ -3,7 +3,7 @@ sys.path.append("server")
 
 
 import unittest
-from database.database_controller import set_connection_source
+from database.database_controller import set_db_connection
 from fleetv2_http_api.impl.device_controller import available_devices, available_cars
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Payload
@@ -38,7 +38,7 @@ class Test_Device_Id_Validity(unittest.TestCase):
 class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
     
     def setUp(self) -> None:
-        set_connection_source("sqlite","pysqlite","/:memory:")
+        set_db_connection("sqlite","pysqlite","/:memory:")
         self.payload_example = Payload(
             type=MessageType.STATUS_TYPE, 
             encoding=EncodingType.JSON, 
@@ -84,7 +84,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
 class Test_Sending_And_Listing_Messages(unittest.TestCase):
 
     def setUp(self) -> None:
-        set_connection_source("sqlite","pysqlite","/:memory:")
+        set_db_connection("sqlite","pysqlite","/:memory:")
         self.status_payload_example = Payload(
             type=MessageType.STATUS_TYPE, 
             encoding=EncodingType.JSON, 
@@ -148,7 +148,7 @@ class Test_Statuses_In_Time(unittest.TestCase):
     CAR_B_NAME = "car_B"
 
     def setUp(self) -> None:
-        set_connection_source("sqlite", "pysqlite", "/:memory:")
+        set_db_connection("sqlite", "pysqlite", "/:memory:")
         self.device_id = DeviceId(module_id=42, type=5, role="left light", name="Light")
 
     @patch('fleetv2_http_api.impl.device_controller.timestamp')
@@ -228,7 +228,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
 
 
     def setUp(self) -> None:
-        set_connection_source("sqlite", "pysqlite", "/:memory:")
+        set_db_connection("sqlite", "pysqlite", "/:memory:")
         self.device_id = DeviceId(module_id=42, type=5, role="left light", name="Light")
         clear_device_ids()
         self.status_payload = Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is conected"})

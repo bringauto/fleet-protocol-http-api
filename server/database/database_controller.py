@@ -16,7 +16,7 @@ def connection_source()->Engine|None:
     return _connection_source
 
 
-def use_connection_source()->Engine:
+def get_connection_source()->Engine:
     if isinstance(_connection_source, Engine): 
         return _connection_source
     else: 
@@ -40,7 +40,7 @@ def _new_connection_source(
     return create_engine(url, *args, **kwargs)
 
 
-def set_connection_source(
+def set_db_connection(
     dialect:str, 
     dbapi:str, 
     dblocation:str, 
@@ -55,12 +55,20 @@ def set_connection_source(
     global _connection_source
     _connection_source = source
     assert(_connection_source is not None)
-    Base.metadata.create_all(source)
+    __create_all_tables(source)
     
+
+def set_message_retention_period(seconds:int)->None:
+    MessageBase.set_data_retention_period(seconds)
+
 
 def unset_connection_source()->None:
     global _connection_source
     _connection_source = None
+
+
+def __create_all_tables(source:Engine)->None:
+    Base.metadata.create_all(source)
 
 
 class Base(DeclarativeBase):  
@@ -70,6 +78,8 @@ class Base(DeclarativeBase):
 @dataclasses.dataclass
 class MessageBase(Base):
     __tablename__:ClassVar[str] = "message"
+    __data_retention_period_in_seconds:ClassVar[int] = 10000
+
     timestamp:Mapped[int] = mapped_column(BigInteger, primary_key=True)
     sent_order:Mapped[int] = mapped_column(Integer, primary_key=True)
 
@@ -84,6 +94,23 @@ class MessageBase(Base):
     payload_type:Mapped[int] = mapped_column(Integer, primary_key=True)
     payload_encoding:Mapped[int] = mapped_column(Integer)
     payload_data:Mapped[dict] = mapped_column(JSON)
+
+
+    @classmethod
+    @property
+    def data_retention_period_s(cls)->int: 
+        """Returns the data retention period in seconds"""
+        return cls.__data_retention_period_in_seconds
+    
+    @classmethod
+    @property
+    def data_retention_period_ms(cls)->int: 
+        """Returns the data retention period in milliseconds"""
+        return cls.__data_retention_period_in_seconds*1000
+
+    @classmethod
+    def set_data_retention_period(cls, seconds:int)->None: 
+        cls.__data_retention_period_in_seconds = seconds
     
     @staticmethod
     def from_model(company_name:str, car_name:str, message:Message_DB, order:int=0)->MessageBase:
@@ -137,7 +164,7 @@ class Message_DB:
 
 
 def send_messages_to_database(company_name:str, car_name:str, *messages:Message_DB)->None: 
-    with use_connection_source().begin() as conn:
+    with get_connection_source().begin() as conn:
         stmt = insert(MessageBase.__table__) # type: ignore
         msg_base = MessageBase.from_models(company_name, car_name, *messages)
         data_list = [msg.__dict__ for msg in msg_base]
@@ -157,7 +184,7 @@ def list_messages(
     )->List[Message_DB]:  # noqa: E501
     
     statuses:List[Message_DB] = list()
-    with Session(use_connection_source()) as session:
+    with Session(get_connection_source()) as session:
         table = MessageBase.__table__
         selection = select(MessageBase).where(table.c.payload_type == message_type)
         if all is not None:
@@ -206,7 +233,7 @@ def cleanup_device_commands_and_warn_before_future_commands(
     )->List[str]: 
 
     table = MessageBase.__table__
-    with use_connection_source().begin() as conn: 
+    with get_connection_source().begin() as conn: 
         stmt = delete(table).where( # type: ignore
             table.c.payload_type == MessageType.COMMAND_TYPE,
             table.c.company_name == company_name,
@@ -256,11 +283,9 @@ def future_command_warning(
            f"device type: {device_type}, device_role: {device_role}, payload: {payload_data}."
 
 
-DATA_RETENTION_PERIOD = 10000
-
 def remove_old_messages(current_timestamp:int)->None:  
-    with use_connection_source().begin() as conn: 
-        oldest_timestamp_to_be_kept = current_timestamp-DATA_RETENTION_PERIOD
+    with get_connection_source().begin() as conn: 
+        oldest_timestamp_to_be_kept = current_timestamp - MessageBase.data_retention_period_ms
         stmt = delete(MessageBase.__table__).where( # type: ignore
             MessageBase.__table__.c.timestamp < oldest_timestamp_to_be_kept
         ) 
@@ -284,7 +309,7 @@ def __clean_up_disconnected_devices(company:str, car:str, module_id:int)->None:
     module_devices = device_ids()[company][car][module_id]
     for serialized_device_id in module_devices:
         _, device_type, device_role = _deserialize_device_id(serialized_device_id)
-        with Session(use_connection_source()) as session: 
+        with Session(get_connection_source()) as session: 
             table = MessageBase.__table__
             select_stmt = select(MessageBase).where(
                 table.c.payload_type == MessageType.STATUS_TYPE,
