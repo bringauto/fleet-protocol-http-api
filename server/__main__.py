@@ -35,6 +35,7 @@ from fleetv2_http_api.__main__ import main as run_server
 
 
 def __connect_to_database(db_server_config:Dict[str,Any])->None:
+    """Clear previously stored available devices and connect to the database."""
     clear_device_ids()
     set_db_connection(
         dialect = db_server_config["dialect"],
@@ -46,7 +47,8 @@ def __connect_to_database(db_server_config:Dict[str,Any])->None:
 
 
 from example_posts import example
-def setup_database_jobs(db_cleanup_config:Dict[str,int])->None:
+def set_up_database_jobs(db_cleanup_config:Dict[str,int])->None:
+    """Set message cleanup job and other customary jobs defined by the example method."""
     scheduler = BackgroundScheduler()
     set_message_retention_period(db_cleanup_config["retention_period"])
     scheduler.add_job(
@@ -59,11 +61,12 @@ def setup_database_jobs(db_cleanup_config:Dict[str,int])->None:
 
 
 def __clean_up_messages()->None:
+    """Clean up messages from the database."""
     remove_old_messages(current_timestamp=timestamp())
 
 
 if __name__ == '__main__':
     config:Dict[str,Any] = json.load(open("config.json"))
     __connect_to_database(config["database"]["server"])
-    setup_database_jobs(config["database"]["cleanup"]["timing_in_seconds"])
+    set_up_database_jobs(config["database"]["cleanup"]["timing_in_seconds"])
     run_server()
