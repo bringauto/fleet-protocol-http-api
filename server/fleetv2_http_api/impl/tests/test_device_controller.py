@@ -218,8 +218,8 @@ class Test_Statuses_In_Time(unittest.TestCase):
         self.assertEqual(len(commands), 0)
 
 
-from database.database_controller import DATA_RETENTION_PERIOD, remove_old_messages
-from database.database_controller import future_command_warning
+from database.database_controller import remove_old_messages
+from database.database_controller import future_command_warning, MessageBase
 class Test_Cleaning_Up_Commands(unittest.TestCase):
 
     COMPANY_1_NAME = "company_1"
@@ -248,7 +248,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         self.assertEqual(len(list_statuses(*self.args, all=True)[0]), 1)
         self.assertEqual(len(list_commands(*self.args, all=True)[0]), 2)
 
-        mock_timestamp.return_value += DATA_RETENTION_PERIOD
+        mock_timestamp.return_value += MessageBase.data_retention_period_ms
         remove_old_messages(mock_timestamp.return_value)
 
         self.assertEqual(len(list_statuses(*self.args, all=True)[0]), 0)
