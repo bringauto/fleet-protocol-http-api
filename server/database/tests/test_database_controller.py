@@ -10,7 +10,6 @@ from database.database_controller import (
     list_messages,
     cleanup_device_commands_and_warn_before_future_commands,
     remove_old_messages,
-    clean_up_disconnected_cars,
     Message_DB,
     MessageType,
     MessageBase
