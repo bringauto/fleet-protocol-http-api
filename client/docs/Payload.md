@@ -1,12 +1,12 @@
 # Payload
 
-A message passed to device (command) or by device (status).
+Payload of the message, containing message type (status or command), encoding and data.
 
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**type** | **int** |  | [optional] 
-**encoding** | **int** |  | [optional] 
+**type** | **int** | Type of the payload, enumerated as follows: &lt;br&gt; 0 - STATUS &lt;br&gt; 1 - COMMAND | [optional] 
+**encoding** | **int** | Encoding of the payload, enumerated as follows: &lt;br&gt; 0 - JSON &lt;br&gt; 1 - BASE64 | [optional] 
 **data** | [**PayloadData**](PayloadData.md) |  | [optional] 
 
 ## Example

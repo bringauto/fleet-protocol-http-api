@@ -63,6 +63,10 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
             available_devices("test_company", "test_car"), 
             [_serialized_device_id(device_id)]
         )
+        self.assertListEqual(
+            available_devices("test_company", "test_car", module_id=42), 
+            [_serialized_device_id(device_id)]
+        )
         self.assertEqual(
             available_devices("other_company", "some_car"), 
             ([], 404)

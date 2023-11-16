@@ -5,7 +5,7 @@ Physical device or program located on the car.
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**timestamp** | **int** |  | [optional] 
+**timestamp** | **int** | Unix timestamp of the message in milliseconds. | [optional] 
 **id** | [**DeviceId**](DeviceId.md) |  | [optional] 
 **payload** | [**Payload**](Payload.md) |  | [optional] 
 

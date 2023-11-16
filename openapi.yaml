@@ -21,7 +21,9 @@ paths:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: available_cars
-      description: It returns the list of available Cars.
+      description: 
+        "Return list of available cars for all companies registered in the database.<br>
+        Each item list has the format: '&lt;company name&gt;_&lt;car name&gt;'."
       tags: 
         - car
       responses:
@@ -35,15 +37,17 @@ paths:
                   type: string
                   pattern: "^[a-z0-9_]+$"
               example:
-                ['company_xy_car_123', 'bringauto_piba0258']
+                ['company_x_basic_car', 'company_x_better_car', "competing_company_even_better_car"]
         '500':
           description: Cannot display avaialble cars due to internal server error.
 
-  /{company_name}/{car_name}/available-devices:
+  /{company_name}/{car_name}/available_devices:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: available_devices
-      description: Returns list of available devices for the whole car or a single module.
+      description: 
+        "Returns list of available devices for the whole car or a single module. <br>
+        Each item list has the format: '&lt;module id&gt;_&lt;device type&gt;_&lt;device role&gt;'."
       tags: 
         - device
       responses:
@@ -54,9 +58,12 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceId'
+                  description: "Serialized device id in the format: '&lt;module id&gt;_&lt;device type&gt;_&lt;device role&gt;'."
+                  type: string
+              example:
+                ["47_2_test_device", "5_3_steering_wheel_switch", "78_1_tire_pressure_sensor"]
         '404':
-          description: Either company or car name specified in the url was not found.
+          description: Cannot display available devices. Either company, car or module specified in the request does not exist.
         '500':
           description: Cannot display available devices due to internal server error.
       
@@ -81,7 +88,25 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Payload'
+                  $ref: '#/components/schemas/Message'
+              example:
+                [
+                  {
+                    "timestamp": 1700139157, 
+                    device_id: {module_id: 47, device_type: 2, device_role: test_device, device_name: Test Device}, 
+                    payload: {payload_type: 0, encoding: 1, data: QnJpbmdBdXRv}
+                  },
+                  {
+                    "timestamp": 1700145485, 
+                    device_id: {module_id: 47, device_type: 2, device_role: test_device, device_name: Test Device}, 
+                    payload: {payload_type: 1, encoding: 1, data: U3RhcnQgd29ya2luZw==}
+                  },
+                  {
+                    "timestamp": 1700145490, 
+                    device_id: {module_id: 47, device_type: 2, device_role: test_device, device_name: Test Device}, 
+                    payload: {payload_type: 0, encoding: 0, data: {"description": "Keep working"}}
+                  },
+                ]
         '500':
           description: The statuses cannot be displayed due to internal server error.
     
@@ -92,7 +117,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/CompanyName'
       - $ref: '#/components/parameters/CarName'
-      - $ref: '#/components/parameters/DeviceId'
+      - $ref: '#/components/parameters/SerializedDeviceId'
 
 
     post:
@@ -131,7 +156,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Payload'
+                  $ref: '#/components/schemas/Message'
       
         '500':
           description: The commands cannot be displayed due to internal server error.
@@ -143,7 +168,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/CompanyName'
       - $ref: '#/components/parameters/CarName'
-      - $ref: '#/components/parameters/DeviceId'
+      - $ref: '#/components/parameters/SerializedDeviceId'
 
     post:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
@@ -174,8 +199,8 @@ components:
       in: query
       allowEmptyValue: true
       schema: 
-        type: boolean
-      example: false
+        nullable: true
+      example: 
 
     Since:
       name: since
@@ -184,50 +209,49 @@ components:
       allowEmptyValue: false 
       schema: 
         type: integer
+        nullable: true
       example: 1699262836
 
     ModuleId:
-      name: module-id
-      description: An Id of module.
+      name: module_id
+      description: An Id of module, an unsigned integer.
       in: query
-      allowEmptyValue: true
+      allowEmptyValue: false 
       schema: 
+        type: integer
         minimum: 0
-      example: 785
+        nullable: true
+      example: 47
 
-    DeviceId:
+    SerializedDeviceId:
       name: device_id
-      description: The Id of the Device. 
+      description: The Id of the Device, described with an object.
       in: path
       required: true
       schema:
-        $ref: '#/components/schemas/DeviceId'
-      example: 
-        module_id: 42
-        type: 8
-        role: device_role
-        name: 'Device Name'
-
+        type: string
+        pattern: "^[0-9]+_[0-9]+_[a-z0-9_]+$"
+        example: 47_2_test_device
 
     CarName: 
       name: car_name 
-      description: Name of the Car 
+      description: Name of the Car, following a pattern '^[0-9a-z_]+$'.
       in: path 
       required: true 
       schema: 
         type: string
         pattern: "^[0-9a-z_]+$"
-        example: auto_123
+        example: test_car
 
     CompanyName: 
       name: company_name
-      description: Name of the company
+      description: Name of the company, following a pattern '^[0-9a-z_]+$'.
       in: path 
       required: true 
       schema: 
         type: string
         pattern: "^[0-9a-z_]+$"
-        example: company_xyz
+        example: test_company
   
 
   schemas:
@@ -236,6 +260,7 @@ components:
       type: object 
       properties: 
         timestamp: 
+          description: Unix timestamp of the message in milliseconds.
           type: integer 
           example: 1699262836
         id: 
@@ -244,50 +269,57 @@ components:
           $ref: '#/components/schemas/Payload'
 
     DeviceId: 
-      description: The Id of a device. 
+      description: Id of the device described with an object.
       type: object
       properties:
         module_id: 
-          $ref: '#/components/schemas/Id'
-        type:
+          description: Unsigned integer.
           type: integer
           minimum: 0
-          example: 4
+        type:
+          description: Unsigned integer.
+          type: integer
+          minimum: 0
         role:
+          description: "String description of the device role. It follows pattern '^[a-z0-9_]+$'."
           type: string
-          example: "warning_led"
           format: utf-8
           pattern: '^[a-z0-9_]+$'
         name: 
+          description: UTF-8 encoded string.
           type: string
           format: utf-8
-          example: "Left red LED"
+      example:
+        module_id: 47
+        type: 2
+        role: test_device
+        name: Test Device
           
     Payload: 
-      description: A message passed to device (command) or by device (status).
       type: object
+      description: Payload of the message, containing message type (status or command), encoding and data.
       properties:
         type: 
+          description: 'Type of the payload, enumerated as follows: <br>
+            0 - STATUS <br>
+            1 - COMMAND'
           type: integer 
-          example: 4
         encoding:
+          description: 'Encoding of the payload, enumerated as follows: <br>
+            0 - JSON <br>
+            1 - BASE64'
           type: integer
-          example: 1
         data:
+          description: 'Payload data in JSON or BASE64 format, depending on the encoding.'
           oneOf:
             - type: object
-              example: 
-                main_text: "Payload text"
-                comments: "An example of a comment"
+              
             - type: string
               format: base64
-              example: SSBhbSB0aGUgYmVzdA==
-
-    Id: 
-      description: A general integer Id
-      type: integer 
-      minimum: 0 
-      example: 42
+      example:
+        type: 0
+        encoding: 1
+        data: QnJpbmdBdXRv
 
 
 # Cleaning up the statuses/commands:

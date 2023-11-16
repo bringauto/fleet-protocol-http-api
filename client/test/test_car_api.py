@@ -26,8 +26,8 @@ class TestCarApi(unittest.TestCase):
     def tearDown(self) -> None:
         pass
 
-    def test_cars_available(self) -> None:
-        """Test case for cars_available
+    def test_available_cars(self) -> None:
+        """Test case for available_cars
 
         """
         pass

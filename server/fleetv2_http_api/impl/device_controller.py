@@ -10,10 +10,9 @@ from database.database_controller import send_messages_to_database, Message_DB
 from database.database_controller import list_messages as __list_messages
 from database.device_ids import store_device_id_if_new, device_ids
 from database.time import timestamp
+from database.database_controller import cleanup_device_commands_and_warn_before_future_commands
 
 from enums import MessageType
-from flask.json import jsonify
-
 
   
 def __message_from_db(message_db:Message_DB)->Message:
@@ -63,6 +62,7 @@ def list_commands(
     all=None, 
     since=None
     )->Tuple[List[Message], int]:  # noqa: E501
+
 
     commands = [__message_from_db(m) for m in __list_messages(
         company_name=company_name,
@@ -176,6 +176,7 @@ def _serialized_device_id(device_id:DeviceId)->str:
 
 
 def __all_available_devices(company_name:str, car_name:str)->List[str]:
+    print("All available devices")
     device_id_list:List[str] = list()
     for module_devices in device_ids()[company_name][car_name].values():
         device_id_list.extend(module_devices)
@@ -188,7 +189,6 @@ def __available_devices_for_module(company_name:str, car_name:str, module_id:int
         return device_ids()[company_name][car_name][module_id]
 
 
-from database.database_controller import cleanup_device_commands_and_warn_before_future_commands
 def __handle_first_status_and_return_warnings(
     current_timestamp:int, 
     company_name:str,

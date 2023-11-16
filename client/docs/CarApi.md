@@ -12,7 +12,7 @@ Method | HTTP request | Description
 
 
 
-It returns the list of available Cars.
+Return list of available cars for all companies registered in the database.<br> Each item list has the format: '&lt;company name&gt;_&lt;car name&gt;'.
 
 ### Example
 

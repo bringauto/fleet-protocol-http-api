@@ -17,8 +17,13 @@ def __post_statuses(scheduler:BackgroundScheduler)->None:
     if k>3: scheduler.remove_job("posting")
 
 
-def __print_available_cars()->None:
-    print(available_cars())
+def __post_example_status(scheduler:BackgroundScheduler)->None:
+    device_id = DeviceId(module_id=47, type=2, role="test_device", name="Test Device")
+    payload = Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"test_status_data": "Still connected"})
+    send_statuses("test_company", "test_car", device_id, [payload])
+
+# def __print_available_cars()->None:
+#     print(available_cars())
 
 
 def example(scheduler:BackgroundScheduler)->None:
@@ -28,9 +33,15 @@ def example(scheduler:BackgroundScheduler)->None:
         trigger="interval", 
         seconds=2,
     )
+    # scheduler.add_job(
+    #     func=__print_available_cars,
+    #     id = "posting2" ,
+    #     trigger="interval", 
+    #     seconds=1,
+    # )
     scheduler.add_job(
-        func=__print_available_cars,
-        id = "posting2" ,
+        func=partial(__post_example_status, scheduler=scheduler), 
+        id = "posting3" ,
         trigger="interval", 
-        seconds=1,
+        seconds=3,
     )

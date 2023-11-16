@@ -37,15 +37,8 @@ class TestMessage(unittest.TestCase):
         if include_optional:
             return Message(
                 timestamp = 1699262836,
-                id = http_api_client.models.device_id.DeviceId(
-                    module_id = 42, 
-                    type = 4, 
-                    role = 'warning_led', 
-                    name = 'Left red LED', ),
-                payload = http_api_client.models.payload.Payload(
-                    type = 4, 
-                    encoding = 'BASE64', 
-                    data = {"main_text":"The device is running."}, )
+                id = {"moduleid":47,"type":2,"role":"test_device","name":"Test Device"},
+                payload = {"type":0,"encoding":1,"data":"QnJpbmdBdXRv"}
             )
         else:
             return Message(

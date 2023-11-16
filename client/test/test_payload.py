@@ -36,9 +36,9 @@ class TestPayload(unittest.TestCase):
         model = Payload()  # noqa: E501
         if include_optional:
             return Payload(
-                type = 4,
-                encoding = 'BASE64',
-                data = {"main_text":"The device is running."}
+                type = 56,
+                encoding = 56,
+                data = None
             )
         else:
             return Payload(

@@ -36,10 +36,10 @@ class TestDeviceId(unittest.TestCase):
         model = DeviceId()  # noqa: E501
         if include_optional:
             return DeviceId(
-                module_id = 42,
-                type = 4,
-                role = 'warning_led',
-                name = 'Left red LED'
+                moduleid = 0,
+                type = 0,
+                role = 'p',
+                name = ''
             )
         else:
             return DeviceId(
