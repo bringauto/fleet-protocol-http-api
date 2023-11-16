@@ -10,3 +10,4 @@ class EncodingType(IntEnum):
     BASE64 = 0
     JSON = 1
 
+ 
