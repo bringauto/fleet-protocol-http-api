@@ -9,18 +9,6 @@ from enums import MessageType
 from database.device_ids import remove_device_id
 
 
-def connect_to_database(body=None)->None:
-    rq = body
-    if rq is not None:
-        set_connection_source(
-            dialect=rq["dialect"], 
-            dbapi=rq["dbapi"], 
-            dblocation=rq["location"],
-            username=rq["username"],
-            password=rq["password"]
-        )
-
-
 _connection_source:Optional[Engine] = None
 
 
