@@ -268,7 +268,7 @@ def future_command_warning(
            f"device type: {device_type}, device_role: {device_role}, payload: {payload_data}."
 
 
-DATA_RETENTION_PERIOD = 5000
+DATA_RETENTION_PERIOD = 10000
 
 def remove_old_messages(current_timestamp:int)->None:  
     with use_connection_source().begin() as conn: 
@@ -281,8 +281,10 @@ def remove_old_messages(current_timestamp:int)->None:
 
     
 from database.device_ids import device_ids, clean_up_disconnected_cars_and_modules
+
+import copy
 def clean_up_disconnected_cars()->None:
-    device_dict = device_ids()
+    device_dict = copy.deepcopy(device_ids())
     for company in device_dict:
         for car in device_dict[company]:
             for module_id in device_dict[company][car]:

@@ -30,7 +30,6 @@ from fleetv2_http_api.impl.device_controller import available_cars
 from apscheduler.schedulers.background import BackgroundScheduler
 
 
-
 def connect_to_database()->None:
     clear_device_ids()
     set_connection_source(
@@ -42,14 +41,25 @@ def connect_to_database()->None:
     )
 
 
-def schedule_message_cleanup()->None:
-    scheduler = BackgroundScheduler()
+scheduler = BackgroundScheduler()
+
+
+def schedule_jobs()->None:
+    global scheduler
     scheduler.add_job(
         func=__clean_up_messages, 
         trigger="interval", 
-        seconds=1
+        seconds=1,
+    )
+
+    scheduler.add_job(
+        func=__post_statuses,
+        id = "posting" ,
+        trigger="interval", 
+        seconds=2,
     )
     scheduler.start()
+
 
 
 def __clean_up_messages()->None:
@@ -59,14 +69,23 @@ def __clean_up_messages()->None:
 
 from fleetv2_http_api.impl.device_controller import DeviceId, Payload, send_statuses
 from enums import MessageType, EncodingType
-def __post_statuses()->None:
-    device_id = DeviceId(module_id=42, type=4, role="test_device", name="Test Device")
-    payload = Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={})
 
-    send_statuses("company", "test_car", device_id, [payload])
+
+k = 1
+def __post_statuses()->None:
+    global k, scheduler
+
+    device_id = DeviceId(module_id=42+2*k, type=4, role="test_device", name="Test Device")
+    payload = Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={})
+    send_statuses("company", f"test_car_{k}", device_id, [payload])
+
+    k += 1
+    
+    if k>3: scheduler.remove_job("posting")
+
 
 if __name__ == '__main__':
     connect_to_database()
-    schedule_message_cleanup()
+    schedule_jobs()
     __post_statuses()
     run_server()
