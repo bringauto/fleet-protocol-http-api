@@ -6,7 +6,8 @@ from typing import List, Optional, Tuple
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Message
-from database.database_controller import list_messages, send_messages_to_database, Message_DB
+from database.database_controller import send_messages_to_database, Message_DB
+from database.database_controller import list_messages as __list_messages
 from database.device_ids import store_device_id_if_new, device_ids
 from database.time import timestamp
 
@@ -61,7 +62,7 @@ def list_commands(
     since=None
     )->Tuple[List[Message], int]:  # noqa: E501
 
-    commands = [__message_from_db(m) for m in list_messages(
+    commands = [__message_from_db(m) for m in __list_messages(
         company_name=company_name,
         car_name=car_name,
         message_type=MessageType.COMMAND_TYPE,
@@ -83,7 +84,7 @@ def list_statuses(
     since:Optional[int]=None
     )->Tuple[List[Message], int]:  # noqa: E501
 
-    statuses = [__message_from_db(m) for m in list_messages(
+    statuses = [__message_from_db(m) for m in __list_messages(
         company_name=company_name,
         car_name=car_name,
         message_type=MessageType.STATUS_TYPE,
