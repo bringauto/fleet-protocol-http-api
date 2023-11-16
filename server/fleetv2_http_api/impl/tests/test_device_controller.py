@@ -225,6 +225,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
     COMPANY_1_NAME = "company_1"
     CAR_A_NAME = "car_A"
     CAR_B_NAME = "car_B"
+    DATA_RETENTION_PERIOD = MessageBase.data_retention_period_ms
 
 
     def setUp(self) -> None:
@@ -248,7 +249,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         self.assertEqual(len(list_statuses(*self.args, all=True)[0]), 1)
         self.assertEqual(len(list_commands(*self.args, all=True)[0]), 2)
 
-        mock_timestamp.return_value += MessageBase.data_retention_period_ms
+        mock_timestamp.return_value += self.DATA_RETENTION_PERIOD
         remove_old_messages(mock_timestamp.return_value)
 
         self.assertEqual(len(list_statuses(*self.args, all=True)[0]), 0)
@@ -277,13 +278,13 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
             [_serialized_car_info(self.COMPANY_1_NAME, self.CAR_A_NAME)]
         )
 
-        mock_timestamp.return_value = DATA_RETENTION_PERIOD + 30
+        mock_timestamp.return_value = self.DATA_RETENTION_PERIOD + 30
         send_commands(*self.args, [self.command_payload])
         # the following timestamp is invalid as it is set to the future relative to the next (FIRST) status
-        mock_timestamp.return_value = DATA_RETENTION_PERIOD + 100
+        mock_timestamp.return_value = self.DATA_RETENTION_PERIOD + 100
         send_commands(*self.args, [self.command_payload])
 
-        remove_old_messages(DATA_RETENTION_PERIOD + 10)
+        remove_old_messages(self.DATA_RETENTION_PERIOD + 10)
 
         self.assertEqual(len(list_statuses(*self.args, all=True)[0]), 0)
         self.assertEqual(len(list_commands(*self.args, all=True)[0]), 2)
@@ -291,7 +292,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         self.assertEqual(available_devices(self.COMPANY_1_NAME, self.CAR_A_NAME)[0], [])
         self.assertEqual(available_cars(), [])
 
-        mock_timestamp.return_value = DATA_RETENTION_PERIOD + 50
+        mock_timestamp.return_value = self.DATA_RETENTION_PERIOD + 50
         warnings, code = send_statuses(*self.args, [self.status_payload])
         self.assertEqual(len(list_statuses(*self.args, all=True)[0]), 1)
         self.assertEqual(len(list_commands(*self.args, all=True)[0]), 0) 
@@ -301,7 +302,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
             warnings,
             [
                 future_command_warning(
-                    timestamp=DATA_RETENTION_PERIOD + 100,
+                    timestamp=self.DATA_RETENTION_PERIOD + 100,
                     company_name=self.COMPANY_1_NAME,
                     car_name=self.CAR_A_NAME,
                     module_id=self.device_id.module_id,
