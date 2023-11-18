@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 
-from typing import List, Optional, Tuple, Any
+from typing import List, Optional, Tuple
 
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
 from fleetv2_http_api.models.device_id import DeviceId
@@ -128,10 +128,9 @@ def send_commands(company_name:str, car_name:str, sdevice_id:str, messages:List[
     elif device_id.module_id not in device_dict[company_name][car_name]:
         return "", 404
     else:
-        tstamp = timestamp()
         commands_to_db = [
             Message_DB(
-                timestamp=tstamp,
+                timestamp=message.timestamp,
                 serialized_device_id=sdevice_id,
                 module_id=message.id.module_id,
                 device_type=message.id.type,
@@ -147,13 +146,18 @@ def send_commands(company_name:str, car_name:str, sdevice_id:str, messages:List[
         return "", 200
 
 
-def send_statuses(company_name:str, car_name:str, sdevice_id:str, messages:List[Message]=list())->Tuple[str|List[str],int]:  # noqa: E501
+def send_statuses(
+    company_name:str, 
+    car_name:str, 
+    sdevice_id:str, 
+    messages:List[Message]=list()
+    )->Tuple[str|List[str],int]:  # noqa: E501
+
     device_id = deserialize_device_id(sdevice_id)
     __check_corresponding_device_id_in_path_and_messages(sdevice_id, *messages)
-    tstamp = timestamp()
     statuses_to_db = [
         Message_DB(
-            timestamp=tstamp,
+            timestamp=message.timestamp,
             serialized_device_id=sdevice_id,
             module_id=device_id.module_id,
             device_type=message.id.type,
@@ -165,19 +169,16 @@ def send_statuses(company_name:str, car_name:str, sdevice_id:str, messages:List[
         ) 
         for message in messages
     ]
-
     send_messages_to_database(company_name, car_name, *statuses_to_db)
-
     first_status_was_sent = store_device_id_if_new(
         company_name = company_name,
         car_name = car_name,
         module_id = device_id.module_id, 
         serialized_device_id = sdevice_id
     )
-
     if first_status_was_sent: 
         return __handle_first_status_and_return_warnings(
-            current_timestamp = tstamp, 
+            timestamp = messages[-1].timestamp, 
             company_name = company_name, 
             car_name = car_name, 
             serialized_device_id=sdevice_id
@@ -211,14 +212,14 @@ def __available_devices_for_module(company_name:str, car_name:str, module_id:int
 
 
 def __handle_first_status_and_return_warnings(
-    current_timestamp:int, 
+    timestamp:int, 
     company_name:str,
     car_name:str,
     serialized_device_id:str,
     )->List[str]:
 
     return cleanup_device_commands_and_warn_before_future_commands(
-        current_timestamp = current_timestamp, 
+        current_timestamp = timestamp, 
         company_name = company_name,
         car_name = car_name,
         serialized_device_id=serialized_device_id
