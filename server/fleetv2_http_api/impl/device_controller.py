@@ -83,9 +83,7 @@ def list_statuses(
     all:Optional[str]=None, 
     since:Optional[int]=None
     )->Tuple[List[Message], int]:  # noqa: E501
-
-    device_id = deserialize_device_id(sdevice_id)
-
+    
     statuses = [__message_from_db(m) for m in __list_messages(
         company_name=company_name,
         car_name=car_name,
@@ -94,7 +92,6 @@ def list_statuses(
         all=all, 
         since=since
     )]
-
     return statuses, 200
 
 
