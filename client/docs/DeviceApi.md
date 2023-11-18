@@ -233,7 +233,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **send_commands**
-> send_commands(company_name, car_name, sdevice_id, payload=payload)
+> send_commands(company_name, car_name, sdevice_id, message=message)
 
 
 
@@ -245,7 +245,7 @@ It adds new device Commands.
 import time
 import os
 import http_api_client
-from http_api_client.models.payload import Payload
+from http_api_client.models.message import Message
 from http_api_client.rest import ApiException
 from pprint import pprint
 
@@ -263,10 +263,10 @@ with http_api_client.ApiClient(configuration) as api_client:
     company_name = 'test_company' # str | Name of the company, following a pattern '^[0-9a-z_]+$'.
     car_name = 'test_car' # str | Name of the Car, following a pattern '^[0-9a-z_]+$'.
     sdevice_id = '47_2_test_device' # str | The Id of the Device, described with an object.
-    payload = [{"payload_type":1,"encoding":1,"data":"U2F5IGhlbGxv"},{"payload_type":1,"encoding":0,"data":{"main_instruction":"You keep working."}}] # List[Payload] | Commands to be executed by the device. (optional)
+    message = [{"timestamp":1700139157,"device_id":{"module_id":47,"type":2,"role":"test_device","name":"Test Device"},"payload":{"payload_type":1,"encoding":1,"data":"U2F5IGhlbGxv"}}] # List[Message] | Commands to be executed by the device. (optional)
 
     try:
-        api_instance.send_commands(company_name, car_name, sdevice_id, payload=payload)
+        api_instance.send_commands(company_name, car_name, sdevice_id, message=message)
     except Exception as e:
         print("Exception when calling DeviceApi->send_commands: %s\n" % e)
 ```
@@ -280,7 +280,7 @@ Name | Type | Description  | Notes
  **company_name** | **str**| Name of the company, following a pattern &#39;^[0-9a-z_]+$&#39;. | 
  **car_name** | **str**| Name of the Car, following a pattern &#39;^[0-9a-z_]+$&#39;. | 
  **sdevice_id** | **str**| The Id of the Device, described with an object. | 
- **payload** | [**List[Payload]**](Payload.md)| Commands to be executed by the device. | [optional] 
+ **message** | [**List[Message]**](Message.md)| Commands to be executed by the device. | [optional] 
 
 ### Return type
 
@@ -304,7 +304,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **send_statuses**
-> send_statuses(company_name, car_name, sdevice_id, payload=payload)
+> send_statuses(company_name, car_name, sdevice_id, message=message)
 
 
 
@@ -316,7 +316,7 @@ Add statuses received from the Device.
 import time
 import os
 import http_api_client
-from http_api_client.models.payload import Payload
+from http_api_client.models.message import Message
 from http_api_client.rest import ApiException
 from pprint import pprint
 
@@ -334,10 +334,10 @@ with http_api_client.ApiClient(configuration) as api_client:
     company_name = 'test_company' # str | Name of the company, following a pattern '^[0-9a-z_]+$'.
     car_name = 'test_car' # str | Name of the Car, following a pattern '^[0-9a-z_]+$'.
     sdevice_id = '47_2_test_device' # str | The Id of the Device, described with an object.
-    payload = [{"payload_type":0,"encoding":1,"data":"QnJpbmdBdXRv"},{"payload_type":0,"encoding":1,"data":"U3RhcnQgd29ya2luZw=="}] # List[Payload] | Statuses to be send by the device. (optional)
+    message = [{"timestamp":1700139157,"device_id":{"module_id":47,"type":2,"role":"test_device","name":"Test Device"},"payload":{"payload_type":0,"encoding":1,"data":"QnJpbmdBdXRv"}},{"timestamp":1700145485,"device_id":{"module_id":47,"type":2,"role":"test_device","name":"Test Device"},"payload":{"payload_type":0,"encoding":1,"data":"U3RhcnQgd29ya2luZw=="}},{"timestamp":1700145490,"device_id":{"module_id":47,"type":2,"role":"test_device","name":"Test Device"},"payload":{"payload_type":0,"encoding":0,"data":{"description":"Just keep working"}}}] # List[Message] | Statuses to be send by the device. (optional)
 
     try:
-        api_instance.send_statuses(company_name, car_name, sdevice_id, payload=payload)
+        api_instance.send_statuses(company_name, car_name, sdevice_id, message=message)
     except Exception as e:
         print("Exception when calling DeviceApi->send_statuses: %s\n" % e)
 ```
@@ -351,7 +351,7 @@ Name | Type | Description  | Notes
  **company_name** | **str**| Name of the company, following a pattern &#39;^[0-9a-z_]+$&#39;. | 
  **car_name** | **str**| Name of the Car, following a pattern &#39;^[0-9a-z_]+$&#39;. | 
  **sdevice_id** | **str**| The Id of the Device, described with an object. | 
- **payload** | [**List[Payload]**](Payload.md)| Statuses to be send by the device. | [optional] 
+ **message** | [**List[Message]**](Message.md)| Statuses to be send by the device. | [optional] 
 
 ### Return type
 

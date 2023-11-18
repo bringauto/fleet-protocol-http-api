@@ -68,9 +68,7 @@ def list_commands(
         company_name=company_name,
         car_name=car_name,
         message_type=MessageType.COMMAND_TYPE,
-        module_id=device_id.module_id,
-        device_type=device_id.type,
-        device_role=device_id.role,
+        serialized_device_id=sdevice_id,
         all=all, 
         since=since
     )]
@@ -92,19 +90,40 @@ def list_statuses(
         company_name=company_name,
         car_name=car_name,
         message_type=MessageType.STATUS_TYPE,
-        module_id=device_id.module_id,
-        device_type=device_id.type,
-        device_role=device_id.role,
+        serialized_device_id=sdevice_id,
         all=all, 
         since=since
     )]
 
     return statuses, 200
+
+
+def _serialized_device_id(device_id:DeviceId)->str:
+    return f"{device_id.module_id}_{device_id.type}_{device_id.role}"
+
+
+def __check_corresponding_device_id_in_path_and_messages(
+    sdevice_id:str,
+    *messages:Message
+    )->None:
+
+    device_id = deserialize_device_id(sdevice_id)
+    for message in messages:
+        if message.id.module_id != device_id.module_id or \
+            message.id.type != device_id.type or \
+            message.id.role != device_id.role:
+            raise ValueError(
+                f"The device Id in path (.../{sdevice_id}) is not equal "
+                f"to a device Id from the message ({_serialized_device_id(message.id)})"
+            )
     
 
-def send_commands(company_name:str, car_name:str, sdevice_id:str, payload:List[Payload]=list())->Tuple[str, int]:  # noqa: E501
+def send_commands(company_name:str, car_name:str, sdevice_id:str, messages:List[Message]=list())->Tuple[str, int]:  # noqa: E501
     device_dict = device_ids()
     device_id = deserialize_device_id(sdevice_id)
+
+    __check_corresponding_device_id_in_path_and_messages(sdevice_id, *messages)
+ 
     if company_name not in device_dict:
         return [], 404 # type: ignore
     
@@ -118,33 +137,38 @@ def send_commands(company_name:str, car_name:str, sdevice_id:str, payload:List[P
         commands_to_db = [
             Message_DB(
                 timestamp=tstamp,
-                module_id=device_id.module_id,
-                device_type=device_id.type,
-                device_role=device_id.role,
+                serialized_device_id=sdevice_id,
+                module_id=message.id.module_id,
+                device_type=message.id.type,
+                device_role=message.id.role,
+                device_name=message.id.name,
                 message_type=MessageType.COMMAND_TYPE,
-                payload_encoding=p.encoding,
-                payload_data=p.data # type: ignore
+                payload_encoding=message.payload.encoding,
+                payload_data=message.payload.data # type: ignore
             ) 
-            for p in payload
+            for message in messages
         ]
         send_messages_to_database(company_name, car_name, *commands_to_db)
         return "", 200
 
 
-def send_statuses(company_name:str, car_name:str, sdevice_id:str, payload:List[Payload]=list())->Tuple[str|List[str],int]:  # noqa: E501
-    tstamp = timestamp()
+def send_statuses(company_name:str, car_name:str, sdevice_id:str, messages:List[Message]=list())->Tuple[str|List[str],int]:  # noqa: E501
     device_id = deserialize_device_id(sdevice_id)
+    __check_corresponding_device_id_in_path_and_messages(sdevice_id, *messages)
+    tstamp = timestamp()
     statuses_to_db = [
         Message_DB(
             timestamp=tstamp,
+            serialized_device_id=sdevice_id,
             module_id=device_id.module_id,
-            device_type=device_id.type,
-            device_role=device_id.role,
+            device_type=message.id.type,
+            device_role=message.id.role,
+            device_name=message.id.name,
             message_type=MessageType.STATUS_TYPE,
-            payload_encoding=p.encoding,
-            payload_data=p.data # type: ignore
+            payload_encoding=message.payload.encoding,
+            payload_data=message.payload.data # type: ignore
         ) 
-        for p in payload
+        for message in messages
     ]
 
     send_messages_to_database(company_name, car_name, *statuses_to_db)
@@ -161,9 +185,7 @@ def send_statuses(company_name:str, car_name:str, sdevice_id:str, payload:List[P
             current_timestamp = tstamp, 
             company_name = company_name, 
             car_name = car_name, 
-            module_id = device_id.module_id, 
-            device_type = device_id.type,
-            device_role = device_id.role
+            serialized_device_id=sdevice_id
         ), 200
 
     return "", 200
@@ -197,17 +219,13 @@ def __handle_first_status_and_return_warnings(
     current_timestamp:int, 
     company_name:str,
     car_name:str,
-    module_id:int,
-    device_type:int,
-    device_role:str
+    serialized_device_id:str,
     )->List[str]:
 
     return cleanup_device_commands_and_warn_before_future_commands(
         current_timestamp = current_timestamp, 
         company_name = company_name,
         car_name = car_name,
-        module_id = module_id,
-        device_type = device_type,
-        device_role = device_role
+        serialized_device_id=serialized_device_id
     )
 

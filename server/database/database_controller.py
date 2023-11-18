@@ -89,10 +89,12 @@ class MessageBase(Base):
 
     company_name:Mapped[str] = mapped_column(String, primary_key=True)
     car_name:Mapped[str] = mapped_column(String, primary_key=True)
+    serialized_device_id:Mapped[str] = mapped_column(String, primary_key=True)
 
-    module_id:Mapped[int] = mapped_column(Integer, primary_key=True)
-    device_type:Mapped[int] = mapped_column(Integer, primary_key=True)
-    device_role:Mapped[str] = mapped_column(String, primary_key=True)
+    module_id:Mapped[int] = mapped_column(Integer)
+    device_type:Mapped[int] = mapped_column(Integer)
+    device_role:Mapped[str] = mapped_column(String)
+    device_name:Mapped[str] = mapped_column(String)
 
     payload_type:Mapped[int] = mapped_column(Integer, primary_key=True)
     payload_encoding:Mapped[int] = mapped_column(Integer)
@@ -123,20 +125,22 @@ class MessageBase(Base):
 
             company_name=company_name,
             car_name=car_name,
+            serialized_device_id = message.serialized_device_id,
 
             module_id = message.module_id,
             device_type = message.device_type,
             device_role = message.device_role,
+            device_name = message.device_name,
             payload_type = message.message_type, 
             payload_encoding=message.payload_encoding,
             payload_data=message.payload_data # type: ignore
         )
 
     @staticmethod
-    def from_models(company_name:str, car_name:str, *models:Message_DB)->List[MessageBase]:
+    def from_models(company_name:str, car_name:str, *messages:Message_DB)->List[MessageBase]:
         bases:List[MessageBase] = list()
-        for k in range(len(models)):
-            bases.append(MessageBase.from_model(company_name, car_name, message = models[k], order=k))
+        for k in range(len(messages)):
+            bases.append(MessageBase.from_model(company_name, car_name, message = messages[k], order=k))
         return bases
 
     def to_model(self)->Message_DB:
@@ -145,6 +149,8 @@ class MessageBase(Base):
             module_id=self.module_id,
             device_type=self.device_type,
             device_role=self.device_role,
+            device_name=self.device_name,
+            serialized_device_id=self.serialized_device_id,
             message_type=self.payload_type,
             payload_encoding=self.payload_encoding,
             payload_data=self.payload_data
@@ -156,9 +162,11 @@ from typing import Dict
 class Message_DB:
     """Object defining the structure of messages sent to and retrieved from the database."""
     timestamp:int
+    serialized_device_id:str
     module_id:int
     device_type:int
     device_role:str
+    device_name:str
     message_type:int
     payload_encoding:int
     payload_data:Dict[str,str]
@@ -177,17 +185,15 @@ def list_messages(
     company_name:str, 
     car_name:str, 
     message_type:int, 
-    module_id:int,
-    device_type:int,
-    device_role:str,
+    serialized_device_id:str,
     all:Optional[str]=None, 
     since:Optional[int]=None
     )->List[Message_DB]:  # noqa: 
     
     """Return a list of messages of the given type, optionally filtered by the given parameters.
     If all is not None, then all messages of the given type are returned.
-    Otherwise, if since is not None, then all messages of the given type with a timestamp less than or equal to since are returned.
-    Otherwise, the newest status or oldest command is returned.
+    Otherwise, if since is not None, then all messages of the given type with a timestamp 
+    less or equal to since are returned. Otherwise, the newest status or oldest command is returned.
     """
     
     statuses:List[Message_DB] = list()
@@ -198,17 +204,13 @@ def list_messages(
             selection = selection.where(and_(
                 table.c.company_name == company_name,
                 table.c.car_name == car_name,
-                table.c.module_id == module_id,
-                table.c.device_type == device_type,
-                table.c.device_role == device_role,
+                table.c.serialized_device_id == serialized_device_id,
             ))
         elif since is not None:
             selection = selection.where(and_(
                 table.c.company_name == company_name,
                 table.c.car_name == car_name,
-                table.c.module_id == module_id,
-                table.c.device_type == device_type,
-                table.c.device_role == device_role,
+                table.c.serialized_device_id == serialized_device_id,
                 table.c.timestamp <= since
             ))
         else:
@@ -234,16 +236,16 @@ def cleanup_device_commands_and_warn_before_future_commands(
     current_timestamp:int, 
     company_name:str,
     car_name:str,
-    module_id:int,
-    device_type:int,
-    device_role:str
+    serialized_device_id:str
     )->List[str]: 
 
     """Remove all device commands assigned to a device before the first status was sent.
 
-    All such commands ought to have timestamp less than or equal to the timestamp of the first status.
+    All such commands ought to have timestamp less than or equal to the timestamp 
+    of the first status.
 
-    If any commands have a timestamp greater than the timestamp of the first status, then return a warning.
+    If any commands have a timestamp greater than the timestamp of the first status, 
+    then return a warning.
 
     """
     table = MessageBase.__table__
@@ -252,16 +254,12 @@ def cleanup_device_commands_and_warn_before_future_commands(
             table.c.payload_type == MessageType.COMMAND_TYPE,
             table.c.company_name == company_name,
             table.c.car_name == car_name,   
-            table.c.module_id == module_id,
-            table.c.device_type == device_type,
-            table.c.device_role == device_role,
+            table.c.serialized_device_id == serialized_device_id,
         ).returning(
             table.c.timestamp,
             table.c.company_name,
             table.c.car_name,   
-            table.c.module_id,
-            table.c.device_type,
-            table.c.device_role,
+            table.c.serialized_device_id,
             table.c.payload_data
         )
         result = conn.execute(stmt)
@@ -272,10 +270,8 @@ def cleanup_device_commands_and_warn_before_future_commands(
                     timestamp=row[0], 
                     company_name=row[1], 
                     car_name=row[2], 
-                    module_id=row[3],
-                    device_type=row[4],
-                    device_role=row[5],
-                    payload_data=row[6]
+                    serialized_device_id=row[3],
+                    payload_data=row[4]
                 ))
         return future_command_warnings
 
@@ -285,9 +281,7 @@ def future_command_warning(
     timestamp:int, 
     company_name:str, 
     car_name:str, 
-    module_id:int, 
-    device_type:int,
-    device_role:str,
+    serialized_device_id:str,
     payload_data:Any
     )->str:
 
@@ -296,8 +290,8 @@ def future_command_warning(
     """
     return "Warning: Removing command existing before first status was sent, " \
            "but with newer timestamp\n:" \
-           f"timestamp: {timestamp}, company:{company_name}, car:{car_name}, module id:{module_id}, " \
-           f"device type: {device_type}, device_role: {device_role}, payload: {payload_data}."
+           f"timestamp: {timestamp}, company:{company_name}, car:{car_name}, \
+            device id:{serialized_device_id}, payload: {payload_data}."
 
 
 def remove_old_messages(current_timestamp:int)->None:  
