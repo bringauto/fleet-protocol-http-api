@@ -1,6 +1,6 @@
 # http_api_client.CarApi
 
-All URIs are relative to *http://localhost:8080*
+All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
@@ -23,10 +23,10 @@ import http_api_client
 from http_api_client.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to http://localhost:8080
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = http_api_client.Configuration(
-    host = "http://localhost:8080"
+    host = "http://localhost"
 )
 
 

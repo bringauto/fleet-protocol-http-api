@@ -5,7 +5,7 @@ Id of the device described with an object.
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**module_id** | **int** | Unsigned integer. | [optional] 
+**module_id** | **int** | Id (unsigned integer) of the module containing the device. | [optional] 
 **type** | **int** | Unsigned integer. | [optional] 
 **role** | **str** | String description of the device role. It follows pattern &#39;^[a-z0-9_]+$&#39;. | [optional] 
 **name** | **str** | UTF-8 encoded string. | [optional] 

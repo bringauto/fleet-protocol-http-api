@@ -1,14 +1,14 @@
 # http_api_client.DeviceApi
 
-All URIs are relative to *http://localhost:8080*
+All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**available_devices**](DeviceApi.md#available_devices) | **GET** /{company_name}/{car_name}/available_devices | 
-[**list_commands**](DeviceApi.md#list_commands) | **GET** /{company_name}/{car_name}/command/{device_id} | 
-[**list_statuses**](DeviceApi.md#list_statuses) | **GET** /{company_name}/{car_name}/status/{device_id} | 
-[**send_commands**](DeviceApi.md#send_commands) | **POST** /{company_name}/{car_name}/command/{device_id} | 
-[**send_statuses**](DeviceApi.md#send_statuses) | **POST** /{company_name}/{car_name}/status/{device_id} | 
+[**available_devices**](DeviceApi.md#available_devices) | **GET** /{company_name}/{car_name}/available-devices | 
+[**list_commands**](DeviceApi.md#list_commands) | **GET** /{company_name}/{car_name}/command/{sdevice_id} | 
+[**list_statuses**](DeviceApi.md#list_statuses) | **GET** /{company_name}/{car_name}/status/{sdevice_id} | 
+[**send_commands**](DeviceApi.md#send_commands) | **POST** /{company_name}/{car_name}/command/{sdevice_id} | 
+[**send_statuses**](DeviceApi.md#send_statuses) | **POST** /{company_name}/{car_name}/status/{sdevice_id} | 
 
 
 # **available_devices**
@@ -27,10 +27,10 @@ import http_api_client
 from http_api_client.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to http://localhost:8080
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = http_api_client.Configuration(
-    host = "http://localhost:8080"
+    host = "http://localhost"
 )
 
 
@@ -83,7 +83,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **list_commands**
-> List[Message] list_commands(company_name, car_name, device_id, all=all, since=since)
+> List[Message] list_commands(company_name, car_name, sdevice_id, all=all, since=since)
 
 
 
@@ -99,10 +99,10 @@ from http_api_client.models.message import Message
 from http_api_client.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to http://localhost:8080
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = http_api_client.Configuration(
-    host = "http://localhost:8080"
+    host = "http://localhost"
 )
 
 
@@ -112,12 +112,12 @@ with http_api_client.ApiClient(configuration) as api_client:
     api_instance = http_api_client.DeviceApi(api_client)
     company_name = 'test_company' # str | Name of the company, following a pattern '^[0-9a-z_]+$'.
     car_name = 'test_car' # str | Name of the Car, following a pattern '^[0-9a-z_]+$'.
-    device_id = '47_2_test_device' # str | The Id of the Device, described with an object.
-    all = None # object | If set, the method returns a complete history of statuses/commands. (optional)
+    sdevice_id = '47_2_test_device' # str | The Id of the Device, described with an object.
+    all = 'all_example' # str | If set, the method returns a complete history of statuses/commands. (optional)
     since = 1699262836 # int | A Unix timestamp; if specified, the method returns all device statuses/commands inclusivelly older than value of specified timestamp. (optional)
 
     try:
-        api_response = api_instance.list_commands(company_name, car_name, device_id, all=all, since=since)
+        api_response = api_instance.list_commands(company_name, car_name, sdevice_id, all=all, since=since)
         print("The response of DeviceApi->list_commands:\n")
         pprint(api_response)
     except Exception as e:
@@ -132,8 +132,8 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **company_name** | **str**| Name of the company, following a pattern &#39;^[0-9a-z_]+$&#39;. | 
  **car_name** | **str**| Name of the Car, following a pattern &#39;^[0-9a-z_]+$&#39;. | 
- **device_id** | **str**| The Id of the Device, described with an object. | 
- **all** | [**object**](.md)| If set, the method returns a complete history of statuses/commands. | [optional] 
+ **sdevice_id** | **str**| The Id of the Device, described with an object. | 
+ **all** | **str**| If set, the method returns a complete history of statuses/commands. | [optional] 
  **since** | **int**| A Unix timestamp; if specified, the method returns all device statuses/commands inclusivelly older than value of specified timestamp. | [optional] 
 
 ### Return type
@@ -158,7 +158,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **list_statuses**
-> List[Message] list_statuses(company_name, car_name, device_id, all=all, since=since)
+> List[Message] list_statuses(company_name, car_name, sdevice_id, all=all, since=since)
 
 
 
@@ -174,10 +174,10 @@ from http_api_client.models.message import Message
 from http_api_client.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to http://localhost:8080
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = http_api_client.Configuration(
-    host = "http://localhost:8080"
+    host = "http://localhost"
 )
 
 
@@ -187,12 +187,12 @@ with http_api_client.ApiClient(configuration) as api_client:
     api_instance = http_api_client.DeviceApi(api_client)
     company_name = 'test_company' # str | Name of the company, following a pattern '^[0-9a-z_]+$'.
     car_name = 'test_car' # str | Name of the Car, following a pattern '^[0-9a-z_]+$'.
-    device_id = '47_2_test_device' # str | The Id of the Device, described with an object.
-    all = None # object | If set, the method returns a complete history of statuses/commands. (optional)
+    sdevice_id = '47_2_test_device' # str | The Id of the Device, described with an object.
+    all = 'all_example' # str | If set, the method returns a complete history of statuses/commands. (optional)
     since = 1699262836 # int | A Unix timestamp; if specified, the method returns all device statuses/commands inclusivelly older than value of specified timestamp. (optional)
 
     try:
-        api_response = api_instance.list_statuses(company_name, car_name, device_id, all=all, since=since)
+        api_response = api_instance.list_statuses(company_name, car_name, sdevice_id, all=all, since=since)
         print("The response of DeviceApi->list_statuses:\n")
         pprint(api_response)
     except Exception as e:
@@ -207,8 +207,8 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **company_name** | **str**| Name of the company, following a pattern &#39;^[0-9a-z_]+$&#39;. | 
  **car_name** | **str**| Name of the Car, following a pattern &#39;^[0-9a-z_]+$&#39;. | 
- **device_id** | **str**| The Id of the Device, described with an object. | 
- **all** | [**object**](.md)| If set, the method returns a complete history of statuses/commands. | [optional] 
+ **sdevice_id** | **str**| The Id of the Device, described with an object. | 
+ **all** | **str**| If set, the method returns a complete history of statuses/commands. | [optional] 
  **since** | **int**| A Unix timestamp; if specified, the method returns all device statuses/commands inclusivelly older than value of specified timestamp. | [optional] 
 
 ### Return type
@@ -233,7 +233,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **send_commands**
-> send_commands(company_name, car_name, device_id, payload=payload)
+> send_commands(company_name, car_name, sdevice_id, payload=payload)
 
 
 
@@ -249,10 +249,10 @@ from http_api_client.models.payload import Payload
 from http_api_client.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to http://localhost:8080
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = http_api_client.Configuration(
-    host = "http://localhost:8080"
+    host = "http://localhost"
 )
 
 
@@ -262,11 +262,11 @@ with http_api_client.ApiClient(configuration) as api_client:
     api_instance = http_api_client.DeviceApi(api_client)
     company_name = 'test_company' # str | Name of the company, following a pattern '^[0-9a-z_]+$'.
     car_name = 'test_car' # str | Name of the Car, following a pattern '^[0-9a-z_]+$'.
-    device_id = '47_2_test_device' # str | The Id of the Device, described with an object.
-    payload = [http_api_client.Payload()] # List[Payload] | Commands to be executed by the device. (optional)
+    sdevice_id = '47_2_test_device' # str | The Id of the Device, described with an object.
+    payload = [{"payload_type":1,"encoding":1,"data":"U2F5IGhlbGxv"},{"payload_type":1,"encoding":0,"data":{"main_instruction":"You keep working."}}] # List[Payload] | Commands to be executed by the device. (optional)
 
     try:
-        api_instance.send_commands(company_name, car_name, device_id, payload=payload)
+        api_instance.send_commands(company_name, car_name, sdevice_id, payload=payload)
     except Exception as e:
         print("Exception when calling DeviceApi->send_commands: %s\n" % e)
 ```
@@ -279,7 +279,7 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **company_name** | **str**| Name of the company, following a pattern &#39;^[0-9a-z_]+$&#39;. | 
  **car_name** | **str**| Name of the Car, following a pattern &#39;^[0-9a-z_]+$&#39;. | 
- **device_id** | **str**| The Id of the Device, described with an object. | 
+ **sdevice_id** | **str**| The Id of the Device, described with an object. | 
  **payload** | [**List[Payload]**](Payload.md)| Commands to be executed by the device. | [optional] 
 
 ### Return type
@@ -304,7 +304,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **send_statuses**
-> send_statuses(company_name, car_name, device_id, payload=payload)
+> send_statuses(company_name, car_name, sdevice_id, payload=payload)
 
 
 
@@ -320,10 +320,10 @@ from http_api_client.models.payload import Payload
 from http_api_client.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to http://localhost:8080
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = http_api_client.Configuration(
-    host = "http://localhost:8080"
+    host = "http://localhost"
 )
 
 
@@ -333,11 +333,11 @@ with http_api_client.ApiClient(configuration) as api_client:
     api_instance = http_api_client.DeviceApi(api_client)
     company_name = 'test_company' # str | Name of the company, following a pattern '^[0-9a-z_]+$'.
     car_name = 'test_car' # str | Name of the Car, following a pattern '^[0-9a-z_]+$'.
-    device_id = '47_2_test_device' # str | The Id of the Device, described with an object.
-    payload = [http_api_client.Payload()] # List[Payload] | Statuses to be send by the device. (optional)
+    sdevice_id = '47_2_test_device' # str | The Id of the Device, described with an object.
+    payload = [{"payload_type":0,"encoding":1,"data":"QnJpbmdBdXRv"},{"payload_type":0,"encoding":1,"data":"U3RhcnQgd29ya2luZw=="}] # List[Payload] | Statuses to be send by the device. (optional)
 
     try:
-        api_instance.send_statuses(company_name, car_name, device_id, payload=payload)
+        api_instance.send_statuses(company_name, car_name, sdevice_id, payload=payload)
     except Exception as e:
         print("Exception when calling DeviceApi->send_statuses: %s\n" % e)
 ```
@@ -350,7 +350,7 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **company_name** | **str**| Name of the company, following a pattern &#39;^[0-9a-z_]+$&#39;. | 
  **car_name** | **str**| Name of the Car, following a pattern &#39;^[0-9a-z_]+$&#39;. | 
- **device_id** | **str**| The Id of the Device, described with an object. | 
+ **sdevice_id** | **str**| The Id of the Device, described with an object. | 
  **payload** | [**List[Payload]**](Payload.md)| Statuses to be send by the device. | [optional] 
 
 ### Return type

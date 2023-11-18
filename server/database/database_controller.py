@@ -93,7 +93,6 @@ class MessageBase(Base):
     module_id:Mapped[int] = mapped_column(Integer, primary_key=True)
     device_type:Mapped[int] = mapped_column(Integer, primary_key=True)
     device_role:Mapped[str] = mapped_column(String, primary_key=True)
-    device_name:Mapped[str] = mapped_column(String)
 
     payload_type:Mapped[int] = mapped_column(Integer, primary_key=True)
     payload_encoding:Mapped[int] = mapped_column(Integer)
@@ -128,7 +127,6 @@ class MessageBase(Base):
             module_id = message.module_id,
             device_type = message.device_type,
             device_role = message.device_role,
-            device_name = message.device_name,
             payload_type = message.message_type, 
             payload_encoding=message.payload_encoding,
             payload_data=message.payload_data # type: ignore
@@ -147,7 +145,6 @@ class MessageBase(Base):
             module_id=self.module_id,
             device_type=self.device_type,
             device_role=self.device_role,
-            device_name=self.device_name,
             message_type=self.payload_type,
             payload_encoding=self.payload_encoding,
             payload_data=self.payload_data
@@ -162,7 +159,6 @@ class Message_DB:
     module_id:int
     device_type:int
     device_role:str
-    device_name:str
     message_type:int
     payload_encoding:int
     payload_data:Dict[str,str]
@@ -184,7 +180,7 @@ def list_messages(
     module_id:int,
     device_type:int,
     device_role:str,
-    all=None, 
+    all:Optional[str]=None, 
     since:Optional[int]=None
     )->List[Message_DB]:  # noqa: 
     

@@ -8,7 +8,7 @@ info:
 
 
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost
 
 tags: 
 - name: car
@@ -41,10 +41,10 @@ paths:
         '500':
           description: Cannot display avaialble cars due to internal server error.
 
-  /{company_name}/{car_name}/available_devices:
+  /{company_name}/{car_name}/available-devices:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
-      operationId: available_devices
+      operationId: available-devices
       description: 
         "Returns list of available devices for the whole car or a single module. <br>
         Each item list has the format: '&lt;module id&gt;_&lt;device type&gt;_&lt;device role&gt;'."
@@ -73,7 +73,7 @@ paths:
       - $ref: "#/components/parameters/ModuleId"
 
 
-  /{company_name}/{car_name}/status/{device_id}:
+  /{company_name}/{car_name}/status/{sdevice_id}:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: list_statuses
@@ -93,17 +93,17 @@ paths:
                 [
                   {
                     "timestamp": 1700139157, 
-                    device_id: {module_id: 47, device_type: 2, device_role: test_device, device_name: Test Device}, 
+                    sdevice_id: 47_2_test_device, 
                     payload: {payload_type: 0, encoding: 1, data: QnJpbmdBdXRv}
                   },
                   {
                     "timestamp": 1700145485, 
-                    device_id: {module_id: 47, device_type: 2, device_role: test_device, device_name: Test Device}, 
+                    sdevice_id: 47_2_test_device, 
                     payload: {payload_type: 1, encoding: 1, data: U3RhcnQgd29ya2luZw==}
                   },
                   {
                     "timestamp": 1700145490, 
-                    device_id: {module_id: 47, device_type: 2, device_role: test_device, device_name: Test Device}, 
+                    sdevice_id: 47_2_test_device, 
                     payload: {payload_type: 0, encoding: 0, data: {"description": "Keep working"}}
                   },
                 ]
@@ -139,13 +139,18 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/Payload'
+            example:
+              [
+                {payload_type: 0, encoding: 1, data: QnJpbmdBdXRv},
+                {payload_type: 0, encoding: 1, data: U3RhcnQgd29ya2luZw==},
+              ]
 
 
-  /{company_name}/{car_name}/command/{device_id}:
+  /{company_name}/{car_name}/command/{sdevice_id}:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: list_commands
-      description: Returns list of the Device Commands.
+      description: Returns list of the Device Commands. 
       tags: 
       - device
       responses:
@@ -157,6 +162,14 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Message'
+              example:
+                [
+                  {
+                    "timestamp": 1700139157, 
+                    sdevice_id: 47_2_test_device, 
+                    payload: {payload_type: 1, encoding: 1, data: U2F5IGhlbGxv}
+                  },
+                ]
       
         '500':
           description: The commands cannot be displayed due to internal server error.
@@ -184,6 +197,12 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/Payload'
+            example:
+              [
+                {payload_type: 1, encoding: 1, data: U2F5IGhlbGxv},
+                {payload_type: 1, encoding: 0, data: {main_instruction: "You keep working."}},
+              ]
+
       responses:
         '200':
           description: The commands have been sent.
@@ -199,6 +218,7 @@ components:
       in: query
       allowEmptyValue: true
       schema: 
+        type: string
         nullable: true
       example: 
 
@@ -224,14 +244,14 @@ components:
       example: 47
 
     SerializedDeviceId:
-      name: device_id
+      name: sdevice_id
       description: The Id of the Device, described with an object.
       in: path
       required: true
       schema:
         type: string
         pattern: "^[0-9]+_[0-9]+_[a-z0-9_]+$"
-        example: 47_2_test_device
+      example: 47_2_test_device
 
     CarName: 
       name: car_name 
@@ -241,7 +261,7 @@ components:
       schema: 
         type: string
         pattern: "^[0-9a-z_]+$"
-        example: test_car
+      example: test_car
 
     CompanyName: 
       name: company_name
@@ -251,7 +271,7 @@ components:
       schema: 
         type: string
         pattern: "^[0-9a-z_]+$"
-        example: test_company
+      example: test_company
   
 
   schemas:
@@ -273,7 +293,7 @@ components:
       type: object
       properties:
         module_id: 
-          description: Unsigned integer.
+          description: Id (unsigned integer) of the module containing the device.
           type: integer
           minimum: 0
         type:

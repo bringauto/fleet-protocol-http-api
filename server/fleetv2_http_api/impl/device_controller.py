@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Any
 
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
 from fleetv2_http_api.models.device_id import DeviceId
@@ -21,8 +21,7 @@ def __message_from_db(message_db:Message_DB)->Message:
         id=DeviceId(
             message_db.module_id, 
             message_db.device_type, 
-            message_db.device_role, 
-            message_db.device_name
+            message_db.device_role
         ),
         payload=Payload(
             type=message_db.message_type, 
@@ -58,11 +57,12 @@ def available_devices(company_name:str, car_name:str, module_id:Optional[int]=No
 def list_commands(
     company_name:str, 
     car_name:str, 
-    device_id:DeviceId, 
-    all=None, 
+    sdevice_id:str, 
+    all:Optional[str]=None, 
     since=None
     )->Tuple[List[Message], int]:  # noqa: E501
 
+    device_id = deserialize_device_id(sdevice_id)
 
     commands = [__message_from_db(m) for m in __list_messages(
         company_name=company_name,
@@ -74,17 +74,19 @@ def list_commands(
         all=all, 
         since=since
     )]
-    if commands: return commands, 200
-    else: return [], 404
+
+    return commands, 200
 
 
 def list_statuses(
     company_name:str, 
     car_name:str, 
-    device_id:DeviceId, 
-    all=None, 
+    sdevice_id:str, 
+    all:Optional[str]=None, 
     since:Optional[int]=None
     )->Tuple[List[Message], int]:  # noqa: E501
+
+    device_id = deserialize_device_id(sdevice_id)
 
     statuses = [__message_from_db(m) for m in __list_messages(
         company_name=company_name,
@@ -96,12 +98,13 @@ def list_statuses(
         all=all, 
         since=since
     )]
-    if statuses: return statuses, 200
-    else: return [], 404
+
+    return statuses, 200
     
 
-def send_commands(company_name:str, car_name:str, device_id:DeviceId, payload:List[Payload]=list())->Tuple[str, int]:  # noqa: E501
+def send_commands(company_name:str, car_name:str, sdevice_id:str, payload:List[Payload]=list())->Tuple[str, int]:  # noqa: E501
     device_dict = device_ids()
+    device_id = deserialize_device_id(sdevice_id)
     if company_name not in device_dict:
         return [], 404 # type: ignore
     
@@ -118,7 +121,6 @@ def send_commands(company_name:str, car_name:str, device_id:DeviceId, payload:Li
                 module_id=device_id.module_id,
                 device_type=device_id.type,
                 device_role=device_id.role,
-                device_name=device_id.name,
                 message_type=MessageType.COMMAND_TYPE,
                 payload_encoding=p.encoding,
                 payload_data=p.data # type: ignore
@@ -129,15 +131,15 @@ def send_commands(company_name:str, car_name:str, device_id:DeviceId, payload:Li
         return "", 200
 
 
-def send_statuses(company_name:str, car_name:str, device_id:DeviceId, payload:List[Payload]=list())->Tuple[str|List[str],int]:  # noqa: E501
+def send_statuses(company_name:str, car_name:str, sdevice_id:str, payload:List[Payload]=list())->Tuple[str|List[str],int]:  # noqa: E501
     tstamp = timestamp()
+    device_id = deserialize_device_id(sdevice_id)
     statuses_to_db = [
         Message_DB(
             timestamp=tstamp,
             module_id=device_id.module_id,
             device_type=device_id.type,
             device_role=device_id.role,
-            device_name=device_id.name,
             message_type=MessageType.STATUS_TYPE,
             payload_encoding=p.encoding,
             payload_data=p.data # type: ignore
@@ -151,7 +153,7 @@ def send_statuses(company_name:str, car_name:str, device_id:DeviceId, payload:Li
         company_name = company_name,
         car_name = car_name,
         module_id = device_id.module_id, 
-        serialized_device_id = _serialized_device_id(device_id)
+        serialized_device_id = sdevice_id
     )
 
     if first_status_was_sent: 
@@ -170,13 +172,15 @@ def send_statuses(company_name:str, car_name:str, device_id:DeviceId, payload:Li
 def _serialized_car_info(company_name:str, car_name:str)->str:
     return f"{company_name}_{car_name}"
 
-def _serialized_device_id(device_id:DeviceId)->str:
-    return f"{device_id.module_id}_{device_id.type}_{device_id.role}"
-
-
+def deserialize_device_id(serialized_device_id:str)->DeviceId:
+    module_id, device_type, device_role = serialized_device_id.split("_", maxsplit=2)
+    return DeviceId(
+        module_id = int(module_id),
+        type = int(device_type),
+        role = device_role
+    )
 
 def __all_available_devices(company_name:str, car_name:str)->List[str]:
-    print("All available devices")
     device_id_list:List[str] = list()
     for module_devices in device_ids()[company_name][car_name].values():
         device_id_list.extend(module_devices)
