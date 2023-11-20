@@ -6,7 +6,10 @@ from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from sqlalchemy import Integer, String, JSON, select, insert, BigInteger
 from enums import MessageType
-from database.device_ids import remove_device_id
+from database.device_ids import remove_device_id, _serialized_device_id
+
+from fleetv2_http_api.models.message import Message
+from fleetv2_http_api.models.device_id import DeviceId
 
 
 _connection_source:Optional[Engine] = None
@@ -41,6 +44,10 @@ def _new_connection_source(
 
     url = ('').join([dialect,'+',dbapi,"://",username,":",password,"@",dblocation])
     return create_engine(url, *args, **kwargs)
+
+
+def _serialized_device_id(device_id:DeviceId)->str:
+    return f"{device_id.module_id}_{device_id.type}_{device_id.role}"
 
 
 def set_db_connection(
@@ -192,6 +199,7 @@ def list_messages(
     
     """Return a list of messages of the given type, optionally filtered by the given parameters.
     If all is not None, then all messages of the given type are returned.
+
     Otherwise, if since is not None, then all messages of the given type with a timestamp 
     less or equal to since are returned. Otherwise, the newest status or oldest command is returned.
     """

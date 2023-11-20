@@ -6,11 +6,11 @@ from typing import List, Optional, Tuple, Dict
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Message
+from fleetv2_http_api.models.module import Module
 from database.database_controller import send_messages_to_database, Message_DB
 from database.database_controller import list_messages as __list_messages
-from database.device_ids import store_device_id_if_new, device_ids
+from database.device_ids import store_device_id_if_new, device_ids, _serialized_device_id
 from database.database_controller import cleanup_device_commands_and_warn_before_future_commands
-
 from enums import MessageType
 
        
@@ -24,7 +24,7 @@ def available_cars()->List[str]:
     return cars
 
 
-def available_devices(company_name:str, car_name:str, module_id:Optional[int]=None)->List[str]:  # noqa: E501
+def available_devices(company_name:str, car_name:str, module_id:Optional[int]=None)->Module|List[Module]:  # noqa: E501
     """Return a list of serialized device ids for devices available in a given car.
     If a module_id is not specified, return all available devices in a given car.
     """
@@ -36,9 +36,13 @@ def available_devices(company_name:str, car_name:str, module_id:Optional[int]=No
         return [], 404 # type: ignore
     
     if module_id is None: 
-        return __all_available_devices(company_name, car_name)
+        car_modules = device_dict[company_name][car_name]
+        return [__available_module(company_name, car_name, id) for id in car_modules] # type: ignore
     else: 
-        return __available_devices_for_module(company_name, car_name, module_id)
+        if module_id not in device_dict[company_name][car_name]: 
+            return 404 # type: ignore
+        else:
+            return __available_module(company_name, car_name, module_id) # type: ignore
 
 
 def list_commands(
@@ -182,8 +186,7 @@ def send_statuses(
     first_status_was_sent = store_device_id_if_new(
         company_name = company_name,
         car_name = car_name,
-        module_id = messages[-1].device_id.module_id, 
-        serialized_device_id = sdevice_id
+        device_id = messages[-1].device_id
     )
     if first_status_was_sent: 
         return __handle_first_status_and_return_warnings(
@@ -199,9 +202,6 @@ def send_statuses(
 def _serialized_car_info(company_name:str, car_name:str)->str:
     return f"{company_name}_{car_name}"
 
-def _serialized_device_id(device_id:DeviceId)->str:
-    return f"{device_id.module_id}_{device_id.type}_{device_id.role}"
-
 
 def __check_equal_device_id_in_path_and_messages(
     sdevice_id:str,
@@ -216,18 +216,12 @@ def __check_equal_device_id_in_path_and_messages(
                 f"to a device Id from the message ({sdevice_id_from_message})"
             )
 
-
-def __all_available_devices(company_name:str, car_name:str)->List[str]:
-    device_id_list:List[str] = list()
-    for module_devices in device_ids()[company_name][car_name].values():
-        device_id_list.extend(module_devices)
-    return device_id_list
-
-def __available_devices_for_module(company_name:str, car_name:str, module_id:int)->List[str]:
+def __available_module(company_name:str, car_name:str, module_id:int)->Module:
     if not module_id in device_ids()[company_name][car_name]: 
-        return [], 404 # type: ignore
+        return 404 # type: ignore
     else: 
-        return device_ids()[company_name][car_name][module_id]
+        device_id_list = list((device_ids()[company_name][car_name][module_id]).values())
+        return Module(module_id, device_id_list)
 
 
 def __handle_first_status_and_return_warnings(

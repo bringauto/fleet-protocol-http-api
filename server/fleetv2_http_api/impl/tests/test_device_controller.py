@@ -7,10 +7,10 @@ from database.database_controller import set_db_connection
 from fleetv2_http_api.impl.device_controller import available_devices, available_cars
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Payload, Message
+from fleetv2_http_api.models.module import Module
 
 from fleetv2_http_api.impl.device_controller import send_statuses, send_commands, list_statuses, list_commands
-from fleetv2_http_api.impl.device_controller import _serialized_device_id
-from database.device_ids import clear_device_ids
+from database.device_ids import clear_device_ids, _serialized_device_id
 
 from enums import MessageType, EncodingType
 
@@ -44,35 +44,28 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
             encoding=EncodingType.JSON, 
             data={"message":"Device is running"}
         )
+        self.device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
         self.status_example = Message(
             timestamp=123456789,
-            device_id=DeviceId(module_id=42, type=7, role="test_device_1", name="Left light"),
+            device_id=self.device_id,
             payload=payload_example
         )
     
         clear_device_ids()
 
     def test_device_is_considered_available_if_at_least_one_status_is_in_the_database(self):
-        device_id = "42_7_test_device_1"
+        sdevice_id = _serialized_device_id(self.device_id)
+        self.assertEqual(available_devices("test_company", "test_car"), ([], 404))
+
+        send_statuses("test_company", "test_car", sdevice_id, messages=[self.status_example])
+
         self.assertEqual(
             available_devices("test_company", "test_car"), 
-            ([], 404)
+            [
+                Module(module_id=42, device_list=[self.device_id]),
+            ]
         )
-        send_statuses(
-            company_name="test_company", 
-            car_name="test_car", 
-            sdevice_id=device_id, 
-            messages=[self.status_example]
-        )
-        # assuming that the status is still in the database
-        self.assertListEqual(
-            available_devices("test_company", "test_car"), [device_id])
-        self.assertListEqual(
-            available_devices("test_company", "test_car", module_id=42), [device_id])
-        self.assertEqual(
-            available_devices("other_company", "some_car"), 
-            ([], 404)
-        )
+        self.assertEqual(available_devices("other_company", "some_car"), ([], 404))
     
     def test_car_is_considered_available_if_at_least_one_of_its_devices_are_available(self):
         self.assertListEqual(available_cars(), [])
@@ -319,7 +312,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
 
         self.assertEqual(
             available_devices(self.COMPANY_1_NAME, self.CAR_A_NAME), 
-            [_serialized_device_id(self.device_id)]
+            [Module(module_id=42, device_list=[self.device_id])]
         )
         self.assertEqual(available_cars(),[f"{self.COMPANY_1_NAME}_{self.CAR_A_NAME}"])
 
@@ -331,7 +324,10 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         self.assertEqual(len(list_statuses(*self.args, all_available="")[0]), 0)
         self.assertEqual(len(list_commands(*self.args, all_available="")[0]), 2)
 
-        self.assertEqual(available_devices(self.COMPANY_1_NAME, self.CAR_A_NAME)[0], [])
+        self.assertEqual(
+            available_devices(self.COMPANY_1_NAME, self.CAR_A_NAME), 
+            ([], 404)
+        )
         self.assertEqual(available_cars(), [])
 
         warnings, code = send_statuses(*self.args, [new_first_status])
@@ -351,6 +347,12 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
                 )
             ]
         )
+
+
+# class Test_Listing_Commands_And_Statuses_Of_Nonexistent_Cars(unittest.TestCase):
+
+#     def test_listing_statuses_of_nonexistent_car_returns_code_404(self):
+#         self.assertEqual(list_statuses("nonexistent_company", "test_car", "..."), ([], 404))
 
 
 if __name__=="__main__": 

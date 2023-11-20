@@ -1,12 +1,12 @@
 # Module
 
-Car module, representing set of Device
+A module containing at least one device (specified by device Id).
 
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**id** | **int** | A general integer Id | 
-**device_list** | [**List[DeviceId]**](DeviceId.md) |  | 
+**module_id** | **int** | Id (unsigned integer) of the module. | [optional] 
+**device_list** | [**List[DeviceId]**](DeviceId.md) | List of Ids of devices contained in the module. | [optional] 
 
 ## Example
 

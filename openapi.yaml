@@ -13,7 +13,7 @@ servers:
 tags: 
 - name: car
 - name: device
-- name: database
+- name: module
 
 
 paths:
@@ -46,8 +46,11 @@ paths:
       x-openapi-router-controller: fleetv2_http_api.impl.device_controller
       operationId: available-devices
       description: 
-        "Returns list of available devices for the whole car or a single module. <br>
-        Each item list has the format: '&lt;module id&gt;_&lt;device type&gt;_&lt;device role&gt;'."
+        Return device Ids for all devices available for contained in the specified car.<br>
+        For a single car module, the device Ids are returned as an object containing module Id and the list of device Ids. <br>
+
+        If a module Id is specified, only a single such object is returned. <br>
+        Otherwise, a list of such objects is returned, one for each module contained in the car. <br>
       tags: 
         - device
       responses:
@@ -56,12 +59,12 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  description: "Serialized device id in the format: '&lt;module id&gt;_&lt;device type&gt;_&lt;device role&gt;'."
-                  type: string
-              example:
-                ["47_2_test_device", "5_3_steering_wheel_switch", "78_1_tire_pressure_sensor"]
+                oneOf:
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/Module'
+                - $ref: '#/components/schemas/Module'
+                
         '404':
           description: Cannot display available devices. Either company, car or module specified in the request does not exist.
         '500':
@@ -79,7 +82,7 @@ paths:
       operationId: list_statuses
       description: It returns list of the Device Statuses.
       tags: 
-      - device
+      - module
       responses:
         '200':
           description: A list of device statuses.
@@ -313,6 +316,26 @@ components:
           $ref: '#/components/schemas/DeviceId'
         payload:
           $ref: '#/components/schemas/Payload'
+
+    Module: 
+      description: A module containing at least one device (specified by device Id).
+      type: object 
+      properties:
+        module_id: 
+          description: Id (unsigned integer) of the module.
+          type: integer
+          minimum: 0
+          example: 47
+        device_list:
+          description: List of Ids of devices contained in the module.
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceId'
+          example: 
+            [
+              {module_id: 47, device_type: 2, device_role: test_device, device_name: Test Device},
+              {module_id: 47, device_type: 2, device_role: test_device, device_name: Test Device},
+            ]
 
     DeviceId: 
       description: Id of the device described with an object.
