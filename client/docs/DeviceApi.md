@@ -83,7 +83,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **list_commands**
-> List[Message] list_commands(company_name, car_name, sdevice_id, all=all, since=since)
+> List[Message] list_commands(company_name, car_name, sdevice_id, all_available=all_available, since=since)
 
 
 
@@ -113,11 +113,11 @@ with http_api_client.ApiClient(configuration) as api_client:
     company_name = 'test_company' # str | Name of the company, following a pattern '^[0-9a-z_]+$'.
     car_name = 'test_car' # str | Name of the Car, following a pattern '^[0-9a-z_]+$'.
     sdevice_id = '47_2_test_device' # str | The Id of the Device, described with an object.
-    all = 'all_example' # str | If set, the method returns a complete history of statuses/commands. (optional)
-    since = 1699262836 # int | A Unix timestamp; if specified, the method returns all device statuses/commands inclusivelly older than value of specified timestamp. (optional)
+    all_available = 'all_available_example' # str | If set, the method returns a complete history of statuses/commands. (optional)
+    since = 1699262836 # int | A Unix timestamp; if specified, the method returns all device statuses inclusivelly older than value of specified timestamp. (optional)
 
     try:
-        api_response = api_instance.list_commands(company_name, car_name, sdevice_id, all=all, since=since)
+        api_response = api_instance.list_commands(company_name, car_name, sdevice_id, all_available=all_available, since=since)
         print("The response of DeviceApi->list_commands:\n")
         pprint(api_response)
     except Exception as e:
@@ -133,8 +133,8 @@ Name | Type | Description  | Notes
  **company_name** | **str**| Name of the company, following a pattern &#39;^[0-9a-z_]+$&#39;. | 
  **car_name** | **str**| Name of the Car, following a pattern &#39;^[0-9a-z_]+$&#39;. | 
  **sdevice_id** | **str**| The Id of the Device, described with an object. | 
- **all** | **str**| If set, the method returns a complete history of statuses/commands. | [optional] 
- **since** | **int**| A Unix timestamp; if specified, the method returns all device statuses/commands inclusivelly older than value of specified timestamp. | [optional] 
+ **all_available** | **str**| If set, the method returns a complete history of statuses/commands. | [optional] 
+ **since** | **int**| A Unix timestamp; if specified, the method returns all device statuses inclusivelly older than value of specified timestamp. | [optional] 
 
 ### Return type
 
@@ -158,7 +158,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **list_statuses**
-> List[Message] list_statuses(company_name, car_name, sdevice_id, all=all, since=since)
+> List[Message] list_statuses(company_name, car_name, sdevice_id, all_available=all_available, since=since)
 
 
 
@@ -188,11 +188,11 @@ with http_api_client.ApiClient(configuration) as api_client:
     company_name = 'test_company' # str | Name of the company, following a pattern '^[0-9a-z_]+$'.
     car_name = 'test_car' # str | Name of the Car, following a pattern '^[0-9a-z_]+$'.
     sdevice_id = '47_2_test_device' # str | The Id of the Device, described with an object.
-    all = 'all_example' # str | If set, the method returns a complete history of statuses/commands. (optional)
-    since = 1699262836 # int | A Unix timestamp; if specified, the method returns all device statuses/commands inclusivelly older than value of specified timestamp. (optional)
+    all_available = 'all_available_example' # str | If set, the method returns a complete history of statuses/commands. (optional)
+    since = 1699262836 # int | A Unix timestamp; if specified, the method returns all device statuses inclusivelly older than value of specified timestamp. (optional)
 
     try:
-        api_response = api_instance.list_statuses(company_name, car_name, sdevice_id, all=all, since=since)
+        api_response = api_instance.list_statuses(company_name, car_name, sdevice_id, all_available=all_available, since=since)
         print("The response of DeviceApi->list_statuses:\n")
         pprint(api_response)
     except Exception as e:
@@ -208,8 +208,8 @@ Name | Type | Description  | Notes
  **company_name** | **str**| Name of the company, following a pattern &#39;^[0-9a-z_]+$&#39;. | 
  **car_name** | **str**| Name of the Car, following a pattern &#39;^[0-9a-z_]+$&#39;. | 
  **sdevice_id** | **str**| The Id of the Device, described with an object. | 
- **all** | **str**| If set, the method returns a complete history of statuses/commands. | [optional] 
- **since** | **int**| A Unix timestamp; if specified, the method returns all device statuses/commands inclusivelly older than value of specified timestamp. | [optional] 
+ **all_available** | **str**| If set, the method returns a complete history of statuses/commands. | [optional] 
+ **since** | **int**| A Unix timestamp; if specified, the method returns all device statuses inclusivelly older than value of specified timestamp. | [optional] 
 
 ### Return type
 

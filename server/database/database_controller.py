@@ -186,8 +186,8 @@ def list_messages(
     car_name:str, 
     message_type:int, 
     serialized_device_id:str,
-    all:Optional[str]=None, 
-    since:Optional[int]=None
+    all_available:Optional[str]=None, 
+    limit_timestamp:Optional[int]=None
     )->List[Message_DB]:  # noqa: 
     
     """Return a list of messages of the given type, optionally filtered by the given parameters.
@@ -200,18 +200,18 @@ def list_messages(
     with Session(get_connection_source()) as session:
         table = MessageBase.__table__
         selection = select(MessageBase).where(table.c.payload_type == message_type)
-        if all is not None:
+        if all_available is not None:
             selection = selection.where(and_(
                 table.c.company_name == company_name,
                 table.c.car_name == car_name,
                 table.c.serialized_device_id == serialized_device_id,
             ))
-        elif since is not None:
+        elif limit_timestamp is not None:
             selection = selection.where(and_(
                 table.c.company_name == company_name,
                 table.c.car_name == car_name,
                 table.c.serialized_device_id == serialized_device_id,
-                table.c.timestamp <= since
+                table.c.timestamp <= limit_timestamp
             ))
         else:
             # return newest status or oldest command

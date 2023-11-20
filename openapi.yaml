@@ -229,7 +229,7 @@ paths:
 components:
   parameters:
     All: 
-      name: all 
+      name: all_available
       description: If set, the method returns a complete history of statuses/commands.
       in: query
       allowEmptyValue: true
@@ -240,7 +240,17 @@ components:
 
     Since:
       name: since
-      description: A Unix timestamp; if specified, the method returns all device statuses/commands inclusivelly older than value of specified timestamp.
+      description: A Unix timestamp; if specified, the method returns all device statuses inclusivelly older than value of specified timestamp.
+      in: query
+      allowEmptyValue: false 
+      schema: 
+        type: integer
+        nullable: true
+      example: 1699262836
+
+    Until:
+      name: since
+      description: A Unix timestamp; if specified, the method returns all device commands inclusivelly newer than value of specified timestamp.
       in: query
       allowEmptyValue: false 
       schema: 

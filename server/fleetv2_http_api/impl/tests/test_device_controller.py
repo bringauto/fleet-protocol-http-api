@@ -191,7 +191,7 @@ class Test_Statuses_In_Time(unittest.TestCase):
         self.assertEqual(statuses[-1].timestamp, 37)
 
         # any value passed as 'all' attribute makes the list_statuses to return all the statuses
-        statuses, code = list_statuses(*args, all="")
+        statuses, code = list_statuses(*args, all_available="")
         self.assertEqual(len(statuses), 3)
         self.assertEqual(statuses[0].timestamp, 10)
         self.assertEqual(statuses[1].timestamp, 20)
@@ -229,18 +229,18 @@ class Test_Statuses_In_Time(unittest.TestCase):
         self.assertEqual(len(commands), 1)
         self.assertEqual(commands[0].timestamp, 20)
 
-        commands, code = list_commands(*args, all="")
+        commands, code = list_commands(*args, all_available="")
         self.assertEqual(len(commands), 3)
         self.assertEqual(commands[0].timestamp, 20)
         self.assertEqual(commands[1].timestamp, 30)
         self.assertEqual(commands[2].timestamp, 45)
 
-        commands, code = list_commands(*args, since=30)
+        commands, code = list_commands(*args, until=30)
         self.assertEqual(len(commands), 2)
         self.assertEqual(commands[0].timestamp, 20)
         self.assertEqual(commands[1].timestamp, 30)
 
-        commands, code = list_commands(*args, since=5)
+        commands, code = list_commands(*args, until=5)
         self.assertEqual(len(commands), 0)
 
 
@@ -277,22 +277,22 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         send_commands(*self.args, [command_1])
         send_commands(*self.args, [command_2])
 
-        self.assertEqual(len(list_statuses(*self.args, all="")[0]), 1)
-        self.assertEqual(len(list_commands(*self.args, all="")[0]), 2)
+        self.assertEqual(len(list_statuses(*self.args, all_available="")[0]), 1)
+        self.assertEqual(len(list_commands(*self.args, all_available="")[0]), 2)
 
         mock_timestamp.return_value = self.DATA_RETENTION_PERIOD+20
         remove_old_messages(mock_timestamp.return_value)
 
-        self.assertEqual(len(list_statuses(*self.args, all="")[0]), 0)
-        self.assertEqual(len(list_commands(*self.args, all="")[0]), 1)
+        self.assertEqual(len(list_statuses(*self.args, all_available="")[0]), 0)
+        self.assertEqual(len(list_commands(*self.args, all_available="")[0]), 1)
         
         mock_timestamp.return_value += 5 
         
         # the following status is considered to be the FIRST status for given device and after sending it, 
         # all commands previously sent to this device have to be removed
         send_statuses(*self.args, [status])
-        self.assertEqual(len(list_statuses(*self.args, all="")[0]), 1)
-        self.assertEqual(len(list_commands(*self.args, all="")[0]), 0)
+        self.assertEqual(len(list_statuses(*self.args, all_available="")[0]), 1)
+        self.assertEqual(len(list_commands(*self.args, all_available="")[0]), 0)
 
 
     @patch('database.time._time_in_ms')
@@ -316,15 +316,15 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
 
         remove_old_messages(self.DATA_RETENTION_PERIOD + 10)
 
-        self.assertEqual(len(list_statuses(*self.args, all="")[0]), 0)
-        self.assertEqual(len(list_commands(*self.args, all="")[0]), 2)
+        self.assertEqual(len(list_statuses(*self.args, all_available="")[0]), 0)
+        self.assertEqual(len(list_commands(*self.args, all_available="")[0]), 2)
 
         self.assertEqual(available_devices(self.COMPANY_1_NAME, self.CAR_A_NAME)[0], [])
         self.assertEqual(available_cars(), [])
 
         warnings, code = send_statuses(*self.args, [new_first_status])
-        self.assertEqual(len(list_statuses(*self.args, all="")[0]), 1)
-        self.assertEqual(len(list_commands(*self.args, all="")[0]), 0) 
+        self.assertEqual(len(list_statuses(*self.args, all_available="")[0]), 1)
+        self.assertEqual(len(list_commands(*self.args, all_available="")[0]), 0) 
 
         assert(type(warnings) is list)
         self.assertListEqual(

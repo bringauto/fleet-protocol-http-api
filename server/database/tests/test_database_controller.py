@@ -63,7 +63,7 @@ class TestDatabaseController(unittest.TestCase):
             device_type=2,
             device_role="role1",
 
-            all=True
+            all_available=True
         )
         self.assertEqual(len(messages), 2)
         self.assertEqual(messages[0].timestamp, 1)
@@ -88,7 +88,7 @@ class TestDatabaseController(unittest.TestCase):
             module_id=45,
             device_type=1,
             device_role="role1",
-            all=True
+            all_available=True
         )
         self.assertEqual(len(messages), 0)
 
@@ -135,7 +135,7 @@ class TestDatabaseController(unittest.TestCase):
             device_type=2,
             device_role="role2",
 
-            all=True
+            all_available=True
         )
         self.assertEqual(len(messages), 1)
 
