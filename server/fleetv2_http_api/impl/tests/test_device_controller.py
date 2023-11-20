@@ -219,8 +219,7 @@ class Test_Statuses_In_Time(unittest.TestCase):
         self.assertEqual(len(statuses), 0)
 
 
-    @patch('database.time._time_in_ms')
-    def test_by_default_only_the_OLDEST_COMMAND_is_returned(self, mock_timestamp):
+    def test_by_default_only_the_OLDEST_COMMAND_is_returned(self):
         device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
         sdevice = _serialized_device_id(device_id)
         status_payload = Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is running"})
