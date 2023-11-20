@@ -250,7 +250,6 @@ class Test_Statuses_In_Time(unittest.TestCase):
 
 from database.database_controller import remove_old_messages
 from database.database_controller import future_command_warning, MessageBase
-from fleetv2_http_api.impl.device_controller import deserialize_device_id
 
 class Test_Cleaning_Up_Commands(unittest.TestCase):
 

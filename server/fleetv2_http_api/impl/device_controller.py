@@ -6,29 +6,13 @@ from typing import List, Optional, Tuple
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Message
-from database.database_controller import send_messages_to_database, Message_DB
+from database.database_controller import send_messages_to_database, Message_DB, _deserialize_device_id
 from database.database_controller import list_messages as __list_messages
 from database.device_ids import store_device_id_if_new, device_ids
 from database.time import timestamp
 from database.database_controller import cleanup_device_commands_and_warn_before_future_commands
 
 from enums import MessageType
-
-  
-def __message_from_db(message_db:Message_DB)->Message:
-    return Message(
-        timestamp=message_db.timestamp,
-        id=DeviceId(
-            message_db.module_id, 
-            message_db.device_type, 
-            message_db.device_role
-        ),
-        payload=Payload(
-            type=message_db.message_type, 
-            encoding=message_db.payload_encoding,
-            data=message_db.payload_data
-        )
-    )
 
        
 def available_cars()->List[str]:
@@ -93,31 +77,17 @@ def list_statuses(
     return statuses, 200
 
 
-def _serialized_device_id(device_id:DeviceId)->str:
-    return f"{device_id.module_id}_{device_id.type}_{device_id.role}"
-
-
-def __check_corresponding_device_id_in_path_and_messages(
-    sdevice_id:str,
-    *messages:Message
-    )->None:
-
-    device_id = deserialize_device_id(sdevice_id)
-    for message in messages:
-        if message.id.module_id != device_id.module_id or \
-            message.id.type != device_id.type or \
-            message.id.role != device_id.role:
-            raise ValueError(
-                f"The device Id in path (.../{sdevice_id}) is not equal "
-                f"to a device Id from the message ({_serialized_device_id(message.id)})"
-            )
-    
-
 def send_commands(company_name:str, car_name:str, sdevice_id:str, messages:List[Message]=list())->Tuple[str, int]:  # noqa: E501
     device_dict = device_ids()
-    device_id = deserialize_device_id(sdevice_id)
+    path_module_id, path_device_type, path_device_role = _deserialize_device_id(sdevice_id)
 
-    __check_corresponding_device_id_in_path_and_messages(sdevice_id, *messages)
+    __check_corresponding_device_id_in_path_and_messages(
+        path_module_id, 
+        path_device_type, 
+        path_device_role, 
+        sdevice_id, 
+        *messages
+    )
  
     if company_name not in device_dict:
         return [], 404 # type: ignore
@@ -125,7 +95,7 @@ def send_commands(company_name:str, car_name:str, sdevice_id:str, messages:List[
     elif car_name not in device_dict[company_name]:
         return [], 404 # type: ignore
     
-    elif device_id.module_id not in device_dict[company_name][car_name]:
+    elif path_module_id not in device_dict[company_name][car_name]:
         return "", 404
     else:
         commands_to_db = [
@@ -153,13 +123,20 @@ def send_statuses(
     messages:List[Message]=list()
     )->Tuple[str|List[str],int]:  # noqa: E501
 
-    device_id = deserialize_device_id(sdevice_id)
-    __check_corresponding_device_id_in_path_and_messages(sdevice_id, *messages)
+    path_module_id, path_device_type, path_device_role, = _deserialize_device_id(sdevice_id)
+    __check_corresponding_device_id_in_path_and_messages(
+        path_module_id,
+        path_device_type,
+        path_device_role,
+        sdevice_id,
+        *messages
+    )
+
     statuses_to_db = [
         Message_DB(
             timestamp=message.timestamp,
             serialized_device_id=sdevice_id,
-            module_id=device_id.module_id,
+            module_id=path_module_id,
             device_type=message.id.type,
             device_role=message.id.role,
             device_name=message.id.name,
@@ -173,7 +150,7 @@ def send_statuses(
     first_status_was_sent = store_device_id_if_new(
         company_name = company_name,
         car_name = car_name,
-        module_id = device_id.module_id, 
+        module_id = path_module_id, 
         serialized_device_id = sdevice_id
     )
     if first_status_was_sent: 
@@ -187,16 +164,31 @@ def send_statuses(
     return "", 200
 
 
+def _serialized_device_id(device_id:DeviceId)->str:
+    return f"{device_id.module_id}_{device_id.type}_{device_id.role}"
+
+
+def __check_corresponding_device_id_in_path_and_messages(
+    path_module_id:int, 
+    path_device_type:int, 
+    path_device_role:str,
+    serialized_device_id:str,
+    *messages:Message
+    )->None:
+
+    for message in messages:
+        if message.id.module_id != path_module_id or \
+            message.id.type != path_device_type or \
+            message.id.role != path_device_role:
+            raise ValueError(
+                f"The device Id in path (.../{serialized_device_id}) is not equal "
+                f"to a device Id from the message ({_serialized_device_id(message.id)})"
+            )
+    
+
 def _serialized_car_info(company_name:str, car_name:str)->str:
     return f"{company_name}_{car_name}"
 
-def deserialize_device_id(serialized_device_id:str)->DeviceId:
-    module_id, device_type, device_role = serialized_device_id.split("_", maxsplit=2)
-    return DeviceId(
-        module_id = int(module_id),
-        type = int(device_type),
-        role = device_role
-    )
 
 def __all_available_devices(company_name:str, car_name:str)->List[str]:
     device_id_list:List[str] = list()
@@ -223,5 +215,20 @@ def __handle_first_status_and_return_warnings(
         company_name = company_name,
         car_name = car_name,
         serialized_device_id=serialized_device_id
+    )
+  
+def __message_from_db(message_db:Message_DB)->Message:
+    return Message(
+        timestamp=message_db.timestamp,
+        id=DeviceId(
+            message_db.module_id, 
+            message_db.device_type, 
+            message_db.device_role
+        ),
+        payload=Payload(
+            type=message_db.message_type, 
+            encoding=message_db.payload_encoding,
+            data=message_db.payload_data
+        )
     )
 
