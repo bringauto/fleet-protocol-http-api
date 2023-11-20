@@ -5,14 +5,14 @@ from fleetv2_http_api.impl.device_controller import (
     Payload,
     send_statuses,
     send_commands,
-    Message,
-    timestamp
+    Message
 )
 
 from enums import MessageType, EncodingType
 from apscheduler.schedulers.background import BackgroundScheduler
 from functools import partial
 from fleetv2_http_api.impl.device_controller import available_cars, _serialized_device_id
+from database.time import timestamp
 
 
 def __send_message_examples(scheduler:BackgroundScheduler)->None:
