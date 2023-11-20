@@ -133,9 +133,10 @@ def send_statuses(
     body:List[Dict] = []
     )->Tuple[str|List[str],int]:  # noqa: E501
 
-
     messages.extend([Message.from_dict(b) for b in body])
-
+    if messages == []: 
+        return "", 200
+    
     path_module_id, path_device_type, path_device_role, = _deserialize_device_id(sdevice_id)
     __check_corresponding_device_id_in_path_and_messages(
         path_module_id,

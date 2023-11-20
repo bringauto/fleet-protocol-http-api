@@ -91,6 +91,9 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
 
     def setUp(self) -> None:
         set_db_connection("sqlite","pysqlite","/:memory:")
+        self.device_id = DeviceId(module_id=42, type=7, role="test_device", name="Test Device X")
+        self.sdevice_id = _serialized_device_id(self.device_id)
+
         self.status_example = Message(
             timestamp=123456789,
             device_id=DeviceId(module_id=42, type=7, role="test_device", name="Test Device X"),
@@ -112,14 +115,8 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
         clear_device_ids()
 
     def test_listing_sent_statuses(self)->None:
-        sdevice_id = "42_7_test_device"
-        send_statuses(
-            company_name="test_company", 
-            car_name="test_car", 
-            sdevice_id=sdevice_id, 
-            messages=[self.status_example]
-        )
-        statuses, code = list_statuses("test_company", "test_car", sdevice_id)
+        send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.status_example])
+        statuses, code = list_statuses("test_company", "test_car", self.sdevice_id)
         self.assertEqual(len(statuses), 1)
         self.assertEqual(code, 200)
         status = statuses[0]
@@ -127,6 +124,14 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
         self.assertEqual(status.device_id.type, self.status_example.device_id.type)
         self.assertEqual(status.device_id.role, self.status_example.device_id.role)
         self.assertEqual(status.payload, self.status_example.payload)
+
+    def test_sending_empty_list_of_statuses_does_not_affect_list_of_statuses_returned_from_database(self)->None:
+        send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.status_example])
+        statuses_before = list_statuses("test_company", "test_car", self.sdevice_id)
+
+        send_statuses("test_company", "test_car", self.sdevice_id, messages=[])
+        statuses_after = list_statuses("test_company", "test_car", self.sdevice_id)
+        self.assertEqual(statuses_before, statuses_after)
 
     def test_sent_commands(self)->None:
         device_id = "42_7_test_device"
@@ -150,6 +155,14 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
         self.assertEqual(cmd.device_id.type, self.command_example.device_id.type)
         self.assertEqual(cmd.device_id.role, self.command_example.device_id.role)
         self.assertEqual(cmd.payload, self.command_example.payload)
+
+    def test_sending_empty_list_of_commands_does_not_affect_list_of_commands_returned_from_database(self)->None:
+        send_commands("test_company", "test_car", self.sdevice_id, messages=[self.command_example])
+        commands_before = list_commands("test_company", "test_car", self.sdevice_id)
+
+        send_commands("test_company", "test_car", self.sdevice_id, messages=[])
+        commands_after = list_commands("test_company", "test_car", self.sdevice_id)
+        self.assertEqual(commands_before, commands_after)
 
     def test_sending_commands_sent_to_nonexistent_device_returns_code_404(self)->None:
         not_connected_device_id = "42_7_test_device"
