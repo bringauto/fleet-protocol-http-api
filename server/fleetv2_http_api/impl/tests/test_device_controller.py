@@ -173,8 +173,7 @@ class Test_Statuses_In_Time(unittest.TestCase):
         set_db_connection("sqlite", "pysqlite", "/:memory:")
         self.sdevice_id = "2_5_test_device"
 
-    @patch('fleetv2_http_api.impl.device_controller.timestamp')
-    def test_by_default_only_the_NEWEST_STATUS_is_returned_and_if_all_is_specified_all_statuses_are_returned(self, mock_timestamp):
+    def test_by_default_only_the_NEWEST_STATUS_is_returned_and_if_all_is_specified_all_statuses_are_returned(self):
         payload = Payload(type=0, encoding=EncodingType.JSON, data={"message":"Device is running"})
         device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
         
@@ -183,11 +182,8 @@ class Test_Statuses_In_Time(unittest.TestCase):
         message_3 = Message(timestamp=37, id=device_id, payload = payload)
         args = self.COMPANY_1_NAME, self.CAR_A_NAME, self.sdevice_id
 
-        mock_timestamp.return_value = 10
         send_statuses(*args, [message_1])
-        mock_timestamp.return_value = 20
         send_statuses(*args, [message_2])
-        mock_timestamp.return_value = 37
         send_statuses(*args, [message_3])
 
         statuses, code = list_statuses(*args)
