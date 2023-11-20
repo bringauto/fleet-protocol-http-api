@@ -9,7 +9,6 @@ from fleetv2_http_api.models.message import Message
 from database.database_controller import send_messages_to_database, Message_DB, _deserialize_device_id
 from database.database_controller import list_messages as __list_messages
 from database.device_ids import store_device_id_if_new, device_ids
-from database.time import timestamp
 from database.database_controller import cleanup_device_commands_and_warn_before_future_commands
 
 from enums import MessageType
