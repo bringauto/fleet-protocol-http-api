@@ -223,6 +223,7 @@ def __check_messages(
     __check_equal_device_id_in_path_and_messages(sdevice_id, *messages)
 
 def __check_message_types(expected_message_type:int, *messages:Message)->None:
+    """Check that type of every message matches the method (send command or send status)."""
     for message in messages:
         if message.payload.type != expected_message_type:
             if expected_message_type == MessageType.COMMAND_TYPE:
