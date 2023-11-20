@@ -123,7 +123,7 @@ def send_commands(
 
     device_dict = device_ids()
     messages.extend([Message.from_dict(b) for b in body])
-    __check_equal_device_id_in_path_and_messages(sdevice_id, *messages)
+    __check_messages(MessageType.COMMAND_TYPE, sdevice_id, *messages)
  
     if company_name not in device_dict:
         return [], 404 # type: ignore
@@ -171,7 +171,7 @@ def send_statuses(
 
     messages.extend([Message.from_dict(b) for b in body])
     if messages == []: return "", 200
-    __check_equal_device_id_in_path_and_messages(sdevice_id,*messages)
+    __check_messages(MessageType.STATUS_TYPE, sdevice_id, *messages)
 
     statuses_to_db = [
         Message_DB(
@@ -205,9 +205,34 @@ def send_statuses(
     return "", 200
 
 
+class SendingCommandAsStatus(Exception): pass
+class SendingStatusAsCommand(Exception): pass
+
+
 def _serialized_car_info(company_name:str, car_name:str)->str:
     return f"{company_name}_{car_name}"
 
+
+def __check_messages(
+    expected_message_type:int,
+    sdevice_id:str,
+    *messages:Message
+    )->None:
+
+    __check_message_types(expected_message_type, *messages)
+    __check_equal_device_id_in_path_and_messages(sdevice_id, *messages)
+
+def __check_message_types(expected_message_type:int, *messages:Message)->None:
+    for message in messages:
+        if message.payload.type != expected_message_type:
+            if expected_message_type == MessageType.COMMAND_TYPE:
+                raise SendingStatusAsCommand(
+                    f"Cannot send a status as a command: {message}"
+                )
+            else:
+                raise SendingCommandAsStatus(
+                    f"Cannot send a command as a status: {message}"
+                )
 
 def __check_equal_device_id_in_path_and_messages(
     sdevice_id:str,
@@ -221,6 +246,7 @@ def __check_equal_device_id_in_path_and_messages(
                 f"The device Id in path (.../{sdevice_id}) is not equal "
                 f"to a device Id from the message ({sdevice_id_from_message})"
             )
+
 
 def __available_module(company_name:str, car_name:str, module_id:int)->Module:
     if not module_id in device_ids()[company_name][car_name]: 

@@ -360,5 +360,24 @@ class Test_Listing_Commands_And_Statuses_Of_Nonexistent_Cars(unittest.TestCase):
         self.assertEqual(list_commands("nonexistent_company", "test_car", "..."), ([], 404))
 
 
+
+from fleetv2_http_api.impl.device_controller import SendingCommandAsStatus, SendingStatusAsCommand
+class Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_Methods(unittest.TestCase):
+
+    def test_send_statuses_accepts_only_statuses(self):
+        payload = Payload(type=MessageType.COMMAND_TYPE, encoding=EncodingType.JSON, data={"message":"Beep"})
+        device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
+        command = Message(timestamp=10, device_id=device_id, payload=payload)
+        with self.assertRaises(SendingCommandAsStatus): 
+            send_statuses("test_company", "test_car", "...", [command])
+
+    def test_send_commands_accepts_only_commands(self):
+        payload = Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is running"})
+        device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
+        status = Message(timestamp=10, device_id=device_id, payload=payload)
+        with self.assertRaises(SendingStatusAsCommand): 
+            send_commands("test_company", "test_car", "...", [status])
+
+
 if __name__=="__main__": 
     unittest.main()
