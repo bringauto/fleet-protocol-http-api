@@ -46,7 +46,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
         )
         self.status_example = Message(
             timestamp=123456789,
-            id=DeviceId(module_id=42, type=7, role="test_device_1", name="Left light"),
+            device_id=DeviceId(module_id=42, type=7, role="test_device_1", name="Left light"),
             payload=payload_example
         )
     
@@ -93,7 +93,7 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
         set_db_connection("sqlite","pysqlite","/:memory:")
         self.status_example = Message(
             timestamp=123456789,
-            id=DeviceId(module_id=42, type=7, role="test_device", name="Test Device X"),
+            device_id=DeviceId(module_id=42, type=7, role="test_device", name="Test Device X"),
             payload=Payload(
                 type=MessageType.STATUS_TYPE, 
                 encoding=EncodingType.JSON, 
@@ -102,7 +102,7 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
         )
         self.command_example = Message(
             timestamp = 124879465,
-            id = DeviceId(module_id=42, type=7, role="test_device", name="Test Device X"),
+            device_id = DeviceId(module_id=42, type=7, role="test_device", name="Test Device X"),
             payload = Payload(
                 type=MessageType.COMMAND_TYPE, 
                 encoding=EncodingType.JSON, 
@@ -123,9 +123,9 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
         self.assertEqual(len(statuses), 1)
         self.assertEqual(code, 200)
         status = statuses[0]
-        self.assertEqual(status.id.module_id, self.status_example.id.module_id)
-        self.assertEqual(status.id.type, self.status_example.id.type)
-        self.assertEqual(status.id.role, self.status_example.id.role)
+        self.assertEqual(status.device_id.module_id, self.status_example.device_id.module_id)
+        self.assertEqual(status.device_id.type, self.status_example.device_id.type)
+        self.assertEqual(status.device_id.role, self.status_example.device_id.role)
         self.assertEqual(status.payload, self.status_example.payload)
 
     def test_sent_commands(self)->None:
@@ -146,9 +146,9 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertEqual(len(commands), 1)
         cmd = commands[0]
-        self.assertEqual(cmd.id.module_id, self.command_example.id.module_id)
-        self.assertEqual(cmd.id.type, self.command_example.id.type)
-        self.assertEqual(cmd.id.role, self.command_example.id.role)
+        self.assertEqual(cmd.device_id.module_id, self.command_example.device_id.module_id)
+        self.assertEqual(cmd.device_id.type, self.command_example.device_id.type)
+        self.assertEqual(cmd.device_id.role, self.command_example.device_id.role)
         self.assertEqual(cmd.payload, self.command_example.payload)
 
     def test_sending_commands_sent_to_nonexistent_device_returns_code_404(self)->None:
@@ -177,14 +177,14 @@ class Test_Statuses_In_Time(unittest.TestCase):
         payload = Payload(type=0, encoding=EncodingType.JSON, data={"message":"Device is running"})
         device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
         
-        message_1 = Message(timestamp=10, id=device_id, payload = payload)
-        message_2 = Message(timestamp=20, id=device_id, payload = payload)
-        message_3 = Message(timestamp=37, id=device_id, payload = payload)
+        message_1 = Message(timestamp=10, device_id=device_id, payload = payload)
+        message_2 = Message(timestamp=20, device_id=device_id, payload = payload)
+        message_3 = Message(timestamp=37, device_id=device_id, payload = payload)
         args = self.COMPANY_1_NAME, self.CAR_A_NAME, self.sdevice_id
 
-        send_statuses(*args, [message_1])
-        send_statuses(*args, [message_2])
-        send_statuses(*args, [message_3])
+        send_statuses(*args, messages=[message_1])
+        send_statuses(*args, messages=[message_2])
+        send_statuses(*args, messages=[message_3])
 
         statuses, code = list_statuses(*args)
         self.assertEqual(len(statuses), 1)
@@ -213,10 +213,10 @@ class Test_Statuses_In_Time(unittest.TestCase):
         status_payload = Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is running"})
         command_payload = Payload(type=MessageType.COMMAND_TYPE, encoding=EncodingType.JSON, data={"message":"Beep"})
         
-        status = Message(timestamp=10, id=device_id, payload=status_payload)
-        command_1 = Message(timestamp=20, id=device_id, payload=command_payload)
-        command_2 = Message(timestamp=30, id=device_id, payload=command_payload)
-        command_3 = Message(timestamp=45, id=device_id, payload=command_payload)
+        status = Message(timestamp=10, device_id=device_id, payload=status_payload)
+        command_1 = Message(timestamp=20, device_id=device_id, payload=command_payload)
+        command_2 = Message(timestamp=30, device_id=device_id, payload=command_payload)
+        command_3 = Message(timestamp=45, device_id=device_id, payload=command_payload)
 
         args = self.COMPANY_1_NAME, self.CAR_A_NAME, sdevice
 
@@ -269,9 +269,9 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
 
     @patch('database.time._time_in_ms')
     def test_cleaning_up_commands(self, mock_timestamp):
-        status = Message(timestamp=0, id=self.device_id, payload=self.status_payload)
-        command_1 = Message(timestamp=10, id=self.device_id, payload=self.command_payload)
-        command_2 = Message(timestamp=20, id=self.device_id, payload=self.command_payload)
+        status = Message(timestamp=0, device_id=self.device_id, payload=self.status_payload)
+        command_1 = Message(timestamp=10, device_id=self.device_id, payload=self.command_payload)
+        command_2 = Message(timestamp=20, device_id=self.device_id, payload=self.command_payload)
 
         send_statuses(*self.args, [status])
         send_commands(*self.args, [command_1])
@@ -297,11 +297,11 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
 
     @patch('database.time._time_in_ms')
     def test_cleaning_up_command_with_newer_timestamp_relative_to_the_first_status_raises_warning(self, mock_timestamp):
-        status = Message(timestamp=0, id=self.device_id, payload=self.status_payload)
-        new_first_status = Message(timestamp=self.DATA_RETENTION_PERIOD + 50, id=self.device_id, payload=self.status_payload)
-        command_1 = Message(timestamp=self.DATA_RETENTION_PERIOD+30, id=self.device_id, payload=self.command_payload)
+        status = Message(timestamp=0, device_id=self.device_id, payload=self.status_payload)
+        new_first_status = Message(timestamp=self.DATA_RETENTION_PERIOD + 50, device_id=self.device_id, payload=self.status_payload)
+        command_1 = Message(timestamp=self.DATA_RETENTION_PERIOD+30, device_id=self.device_id, payload=self.command_payload)
         # the following timestamp is invalid as it is set to the future relative to the next (FIRST) status
-        command_2 = Message(timestamp=self.DATA_RETENTION_PERIOD+100, id=self.device_id, payload=self.command_payload)
+        command_2 = Message(timestamp=self.DATA_RETENTION_PERIOD+100, device_id=self.device_id, payload=self.command_payload)
 
         send_statuses(*self.args, [status])
 

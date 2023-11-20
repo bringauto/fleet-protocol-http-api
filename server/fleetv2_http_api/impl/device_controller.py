@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
 from fleetv2_http_api.models.device_id import DeviceId
@@ -64,7 +64,7 @@ def list_statuses(
     all_available:Optional[str]=None, 
     since:Optional[int]=None
     )->Tuple[List[Message], int]:  # noqa: E501
-    
+
     statuses = [__message_from_db(m) for m in __list_messages(
         company_name=company_name,
         car_name=car_name,
@@ -76,9 +76,18 @@ def list_statuses(
     return statuses, 200
 
 
-def send_commands(company_name:str, car_name:str, sdevice_id:str, messages:List[Message]=list())->Tuple[str, int]:  # noqa: E501
+def send_commands(
+    company_name:str, 
+    car_name:str, 
+    sdevice_id:str, 
+    messages:List[Message] = [],
+    body:List[Dict] = []
+    )->Tuple[str, int]:  # noqa: E501
+
     device_dict = device_ids()
     path_module_id, path_device_type, path_device_role = _deserialize_device_id(sdevice_id)
+
+    messages.extend([Message.from_dict(b) for b in body])
 
     __check_corresponding_device_id_in_path_and_messages(
         path_module_id, 
@@ -96,15 +105,16 @@ def send_commands(company_name:str, car_name:str, sdevice_id:str, messages:List[
     
     elif path_module_id not in device_dict[company_name][car_name]:
         return "", 404
+
     else:
         commands_to_db = [
             Message_DB(
                 timestamp=message.timestamp,
                 serialized_device_id=sdevice_id,
-                module_id=message.id.module_id,
-                device_type=message.id.type,
-                device_role=message.id.role,
-                device_name=message.id.name,
+                module_id=message.device_id.module_id,
+                device_type=message.device_id.type,
+                device_role=message.device_id.role,
+                device_name=message.device_id.name,
                 message_type=MessageType.COMMAND_TYPE,
                 payload_encoding=message.payload.encoding,
                 payload_data=message.payload.data # type: ignore
@@ -119,8 +129,12 @@ def send_statuses(
     company_name:str, 
     car_name:str, 
     sdevice_id:str, 
-    messages:List[Message]=list()
+    messages:List[Message] = [],
+    body:List[Dict] = []
     )->Tuple[str|List[str],int]:  # noqa: E501
+
+
+    messages.extend([Message.from_dict(b) for b in body])
 
     path_module_id, path_device_type, path_device_role, = _deserialize_device_id(sdevice_id)
     __check_corresponding_device_id_in_path_and_messages(
@@ -130,21 +144,21 @@ def send_statuses(
         sdevice_id,
         *messages
     )
-
     statuses_to_db = [
         Message_DB(
             timestamp=message.timestamp,
             serialized_device_id=sdevice_id,
             module_id=path_module_id,
-            device_type=message.id.type,
-            device_role=message.id.role,
-            device_name=message.id.name,
+            device_type=message.device_id.type,
+            device_role=message.device_id.role,
+            device_name=message.device_id.name,
             message_type=MessageType.STATUS_TYPE,
             payload_encoding=message.payload.encoding,
             payload_data=message.payload.data # type: ignore
         ) 
         for message in messages
     ]
+
     send_messages_to_database(company_name, car_name, *statuses_to_db)
     first_status_was_sent = store_device_id_if_new(
         company_name = company_name,
@@ -172,16 +186,16 @@ def __check_corresponding_device_id_in_path_and_messages(
     path_device_type:int, 
     path_device_role:str,
     serialized_device_id:str,
-    *messages:Message
+    *messages:Message  
     )->None:
 
     for message in messages:
-        if message.id.module_id != path_module_id or \
-            message.id.type != path_device_type or \
-            message.id.role != path_device_role:
+        if message.device_id.module_id != path_module_id or \
+            message.device_id.type != path_device_type or \
+            message.device_id.role != path_device_role:
             raise ValueError(
                 f"The device Id in path (.../{serialized_device_id}) is not equal "
-                f"to a device Id from the message ({_serialized_device_id(message.id)})"
+                f"to a device Id from the message ({_serialized_device_id(message.device_id)})"
             )
     
 
@@ -219,7 +233,7 @@ def __handle_first_status_and_return_warnings(
 def __message_from_db(message_db:Message_DB)->Message:
     return Message(
         timestamp=message_db.timestamp,
-        id=DeviceId(
+        device_id=DeviceId(
             message_db.module_id, 
             message_db.device_type, 
             message_db.device_role

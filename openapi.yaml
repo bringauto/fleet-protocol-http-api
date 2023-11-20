@@ -142,17 +142,17 @@ paths:
             example:
               [
                 {
-                  "timestamp": 1700139157, 
+                  timestamp: 1700139157, 
                   device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
                   payload: {payload_type: 0, encoding: 1, data: QnJpbmdBdXRv}
                 },
                 {
-                  "timestamp": 1700145485, 
+                  timestamp: 1700145485, 
                   device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
                   payload: {payload_type: 0, encoding: 1, data: U3RhcnQgd29ya2luZw==}
                 },
                 {
-                  "timestamp": 1700145490, 
+                  timestamp: 1700145490, 
                   device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
                   payload: {payload_type: 0, encoding: 0, data: {"description": "Just keep working"}}
                 },
@@ -213,7 +213,7 @@ paths:
             example:
               [
                 {
-                  "timestamp": 1700139157, 
+                  timestamp: 1700139157, 
                   device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
                   payload: {payload_type: 1, encoding: 1, data: U2F5IGhlbGxv}
                 },
@@ -309,7 +309,7 @@ components:
           description: Unix timestamp of the message in milliseconds.
           type: integer 
           example: 1699262836
-        id: 
+        device_id: 
           $ref: '#/components/schemas/DeviceId'
         payload:
           $ref: '#/components/schemas/Payload'

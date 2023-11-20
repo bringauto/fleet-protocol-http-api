@@ -25,9 +25,9 @@ def __send_message_examples(scheduler:BackgroundScheduler)->None:
     tstamp_1 = timestamp()
     tstamp_2 = tstamp_1 + 10
     tstamp_3 = tstamp_2 + 10
-    status_1 = Message(timestamp=tstamp_1, id=device_id, payload=payload_1)
-    status_2 = Message(timestamp=tstamp_2, id=device_id, payload=payload_2)
-    status_3 = Message(timestamp=tstamp_3, id=device_id, payload=payload_3)
+    status_1 = Message(timestamp=tstamp_1, device_id=device_id, payload=payload_1)
+    status_2 = Message(timestamp=tstamp_2, device_id=device_id, payload=payload_2)
+    status_3 = Message(timestamp=tstamp_3, device_id=device_id, payload=payload_3)
     
     send_statuses("test_company", "test_car", sdevice_id, [status_1])
     send_statuses("test_company", "test_car", sdevice_id, [status_2])
