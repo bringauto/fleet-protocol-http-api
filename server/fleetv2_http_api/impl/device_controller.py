@@ -42,7 +42,7 @@ def list_commands(
     car_name:str, 
     sdevice_id:str, 
     all:Optional[str]=None, 
-    since=None
+    since:Optional[int]=None
     )->Tuple[List[Message], int]:  # noqa: E501
 
     commands = [__message_from_db(m) for m in __list_messages(
@@ -64,6 +64,8 @@ def list_statuses(
     all:Optional[str]=None, 
     since:Optional[int]=None
     )->Tuple[List[Message], int]:  # noqa: E501
+
+    print(sdevice_id, all, since)
 
     statuses = [__message_from_db(m) for m in __list_messages(
         company_name=company_name,
