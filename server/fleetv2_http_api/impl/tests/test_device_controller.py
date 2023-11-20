@@ -289,7 +289,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         remove_old_messages(mock_timestamp.return_value)
 
         self.assertEqual(len(list_statuses(*self.args, all_available="")[0]), 0)
-        self.assertEqual(len(list_commands(*self.args, all_available="")[0]), 1)
+        self.assertEqual(len(list_commands(*self.args, all_available="")[0]), 0)
         
         mock_timestamp.return_value += 5 
         
@@ -322,7 +322,9 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         remove_old_messages(self.DATA_RETENTION_PERIOD + 10)
 
         self.assertEqual(len(list_statuses(*self.args, all_available="")[0]), 0)
-        self.assertEqual(len(list_commands(*self.args, all_available="")[0]), 2)
+        # The device is considered to be disconnected and all commands sent to it are then 
+        # considered to be removed.
+        self.assertEqual(len(list_commands(*self.args, all_available="")[0]), 0)
 
         self.assertEqual(
             available_devices(self.COMPANY_1_NAME, self.CAR_A_NAME), 
@@ -349,10 +351,13 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         )
 
 
-# class Test_Listing_Commands_And_Statuses_Of_Nonexistent_Cars(unittest.TestCase):
+class Test_Listing_Commands_And_Statuses_Of_Nonexistent_Cars(unittest.TestCase):
 
-#     def test_listing_statuses_of_nonexistent_car_returns_code_404(self):
-#         self.assertEqual(list_statuses("nonexistent_company", "test_car", "..."), ([], 404))
+    def test_listing_statuses_of_nonexistent_car_returns_code_404(self):
+        self.assertEqual(list_statuses("nonexistent_company", "test_car", "..."), ([], 404))
+
+    def test_listing_commands_of_nonexistent_car_returns_code_404(self):
+        self.assertEqual(list_commands("nonexistent_company", "test_car", "..."), ([], 404))
 
 
 if __name__=="__main__": 

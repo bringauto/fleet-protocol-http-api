@@ -60,6 +60,9 @@ def list_commands(
     having the timestamp equal or lower than 'until'.
     """
 
+    if company_name not in device_ids(): return [], 404 # type: ignore
+    elif car_name not in device_ids()[company_name]: return [], 404 # type: ignore
+
     commands = [__message_from_db(m) for m in __list_messages(
         company_name=company_name,
         car_name=car_name,
@@ -87,6 +90,9 @@ def list_statuses(
     If 'since' is specified (unix timestamp in milliseconds), return all stored statuses
     having the timestamp equal or lower than 'since'.
     """
+
+    if company_name not in device_ids(): return [], 404 # type: ignore
+    elif car_name not in device_ids()[company_name]: return [], 404 # type: ignore
 
     statuses = [__message_from_db(m) for m in __list_messages(
         company_name=company_name,
