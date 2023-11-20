@@ -9,7 +9,7 @@ from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Payload, Message
 
 from fleetv2_http_api.impl.device_controller import send_statuses, send_commands, list_statuses, list_commands
-from fleetv2_http_api.impl.device_controller import _serialized_car_info, _serialized_device_id
+from fleetv2_http_api.impl.device_controller import _serialized_device_id
 from database.device_ids import clear_device_ids
 
 from enums import MessageType, EncodingType
@@ -84,7 +84,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
             messages=[self.status_example]
         )
         self.assertEqual(code, 200)
-        self.assertListEqual(available_cars(), [_serialized_car_info("test_company", "test_car")])
+        self.assertListEqual(available_cars(), ["test_company_test_car"])
 
 
 class Test_Sending_And_Listing_Messages(unittest.TestCase):
@@ -321,7 +321,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
             available_devices(self.COMPANY_1_NAME, self.CAR_A_NAME), 
             [_serialized_device_id(self.device_id)]
         )
-        self.assertEqual(available_cars(),[_serialized_car_info(self.COMPANY_1_NAME, self.CAR_A_NAME)])
+        self.assertEqual(available_cars(),[f"{self.COMPANY_1_NAME}_{self.CAR_A_NAME}"])
 
         send_commands(*self.args, [command_1])
         send_commands(*self.args, [command_2])

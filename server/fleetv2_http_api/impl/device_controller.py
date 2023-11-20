@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple, Dict
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Message
-from database.database_controller import send_messages_to_database, Message_DB, _deserialize_device_id
+from database.database_controller import send_messages_to_database, Message_DB
 from database.database_controller import list_messages as __list_messages
 from database.device_ids import store_device_id_if_new, device_ids
 from database.database_controller import cleanup_device_commands_and_warn_before_future_commands
@@ -15,6 +15,7 @@ from enums import MessageType
 
        
 def available_cars()->List[str]:
+    """Return a list of serialized car info for cars owning at least one available device."""
     cars:List[str] = list()
     device_dict = device_ids()
     for company_name in device_dict:
@@ -24,6 +25,9 @@ def available_cars()->List[str]:
 
 
 def available_devices(company_name:str, car_name:str, module_id:Optional[int]=None)->List[str]:  # noqa: E501
+    """Return a list of serialized device ids for devices available in a given car.
+    If a module_id is not specified, return all available devices in a given car.
+    """
     device_dict = device_ids()
     if company_name not in device_dict:
         return [], 404 # type: ignore
@@ -44,6 +48,13 @@ def list_commands(
     all_available:Optional[str]=None, 
     until:Optional[int]=None
     )->Tuple[List[Message], int]:  # noqa: E501
+    """Return list containing the OLDEST command currently stored for an AVAILABLE device. 
+    If a device is not available, return empty list and code 404.
+
+    If 'all_available' is not None, return ALL commands stored for a given device.
+    If 'until' is specified (unix timestamp in milliseconds), return all stored commands
+    having the timestamp equal or lower than 'until'.
+    """
 
     commands = [__message_from_db(m) for m in __list_messages(
         company_name=company_name,
@@ -65,6 +76,14 @@ def list_statuses(
     since:Optional[int]=None
     )->Tuple[List[Message], int]:  # noqa: E501
 
+    """Return list containing the NEWEST status currently stored for an AVAILABLE device. 
+    If a device is not available, return empty list and code 404.
+
+    If 'all_available' is not None, return ALL statuses stored for a given device.
+    If 'since' is specified (unix timestamp in milliseconds), return all stored statuses
+    having the timestamp equal or lower than 'since'.
+    """
+
     statuses = [__message_from_db(m) for m in __list_messages(
         company_name=company_name,
         car_name=car_name,
@@ -84,18 +103,17 @@ def send_commands(
     body:List[Dict] = []
     )->Tuple[str, int]:  # noqa: E501
 
+    """Send a list of commands to given device. If the device specified is not available,
+    return code 404.
+
+    The body of the request should contain a list of commands, each in the form of a dictionary.
+
+    If for any command the device_id does not correspond to the sdevice_id, exception is raised.
+    """
+
     device_dict = device_ids()
-    path_module_id, path_device_type, path_device_role = _deserialize_device_id(sdevice_id)
-
     messages.extend([Message.from_dict(b) for b in body])
-
-    __check_corresponding_device_id_in_path_and_messages(
-        path_module_id, 
-        path_device_type, 
-        path_device_role, 
-        sdevice_id, 
-        *messages
-    )
+    __check_equal_device_id_in_path_and_messages(sdevice_id, *messages)
  
     if company_name not in device_dict:
         return [], 404 # type: ignore
@@ -103,7 +121,7 @@ def send_commands(
     elif car_name not in device_dict[company_name]:
         return [], 404 # type: ignore
     
-    elif path_module_id not in device_dict[company_name][car_name]:
+    elif messages[-1].device_id.module_id not in device_dict[company_name][car_name]:
         return "", 404
 
     else:
@@ -133,23 +151,23 @@ def send_statuses(
     body:List[Dict] = []
     )->Tuple[str|List[str],int]:  # noqa: E501
 
+    """Send a list of statuses to given device. 
+    The device specified in the statuses is then automatically considered available.
+
+    The body of the request should contain a list of statuses, each in the form of a dictionary.
+
+    If for any status the device_id does not correspond to the sdevice_id, exception is raised.
+    """
+
     messages.extend([Message.from_dict(b) for b in body])
-    if messages == []: 
-        return "", 200
-    
-    path_module_id, path_device_type, path_device_role, = _deserialize_device_id(sdevice_id)
-    __check_corresponding_device_id_in_path_and_messages(
-        path_module_id,
-        path_device_type,
-        path_device_role,
-        sdevice_id,
-        *messages
-    )
+    if messages == []: return "", 200
+    __check_equal_device_id_in_path_and_messages(sdevice_id,*messages)
+
     statuses_to_db = [
         Message_DB(
             timestamp=message.timestamp,
             serialized_device_id=sdevice_id,
-            module_id=path_module_id,
+            module_id=message.device_id.module_id,
             device_type=message.device_id.type,
             device_role=message.device_id.role,
             device_name=message.device_id.name,
@@ -164,7 +182,7 @@ def send_statuses(
     first_status_was_sent = store_device_id_if_new(
         company_name = company_name,
         car_name = car_name,
-        module_id = path_module_id, 
+        module_id = messages[-1].device_id.module_id, 
         serialized_device_id = sdevice_id
     )
     if first_status_was_sent: 
@@ -178,30 +196,25 @@ def send_statuses(
     return "", 200
 
 
+def _serialized_car_info(company_name:str, car_name:str)->str:
+    return f"{company_name}_{car_name}"
+
 def _serialized_device_id(device_id:DeviceId)->str:
     return f"{device_id.module_id}_{device_id.type}_{device_id.role}"
 
 
-def __check_corresponding_device_id_in_path_and_messages(
-    path_module_id:int, 
-    path_device_type:int, 
-    path_device_role:str,
-    serialized_device_id:str,
+def __check_equal_device_id_in_path_and_messages(
+    sdevice_id:str,
     *messages:Message  
     )->None:
 
     for message in messages:
-        if message.device_id.module_id != path_module_id or \
-            message.device_id.type != path_device_type or \
-            message.device_id.role != path_device_role:
+        sdevice_id_from_message = _serialized_device_id(message.device_id)
+        if sdevice_id_from_message != sdevice_id:
             raise ValueError(
-                f"The device Id in path (.../{serialized_device_id}) is not equal "
-                f"to a device Id from the message ({_serialized_device_id(message.device_id)})"
+                f"The device Id in path (.../{sdevice_id}) is not equal "
+                f"to a device Id from the message ({sdevice_id_from_message})"
             )
-    
-
-def _serialized_car_info(company_name:str, car_name:str)->str:
-    return f"{company_name}_{car_name}"
 
 
 def __all_available_devices(company_name:str, car_name:str)->List[str]:
