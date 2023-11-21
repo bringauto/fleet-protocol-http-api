@@ -16,7 +16,7 @@ tags:
 - name: module
 
 security:
-  - ApiKeyAuth: []
+- MaintainerAuth: []
 
 paths:
   /cars:
@@ -28,6 +28,10 @@ paths:
         Each item list has the format: '&lt;company name&gt;_&lt;car name&gt;'."
       tags: 
         - car
+      security:
+      - VisitorAuth: []
+      - MaintainerAuth: []
+
       responses:
         '200':
           description: A list of available cars. 
@@ -233,7 +237,12 @@ paths:
 
 components:
   securitySchemes:
-    ApiKeyAuth:
+    VisitorAuth:
+      type: apiKey
+      in: query
+      name: key
+
+    MaintainerAuth:
       type: apiKey
       in: query
       name: key
