@@ -23,7 +23,6 @@ def info_from_VisitorAuth(api_key, *args)->Dict:
     """
     
     if api_key == KEYS["visitor"]: 
-        print("Visitor key OK")
         return {'client role': "visitor"}
     else: 
         return info_from_MaintainerAuth(api_key, *args)
@@ -42,7 +41,6 @@ def info_from_MaintainerAuth(api_key, *args)->Dict:
     """
 
     if api_key == KEYS["maintainer"]: 
-        print("Maintainer key OK")
         return {'client role': "maintainer"}
     else: 
         return None # type: ignore
