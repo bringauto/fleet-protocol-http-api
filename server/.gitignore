@@ -78,5 +78,12 @@ test-requirements.txt
 tox.ini
 .dockerignore 
 
-fleetv2_http_api/*
+fleetv2_http_api/controllers/*
+fleetv2_http_api/models/*
+fleetv2_http_api/test/*
+fleetv2_http_api/util/*
+fleetv2_http_api/*.py
+fleetv2_http_api/openapi
+
 !fleetv2_http_api/impl
+!fleetv2_http_api/controllers/security_controller.py

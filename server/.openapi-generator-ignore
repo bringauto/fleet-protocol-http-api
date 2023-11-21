@@ -25,3 +25,4 @@
 .gitignore
 
 .openapi-generator-ignore
+fleetv2_http_api/controllers/security_controller.py

@@ -236,7 +236,7 @@ components:
     ApiKeyAuth:
       type: apiKey
       in: query
-      name: X-API-Key
+      name: key
 
   parameters:
     All: 
