@@ -3,16 +3,22 @@ sys.path.append("server")
 
 
 import unittest
+from enums import MessageType, EncodingType
+from database.device_ids import clear_device_ids, _serialized_device_id
 from database.database_controller import set_db_connection
-from server.fleetv2_http_api.impl.controllers import available_devices, available_cars
+from fleetv2_http_api.impl.controllers import (
+    available_devices, 
+    available_cars,
+    send_statuses, 
+    send_commands, 
+    list_statuses, 
+    list_commands,
+    SendingCommandAsStatus,
+    SendingStatusAsCommand
+)
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Payload, Message
 from fleetv2_http_api.models.module import Module
-
-from server.fleetv2_http_api.impl.controllers import send_statuses, send_commands, list_statuses, list_commands
-from database.device_ids import clear_device_ids, _serialized_device_id
-
-from enums import MessageType, EncodingType
 
 
 class Test_Device_Id_Validity(unittest.TestCase):
@@ -361,7 +367,6 @@ class Test_Listing_Commands_And_Statuses_Of_Nonexistent_Cars(unittest.TestCase):
 
 
 
-from server.fleetv2_http_api.impl.controllers import SendingCommandAsStatus, SendingStatusAsCommand
 class Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_Methods(unittest.TestCase):
 
     def test_send_statuses_accepts_only_statuses(self):
