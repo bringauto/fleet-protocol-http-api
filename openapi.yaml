@@ -16,7 +16,7 @@ tags:
 - name: module
 
 security:
-- MaintainerAuth: []
+- OperatorAuth: []
 
 paths:
   /cars:
@@ -30,7 +30,7 @@ paths:
         - car
       security:
       - VisitorAuth: []
-      - MaintainerAuth: []
+      - OperatorAuth: []
 
       responses:
         '200':
@@ -242,7 +242,7 @@ components:
       in: query
       name: key
 
-    MaintainerAuth:
+    OperatorAuth:
       type: apiKey
       in: query
       name: key

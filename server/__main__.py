@@ -21,17 +21,23 @@ sys.path.append("server")
 
 from apscheduler.schedulers.background import BackgroundScheduler
 import json
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 
-from database.database_controller import (
-    set_db_connection, 
-    remove_old_messages, 
-    set_message_retention_period
-)
+from database.database_controller import remove_old_messages, set_message_retention_period
 from database.device_ids import clear_device_ids
+from database.database_connection import set_db_connection
 from database.time import timestamp
 from fleetv2_http_api.__main__ import main as run_server
+from database.security import add_client, number_of_operators, number_of_visitors
+
+def add_first_clients()->Dict[str,List[str]]:
+    clients:Dict[str,List[str]] = {"visitors":[], "operators":[]}
+    if number_of_visitors() == 0:
+        clients["visitors"].append(add_client("Alice", "visitor"))
+    if number_of_operators() == 0:
+        clients["operators"].append(add_client("Bob", "operator"))
+    return clients
 
 
 def __connect_to_database(db_server_config:Dict[str,Any])->None:
@@ -68,5 +74,6 @@ def __clean_up_messages()->None:
 if __name__ == '__main__':
     config:Dict[str,Any] = json.load(open("config.json"))
     __connect_to_database(config["database"]["server"])
+    add_first_clients()
     set_up_database_jobs(config["database"]["cleanup"]["timing_in_seconds"])
     run_server()
