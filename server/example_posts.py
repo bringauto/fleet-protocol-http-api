@@ -1,6 +1,6 @@
 
 
-from fleetv2_http_api.impl.device_controller import (
+from server.fleetv2_http_api.impl.controllers import (
     DeviceId,
     Payload,
     send_statuses,
@@ -11,7 +11,7 @@ from fleetv2_http_api.impl.device_controller import (
 from enums import MessageType, EncodingType
 from apscheduler.schedulers.background import BackgroundScheduler
 from functools import partial
-from fleetv2_http_api.impl.device_controller import _serialized_device_id
+from server.fleetv2_http_api.impl.controllers import _serialized_device_id
 from database.time import timestamp
 
 

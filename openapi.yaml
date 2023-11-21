@@ -15,11 +15,13 @@ tags:
 - name: device
 - name: module
 
+security:
+  - ApiKeyAuth: []
 
 paths:
   /cars:
     get:
-      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: available_cars
       description: 
         "Return list of available cars for all companies registered in the database.<br>
@@ -43,7 +45,7 @@ paths:
 
   /{company_name}/{car_name}/available-devices:
     get:
-      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: available-devices
       description: 
         Return device Ids for all devices available for contained in the specified car.<br>
@@ -52,7 +54,7 @@ paths:
         If a module Id is specified, only a single such object is returned. <br>
         Otherwise, a list of such objects is returned, one for each module contained in the car. <br>
       tags: 
-        - device
+        - module
       responses:
         '200':
           description: A list of available devices. 
@@ -78,11 +80,11 @@ paths:
 
   /{company_name}/{car_name}/status/{sdevice_id}:
     get:
-      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: list_statuses
       description: It returns list of the Device Statuses.
       tags: 
-      - module
+      - device
       responses:
         '200':
           description: A list of device statuses.
@@ -124,7 +126,7 @@ paths:
 
 
     post:
-      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: send_statuses
       description: Add statuses received from the Device.
       tags: 
@@ -164,7 +166,7 @@ paths:
 
   /{company_name}/{car_name}/command/{sdevice_id}:
     get:
-      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: list_commands
       description: Returns list of the Device Commands. 
       tags: 
@@ -192,7 +194,7 @@ paths:
 
       parameters:
         - $ref: '#/components/parameters/All'
-        - $ref: '#/components/parameters/Since'
+        - $ref: '#/components/parameters/Until'
 
     parameters:
       - $ref: '#/components/parameters/CompanyName'
@@ -200,7 +202,7 @@ paths:
       - $ref: '#/components/parameters/SerializedDeviceId'
 
     post:
-      x-openapi-router-controller: fleetv2_http_api.impl.device_controller
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: send_commands
       description: It adds new device Commands.
       tags: 
@@ -230,6 +232,12 @@ paths:
 
 
 components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: query
+      name: X-API-Key
+
   parameters:
     All: 
       name: all_available
