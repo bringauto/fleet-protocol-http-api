@@ -4,7 +4,7 @@ sys.path.append("server")
 
 import unittest
 from enums import MessageType, EncodingType
-from database.device_ids import clear_device_ids, _serialized_device_id
+from database.device_ids import clear_device_ids, serialized_device_id
 from database.database_controller import set_db_connection
 from fleetv2_http_api.impl.controllers import (
     available_devices, 
@@ -60,7 +60,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
         clear_device_ids()
 
     def test_device_is_considered_available_if_at_least_one_status_is_in_the_database(self):
-        sdevice_id = _serialized_device_id(self.device_id)
+        sdevice_id = serialized_device_id(self.device_id)
         self.assertEqual(available_devices("test_company", "test_car"), ([], 404))
 
         send_statuses("test_company", "test_car", sdevice_id, messages=[self.status_example])
@@ -91,7 +91,7 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
     def setUp(self) -> None:
         set_db_connection("sqlite","pysqlite","/:memory:")
         self.device_id = DeviceId(module_id=42, type=7, role="test_device", name="Test Device X")
-        self.sdevice_id = _serialized_device_id(self.device_id)
+        self.sdevice_id = serialized_device_id(self.device_id)
 
         self.status_example = Message(
             timestamp=123456789,
@@ -220,7 +220,7 @@ class Test_Statuses_In_Time(unittest.TestCase):
 
     def test_by_default_only_the_OLDEST_COMMAND_is_returned(self):
         device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
-        sdevice = _serialized_device_id(device_id)
+        sdevice = serialized_device_id(device_id)
         status_payload = Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is running"})
         command_payload = Payload(type=MessageType.COMMAND_TYPE, encoding=EncodingType.JSON, data={"message":"Beep"})
         
@@ -274,7 +274,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         self.status_payload = Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is conected"})
         self.command_payload = Payload(type=MessageType.COMMAND_TYPE, encoding=EncodingType.JSON, data={"message":"Beep"})
         
-        sdevice_id = _serialized_device_id(self.device_id)
+        sdevice_id = serialized_device_id(self.device_id)
         self.args = self.COMPANY_1_NAME, self.CAR_A_NAME, sdevice_id
 
 
@@ -350,7 +350,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
                     timestamp=self.DATA_RETENTION_PERIOD + 100,
                     company_name=self.COMPANY_1_NAME,
                     car_name=self.CAR_A_NAME,
-                    serialized_device_id= _serialized_device_id(self.device_id),
+                    serialized_device_id= serialized_device_id(self.device_id),
                     payload_data=command_2.payload.data
                 )
             ]

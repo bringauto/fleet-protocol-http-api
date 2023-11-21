@@ -6,9 +6,9 @@ from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from sqlalchemy import Integer, String, JSON, select, insert, BigInteger
 from enums import MessageType
-from database.device_ids import remove_device_id, _serialized_device_id
+from database.device_ids import remove_device_id
 
-from fleetv2_http_api.models.message import Message
+
 from fleetv2_http_api.models.device_id import DeviceId
 
 
@@ -46,7 +46,7 @@ def _new_connection_source(
     return create_engine(url, *args, **kwargs)
 
 
-def _serialized_device_id(device_id:DeviceId)->str:
+def serialized_device_id(device_id:DeviceId)->str:
     return f"{device_id.module_id}_{device_id.type}_{device_id.role}"
 
 

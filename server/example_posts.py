@@ -11,13 +11,13 @@ from server.fleetv2_http_api.impl.controllers import (
 from enums import MessageType, EncodingType
 from apscheduler.schedulers.background import BackgroundScheduler
 from functools import partial
-from server.fleetv2_http_api.impl.controllers import _serialized_device_id
+from server.fleetv2_http_api.impl.controllers import serialized_device_id
 from database.time import timestamp
 
 
 def __send_message_examples(scheduler:BackgroundScheduler)->None:
     device_id = DeviceId(module_id=47, type=2, role="test_device", name="Test Device")
-    sdevice_id = _serialized_device_id(device_id)
+    sdevice_id = serialized_device_id(device_id)
     payload_1 = Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"test_status_data": "Connected"})
     payload_2 = Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"test_status_data": "Still connected"})
     payload_3 = Payload(type=MessageType.COMMAND_TYPE, encoding=EncodingType.JSON, data={"test_command_data": "Stay online"})
