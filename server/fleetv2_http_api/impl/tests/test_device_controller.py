@@ -5,7 +5,7 @@ sys.path.append("server")
 import unittest
 from enums import MessageType, EncodingType
 from database.device_ids import clear_device_ids, serialized_device_id
-from database.database_controller import set_db_connection
+from database.database_connection import set_db_connection
 from fleetv2_http_api.impl.controllers import (
     available_devices, 
     available_cars,

@@ -2,12 +2,12 @@ import sys
 sys.path.append("server")
 from unittest.mock import patch, Mock
 from fleetv2_http_api.models.device_id import DeviceId
-from database.database_controller import serialized_device_id
+from database.device_ids import serialized_device_id
+from database.database_connection import set_db_connection
 
 
 import unittest
 from database.database_controller import (
-    set_db_connection,
     send_messages_to_database,
     list_messages,
     cleanup_device_commands_and_warn_before_future_commands,

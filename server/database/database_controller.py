@@ -2,87 +2,19 @@ from __future__ import annotations
 
 from typing import Optional, List, ClassVar
 import dataclasses
-from sqlalchemy import create_engine, Engine
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
+from sqlalchemy.orm import Mapped, mapped_column, Session
 from sqlalchemy import Integer, String, JSON, select, insert, BigInteger
 from enums import MessageType
 from database.device_ids import remove_device_id
+from database.database_connection import get_connection_source, Base
 
 
 from fleetv2_http_api.models.device_id import DeviceId
 
 
-_connection_source:Optional[Engine] = None
-
-
-def connection_source()->Engine|None:
-    return _connection_source
-
-
-def get_connection_source()->Engine:
-    """Return the SQLAlchemy engine object used to connect to the database and
-    raise exception if the engine object was not set yet.
-    """
-    if isinstance(_connection_source, Engine): 
-        return _connection_source
-    else: 
-        raise Connection_Source_Not_Set(_connection_source)
-
-
-class Connection_Source_Not_Set(Exception): pass
-
-
-def _new_connection_source(
-    dialect:str, 
-    dbapi:str, 
-    dblocation:str, 
-    username:str="", 
-    password:str="", 
-    *args,
-    **kwargs
-    )->Engine:
-
-    url = ('').join([dialect,'+',dbapi,"://",username,":",password,"@",dblocation])
-    return create_engine(url, *args, **kwargs)
-
-
-def serialized_device_id(device_id:DeviceId)->str:
-    return f"{device_id.module_id}_{device_id.type}_{device_id.role}"
-
-
-def set_db_connection(
-    dialect:str, 
-    dbapi:str, 
-    dblocation:str, 
-    username:str="", 
-    password:str="", 
-    *args,
-    **kwargs
-    )->None:
-
-
-    source = _new_connection_source(dialect, dbapi, dblocation, username, password, *args, **kwargs)
-    global _connection_source
-    _connection_source = source
-    assert(_connection_source is not None)
-    __create_all_tables(source)
-    
-
 def set_message_retention_period(seconds:int)->None:
     MessageBase.set_data_retention_period(seconds)
 
-
-def unset_connection_source()->None:
-    global _connection_source
-    _connection_source = None
-
-
-def __create_all_tables(source:Engine)->None:
-    Base.metadata.create_all(source)
-
-
-class Base(DeclarativeBase):  
-    pass
 
 
 @dataclasses.dataclass
@@ -333,8 +265,8 @@ def clean_up_disconnected_cars()->None:
 def __clean_up_disconnected_devices(company:str, car:str, module_id:int)->None:
     """Remove all device ids from the device_ids dictionary that do not have any messages."""
     module_devices = device_ids()[company][car][module_id]
-    for serialized_device_id in module_devices:
-        _, device_type, device_role = _deserialize_device_id(serialized_device_id)
+    for sdevice_id in module_devices:
+        _, device_type, device_role = _deserialize_device_id(sdevice_id)
         with Session(get_connection_source()) as session: 
             table = MessageBase.__table__
             select_stmt = select(MessageBase).where(
@@ -347,7 +279,7 @@ def __clean_up_disconnected_devices(company:str, car:str, module_id:int)->None:
             )
             selection = session.execute(select_stmt)
             if selection.first() is None:
-                remove_device_id(company, car, module_id, serialized_device_id)
+                remove_device_id(company, car, sdevice_id)
 
 
 from typing import Tuple

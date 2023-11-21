@@ -23,10 +23,15 @@ def clear_device_ids()->None:
     __device_ids.clear()
 
 
-def remove_device_id(company_name:str, car_name:str, device_id:DeviceId)->None:
+def remove_device_id(company_name:str, car_name:str, device_id:DeviceId|str)->None:
     """Remove a device id from its module dict in the device_ids dictionary."""
-    module_id = int(serialized_device_id.split("_",maxsplit=1)[0])
-    __device_ids[company_name][car_name][module_id].pop(serialized_device_id(device_id))
+    if isinstance(device_id, DeviceId): 
+        sdevice_id = serialized_device_id(device_id)
+        module_id = device_id.module_id
+    else: 
+        sdevice_id = device_id
+        module_id = int(device_id.split("_")[0])
+    __device_ids[company_name][car_name][module_id].pop(sdevice_id)
 
 
 def clean_up_disconnected_cars_and_modules()->None:

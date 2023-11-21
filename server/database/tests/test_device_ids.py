@@ -13,15 +13,13 @@ from database.device_ids import (
 
 
 from fleetv2_http_api.models.device_id import DeviceId
-from database.device_ids import serialized_device_id
-
-
 class TestDeviceIds(unittest.TestCase):
 
     def setUp(self):
         self.device_1_id = DeviceId(module_id=45, type=2, role="role1", name="device1")
         self.device_x_id = DeviceId(module_id=48, type=7, role="role_x", name="device X")
         self.device_123_id = DeviceId(module_id=45, type=9, role="role_123", name="device 123")
+        self.maxDiff = None
     
     def test_cleaning_up_cars_without_any_device_ids(self):
         clear_device_ids()
@@ -30,7 +28,14 @@ class TestDeviceIds(unittest.TestCase):
         self.assertEqual(list(device_ids()["company1"].keys()), ["car1", "car2"])
         remove_device_id("company1", "car1", self.device_1_id)
         clean_up_disconnected_cars_and_modules()
-        self.assertDictEqual(device_ids(), {"company1":{"car2":{1:["deviceX"]}}})
+        self.assertDictEqual(
+            device_ids(), 
+            {"company1":{"car2":{
+                48:{
+                    "48_7_role_x":self.device_x_id
+                }
+            }}}
+        )
 
     def test_cleaning_up_modules_without_any_device_ids(self):
         clear_device_ids()
@@ -39,7 +44,15 @@ class TestDeviceIds(unittest.TestCase):
         remove_device_id("company1", "car1", self.device_x_id)
         
         clean_up_disconnected_cars_and_modules()
-        self.assertDictEqual(device_ids(), {"company1":{"car1":{1:["device1"]}}})
+        self.assertDictEqual(
+            device_ids(), 
+            {"company1":{"car1":{
+                45:{
+                    "45_2_role1":self.device_1_id
+                },
+                }
+            }}
+        )
 
     def test_cleaning_up_companies_without_any_cars(self):
         clear_device_ids()
