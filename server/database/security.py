@@ -1,10 +1,11 @@
-from typing import Literal, ClassVar
+from __future__ import annotations
+
+
+from typing import Literal, ClassVar, List
 
 import dataclasses
-import datetime
 from sqlalchemy import String, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, Session
-
 from database.database_connection import Base, get_connection_source
 
 
@@ -19,40 +20,37 @@ class ClientBase(Base):
     id:Mapped[int] = mapped_column(Integer, primary_key=True)
     name:Mapped[str] = mapped_column(String)
     key:Mapped[str] = mapped_column(String)
+    type:Mapped[str] = mapped_column(String)
+    counter:Mapped[int] = mapped_column(Integer, default=0)
 
-    def get_key(self)->str|None:
-        self.__reset_counter_if_period_passed()
-        self.counter += 1
-        if self.counter>self.__max_requests_per_period__:
-            return None
-        else:
-            return self.key
-        
-    def __reset_counter_if_period_passed(self)->None:
-        curr_time = datetime.datetime.now()
-        if curr_time - self.last_time >= datetime.timedelta(seconds=self.__check_period_in_seconds__):
-            self.last_time = curr_time
-            self.counter = 0
-
-    class TooManyRequests(Exception): pass
-
+    __mapper_args__ = {
+        'polymorphic_identity':'client',
+        'polymorphic_on':type
+    }
 
 
 class VisitorBase(ClientBase):
     __tablename__:ClassVar[str] = "visitors"
     id: Mapped[int] = mapped_column(ForeignKey("clients"), primary_key=True)
-    name:Mapped[str] = mapped_column(String)
-    key:Mapped[str] = mapped_column(String)
+
+    __mapper_args__ = {
+        'polymorphic_identity':'visitor',
+    }
 
 
 class OperatorBase(ClientBase):
     __tablename__:ClassVar[str] = "operators"
     id: Mapped[int] = mapped_column(ForeignKey("clients"), primary_key=True)
-    name:Mapped[str] = mapped_column(String, )
-    key:Mapped[str] = mapped_column(String)
+
+    __mapper_args__ = {
+        'polymorphic_identity':'operator',
+    }
     
 
-@dataclasses.dataclass(frozen=True)
+__clients:List[Client_DB] = []
+
+
+@dataclasses.dataclass
 class Client_DB:
     id:int
     name:str
@@ -61,6 +59,11 @@ class Client_DB:
 
 from sqlalchemy import select
 def get_client(key:str, client_type:str)->Client_DB|None:
+    global __clients
+    for client in __clients:
+        if client.key == key:
+            return client
+    
     with Session(get_connection_source()) as session:
         if client_type == "visitor":
             result = session.execute(visitor_selection(key)).first()
@@ -72,9 +75,11 @@ def get_client(key:str, client_type:str)->Client_DB|None:
         if result is None: 
             return None
         else:
-            client:ClientBase = result[0]
-            return Client_DB(id=client.id, name=client.name, key=client.key)
-        
+            clientbase:ClientBase = result[0]
+            client = Client_DB(id=clientbase.id, name=clientbase.name, key=clientbase.key)
+            __clients.append(client)
+            return client
+            
 
 from sqlalchemy import select
 def add_client(name:str, type:Role)->str:
@@ -89,7 +94,7 @@ def add_client(name:str, type:Role)->str:
         session.add(client)
         session.commit()
         return key
-            
+    
 
 from sqlalchemy import Select
 def visitor_selection(key:str)->Select:
@@ -113,6 +118,5 @@ def number_of_operators()->int:
 import random
 import string
 def __generate_key()->str:
-    return '1234567890'
-    # return ''.join(random.choice(string.ascii_letters) for i in range(20))
+    return ''.join(random.choice(string.ascii_letters) for _ in range(30))
 
