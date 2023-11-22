@@ -238,11 +238,14 @@ paths:
 components:
   securitySchemes:
     VisitorAuth:
+      description: Authentication token for a visitor. Visitor can only view the available cars.
       type: apiKey
       in: query
       name: key
 
     OperatorAuth:
+      description: Authentication token for an operator. Operator can view the available cars, 
+        devices, read and send commands and statuses.
       type: apiKey
       in: query
       name: key
