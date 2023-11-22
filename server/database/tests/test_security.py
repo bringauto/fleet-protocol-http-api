@@ -5,7 +5,7 @@ sys.path.append("server")
 import unittest
 from unittest.mock import patch
 from database.database_connection import set_db_connection
-from database.security import get_client, add_client
+from database.security import get_client, add_client, clear_loaded_clients
 
 
 class Test_Getting_Client(unittest.TestCase):
@@ -18,6 +18,7 @@ class Test_Getting_Client(unittest.TestCase):
             username="",
             password=""
         )
+        clear_loaded_clients()
 
     @patch("database.security.__generate_key")
     def test_getting_client_from_database(self, mock_generate_key):
@@ -32,6 +33,7 @@ class Test_Getting_Client(unittest.TestCase):
         add_client("Alice", "visitor")
         # the key was not defined for the type 'operator'
         self.assertTrue(get_client("1234567890", "operator") is None)
+
         
 
 if __name__=="__main__":

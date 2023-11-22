@@ -9,9 +9,6 @@ from sqlalchemy.orm import Mapped, mapped_column, Session
 from database.database_connection import Base, get_connection_source
 
 
-Role = Literal["visitor", "operator"]
-
-
 class ClientBase(Base):
     __tablename__:ClassVar[str] = "clients"
     __check_period_in_seconds__:ClassVar[int] = 5
@@ -27,6 +24,24 @@ class ClientBase(Base):
         'polymorphic_identity':'client',
         'polymorphic_on':type
     }
+
+
+ClientType = Literal["visitor", "operator"]
+
+    
+__loaded_clients:List[Client_DB] = []
+
+def clear_loaded_clients()->None:
+    global __loaded_clients
+    __loaded_clients.clear()
+
+
+@dataclasses.dataclass
+class Client_DB:
+    id:int
+    name:str
+    key:str
+
 
 
 class VisitorBase(ClientBase):
@@ -45,74 +60,59 @@ class OperatorBase(ClientBase):
     __mapper_args__ = {
         'polymorphic_identity':'operator',
     }
+
+
+from typing import Dict, Type
+__client_types:Dict[ClientType, Type[ClientBase]] = {
+    "visitor":VisitorBase,
+    "operator":OperatorBase
+}
+
+
+from sqlalchemy import select
+def add_client(name:str, client_type:ClientType)->str:
+    if client_type not in __client_types: 
+        raise ValueError(f"Invalid client type: {client_type}")
     
-
-__clients:List[Client_DB] = []
-
-
-@dataclasses.dataclass
-class Client_DB:
-    id:int
-    name:str
-    key:str
+    with Session(get_connection_source()) as session:
+        key = __generate_key()
+        client = __client_types[client_type](name=name, key=key)
+        session.add(client)
+        session.commit()
+        return key
 
 
 from sqlalchemy import select
 def get_client(key:str, client_type:str)->Client_DB|None:
-    global __clients
-    for client in __clients:
+    if client_type not in __client_types: return None
+
+    global __loaded_clients
+    for client in __loaded_clients:
         if client.key == key:
             return client
     
     with Session(get_connection_source()) as session:
-        if client_type == "visitor":
-            result = session.execute(visitor_selection(key)).first()
-        elif client_type == "operator":
-            result = session.execute(operator_selection(key)).first()
-        else: 
-            result = None
+        client_base_class = __client_types[client_type]
+        result = session.execute(select(client_base_class).where(client_base_class.key==key)).first()
 
-        if result is None: 
-            return None
+        if result is None: return None
         else:
             clientbase:ClientBase = result[0]
             client = Client_DB(id=clientbase.id, name=clientbase.name, key=clientbase.key)
-            __clients.append(client)
+            __loaded_clients.append(client)
             return client
-            
-
-from sqlalchemy import select
-def add_client(name:str, type:Role)->str:
-    with Session(get_connection_source()) as session:
-        key = __generate_key()
-        if type == "visitor":
-            client = VisitorBase(name=name, key=key)
-        elif type == "operator":
-            client = OperatorBase(name=name, key=key)
-        else:
-            raise ValueError(f"Invalid client type: {type}")
-        session.add(client)
-        session.commit()
-        return key
     
 
-from sqlalchemy import Select
-def visitor_selection(key:str)->Select:
-    return select(VisitorBase).where(VisitorBase.key==key)
+from sqlalchemy import Select, func
 
-
-def operator_selection(key:str)->Select:
-    return select(OperatorBase).where(OperatorBase.key==key)
+def client_selection(key:str, type:ClientType)->Select:
+    return select(__client_types[type]).where(__client_types[type].key==key)
 
 
 from sqlalchemy import func
-def number_of_visitors()->int:
+def number_of_clients(type:ClientType)->int:
     with Session(get_connection_source()) as session:
-        return session.query(func.count(VisitorBase.__table__.c.id)).scalar()
-    
-def number_of_operators()->int:
-    with Session(get_connection_source()) as session:
-        return session.query(func.count(OperatorBase.__table__.c.id)).scalar()
+        return session.query(func.count(__client_types[type].__table__.c.id)).scalar()
 
 
 import random
