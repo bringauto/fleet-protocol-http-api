@@ -29,14 +29,13 @@ from database.device_ids import clear_device_ids
 from database.database_connection import set_db_connection
 from database.time import timestamp
 from fleetv2_http_api.__main__ import main as run_server
-from database.security import add_client, number_of_clients, ClientType
+from database.security import add_admin, number_of_admins
 
 
-def add_first_clients()->Dict[ClientType,List[str]]:
-    clients:Dict[ClientType, List[str]] = {"visitor":[], "operator":[]}
-    for type in clients:
-        if number_of_clients(type) == 0:
-            clients[type].append(add_client(type+"_1", type))
+def add_first_clients()->List[str]:
+    clients:List[str] = list()
+    if number_of_admins() == 0:
+        clients.append(add_admin(name="admin_01"))
     return clients
 
 

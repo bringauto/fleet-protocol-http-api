@@ -1,122 +1,77 @@
 from __future__ import annotations
 
 
-from typing import Literal, ClassVar, List
+from typing import ClassVar, List
 
 import dataclasses
-from sqlalchemy import String, Integer, ForeignKey
+from sqlalchemy import String, Integer
 from sqlalchemy.orm import Mapped, mapped_column, Session
 from database.database_connection import Base, get_connection_source
 
 
-class ClientBase(Base):
-    __tablename__:ClassVar[str] = "clients"
+class AdminBase(Base):
+    __tablename__:ClassVar[str] = "api_keys"
     __check_period_in_seconds__:ClassVar[int] = 5
     __max_requests_per_period__:ClassVar[int] = 5
 
     id:Mapped[int] = mapped_column(Integer, primary_key=True)
     name:Mapped[str] = mapped_column(String)
     key:Mapped[str] = mapped_column(String)
-    type:Mapped[str] = mapped_column(String)
-    counter:Mapped[int] = mapped_column(Integer, default=0)
-
-    __mapper_args__ = {
-        'polymorphic_identity':'client',
-        'polymorphic_on':type
-    }
-
-
-ClientType = Literal["visitor", "operator"]
-
     
-__loaded_clients:List[Client_DB] = []
 
-def clear_loaded_clients()->None:
-    global __loaded_clients
-    __loaded_clients.clear()
+
+__loaded_admins:List[Admin_DB] = []
+
+def clear_loaded_admins()->None:
+    global __loaded_admins
+    __loaded_admins.clear()
 
 
 @dataclasses.dataclass
-class Client_DB:
+class Admin_DB:
     id:int
     name:str
     key:str
 
 
 
-class VisitorBase(ClientBase):
-    __tablename__:ClassVar[str] = "visitors"
-    id: Mapped[int] = mapped_column(ForeignKey("clients"), primary_key=True)
-    name:Mapped[str] = mapped_column(String)
-    key:Mapped[str] = mapped_column(String)
-
-    __mapper_args__ = {
-        'polymorphic_identity':'visitor',
-    }
-
-
-class OperatorBase(ClientBase):
-    __tablename__:ClassVar[str] = "operators"
-    id: Mapped[int] = mapped_column(ForeignKey("clients"), primary_key=True)
-    name:Mapped[str] = mapped_column(String)
-    key:Mapped[str] = mapped_column(String)
-
-    __mapper_args__ = {
-        'polymorphic_identity':'operator',
-    }
-
-
-from typing import Dict, Type
-__client_types:Dict[ClientType, Type[ClientBase]] = {
-    "visitor":VisitorBase,
-    "operator":OperatorBase
-}
-
-
 from sqlalchemy import select
-def add_client(name:str, client_type:ClientType)->str:
-    if client_type not in __client_types: 
-        raise ValueError(f"Invalid client type: {client_type}")
-    
+def add_admin(name:str)->str:
     with Session(get_connection_source()) as session:
         key = __generate_key()
-        client = __client_types[client_type](name=name, key=key)
-        session.add(client)
+        admin = AdminBase(name=name, key=key)
+        session.add(admin)
         session.commit()
         return key
 
 
 from sqlalchemy import select
-def get_client(key:str, client_type:str)->Client_DB|None:
-    if client_type not in __client_types: return None
-
-    global __loaded_clients
-    for client in __loaded_clients:
-        if client.key == key:
-            return client
+def get_admin(key:str)->Admin_DB|None:
+    global __loaded_admins
+    for admin in __loaded_admins:
+        if admin.key == key:
+            return admin
     
     with Session(get_connection_source()) as session:
-        client_base_class = __client_types[client_type]
-        result = session.execute(select(client_base_class).where(client_base_class.key==key)).first()
-
+        result = session.execute(select(AdminBase).where(AdminBase.key==key)).first()
         if result is None: return None
         else:
-            clientbase:ClientBase = result[0]
-            client = Client_DB(id=clientbase.id, name=clientbase.name, key=clientbase.key)
-            __loaded_clients.append(client)
-            return client
-    
+            admin_base:AdminBase = result[0]
+            admin = Admin_DB(id=admin_base.id, name=admin_base.name, key=admin_base.key)
+            __loaded_admins.append(admin)
+            return admin
+
 
 from sqlalchemy import Select, func
 
-def client_selection(key:str, type:ClientType)->Select:
-    return select(__client_types[type]).where(__client_types[type].key==key)
+def admin_selection(key:str)->Select:
+    return select(AdminBase).where(AdminBase.key==key)
 
 
 from sqlalchemy import func
-def number_of_clients(type:ClientType)->int:
+def number_of_admins()->int:
     with Session(get_connection_source()) as session:
-        return session.query(func.count(__client_types[type].__table__.c.id)).scalar()
+        return session.query(func.count(AdminBase.__table__.c.id)).scalar()
 
 
 import random

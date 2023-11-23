@@ -15,6 +15,8 @@ tags:
 - name: device
 - name: module
 
+security:
+  - AdminAuth: []
 
 paths:
   /cars:
@@ -232,18 +234,12 @@ paths:
 
 components:
   securitySchemes:
-    VisitorAuth:
-      description: Authentication token for a visitor. Visitor can only view the available cars.
+    AdminAuth:
+      description: Authentication token for a administrator. 
       type: apiKey
       in: query
-      name: key
+      name: api_key
 
-    OperatorAuth:
-      description: Authentication token for an operator. Operator can view the available cars, 
-        devices, read and send commands and statuses.
-      type: apiKey
-      in: query
-      name: key
 
   parameters:
     All: 

@@ -1,5 +1,4 @@
 
-
 from server.fleetv2_http_api.impl.controllers import (
     DeviceId,
     Payload,
