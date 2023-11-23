@@ -145,15 +145,23 @@ def list_messages(
                 table.c.serialized_device_id == serialized_device_id,
             ))
         elif limit_timestamp is not None:
-            selection = selection.where(and_(
-                table.c.company_name == company_name,
-                table.c.car_name == car_name,
-                table.c.serialized_device_id == serialized_device_id,
-                table.c.timestamp <= limit_timestamp
-            ))
+            if message_type==MessageType.STATUS_TYPE:
+                selection = selection.where(and_(
+                    table.c.company_name == company_name,
+                    table.c.car_name == car_name,
+                    table.c.serialized_device_id == serialized_device_id,
+                    table.c.timestamp >= limit_timestamp
+                ))
+            else:
+                selection = selection.where(and_(
+                    table.c.company_name == company_name,
+                    table.c.car_name == car_name,
+                    table.c.serialized_device_id == serialized_device_id,
+                    table.c.timestamp <= limit_timestamp
+                ))
         else:
             # return newest status or oldest command
-            extreme_func = func.max if message_type==0 else func.min
+            extreme_func = func.max if message_type==MessageType.STATUS_TYPE else func.min
             extreme_value = session.query(extreme_func(table.c.timestamp)).\
                 where(
                     table.c.company_name == company_name,

@@ -211,10 +211,10 @@ class Test_Statuses_In_Time(unittest.TestCase):
 
         statuses, code = list_statuses(*args, since=20)
         self.assertEqual(len(statuses), 2)
-        self.assertEqual(statuses[0].timestamp, 10)
-        self.assertEqual(statuses[1].timestamp, 20)
+        self.assertEqual(statuses[0].timestamp, 20)
+        self.assertEqual(statuses[1].timestamp, 37)
     
-        statuses, code = list_statuses(*args, since=5)
+        statuses, code = list_statuses(*args, since=38)
         self.assertEqual(len(statuses), 0)
 
 

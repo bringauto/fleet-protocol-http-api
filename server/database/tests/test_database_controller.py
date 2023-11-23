@@ -226,5 +226,49 @@ class Test_Database_Cleanup(unittest.TestCase):
         self.assertEqual(MessageBase.data_retention_period_ms, 1000)
 
 
+class Test_Send_And_Read_Message(unittest.TestCase):
+
+    def setUp(self):
+        # Set up the database connection before running the tests
+        set_db_connection(dialect="sqlite", dbapi="pysqlite", dblocation="/:memory:")
+
+    def test_send_and_read_message(self):
+        device_id = DeviceId(module_id=45, type=2, role="role1", name="device1")
+        sdevice_id = serialized_device_id(device_id)
+        message_1 = Message_DB(
+            timestamp=100, 
+            serialized_device_id=sdevice_id, 
+            module_id=device_id.module_id, 
+            device_type=device_id.type, 
+            device_role=device_id.role, 
+            device_name=device_id.name, 
+            message_type=MessageType.STATUS_TYPE, 
+            payload_encoding=1, 
+            payload_data={"content": "..."}
+        )
+        message_2 = Message_DB(
+            timestamp=150, 
+            serialized_device_id=sdevice_id, 
+            module_id=device_id.module_id, 
+            device_type=device_id.type, 
+            device_role=device_id.role, 
+            device_name=device_id.name, 
+            message_type=MessageType.STATUS_TYPE, 
+            payload_encoding=1, 
+            payload_data={"content": "other content"}
+        )
+        send_messages_to_database("test_company", "test_car", message_1, message_2)
+        # read all statuses
+        read_messages = list_messages("test_company", "test_car", MessageType.STATUS_TYPE, sdevice_id, all_available="")
+        self.assertEqual(len(read_messages), 2)
+        # read only the last status
+        read_messages = list_messages("test_company", "test_car", MessageType.STATUS_TYPE, sdevice_id)
+        self.assertEqual(len(read_messages), 1)
+        # read only statuses after timestamp 120
+        read_messages = list_messages("test_company", "test_car", MessageType.STATUS_TYPE, sdevice_id, limit_timestamp=120)
+        self.assertEqual(len(read_messages), 1)
+        self.assertEqual(read_messages[0].timestamp, 150)
+
+
 if __name__ == "__main__":
     unittest.main()
