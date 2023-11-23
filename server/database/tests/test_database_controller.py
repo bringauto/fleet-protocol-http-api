@@ -3,8 +3,12 @@ sys.path.append("server")
 from unittest.mock import patch, Mock
 from fleetv2_http_api.models.device_id import DeviceId
 from database.device_ids import serialized_device_id
-from database.database_connection import set_db_connection
-
+from database.database_connection import (
+    set_db_connection, 
+    unset_connection_source, 
+    Connection_Source_Not_Set,
+    get_connection_source
+)
 
 import unittest
 from database.database_controller import (
@@ -23,6 +27,10 @@ class TestDatabaseController(unittest.TestCase):
     def setUp(self):
         # Set up the database connection before running the tests
         set_db_connection(dialect="sqlite", dbapi="pysqlite", dblocation="/:memory:")
+
+    def test_accessing_not_set_connection_source_raises_exception(self):
+        unset_connection_source()
+        self.assertRaises(Connection_Source_Not_Set, get_connection_source)
         
     @patch("database.time._time_in_ms")
     def test_send_messages_to_database(self, mock_time_in_ms:Mock):
