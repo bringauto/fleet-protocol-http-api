@@ -136,20 +136,53 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         self.assertEqual(messages[1].timestamp, 7)
 
     def test_cleanup_device_commands_and_warn_before_future_commands(self):
-        # Test cleaning up device commands and warning before future commands
         device_id = DeviceId(module_id=45, type=2, role="role1", name="device1")
         sdevice_id = serialized_device_id(device_id)
-        cleanup_device_commands_and_warn_before_future_commands(
-            current_timestamp=100,
-            company_name="company1",
-            car_name="car1",
+
+        send_messages_to_database("test_company", "test_car", Message_DB(
+                timestamp=0,
+                serialized_device_id=sdevice_id,
+                module_id=device_id.module_id,
+                device_type=device_id.type,
+                device_role=device_id.role,
+                device_name=device_id.name,
+                message_type=MessageType.STATUS_TYPE,
+                payload_encoding=1,
+                payload_data={"key1": "value1"},
+            )
+        )  
+        send_messages_to_database("test_company", "test_car", Message_DB(
+                timestamp=MessageBase.data_retention_period_ms + 100,
+                serialized_device_id=sdevice_id,
+                module_id=device_id.module_id,
+                device_type=device_id.type,
+                device_role=device_id.role,
+                device_name=device_id.name,
+                message_type=MessageType.COMMAND_TYPE,
+                payload_encoding=1,
+                payload_data={"key1": "value1"},
+            )
+        )  
+        remove_old_messages(current_timestamp=MessageBase.data_retention_period_ms + 50)
+        self.assertEqual(
+            len(list_messages(
+                "test_company", "test_car", MessageType.STATUS_TYPE, sdevice_id, all_available=""
+            ))
+            , 0
+        )
+
+        warnings = cleanup_device_commands_and_warn_before_future_commands(
+            current_timestamp=MessageBase.data_retention_period_ms + 55,
+            company_name="test_company",
+            car_name="test_car",
             serialized_device_id=sdevice_id
         )
 
+        self.assertEqual(len(warnings), 1)
         # Check that the device commands were cleaned up
         messages = list_messages(
-            company_name="company1", 
-            car_name="car1", 
+            company_name="test_company", 
+            car_name="test_car", 
             message_type=MessageType.COMMAND_TYPE,
             serialized_device_id=sdevice_id,
             all_available=""
