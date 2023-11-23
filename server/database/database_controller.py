@@ -9,12 +9,9 @@ from database.device_ids import remove_device_id
 from database.database_connection import get_connection_source, Base
 
 
-from fleetv2_http_api.models.device_id import DeviceId
-
 
 def set_message_retention_period(seconds:int)->None:
     MessageBase.set_data_retention_period(seconds)
-
 
 
 @dataclasses.dataclass
@@ -35,7 +32,7 @@ class MessageBase(Base):
     device_role:Mapped[str] = mapped_column(String)
     device_name:Mapped[str] = mapped_column(String)
 
-    payload_type:Mapped[int] = mapped_column(Integer, primary_key=True)
+    message_type:Mapped[int] = mapped_column(Integer, primary_key=True)
     payload_encoding:Mapped[int] = mapped_column(Integer)
     payload_data:Mapped[dict] = mapped_column(JSON)
 
@@ -57,7 +54,7 @@ class MessageBase(Base):
         cls.__data_retention_period_in_seconds = seconds
     
     @staticmethod
-    def from_model(company_name:str, car_name:str, message:Message_DB, order:int=0)->MessageBase:
+    def from_message(company_name:str, car_name:str, message:Message_DB, order:int=0)->MessageBase:
         return MessageBase(
             timestamp=message.timestamp,
             sent_order=order,
@@ -70,19 +67,19 @@ class MessageBase(Base):
             device_type = message.device_type,
             device_role = message.device_role,
             device_name = message.device_name,
-            payload_type = message.message_type, 
+            message_type = message.message_type, 
             payload_encoding=message.payload_encoding,
             payload_data=message.payload_data # type: ignore
         )
 
     @staticmethod
-    def from_models(company_name:str, car_name:str, *messages:Message_DB)->List[MessageBase]:
+    def from_messages(company_name:str, car_name:str, *messages:Message_DB)->List[MessageBase]:
         bases:List[MessageBase] = list()
         for k in range(len(messages)):
-            bases.append(MessageBase.from_model(company_name, car_name, message = messages[k], order=k))
+            bases.append(MessageBase.from_message(company_name, car_name, message = messages[k], order=k))
         return bases
 
-    def to_model(self)->Message_DB:
+    def to_message(self)->Message_DB:
         return Message_DB(
             timestamp=self.timestamp,
             module_id=self.module_id,
@@ -90,7 +87,7 @@ class MessageBase(Base):
             device_role=self.device_role,
             device_name=self.device_name,
             serialized_device_id=self.serialized_device_id,
-            message_type=self.payload_type,
+            message_type=self.message_type,
             payload_encoding=self.payload_encoding,
             payload_data=self.payload_data
         )
@@ -114,7 +111,7 @@ class Message_DB:
 def send_messages_to_database(company_name:str, car_name:str, *messages:Message_DB)->None: 
     with get_connection_source().begin() as conn:
         stmt = insert(MessageBase.__table__) # type: ignore
-        msg_base = MessageBase.from_models(company_name, car_name, *messages)
+        msg_base = MessageBase.from_messages(company_name, car_name, *messages)
         data_list = [msg.__dict__ for msg in msg_base]
         conn.execute(stmt, data_list)
 
@@ -139,7 +136,7 @@ def list_messages(
     statuses:List[Message_DB] = list()
     with Session(get_connection_source()) as session:
         table = MessageBase.__table__
-        selection = select(MessageBase).where(table.c.payload_type == message_type)
+        selection = select(MessageBase).where(table.c.message_type == message_type)
         if all_available is not None:
             selection = selection.where(and_(
                 table.c.company_name == company_name,
@@ -160,14 +157,14 @@ def list_messages(
                 where(
                     table.c.company_name == company_name,
                     table.c.car_name == car_name,
-                    table.c.payload_type == message_type
+                    table.c.message_type == message_type
                 ).scalar()    
             selection = selection.where(table.c.timestamp == extreme_value)
             
         result = session.execute(selection)
         for row in result:
             base:MessageBase = row[0]
-            statuses.append(base.to_model())
+            statuses.append(base.to_message())
         return statuses
     
 
@@ -191,7 +188,7 @@ def cleanup_device_commands_and_warn_before_future_commands(
     table = MessageBase.__table__
     with get_connection_source().begin() as conn: 
         stmt = delete(table).where( # type: ignore
-            table.c.payload_type == MessageType.COMMAND_TYPE,
+            table.c.message_type == MessageType.COMMAND_TYPE,
             table.c.company_name == company_name,
             table.c.car_name == car_name,   
             table.c.serialized_device_id == serialized_device_id,
@@ -270,7 +267,7 @@ def __clean_up_disconnected_devices(company:str, car:str, module_id:int)->None:
         with Session(get_connection_source()) as session: 
             table = MessageBase.__table__
             select_stmt = select(MessageBase).where(
-                table.c.payload_type == MessageType.STATUS_TYPE,
+                table.c.message_type == MessageType.STATUS_TYPE,
                 table.c.company_name == company,
                 table.c.car_name == car,
                 table.c.module_id == module_id,

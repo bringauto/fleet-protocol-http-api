@@ -22,7 +22,63 @@ from database.database_controller import (
 )
 
 
-class TestDatabaseController(unittest.TestCase):
+from fleetv2_http_api.impl.controllers import DeviceId
+class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
+
+    def test_creating_message_base_object_from_message(self):
+        company_name = "test_company"
+        car_name = "test_car"
+        device_id = DeviceId(module_id=45, type=2, role="role1", name="device1")
+        sdevice_id = serialized_device_id(device_id)
+        message_db = Message_DB(
+            timestamp = 100, 
+            serialized_device_id=sdevice_id, 
+            module_id=device_id.module_id,
+            device_type=device_id.type,
+            device_role=device_id.role,
+            device_name=device_id.name,
+            message_type=MessageType.STATUS_TYPE,
+            payload_encoding=1,
+            payload_data={"content": "..."}
+        )
+        message_base = MessageBase.from_message(company_name, car_name, message_db)
+        self.assertEqual(message_base.company_name, company_name)
+        self.assertEqual(message_base.car_name, car_name)
+        self.assertEqual(message_base.timestamp, 100)
+        self.assertEqual(message_base.module_id, device_id.module_id)
+        self.assertEqual(message_base.device_type, device_id.type)
+        self.assertEqual(message_base.device_role, device_id.role)
+        self.assertEqual(message_base.device_name, device_id.name)
+        self.assertEqual(message_base.message_type, MessageType.STATUS_TYPE)
+        self.assertEqual(message_base.payload_encoding, 1)
+        self.assertEqual(message_base.payload_data, {"content": "..."})
+
+    def test_creating_message_from_base_object(self):
+        base = MessageBase(
+            company_name="test_company",
+            car_name="test_car",
+            timestamp=100,
+            module_id=45,
+            device_type=2,
+            device_role="role1",
+            device_name="device1",
+            message_type=MessageType.STATUS_TYPE,
+            payload_encoding=1,
+            payload_data={"content": "..."}
+        )
+        message_db = MessageBase.to_message(base)
+        self.assertEqual(message_db.timestamp, 100)
+        self.assertEqual(message_db.module_id, 45)
+        self.assertEqual(message_db.device_type, 2)
+        self.assertEqual(message_db.device_role, "role1")
+        self.assertEqual(message_db.device_name, "device1")
+        self.assertEqual(message_db.message_type, MessageType.STATUS_TYPE)
+        self.assertEqual(message_db.payload_encoding, 1)
+        self.assertEqual(message_db.payload_data, {"content": "..."})
+        
+
+
+class Test_Sending_And_Clearing_Messages(unittest.TestCase):
 
     def setUp(self):
         # Set up the database connection before running the tests
@@ -145,6 +201,16 @@ class TestDatabaseController(unittest.TestCase):
         )
         self.assertEqual(len(messages), 1)
 
+
+class Test_Database_Cleanup(unittest.TestCase):
+
+    def setUp(self):
+        # Set up the database connection before running the tests
+        set_db_connection(dialect="sqlite", dbapi="pysqlite", dblocation="/:memory:")
+
+    def test_setting_data_retention_period(self):
+        MessageBase.set_data_retention_period(seconds=3)
+        self.assertEqual(MessageBase.data_retention_period_ms, 3000)
 
 
 if __name__ == "__main__":
