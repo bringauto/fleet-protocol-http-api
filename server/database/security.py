@@ -47,6 +47,8 @@ class Client_DB:
 class VisitorBase(ClientBase):
     __tablename__:ClassVar[str] = "visitors"
     id: Mapped[int] = mapped_column(ForeignKey("clients"), primary_key=True)
+    name:Mapped[str] = mapped_column(String)
+    key:Mapped[str] = mapped_column(String)
 
     __mapper_args__ = {
         'polymorphic_identity':'visitor',
@@ -56,6 +58,8 @@ class VisitorBase(ClientBase):
 class OperatorBase(ClientBase):
     __tablename__:ClassVar[str] = "operators"
     id: Mapped[int] = mapped_column(ForeignKey("clients"), primary_key=True)
+    name:Mapped[str] = mapped_column(String)
+    key:Mapped[str] = mapped_column(String)
 
     __mapper_args__ = {
         'polymorphic_identity':'operator',
@@ -118,5 +122,6 @@ def number_of_clients(type:ClientType)->int:
 import random
 import string
 def __generate_key()->str:
-    return ''.join(random.choice(string.ascii_letters) for _ in range(30))
+    return '1234567890'
+    # return ''.join(random.choice(string.ascii_letters) for _ in range(30))
 

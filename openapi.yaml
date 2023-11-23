@@ -15,8 +15,6 @@ tags:
 - name: device
 - name: module
 
-security:
-- OperatorAuth: []
 
 paths:
   /cars:
@@ -28,9 +26,6 @@ paths:
         Each item list has the format: '&lt;company name&gt;_&lt;car name&gt;'."
       tags: 
         - car
-      security:
-      - VisitorAuth: []
-      - OperatorAuth: []
 
       responses:
         '200':
