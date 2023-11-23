@@ -163,6 +163,18 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
                 payload_data={"key1": "value1"},
             )
         )  
+        send_messages_to_database("test_company", "test_car", Message_DB(
+                timestamp=MessageBase.data_retention_period_ms + 150,
+                serialized_device_id=sdevice_id,
+                module_id=device_id.module_id,
+                device_type=device_id.type,
+                device_role=device_id.role,
+                device_name=device_id.name,
+                message_type=MessageType.COMMAND_TYPE,
+                payload_encoding=1,
+                payload_data={"key1": "value1"},
+            )
+        )  
         remove_old_messages(current_timestamp=MessageBase.data_retention_period_ms + 50)
         self.assertEqual(
             len(list_messages(
@@ -178,7 +190,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
             serialized_device_id=sdevice_id
         )
 
-        self.assertEqual(len(warnings), 1)
+        self.assertEqual(len(warnings), 2)
         # Check that the device commands were cleaned up
         messages = list_messages(
             company_name="test_company", 
