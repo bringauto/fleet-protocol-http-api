@@ -75,7 +75,6 @@ class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
         self.assertEqual(message_db.message_type, MessageType.STATUS_TYPE)
         self.assertEqual(message_db.payload_encoding, 1)
         self.assertEqual(message_db.payload_data, {"content": "..."})
-        
 
 
 class Test_Sending_And_Clearing_Messages(unittest.TestCase):
@@ -202,15 +201,29 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         self.assertEqual(len(messages), 1)
 
 
+from database.database_controller import set_message_retention_period
 class Test_Database_Cleanup(unittest.TestCase):
 
     def setUp(self):
         # Set up the database connection before running the tests
         set_db_connection(dialect="sqlite", dbapi="pysqlite", dblocation="/:memory:")
 
-    def test_setting_data_retention_period(self):
+    def test_setting_and_accessing_data_retention_period(self):
         MessageBase.set_data_retention_period(seconds=3)
         self.assertEqual(MessageBase.data_retention_period_ms, 3000)
+        set_message_retention_period(seconds=5)
+        self.assertEqual(MessageBase.data_retention_period_ms, 5000)
+        self.assertEqual(MessageBase.data_retention_period_s, 5)
+    
+    def test_setting_other_than_positive_integer_retention_period_is_ignored(self):
+        set_message_retention_period(1)
+        self.assertEqual(MessageBase.data_retention_period_ms, 1000)
+        set_message_retention_period(0)
+        self.assertEqual(MessageBase.data_retention_period_ms, 1000)
+        set_message_retention_period(-9)
+        self.assertEqual(MessageBase.data_retention_period_ms, 1000)  
+        set_message_retention_period("abc") # type: ignore
+        self.assertEqual(MessageBase.data_retention_period_ms, 1000)
 
 
 if __name__ == "__main__":

@@ -51,7 +51,8 @@ class MessageBase(Base):
 
     @classmethod
     def set_data_retention_period(cls, seconds:int)->None:
-        cls.__data_retention_period_in_seconds = seconds
+        if isinstance(seconds, int) and seconds>0:
+            cls.__data_retention_period_in_seconds = seconds
     
     @staticmethod
     def from_message(company_name:str, car_name:str, message:Message_DB, order:int=0)->MessageBase:
