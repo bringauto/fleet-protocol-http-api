@@ -8,7 +8,8 @@ from database.device_ids import (
     clean_up_disconnected_cars_and_modules, 
     clear_device_ids,
     store_device_id_if_new,
-    remove_device_id
+    remove_device_id,
+    serialized_device_id
 )
 
 
@@ -63,6 +64,10 @@ class TestDeviceIds(unittest.TestCase):
         remove_device_id("company2", "car1", self.device_x_id)
         clean_up_disconnected_cars_and_modules()
         self.assertListEqual(list(device_ids().keys()), ["company1", "company3"])
+
+        remove_device_id("company1", "car1", serialized_device_id(self.device_1_id))
+        clean_up_disconnected_cars_and_modules()
+        self.assertListEqual(list(device_ids().keys()), ["company3"]) 
 
     def test_cleaning_up_empty_device_ids_dict_has_no_effect(self):
         clear_device_ids()
