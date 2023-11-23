@@ -21,18 +21,12 @@ class Test_Getting_Client(unittest.TestCase):
         clear_loaded_admins()
 
     @patch("database.security.__generate_key")
-    def test_getting_client_from_database(self, mock_generate_key):
-        self.assertTrue(get_admin("1234567890", "visitor") is None)
+    def test_getting_admin_from_database(self, mock_generate_key):
+        self.assertTrue(get_admin("1234567890") is None)
         mock_generate_key.return_value = "1234567890"
-        add_admin("Alice", "visitor")
-        self.assertTrue(get_admin("1234567890", "visitor") is not None)
+        add_admin("Alice")
+        self.assertTrue(get_admin("1234567890") is not None)
         
-    @patch("database.security.__generate_key")
-    def test_clients_are_distinguished_by_their_types(self, mock_generate_key):
-        mock_generate_key.return_value = "1234567890"
-        add_admin("Alice", "visitor")
-        # the key was not defined for the type 'operator'
-        self.assertTrue(get_admin("1234567890", "operator") is None)
 
         
 
