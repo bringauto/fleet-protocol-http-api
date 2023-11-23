@@ -22,9 +22,14 @@ class AdminBase(Base):
 
 __loaded_admins:List[Admin_DB] = []
 
+
 def clear_loaded_admins()->None:
     global __loaded_admins
     __loaded_admins.clear()
+
+
+def get_loaded_admins()->List[Admin_DB]:
+    return __loaded_admins.copy()
 
 
 @dataclasses.dataclass
@@ -47,8 +52,8 @@ def add_admin(name:str)->str:
 
 from sqlalchemy import select
 def get_admin(key:str)->Admin_DB|None:
-    global __loaded_admins
-    for admin in __loaded_admins:
+    loaded_admins  = get_loaded_admins()
+    for admin in loaded_admins:
         if admin.key == key:
             return admin
     
