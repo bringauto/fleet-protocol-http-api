@@ -6,10 +6,6 @@ from sqlalchemy.orm import DeclarativeBase
 _connection_source:Optional[Engine] = None
 
 
-def __connection_source()->Engine|None:
-    return _connection_source
-
-
 def get_connection_source()->Engine:
     """Return the SQLAlchemy engine object used to connect to the database and
     raise exception if the engine object was not set yet.
