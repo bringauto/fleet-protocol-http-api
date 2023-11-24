@@ -43,11 +43,15 @@ class Admin_DB:
 from sqlalchemy import select
 def add_admin(name:str)->str:
     with Session(get_connection_source()) as session:
-        key = __generate_key()
-        admin = AdminBase(name=name, key=key)
-        session.add(admin)
-        session.commit()
-        return key
+        existing_admin = session.query(AdminBase).filter(AdminBase.name==name).first()
+        if existing_admin is None:
+            key = __generate_key()
+            admin = AdminBase(name=name, key=key)
+            session.add(admin)
+            session.commit()
+            return key
+        else:
+            return ""
 
 
 from sqlalchemy import select
