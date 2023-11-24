@@ -385,7 +385,7 @@ class Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_
 
 
 from sqlalchemy import insert
-from database.database_connection import get_connection_source
+from database.connection import get_connection_source
 from database.database_controller import MessageBase, get_available_devices_from_database
 class Test_Store_Available_Device_Ids_After_Connecting_To_Database_Already_Containing_Data(unittest.TestCase):
 

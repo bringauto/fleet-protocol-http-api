@@ -3,7 +3,7 @@ sys.path.append("server")
 from unittest.mock import patch, Mock
 from fleetv2_http_api.models.device_id import DeviceId
 from database.device_ids import serialized_device_id
-from database.database_connection import (
+from database.connection import (
     set_db_connection, 
     unset_connection_source, 
     Connection_Source_Not_Set,

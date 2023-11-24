@@ -6,7 +6,7 @@ from typing import ClassVar, List
 import dataclasses
 from sqlalchemy import String, Integer
 from sqlalchemy.orm import Mapped, mapped_column, Session
-from database.database_connection import Base, get_connection_source
+from database.connection import Base, get_connection_source
 
 
 class AdminBase(Base):

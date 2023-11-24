@@ -4,7 +4,7 @@ sys.path.append("server")
 
 import unittest
 from unittest.mock import patch, Mock
-from database.database_connection import set_db_connection
+from database.connection import set_db_connection
 from database.security import (
     get_admin,
     add_admin, 

@@ -6,8 +6,8 @@ from sqlalchemy.orm import Mapped, mapped_column, Session
 from sqlalchemy import Integer, String, JSON, select, insert, BigInteger
 from enums import MessageType
 from database.device_ids import remove_device_id, clear_device_ids
-from database.database_connection import get_connection_source, Base
-import database.database_connection
+from database.connection import get_connection_source, Base
+import database.connection
 
 
 def set_message_retention_period(seconds:int)->None:
@@ -22,7 +22,7 @@ def set_db_connection(
     password:str=""
     )->None:
 
-    database.database_connection.set_db_connection(
+    database.connection.set_db_connection(
         dialect=dialect, 
         dbapi=dbapi, 
         dblocation=dblocation, 

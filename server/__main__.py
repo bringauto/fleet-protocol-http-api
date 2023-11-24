@@ -26,7 +26,7 @@ from typing import Any, Dict, List
 
 from database.database_controller import remove_old_messages, set_message_retention_period
 from database.device_ids import clear_device_ids
-from database.database_connection import set_db_connection
+from database.connection import set_db_connection
 from database.time import timestamp
 from fleetv2_http_api.__main__ import main as run_server
 from database.security import add_admin, number_of_admins
