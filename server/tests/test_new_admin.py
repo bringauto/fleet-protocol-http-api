@@ -4,7 +4,6 @@ sys.path.append("server")
 
 import subprocess
 import unittest
-from unittest.mock import patch, Mock
 from database.database_controller import set_db_connection
 from database.security import number_of_admins
 import os
