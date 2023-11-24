@@ -1,5 +1,5 @@
 import sys
-sys.path.append("server")
+sys.path.append(".")
 
 
 import subprocess
@@ -43,7 +43,7 @@ class Test_Adding_Admin(unittest.TestCase):
     def test_printing_new_admin_key_to_console(self):
         args = ['python3', 'new_admin.py', 'Bob', "sqlite", "pysqlite", DB_FILE_LOCATION]
         result = subprocess.run(args, capture_output=True)
-        self.assertTrue("New key" in result.stdout.decode("utf-8"))
+        self.assertTrue("New key" in result.stdout.decode())
 
 
 

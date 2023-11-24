@@ -86,6 +86,5 @@ def number_of_admins()->int:
 import random
 import string
 def __generate_key()->str: # pragma: no cover
-    return '1234567890'
-    # return ''.join(random.choice(string.ascii_letters) for _ in range(30))
+    return ''.join(random.choice(string.ascii_letters) for _ in range(30))
 
