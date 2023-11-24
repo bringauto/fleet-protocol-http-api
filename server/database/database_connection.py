@@ -19,8 +19,9 @@ def get_connection_source()->Engine:
     
 
 def unset_connection_source()->None:
-    global _connection_source
+    global _connection_source, _connection_data
     _connection_source = None
+    _connection_data = None
 
 
 class Connection_Source_Not_Set(Exception): pass
@@ -40,23 +41,24 @@ def _new_connection_source(
     return create_engine(url, *args, **kwargs)
 
 
+from typing import Callable, Tuple
 def set_db_connection(
     dialect:str, 
     dbapi:str, 
     dblocation:str, 
     username:str="", 
     password:str="", 
-    *args,
-    **kwargs
+    after_connect:Tuple[Callable[[], None],...] = (),
     )->None:
 
-
-    source = _new_connection_source(dialect, dbapi, dblocation, username, password, *args, **kwargs)
     global _connection_source
+    source = _new_connection_source(dialect, dbapi, dblocation, username, password)
     _connection_source = source
     assert(_connection_source is not None)
     __create_all_tables(source)
-    
+
+    for foo in after_connect: foo()
+
 
 def __create_all_tables(source:Engine)->None:
     Base.metadata.create_all(source)

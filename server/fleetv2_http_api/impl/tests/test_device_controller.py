@@ -5,7 +5,7 @@ sys.path.append("server")
 import unittest
 from enums import MessageType, EncodingType
 from database.device_ids import clear_device_ids, serialized_device_id
-from database.database_connection import set_db_connection
+from database.database_controller import set_db_connection
 from fleetv2_http_api.impl.controllers import (
     available_devices, 
     available_cars,
@@ -383,6 +383,38 @@ class Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_
         with self.assertRaises(SendingStatusAsCommand): 
             send_commands("test_company", "test_car", "...", [status])
 
+
+from sqlalchemy import insert
+from database.database_connection import get_connection_source
+from database.database_controller import MessageBase, get_available_devices_from_database
+class Test_Store_Available_Device_Ids_After_Connecting_To_Database_Already_Containing_Data(unittest.TestCase):
+
+    def setUp(self) -> None:
+        clear_device_ids()
+
+    def test_list_available_cars(self):
+        set_db_connection("sqlite", "pysqlite", "/:memory:")
+        with get_connection_source().begin() as conn:
+            stmt = insert(MessageBase.__table__) # type: ignore
+            msg_base = MessageBase(
+                timestamp=123456789,
+                company_name="company_xy",
+                car_name="car_abc",
+                serialized_device_id="42_7_test_device",
+                message_type=MessageType.STATUS_TYPE,
+                module_id=42,
+                device_type=7,
+                device_role="test_device",
+                device_name="Test Device",
+                payload_encoding=EncodingType.JSON,
+                payload_data={"message":"Device is running"}
+            )
+            data_list = [msg_base.__dict__]
+            conn.execute(stmt, data_list)
+
+        get_available_devices_from_database()
+        self.assertListEqual(available_cars(), ["company_xy_car_abc"])
+        
 
 if __name__=="__main__": 
     unittest.main()

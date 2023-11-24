@@ -5,13 +5,36 @@ import dataclasses
 from sqlalchemy.orm import Mapped, mapped_column, Session
 from sqlalchemy import Integer, String, JSON, select, insert, BigInteger
 from enums import MessageType
-from database.device_ids import remove_device_id
+from database.device_ids import remove_device_id, clear_device_ids
 from database.database_connection import get_connection_source, Base
-
+import database.database_connection
 
 
 def set_message_retention_period(seconds:int)->None:
     MessageBase.set_data_retention_period(seconds)
+
+
+def set_db_connection(
+    dialect:str, 
+    dbapi:str, 
+    dblocation:str, 
+    username:str="", 
+    password:str=""
+    )->None:
+
+    database.database_connection.set_db_connection(
+        dialect=dialect, 
+        dbapi=dbapi, 
+        dblocation=dblocation, 
+        username=username, 
+        password=password,
+        after_connect=(load_available_devices_from_database, )
+    )
+
+
+def get_available_devices_from_database()->None:
+    clear_device_ids()
+    load_available_devices_from_database()
 
 
 @dataclasses.dataclass
@@ -21,7 +44,7 @@ class MessageBase(Base):
     __data_retention_period_in_seconds:ClassVar[int] = 10000
 
     timestamp:Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    sent_order:Mapped[int] = mapped_column(Integer, primary_key=True)
+    sent_order:Mapped[int] = mapped_column(Integer, primary_key=True, default=0)
 
     company_name:Mapped[str] = mapped_column(String, primary_key=True)
     car_name:Mapped[str] = mapped_column(String, primary_key=True)
@@ -294,3 +317,22 @@ def _deserialize_device_id(serialized_id:str)->Tuple[int,int,str]:
     """
     module_id, device_type, device_role = serialized_id.split("_",2)
     return int(module_id), int(device_type), device_role
+
+
+from database.device_ids import store_device_id_if_new
+from fleetv2_http_api.models.device_id import DeviceId
+def load_available_devices_from_database()->None:
+    with Session(get_connection_source()) as session:
+        stmt = select(MessageBase).where(MessageBase.message_type == MessageType.STATUS_TYPE)
+        result = session.execute(stmt)
+        for row in result:
+            base:MessageBase = row[0]
+            device_id = DeviceId(
+                module_id=base.module_id,
+                type=base.device_type,
+                role=base.device_role,
+                name=base.device_name
+            )
+            store_device_id_if_new(base.company_name, base.car_name, device_id)
+
+
