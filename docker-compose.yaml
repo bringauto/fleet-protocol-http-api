@@ -1,0 +1,33 @@
+version: '3.0'
+
+services: 
+
+  server:
+    image: python:3-alpine
+    restart: always
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - database
+    ports:
+      - 8080:8080
+    networks:
+      - api-network
+
+  database:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "1234"
+    networks:
+      - api-network
+    ports:
+      - 5432:5432
+
+networks:
+  api-network:
+
+
+

@@ -73,7 +73,6 @@ git_push.sh
 openapitools.json
 README.md
 setup.py
-requirements.txt
 test-requirements.txt
 tox.ini
 .dockerignore 
