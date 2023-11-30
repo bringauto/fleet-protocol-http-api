@@ -1,10 +1,13 @@
+import sys
+sys.path.append(".")
+
 import argparse
 from argparse import ArgumentParser
 from typing import Dict, Any, Tuple
 
 
-from database.security import add_admin
-from database.connection import (
+from server.database.security import add_admin
+from server.database.connection import (
     set_db_connection, 
     unset_connection_source, 
     get_connection_source

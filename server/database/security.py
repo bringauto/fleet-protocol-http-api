@@ -6,7 +6,7 @@ from typing import ClassVar, List
 import dataclasses
 from sqlalchemy import String, Integer
 from sqlalchemy.orm import Mapped, mapped_column, Session
-from database.connection import Base, get_connection_source
+from server.database.connection import Base, get_connection_source
 
 
 class AdminBase(Base):
@@ -17,7 +17,6 @@ class AdminBase(Base):
     id:Mapped[int] = mapped_column(Integer, primary_key=True)
     name:Mapped[str] = mapped_column(String)
     key:Mapped[str] = mapped_column(String)
-    
 
 
 __loaded_admins:List[Admin_DB] = []
