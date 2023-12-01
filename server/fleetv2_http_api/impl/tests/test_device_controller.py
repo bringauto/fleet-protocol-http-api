@@ -14,7 +14,8 @@ from fleetv2_http_api.impl.controllers import (
     list_statuses, 
     list_commands,
     SendingCommandAsStatus,
-    SendingStatusAsCommand
+    SendingStatusAsCommand,
+    Unmatched_Device_Ids_In_Argument_And_Message
 )
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Payload, Message
@@ -137,6 +138,23 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
             available_devices("the_company", "available_car", module_id=173), 
             Module(module_id=173, device_list=[device_2_id])
         )
+
+    def test_sending_status_with_device_id_not_matching_the_device_id_in_url_raises_exception(self):
+        device_id = DeviceId(module_id=18, type=3, role="available_device", name="Available device")
+        unmatched_sdevice_id = "19_4_other_device"
+        status = Message(
+            timestamp=456, 
+            device_id=device_id, 
+            payload=Payload(type=0, encoding=EncodingType.JSON, data={"message":"Device is running"})
+        )
+        
+        with self.assertRaises(Unmatched_Device_Ids_In_Argument_And_Message):
+            send_statuses(
+                company_name="the_company", 
+                car_name="available_car", 
+                sdevice_id=unmatched_sdevice_id, 
+                messages=[status]
+            )
 
 
 class Test_Sending_And_Listing_Multiple_Messages(unittest.TestCase):

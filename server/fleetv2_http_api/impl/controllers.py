@@ -260,7 +260,7 @@ def __check_equal_device_id_in_path_and_messages(
     for message in messages:
         sdevice_id_from_message = serialized_device_id(message.device_id)
         if sdevice_id_from_message != sdevice_id:
-            raise ValueError(
+            raise Unmatched_Device_Ids_In_Argument_And_Message(
                 f"The device Id in path (.../{sdevice_id}) is not equal "
                 f"to a device Id from the message ({sdevice_id_from_message})"
             )
@@ -303,3 +303,5 @@ def __message_from_db(message_db:Message_DB)->Message:
         )
     )
 
+
+class Unmatched_Device_Ids_In_Argument_And_Message(Exception): pass
