@@ -57,9 +57,8 @@ def _new_connection_source(
     url = ('').join([dialect,'+',dbapi,"://",username,":",password,"@",dblocation])
     engine = create_engine(url, *args, **kwargs)
     if engine is None: 
-        raise Exception(f"Could not create new connection source ({dialect},'+',{dbapi},://...{dblocation})")
-    
-    print(f"\nConnecting to database (dialect={dialect}, api={dbapi}, location={dblocation})")
+        raise Exception("Could not create new connection source ("
+                        f"{dialect},'+',{dbapi},://...{dblocation})") 
     return engine
 
 

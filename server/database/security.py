@@ -36,8 +36,10 @@ class Admin_DB:
     key:str
 
 
+from typing import Optional
 from sqlalchemy import select
-def add_admin(connection_source:Engine, name:str)->str:
+def add_admin(name:str, connection_source:Optional[Engine]=None)->str:
+    if connection_source is None: connection_source = get_connection_source()
     with Session(connection_source) as session:
         existing_admin = session.query(AdminBase).filter(AdminBase.name==name).first()
         if existing_admin is None:
