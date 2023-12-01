@@ -43,9 +43,6 @@ def unset_connection_source()->None:
 
 class Connection_Source_Not_Set(Exception): pass
 class Invalid_Connection_Arguments(Exception): pass
-class Invalid_SQL_Dialect(Exception): pass
-class Invalid_Database_API(Exception): pass
-
 
 import sqlalchemy.exc
 def _new_connection_source(
