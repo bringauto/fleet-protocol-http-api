@@ -59,13 +59,6 @@ class MessageBase(Base):
     payload_encoding:Mapped[int] = mapped_column(Integer)
     payload_data:Mapped[dict] = mapped_column(JSON)
 
-
-    @classmethod
-    @property
-    def data_retention_period_s(cls)->int: 
-        """Return the data retention period in seconds"""
-        return cls.__data_retention_period_in_seconds
-    
     @classmethod
     @property
     def data_retention_period_ms(cls)->int: 

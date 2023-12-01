@@ -42,8 +42,12 @@ def unset_connection_source()->None:
 
 
 class Connection_Source_Not_Set(Exception): pass
+class Invalid_Connection_Arguments(Exception): pass
+class Invalid_SQL_Dialect(Exception): pass
+class Invalid_Database_API(Exception): pass
 
 
+import sqlalchemy.exc
 def _new_connection_source(
     dialect:str, 
     dbapi:str, 
@@ -55,10 +59,15 @@ def _new_connection_source(
     )->Engine:
 
     url = ('').join([dialect,'+',dbapi,"://",username,":",password,"@",dblocation])
-    engine = create_engine(url, *args, **kwargs)
-    if engine is None: 
-        raise Exception("Could not create new connection source ("
-                        f"{dialect},'+',{dbapi},://...{dblocation})") 
+    try:
+        engine = create_engine(url, *args, **kwargs)
+        if engine is None: 
+            raise Invalid_Connection_Arguments("Could not create new connection source ("
+                    f"{dialect},'+',{dbapi},://...{dblocation})") 
+    except:
+        raise Invalid_Connection_Arguments("Could not create new connection source ("
+            f"{dialect},'+',{dbapi},://...{dblocation})") 
+
     return engine
 
 
@@ -86,10 +95,9 @@ def get_db_connection(
     dblocation:str, 
     username:str="", 
     password:str="", 
-    )->Engine:
+    )->Engine|None:
 
     source = _new_connection_source(dialect, dbapi, dblocation, username, password)
-    assert(source is not None)
     return source
 
 

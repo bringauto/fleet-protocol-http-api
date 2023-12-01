@@ -7,6 +7,7 @@ from database.connection import (
     set_db_connection, 
     unset_connection_source, 
     Connection_Source_Not_Set,
+    Invalid_Connection_Arguments,
     get_connection_source
 )
 
@@ -246,6 +247,29 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         self.assertEqual(len(messages), 1)
 
 
+from database.connection import (
+    Invalid_Connection_Arguments
+)
+class Test_Invalid_Database_Connection_Credentials(unittest.TestCase):
+
+    def test_invalid_dialect_raises_exception(self):
+        self.assertRaises(
+            Invalid_Connection_Arguments, 
+            set_db_connection, 
+            "invalid_dialect", "pysqlite", "/:memory:"
+        )
+        self.assertRaises(
+            Invalid_Connection_Arguments, 
+            set_db_connection, 
+            "postgresql", "invalid_dialect$$$$$", "/:memory:"
+        )
+        self.assertRaises(
+            Invalid_Connection_Arguments, 
+            set_db_connection, 
+            "postgresql", "pysqlite", "asjgnsdifn____invalid_location"
+        )
+
+
 from database.database_controller import set_message_retention_period
 class Test_Database_Cleanup(unittest.TestCase):
 
@@ -258,7 +282,6 @@ class Test_Database_Cleanup(unittest.TestCase):
         self.assertEqual(MessageBase.data_retention_period_ms, 3000)
         set_message_retention_period(seconds=5)
         self.assertEqual(MessageBase.data_retention_period_ms, 5000)
-        self.assertEqual(MessageBase.data_retention_period_s, 5)
     
     def test_setting_other_than_positive_integer_retention_period_is_ignored(self):
         set_message_retention_period(1)
