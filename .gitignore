@@ -1,6 +1,5 @@
 .venv
-
-client
+*.pyc
+__pycache__
 
 /*.sh
-*.pyc
