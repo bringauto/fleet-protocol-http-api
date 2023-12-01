@@ -76,8 +76,9 @@ def admin_selection(key:str)->Select:
 
 
 from sqlalchemy import func
-def number_of_admins()->int:
-    with Session(get_connection_source()) as session:
+def number_of_admins(connection:Engine|None = None)->int:
+    if connection is None: connection = get_connection_source()
+    with Session(connection) as session:
         return session.query(func.count(AdminBase.__table__.c.id)).scalar()
 
 
