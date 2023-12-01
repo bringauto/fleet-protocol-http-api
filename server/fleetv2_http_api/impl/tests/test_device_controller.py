@@ -388,13 +388,41 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         )
 
 
+
 class Test_Listing_Commands_And_Statuses_Of_Nonexistent_Cars(unittest.TestCase):
 
-    def test_listing_statuses_of_nonexistent_car_returns_code_404(self):
-        self.assertEqual(list_statuses("nonexistent_company", "test_car", "..."), ([], 404))
+    def setUp(self) -> None:
+        set_db_connection("sqlite", "pysqlite", "/:memory:")
+        device_id = DeviceId(module_id=15, type=3, role="available_device", name="Available device")
+        sdevice_id = serialized_device_id(device_id)
+        status = Message(
+            timestamp=456, 
+            device_id=device_id, 
+            payload=Payload(
+                type=0, 
+                encoding=EncodingType.JSON, 
+                data={"message":"Device is running"}
+            )
+        )
+        send_statuses(
+            company_name="a_company", 
+            car_name="a_car", 
+            sdevice_id=sdevice_id, 
+            messages=[status]
+        )
 
-    def test_listing_commands_of_nonexistent_car_returns_code_404(self):
-        self.assertEqual(list_commands("nonexistent_company", "test_car", "..."), ([], 404))
+    def test_listing_statuses_of_nonexistent_company_returns_code_404(self):
+        self.assertEqual(list_statuses("nonexistent_company", "a_car", "..."), ([], 404))
+
+    def test_listing_commands_of_nonexistent_company_returns_code_404(self):
+        self.assertEqual(list_commands("nonexistent_company", "a_car", "..."), ([], 404))
+
+    def test_listing_statuses_of_nonexistent_car(self):
+        self.assertEqual(list_statuses("a_company", "nonexistent_car", "..."), ([], 404))
+
+    def test_listing_commands_of_nonexistent_car(self):
+        self.assertEqual(list_commands("a_company", "nonexistent_car", "..."), ([], 404))
+
 
 
 
