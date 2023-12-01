@@ -28,7 +28,17 @@ Your OpenAPI definition lives here:
 
 ```
 http://localhost:8080/openapi.json
+
+
 ```
+## Running with Docker
+
+To run the server on a Docker container (together with the PostgreSQL database), please execute the following from the root directory:
+
+```bash
+# build all and start in detached mode
+docker compose up --build -d
+
 
 
 
