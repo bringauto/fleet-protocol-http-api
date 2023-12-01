@@ -146,7 +146,7 @@ def send_commands(
         return [], 404 # type: ignore
     
     elif car_name not in device_dict[company_name]:
-        return [], 404 # type: ignore
+        return "", 404
     
     elif messages[-1].device_id.module_id not in device_dict[company_name][car_name]:
         return "", 404

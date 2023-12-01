@@ -184,21 +184,21 @@ class Test_Sending_And_Listing_Multiple_Messages(unittest.TestCase):
         statuses_after = list_statuses("test_company", "test_car", self.sdevice_id)
         self.assertEqual(statuses_before, statuses_after)
 
-    def test_sent_commands(self)->None:
-        device_id = "42_7_test_device"
+    def test_sent_commands_to_available_devices(self)->None:
+        sdevice_id = "42_7_test_device"
         send_statuses(
             company_name="test_company", 
             car_name="test_car", 
-            sdevice_id=device_id, 
+            sdevice_id=sdevice_id, 
             messages=[self.status_example]
         )
         send_commands(
             company_name="test_company", 
             car_name="test_car", 
-            sdevice_id=device_id, 
+            sdevice_id=sdevice_id, 
             messages=[self.command_example]
         )
-        commands, code = list_commands("test_company","test_car", device_id)
+        commands, code = list_commands("test_company","test_car", sdevice_id)
         self.assertEqual(code, 200)
         self.assertEqual(len(commands), 1)
         cmd = commands[0]
@@ -206,6 +206,53 @@ class Test_Sending_And_Listing_Multiple_Messages(unittest.TestCase):
         self.assertEqual(cmd.device_id.type, self.command_example.device_id.type)
         self.assertEqual(cmd.device_id.role, self.command_example.device_id.role)
         self.assertEqual(cmd.payload, self.command_example.payload)
+
+    def test_sending_commands_to_unavailable_module_car_or_company_returns_code_404(self)->None:
+        send_statuses(
+            company_name="test_company", 
+            car_name="test_car", 
+            sdevice_id=self.sdevice_id, 
+            messages=[self.status_example]
+        )
+
+        id_of_device_in_nonexistent_module = DeviceId(
+            module_id=1111111, 
+            type=7, 
+            role="test_device", 
+            name="Test Device X"
+        )
+        sid_of_device_in_nonexistent_module = serialized_device_id(
+            id_of_device_in_nonexistent_module
+        )
+        command_of_device_in_nonexistent_module = Message(
+            timestamp = 124879465,
+            device_id=id_of_device_in_nonexistent_module, 
+            payload=self.command_example.payload
+        )
+
+        response, code = send_commands(
+            company_name="test_company", 
+            car_name="test_car", 
+            sdevice_id=sid_of_device_in_nonexistent_module, 
+            messages=[command_of_device_in_nonexistent_module]
+        )
+        self.assertEqual(code, 404)
+
+        response, code = send_commands(
+            company_name="test_company", 
+            car_name="nonexistent_car", 
+            sdevice_id=self.sdevice_id, 
+            messages=[self.command_example]
+        )
+        self.assertEqual(code, 404)
+
+        response, code = send_commands(
+            company_name="nonexistent_company", 
+            car_name="test_car", 
+            sdevice_id=self.sdevice_id, 
+            messages=[self.command_example]
+        )
+        self.assertEqual(code, 404)
 
     def test_sending_empty_list_of_commands_does_not_affect_list_of_commands_returned_from_database(self)->None:
         send_commands("test_company", "test_car", self.sdevice_id, messages=[self.command_example])
