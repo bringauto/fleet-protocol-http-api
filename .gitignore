@@ -5,3 +5,4 @@ __pycache__
 example.db
 
 /*.sh
+!regen.sh
