@@ -1,0 +1,627 @@
+openapi: 3.0.2
+info:
+  description: Development version of a the API
+  title: Fleet v2 HTTP API
+  version: 0.1.0
+servers:
+- url: http://localhost
+security:
+- AdminAuth: []
+tags:
+- name: car
+- name: device
+- name: module
+paths:
+  /cars:
+    get:
+      description: "Return list of available cars for all companies registered in\
+        \ the database.<br> Each item list has the format: '&lt;company name&gt;_&lt;car\
+        \ name&gt;'."
+      operationId: available_cars
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+              - company_x_basic_car
+              - company_x_better_car
+              - competing_company_even_better_car
+              schema:
+                items:
+                  pattern: "^[a-z0-9_]+$"
+                  type: string
+                type: array
+          description: A list of available cars.
+        "500":
+          description: Cannot display avaialble cars due to internal server error.
+      tags:
+      - car
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+  /{company_name}/{car_name}/available-devices:
+    get:
+      description: |-
+        Return device Ids for all devices available for contained in the specified car.<br> For a single car module, the device Ids are returned as an object containing module Id and the list of device Ids. <br>
+        If a module Id is specified, only a single such object is returned. <br> Otherwise, a list of such objects is returned, one for each module contained in the car. <br>
+      operationId: available_devices
+      parameters:
+      - description: "Name of the company, following a pattern '^[0-9a-z_]+$'."
+        example: test_company
+        explode: false
+        in: path
+        name: company_name
+        required: true
+        schema:
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: "Name of the Car, following a pattern '^[0-9a-z_]+$'."
+        example: test_car
+        explode: false
+        in: path
+        name: car_name
+        required: true
+        schema:
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - allowEmptyValue: false
+        description: "An Id of module, an unsigned integer."
+        example: 47
+        explode: true
+        in: query
+        name: module_id
+        required: false
+        schema:
+          minimum: 0
+          nullable: true
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/available_devices_200_response'
+          description: A list of available devices.
+        "404":
+          description: "Cannot display available devices. Either company, car or module\
+            \ specified in the request does not exist."
+        "500":
+          description: Cannot display available devices due to internal server error.
+      tags:
+      - module
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+  /{company_name}/{car_name}/command/{sdevice_id}:
+    get:
+      description: Returns list of the Device Commands.
+      operationId: list_commands
+      parameters:
+      - description: "Name of the company, following a pattern '^[0-9a-z_]+$'."
+        example: test_company
+        explode: false
+        in: path
+        name: company_name
+        required: true
+        schema:
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: "Name of the Car, following a pattern '^[0-9a-z_]+$'."
+        example: test_car
+        explode: false
+        in: path
+        name: car_name
+        required: true
+        schema:
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: "The Id of the Device, described with an object."
+        example: 47_2_test_device
+        explode: false
+        in: path
+        name: sdevice_id
+        required: true
+        schema:
+          pattern: "^[0-9]+_[0-9]+_[a-z0-9_]+$"
+          type: string
+        style: simple
+      - allowEmptyValue: true
+        description: "If set, the method returns a complete history of statuses/commands."
+        explode: true
+        in: query
+        name: all_available
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
+      - allowEmptyValue: false
+        description: "A Unix timestamp; if specified, the method returns all device\
+          \ commands inclusivelly newer than value of specified timestamp."
+        example: 1699262836
+        explode: true
+        in: query
+        name: since
+        required: false
+        schema:
+          nullable: true
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+              - timestamp: 1700139157
+                device_id:
+                  module_id: 47
+                  type: 2
+                  role: test_device
+                  name: Test Device
+                payload:
+                  payload_type: 1
+                  encoding: 1
+                  data: U2F5IGhlbGxv
+              schema:
+                items:
+                  $ref: '#/components/schemas/Message'
+                type: array
+          description: A list of commands.
+        "500":
+          description: The commands cannot be displayed due to internal server error.
+      tags:
+      - device
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+    post:
+      description: It adds new device Commands.
+      operationId: send_commands
+      parameters:
+      - description: "Name of the company, following a pattern '^[0-9a-z_]+$'."
+        example: test_company
+        explode: false
+        in: path
+        name: company_name
+        required: true
+        schema:
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: "Name of the Car, following a pattern '^[0-9a-z_]+$'."
+        example: test_car
+        explode: false
+        in: path
+        name: car_name
+        required: true
+        schema:
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: "The Id of the Device, described with an object."
+        example: 47_2_test_device
+        explode: false
+        in: path
+        name: sdevice_id
+        required: true
+        schema:
+          pattern: "^[0-9]+_[0-9]+_[a-z0-9_]+$"
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            example:
+            - timestamp: 1700139157
+              device_id:
+                module_id: 47
+                type: 2
+                role: test_device
+                name: Test Device
+              payload:
+                payload_type: 1
+                encoding: 1
+                data: U2F5IGhlbGxv
+            schema:
+              items:
+                $ref: '#/components/schemas/Message'
+              type: array
+        description: Commands to be executed by the device.
+      responses:
+        "200":
+          description: The commands have been sent.
+        "500":
+          description: The commands have not been sent due to internal server error.
+      tags:
+      - device
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+  /{company_name}/{car_name}/status/{sdevice_id}:
+    get:
+      description: It returns list of the Device Statuses.
+      operationId: list_statuses
+      parameters:
+      - description: "Name of the company, following a pattern '^[0-9a-z_]+$'."
+        example: test_company
+        explode: false
+        in: path
+        name: company_name
+        required: true
+        schema:
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: "Name of the Car, following a pattern '^[0-9a-z_]+$'."
+        example: test_car
+        explode: false
+        in: path
+        name: car_name
+        required: true
+        schema:
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: "The Id of the Device, described with an object."
+        example: 47_2_test_device
+        explode: false
+        in: path
+        name: sdevice_id
+        required: true
+        schema:
+          pattern: "^[0-9]+_[0-9]+_[a-z0-9_]+$"
+          type: string
+        style: simple
+      - allowEmptyValue: true
+        description: "If set, the method returns a complete history of statuses/commands."
+        explode: true
+        in: query
+        name: all_available
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
+      - allowEmptyValue: false
+        description: "A Unix timestamp; if specified, the method returns all device\
+          \ statuses inclusivelly older than value of specified timestamp."
+        example: 1699262836
+        explode: true
+        in: query
+        name: since
+        required: false
+        schema:
+          nullable: true
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+              - timestamp: 1700139157
+                device_id:
+                  module_id: 47
+                  type: 2
+                  role: test_device
+                  name: Test Device
+                payload:
+                  payload_type: 0
+                  encoding: 1
+                  data: V2FpdGluZw==
+              - timestamp: 1700145485
+                device_id:
+                  module_id: 47
+                  type: 2
+                  role: test_device
+                  name: Test Device
+                payload:
+                  payload_type: 0
+                  encoding: 1
+                  data: U3RpbGwgd29ya2luZw==
+              - timestamp: 1700145490
+                device_id:
+                  module_id: 47
+                  type: 2
+                  role: test_device
+                  name: Test Device
+                payload:
+                  payload_type: 0
+                  encoding: 0
+                  data:
+                    description: Still working
+              schema:
+                items:
+                  $ref: '#/components/schemas/Message'
+                type: array
+          description: A list of device statuses.
+        "500":
+          description: The statuses cannot be displayed due to internal server error.
+      tags:
+      - device
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+    post:
+      description: Add statuses received from the Device.
+      operationId: send_statuses
+      parameters:
+      - description: "Name of the company, following a pattern '^[0-9a-z_]+$'."
+        example: test_company
+        explode: false
+        in: path
+        name: company_name
+        required: true
+        schema:
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: "Name of the Car, following a pattern '^[0-9a-z_]+$'."
+        example: test_car
+        explode: false
+        in: path
+        name: car_name
+        required: true
+        schema:
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: "The Id of the Device, described with an object."
+        example: 47_2_test_device
+        explode: false
+        in: path
+        name: sdevice_id
+        required: true
+        schema:
+          pattern: "^[0-9]+_[0-9]+_[a-z0-9_]+$"
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            example:
+            - timestamp: 1700139157
+              device_id:
+                module_id: 47
+                type: 2
+                role: test_device
+                name: Test Device
+              payload:
+                payload_type: 0
+                encoding: 1
+                data: QnJpbmdBdXRv
+            - timestamp: 1700145485
+              device_id:
+                module_id: 47
+                type: 2
+                role: test_device
+                name: Test Device
+              payload:
+                payload_type: 0
+                encoding: 1
+                data: U3RhcnQgd29ya2luZw==
+            - timestamp: 1700145490
+              device_id:
+                module_id: 47
+                type: 2
+                role: test_device
+                name: Test Device
+              payload:
+                payload_type: 0
+                encoding: 0
+                data:
+                  description: Just keep working
+            schema:
+              items:
+                $ref: '#/components/schemas/Message'
+              type: array
+        description: Statuses to be send by the device.
+      responses:
+        "200":
+          description: The statuses have been sent.
+        "500":
+          description: The statuses could not been sent due to internal server error.
+      tags:
+      - device
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+components:
+  parameters:
+    All:
+      allowEmptyValue: true
+      description: "If set, the method returns a complete history of statuses/commands."
+      explode: true
+      in: query
+      name: all_available
+      required: false
+      schema:
+        nullable: true
+        type: string
+      style: form
+    Since:
+      allowEmptyValue: false
+      description: "A Unix timestamp; if specified, the method returns all device\
+        \ statuses inclusivelly older than value of specified timestamp."
+      example: 1699262836
+      explode: true
+      in: query
+      name: since
+      required: false
+      schema:
+        nullable: true
+        type: integer
+      style: form
+    Until:
+      allowEmptyValue: false
+      description: "A Unix timestamp; if specified, the method returns all device\
+        \ commands inclusivelly newer than value of specified timestamp."
+      example: 1699262836
+      explode: true
+      in: query
+      name: since
+      required: false
+      schema:
+        nullable: true
+        type: integer
+      style: form
+    ModuleId:
+      allowEmptyValue: false
+      description: "An Id of module, an unsigned integer."
+      example: 47
+      explode: true
+      in: query
+      name: module_id
+      required: false
+      schema:
+        minimum: 0
+        nullable: true
+        type: integer
+      style: form
+    SerializedDeviceId:
+      description: "The Id of the Device, described with an object."
+      example: 47_2_test_device
+      explode: false
+      in: path
+      name: sdevice_id
+      required: true
+      schema:
+        pattern: "^[0-9]+_[0-9]+_[a-z0-9_]+$"
+        type: string
+      style: simple
+    CarName:
+      description: "Name of the Car, following a pattern '^[0-9a-z_]+$'."
+      example: test_car
+      explode: false
+      in: path
+      name: car_name
+      required: true
+      schema:
+        pattern: "^[0-9a-z_]+$"
+        type: string
+      style: simple
+    CompanyName:
+      description: "Name of the company, following a pattern '^[0-9a-z_]+$'."
+      example: test_company
+      explode: false
+      in: path
+      name: company_name
+      required: true
+      schema:
+        pattern: "^[0-9a-z_]+$"
+        type: string
+      style: simple
+  schemas:
+    Message:
+      description: Physical device or program located on the car.
+      example:
+        device_id:
+          module_id: 47
+          type: 2
+          role: test_device
+          name: Test Device
+        payload:
+          type: 0
+          encoding: 1
+          data: QnJpbmdBdXRv
+        timestamp: 1699262836
+      properties:
+        timestamp:
+          description: Unix timestamp of the message in milliseconds.
+          example: 1699262836
+          title: timestamp
+          type: integer
+        device_id:
+          $ref: '#/components/schemas/DeviceId'
+        payload:
+          $ref: '#/components/schemas/Payload'
+      title: Message
+      type: object
+    Module:
+      description: A module containing at least one device (specified by device Id).
+      properties:
+        module_id:
+          description: Id (unsigned integer) of the module.
+          example: 47
+          minimum: 0
+          title: module_id
+          type: integer
+        device_list:
+          description: List of Ids of devices contained in the module.
+          example:
+          - module_id: 47
+            device_type: 2
+            device_role: test_device
+            device_name: Test Device
+          - module_id: 47
+            device_type: 2
+            device_role: test_device
+            device_name: Test Device
+          items:
+            $ref: '#/components/schemas/DeviceId'
+          title: device_list
+          type: array
+      title: Module
+      type: object
+    DeviceId:
+      description: Id of the device described with an object.
+      example:
+        module_id: 47
+        type: 2
+        role: test_device
+        name: Test Device
+      properties:
+        module_id:
+          description: Id (unsigned integer) of the module containing the device.
+          minimum: 0
+          type: integer
+        type:
+          description: Unsigned integer.
+          minimum: 0
+          type: integer
+        role:
+          description: "String description of the device role. It follows pattern\
+            \ '^[a-z0-9_]+$'."
+          format: utf-8
+          pattern: "^[a-z0-9_]+$"
+          type: string
+        name:
+          description: UTF-8 encoded string.
+          format: utf-8
+          type: string
+      title: DeviceId
+      type: object
+    Payload:
+      description: "Payload of the message, containing message type (status or command),\
+        \ encoding and data."
+      example:
+        type: 0
+        encoding: 1
+        data: QnJpbmdBdXRv
+      properties:
+        type:
+          description: "Type of the payload, enumerated as follows: <br> 0 - STATUS\
+            \ <br> 1 - COMMAND"
+          type: integer
+        encoding:
+          description: "Encoding of the payload, enumerated as follows: <br> 0 - JSON\
+            \ <br> 1 - BASE64"
+          type: integer
+        data:
+          $ref: '#/components/schemas/Payload_data'
+      title: Payload
+      type: object
+    available_devices_200_response:
+      oneOf:
+      - items:
+          $ref: '#/components/schemas/Module'
+        type: array
+      - $ref: '#/components/schemas/Module'
+      title: available_devices_200_response
+    Payload_data:
+      description: "Payload data in JSON or BASE64 format, depending on the encoding."
+      oneOf:
+      - type: object
+      - format: base64
+        type: string
+      title: Payload_data
+  securitySchemes:
+    AdminAuth:
+      description: Authentication token for a administrator.
+      in: query
+      name: api_key
+      type: apiKey
+      x-apikeyInfoFunc: fleetv2_http_api.controllers.security_controller.info_from_AdminAuth
