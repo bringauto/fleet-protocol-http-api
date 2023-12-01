@@ -51,7 +51,6 @@ def __connect_to_database(db_server_config:Dict[str,Any])->None:
     )
 
 
-from example_posts import example
 def set_up_database_jobs(db_cleanup_config:Dict[str,int])->None:
     """Set message cleanup job and other customary jobs defined by the example method."""
     scheduler = BackgroundScheduler()
@@ -61,7 +60,6 @@ def set_up_database_jobs(db_cleanup_config:Dict[str,int])->None:
         trigger="interval", 
         seconds=db_cleanup_config["cleanup_period"],
     )
-    example(scheduler=scheduler)
     scheduler.start()
 
 
