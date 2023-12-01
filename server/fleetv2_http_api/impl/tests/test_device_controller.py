@@ -99,25 +99,47 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
             sdevice_id=sdevice_id, 
             messages=[status]
         )
-        module = Module(module_id=18, device_list=[device_id])
+        self.assertEqual(available_devices("the_company", "unavailable_car"), ([], 404))
+        self.assertEqual(available_devices("no_company", "unavailable_car"), ([], 404))
+
+    def test_listing_devices_for_particular_module(self):
+        device_1_id = DeviceId(module_id=18, type=3, role="available_device", name="Available device")
+        sdevice_1_id = serialized_device_id(device_1_id)
+        status_1 = Message(
+            timestamp=456, 
+            device_id=device_1_id, 
+            payload=Payload(type=0, encoding=EncodingType.JSON, data={"message":"Device is running"})
+        )
+        device_2_id = DeviceId(module_id=173, type=3, role="available_device", name="Available device")
+        sdevice_2_id = serialized_device_id(device_2_id)
+        status_2 = Message(
+            timestamp=498, 
+            device_id=device_2_id, 
+            payload=Payload(type=0, encoding=EncodingType.JSON, data={"message":"Device is running"})
+        )
+        send_statuses(
+            company_name="the_company", 
+            car_name="available_car", 
+            sdevice_id=sdevice_1_id, 
+            messages=[status_1]
+        )
+        send_statuses(
+            company_name="the_company", 
+            car_name="available_car", 
+            sdevice_id=sdevice_2_id, 
+            messages=[status_2]
+        )
         self.assertEqual(
-            available_devices("the_company", "available_car"), 
-            [module]
+            available_devices("the_company", "available_car", module_id=18), 
+            Module(module_id=18, device_list=[device_1_id])
+        )
+        self.assertEqual(
+            available_devices("the_company", "available_car", module_id=173), 
+            Module(module_id=173, device_list=[device_2_id])
         )
 
-        self.assertEqual(
-            available_devices("the_company", "unavailable_car"), 
-            ([], 404)
-        )
 
-        self.assertEqual(
-            available_devices("no_company", "unavailable_car"), 
-            ([], 404)
-        )
-
-
-
-class Test_Sending_And_Listing_Messages(unittest.TestCase):
+class Test_Sending_And_Listing_Multiple_Messages(unittest.TestCase):
 
     def setUp(self) -> None:
         set_db_connection("sqlite","pysqlite","/:memory:")
@@ -158,7 +180,6 @@ class Test_Sending_And_Listing_Messages(unittest.TestCase):
     def test_sending_empty_list_of_statuses_does_not_affect_list_of_statuses_returned_from_database(self)->None:
         send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.status_example])
         statuses_before = list_statuses("test_company", "test_car", self.sdevice_id)
-
         send_statuses("test_company", "test_car", self.sdevice_id, messages=[])
         statuses_after = list_statuses("test_company", "test_car", self.sdevice_id)
         self.assertEqual(statuses_before, statuses_after)
