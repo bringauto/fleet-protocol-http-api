@@ -85,6 +85,37 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertListEqual(available_cars(), ["test_company_test_car"])
 
+    def test_listing_device_for_unavailable_car_returns_empty_list_and_code_404(self):
+        device_id = DeviceId(module_id=18, type=3, role="available_device", name="Available device")
+        sdevice_id = serialized_device_id(device_id)
+        status = Message(
+            timestamp=456, 
+            device_id=device_id, 
+            payload=Payload(type=0, encoding=EncodingType.JSON, data={"message":"Device is running"})
+        )
+        send_statuses(
+            company_name="the_company", 
+            car_name="available_car", 
+            sdevice_id=sdevice_id, 
+            messages=[status]
+        )
+        module = Module(module_id=18, device_list=[device_id])
+        self.assertEqual(
+            available_devices("the_company", "available_car"), 
+            [module]
+        )
+
+        self.assertEqual(
+            available_devices("the_company", "unavailable_car"), 
+            ([], 404)
+        )
+
+        self.assertEqual(
+            available_devices("no_company", "unavailable_car"), 
+            ([], 404)
+        )
+
+
 
 class Test_Sending_And_Listing_Messages(unittest.TestCase):
 
