@@ -27,13 +27,13 @@ def get_connection_source()->Engine:
     """Return the SQLAlchemy engine object used to connect to the database and
     raise exception if the engine object was not set yet.
     """
+    global _connection_source
     if _connection_source is None: 
         raise Connection_Source_Not_Set()
     else:
         assert isinstance(_connection_source, Engine)
         return _connection_source
 
-    
 
 def unset_connection_source()->None:
     global _connection_source, _connection_data
@@ -57,7 +57,9 @@ def _new_connection_source(
     url = ('').join([dialect,'+',dbapi,"://",username,":",password,"@",dblocation])
     engine = create_engine(url, *args, **kwargs)
     if engine is None: 
-        raise Exception("Could not create connection source")
+        raise Exception(f"Could not create new connection source ({dialect},'+',{dbapi},://...{dblocation})")
+    
+    print(f"\nConnecting to database (dialect={dialect}, api={dbapi}, location={dblocation})")
     return engine
 
 
@@ -76,8 +78,20 @@ def set_db_connection(
     _connection_source = source
     assert(_connection_source is not None)
     __create_all_tables(source)
-
     for foo in after_connect: foo()
+
+
+def get_db_connection(
+    dialect:str, 
+    dbapi:str, 
+    dblocation:str, 
+    username:str="", 
+    password:str="", 
+    )->Engine:
+
+    source = _new_connection_source(dialect, dbapi, dblocation, username, password)
+    assert(source is not None)
+    return source
 
 
 def __create_all_tables(source:Engine)->None:

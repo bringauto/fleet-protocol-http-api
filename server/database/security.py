@@ -1,10 +1,8 @@
 from __future__ import annotations
-
-
 from typing import ClassVar, List
 
 import dataclasses
-from sqlalchemy import String, Integer
+from sqlalchemy import String, Integer, Engine
 from sqlalchemy.orm import Mapped, mapped_column, Session
 from database.connection import Base, get_connection_source
 
@@ -38,10 +36,9 @@ class Admin_DB:
     key:str
 
 
-
 from sqlalchemy import select
-def add_admin(name:str)->str:
-    with Session(get_connection_source()) as session:
+def add_admin(connection_source:Engine, name:str)->str:
+    with Session(connection_source) as session:
         existing_admin = session.query(AdminBase).filter(AdminBase.name==name).first()
         if existing_admin is None:
             key = __generate_key()

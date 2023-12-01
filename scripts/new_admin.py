@@ -1,17 +1,17 @@
-import sys
-sys.path.append(".")
+import sys, os
+
+sys.path[0] = os.path.abspath(os.path.join(sys.path[0], os.pardir))
+sys.path.append("server")
+
 
 import argparse
 from argparse import ArgumentParser
 from typing import Dict, Any, Tuple
+from sqlalchemy.engine import Engine
 
 
 from server.database.security import add_admin
-from server.database.connection import (
-    set_db_connection, 
-    unset_connection_source, 
-    get_connection_source
-)
+from server.database.connection import get_db_connection
 
 
 def parse_arguments()->Tuple[ArgumentParser, Dict[str,Any]]:
@@ -29,35 +29,32 @@ def parse_arguments()->Tuple[ArgumentParser, Dict[str,Any]]:
     return parser, parser.parse_args().__dict__
 
 
-def connect_to_database(parser:argparse.ArgumentParser, arguments:Dict[str,Any])->None:
+def get_connection_to_database(parser:argparse.ArgumentParser, arguments:Dict[str,Any])->Engine:
     try:
-        set_db_connection(
+        source = get_db_connection(
             dialect = arguments["dialect"],
             dbapi = arguments["db-api"],
             dblocation = arguments["db-location"],
             username = arguments["username"],
             password = arguments["password"]
         )
+        if source == None:
+            parser.error("No connection source obtained. Cannot connect to the database. Invalid database connection parameters.")
+        return source
+    
     except Exception as e:
-        parser.error("Cannot connect to the database. Invalid database connection parameters.")
-    if get_connection_source() == None:
-        parser.error("Cannot connect to the database. Invalid database connection parameters.")
+        parser.error("Error when connecting to the database. Cannot connect to the database. Invalid database connection parameters.")
+    
 
-
-def try_to_add_key(arguments:Dict[str,Any])->None:
-    new_key = add_admin(name=arguments["admin-name"])
+def try_to_add_key(connection_source:Engine, arguments:Dict[str,Any])->None:
+    new_key = add_admin(connection_source, name=arguments["admin-name"])
     if new_key != "": 
         print(f"\nNew key for admin '{arguments['admin-name']}':\n\n{new_key}\n")
     else: 
         print(f"Admin '{arguments['admin-name']}' already exists.")
 
 
-def disconnect_from_database()->None:
-    unset_connection_source()
-
-
 if __name__=="__main__":
     parser, arguments = parse_arguments()
-    connect_to_database(parser, arguments)
-    try_to_add_key(arguments)
-    disconnect_from_database()
+    source = get_connection_to_database(parser, arguments)
+    try_to_add_key(source, arguments)

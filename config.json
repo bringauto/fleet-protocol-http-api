@@ -12,6 +12,7 @@
             "timing_in_seconds": {
                 "retention_period": 5,
                 "cleanup_period": 1
+                
             }
         }
     }
