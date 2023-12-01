@@ -55,7 +55,10 @@ def _new_connection_source(
     )->Engine:
 
     url = ('').join([dialect,'+',dbapi,"://",username,":",password,"@",dblocation])
-    return create_engine(url, *args, **kwargs)
+    engine = create_engine(url, *args, **kwargs)
+    if engine is None: 
+        raise Exception("Could not create connection source")
+    return engine
 
 
 from typing import Callable, Tuple
