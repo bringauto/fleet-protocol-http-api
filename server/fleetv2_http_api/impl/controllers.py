@@ -267,11 +267,8 @@ def __check_equal_device_id_in_path_and_messages(
 
 
 def __available_module(company_name:str, car_name:str, module_id:int)->Module:
-    if not module_id in device_ids()[company_name][car_name]: 
-        return 404 # type: ignore
-    else: 
-        device_id_list = list((device_ids()[company_name][car_name][module_id]).values())
-        return Module(module_id, device_id_list)
+    device_id_list = list((device_ids()[company_name][car_name][module_id]).values())
+    return Module(module_id, device_id_list)
 
 
 def __handle_first_status_and_return_warnings(
