@@ -17,7 +17,7 @@ from server.database.connection import get_db_connection
 
 def parse_arguments()->Tuple[ArgumentParser, Dict[str,Any]]:
     parser = argparse.ArgumentParser(description="Add a new admin to the database.")
-    parser.add_argument("admin-name", type=str, help="The name of the new admin.")
+    parser.add_argument("<admin-name>", type=str, help="The name of the new admin.")
     parser.add_argument(
         "-usr", "--username", type=str, help="The username for the database.", default="", required=False
     )
@@ -52,11 +52,11 @@ def get_connection_to_database(
     
 
 def try_to_add_key(connection_source:Engine, arguments:Dict[str,Any])->None:
-    new_key = add_admin(name=arguments["admin-name"], connection_source=connection_source)
+    new_key = add_admin(name=arguments["<admin-name>"], connection_source=connection_source)
     if new_key != "": 
-        print(f"\nNew key for admin '{arguments['admin-name']}':\n\n{new_key}\n")
+        print(f"\nNew key for admin '{arguments['<admin-name>']}':\n\n{new_key}\n")
     else: 
-        print(f"Admin '{arguments['admin-name']}' already exists.")
+        print(f"Admin '{arguments['<admin-name>']}' already exists.")
 
 
 import os
@@ -69,7 +69,7 @@ if __name__=="__main__":
         parser, 
         dbapi=config["api"],
         dialect=config["dialect"],
-        dblocation=config["host"],
+        dblocation=(config["location"]+":"+str(config["port"])),
         username=arguments["username"],
         password=arguments["password"]
     )
