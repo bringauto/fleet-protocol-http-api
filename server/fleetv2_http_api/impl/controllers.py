@@ -57,7 +57,7 @@ def available_devices(company_name:str, car_name:str, module_id:Optional[int]=No
         return [__available_module(company_name, car_name, id) for id in car_modules] # type: ignore
     else: 
         if module_id not in device_dict[company_name][car_name]: 
-            return 404 # type: ignore
+            return [], 404 # type: ignore
         else:
             return __available_module(company_name, car_name, module_id) # type: ignore
 

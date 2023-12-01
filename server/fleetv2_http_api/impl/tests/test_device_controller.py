@@ -155,6 +155,9 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
                 sdevice_id=unmatched_sdevice_id, 
                 messages=[status]
             )
+    
+    def test_listing_available_devices_for_nonexistent_module_returns_code_404(self):
+        self.assertEqual(available_devices("test_company", "test_car", module_id=4999999), ([], 404))
 
 
 class Test_Sending_And_Listing_Multiple_Messages(unittest.TestCase):
