@@ -26,17 +26,9 @@ from typing import Any, Dict, List
 
 from database.database_controller import remove_old_messages, set_message_retention_period
 from database.device_ids import clear_device_ids
-from database.connection import set_db_connection, get_connection_source
+from database.connection import set_db_connection
 from database.time import timestamp
 from fleetv2_http_api.__main__ import main as run_server
-from database.security import add_admin, number_of_admins
-
-
-def add_first_clients()->List[str]:
-    clients:List[str] = list()
-    if number_of_admins() == 0:
-        clients.append(add_admin("admin_01", get_connection_source()))
-    return clients
 
 
 def __connect_to_database(db_server_config:Dict[str,Any])->None:
@@ -71,6 +63,5 @@ def __clean_up_messages()->None:
 if __name__ == '__main__':
     config:Dict[str,Any] = json.load(open("config.json"))
     __connect_to_database(config["database"]["server"])
-    add_first_clients()
     set_up_database_jobs(config["database"]["cleanup"]["timing_in_seconds"])
     run_server()
