@@ -47,7 +47,7 @@ def get_connection_to_database(parser:argparse.ArgumentParser, arguments:Dict[st
     
 
 def try_to_add_key(connection_source:Engine, arguments:Dict[str,Any])->None:
-    new_key = add_admin(connection_source, name=arguments["admin-name"])
+    new_key = add_admin(name=arguments["admin-name"], connection_source=connection_source)
     if new_key != "": 
         print(f"\nNew key for admin '{arguments['admin-name']}':\n\n{new_key}\n")
     else: 

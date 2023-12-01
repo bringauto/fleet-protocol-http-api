@@ -1,7 +1,7 @@
 {
     "database": {
         "server": {
-            "host": "localhost",
+            "host": "database",
             "port": 5432,
             "dialect": "postgresql",
             "api": "psycopg",

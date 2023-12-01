@@ -35,7 +35,7 @@ from database.security import add_admin, number_of_admins
 def add_first_clients()->List[str]:
     clients:List[str] = list()
     if number_of_admins() == 0:
-        clients.append(add_admin(get_connection_source(), name="admin_01"))
+        clients.append(add_admin("admin_01", get_connection_source()))
     return clients
 
 
