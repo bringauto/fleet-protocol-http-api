@@ -588,12 +588,6 @@ class Test_Store_Available_Device_Ids_After_Connecting_To_Database_Already_Conta
         self.assertListEqual(available_cars(), ["company_xy_car_abc"])
         
 
-class Test_Posting_Statuses_As_Dictionaries(unittest.TestCase):
-
-    def test_posting_statuses_as_dictionaries(self):
-        clear_device_ids()
-        set_db_connection("sqlite", "pysqlite", "/:memory:")
-
 
 if __name__=="__main__": 
     unittest.main()
