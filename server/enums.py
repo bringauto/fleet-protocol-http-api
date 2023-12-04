@@ -1,13 +1,13 @@
-from aenum import IntEnum
+from aenum import UpperStrEnum
 
 
-class MessageType(IntEnum):
-    STATUS_TYPE = 0
-    COMMAND_TYPE = 1
+class MessageType(UpperStrEnum):
+    STATUS_TYPE = "STATUS"
+    COMMAND_TYPE = "COMMAND"
 
 
-class EncodingType(IntEnum):
-    BASE64 = 0
-    JSON = 1
+class EncodingType(UpperStrEnum):
+    BASE64 = "BASE64"
+    JSON = "JSON"
 
  

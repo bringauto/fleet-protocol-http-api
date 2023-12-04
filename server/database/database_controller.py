@@ -55,8 +55,8 @@ class MessageBase(Base):
     device_role:Mapped[str] = mapped_column(String)
     device_name:Mapped[str] = mapped_column(String)
 
-    message_type:Mapped[int] = mapped_column(Integer, primary_key=True)
-    payload_encoding:Mapped[int] = mapped_column(Integer)
+    message_type:Mapped[str] = mapped_column(String, primary_key=True)
+    payload_encoding:Mapped[str] = mapped_column(String)
     payload_data:Mapped[dict] = mapped_column(JSON)
 
     @classmethod
@@ -120,8 +120,8 @@ class Message_DB:
     device_type:int
     device_role:str
     device_name:str
-    message_type:int
-    payload_encoding:int
+    message_type:str
+    payload_encoding:str
     payload_data:Dict[str,str]
 
 
@@ -137,7 +137,7 @@ from sqlalchemy import func, and_
 def list_messages(
     company_name:str, 
     car_name:str, 
-    message_type:int, 
+    message_type:str, 
     serialized_device_id:str,
     all_available:Optional[str]=None, 
     limit_timestamp:Optional[int]=None

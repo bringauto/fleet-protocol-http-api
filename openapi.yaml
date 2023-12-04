@@ -42,7 +42,7 @@ paths:
               example:
                 ['company_x_basic_car', 'company_x_better_car', "competing_company_even_better_car"]
         '500':
-          description: Cannot display avaialble cars due to internal server error.
+          description: Cannot display available cars due to internal server error.
 
   /{company_name}/{car_name}/available-devices:
     get:
@@ -100,17 +100,17 @@ paths:
                   {
                     "timestamp": 1700139157, 
                     device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                    payload: {payload_type: 0, encoding: 1, data: V2FpdGluZw==}
+                    payload: {payload_type: STATUS, encoding: BASE64, data: V2FpdGluZw==}
                   },
                   {
                     "timestamp": 1700145485, 
                     device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                    payload: {payload_type: 0, encoding: 1, data: U3RpbGwgd29ya2luZw==}
+                    payload: {payload_type: STATUS, encoding: BASE64, data: U3RpbGwgd29ya2luZw==}
                   },
                   {
                     "timestamp": 1700145490, 
                     device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                    payload: {payload_type: 0, encoding: 0, data: {"description": "Still working"}}
+                    payload: {payload_type: STATUS, encoding: JSON, data: {"description": "Still working"}}
                   },
                 ]
         '500':
@@ -150,17 +150,17 @@ paths:
                 {
                   timestamp: 1700139157, 
                   device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                  payload: {payload_type: 0, encoding: 1, data: QnJpbmdBdXRv}
+                  payload: {payload_type: STATUS, encoding: BASE64, data: QnJpbmdBdXRv}
                 },
                 {
                   timestamp: 1700145485, 
                   device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                  payload: {payload_type: 0, encoding: 1, data: U3RhcnQgd29ya2luZw==}
+                  payload: {payload_type: STATUS, encoding: BASE64, data: U3RhcnQgd29ya2luZw==}
                 },
                 {
                   timestamp: 1700145490, 
                   device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                  payload: {payload_type: 0, encoding: 0, data: {"description": "Just keep working"}}
+                  payload: {payload_type: STATUS, encoding: JSON, data: {"description": "Just keep working"}}
                 },
               ]
 
@@ -186,7 +186,7 @@ paths:
                   {
                     "timestamp": 1700139157, 
                     device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                    payload: {payload_type: 1, encoding: 1, data: U2F5IGhlbGxv}
+                    payload: {payload_type: COMMAND, encoding: BASE64, data: U2F5IGhlbGxv}
                   },
                 ]
       
@@ -221,7 +221,7 @@ paths:
                 {
                   timestamp: 1700139157, 
                   device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                  payload: {payload_type: 1, encoding: 1, data: U2F5IGhlbGxv}
+                  payload: {payload_type: COMMAND, encoding: BASE64, data: U2F5IGhlbGxv}
                 },
               ]
 
@@ -380,25 +380,22 @@ components:
       description: Payload of the message, containing message type (status or command), encoding and data.
       properties:
         type: 
-          description: 'Type of the payload, enumerated as follows: <br>
-            0 - STATUS <br>
-            1 - COMMAND'
-          type: integer 
+          description: 'Type of the payload'
+          type: string
+          pattern: '^(STATUS)|(COMMAND)$'
         encoding:
-          description: 'Encoding of the payload, enumerated as follows: <br>
-            0 - JSON <br>
-            1 - BASE64'
-          type: integer
+          description: 'Encoding of the payload'
+          type: string
+          pattern: "^(JSON)|(BASE64)$"
         data:
           description: 'Payload data in JSON or BASE64 format, depending on the encoding.'
           oneOf:
             - type: object
-              
             - type: string
               format: base64
       example:
-        type: 0
-        encoding: 1
+        type: STATUS
+        encoding: BASE64
         data: QnJpbmdBdXRv
 
 

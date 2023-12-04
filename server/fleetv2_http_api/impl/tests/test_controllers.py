@@ -109,7 +109,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
         status = Message(
             timestamp=456, 
             device_id=device_id, 
-            payload=Payload(type=0, encoding=EncodingType.JSON, data={"message":"Device is running"})
+            payload=Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is running"})
         )
         send_statuses(
             company_name="the_company", 
@@ -126,14 +126,14 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
         status_1 = Message(
             timestamp=456, 
             device_id=device_1_id, 
-            payload=Payload(type=0, encoding=EncodingType.JSON, data={"message":"Device is running"})
+            payload=Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is running"})
         )
         device_2_id = DeviceId(module_id=173, type=3, role="available_device", name="Available device")
         sdevice_2_id = serialized_device_id(device_2_id)
         status_2 = Message(
             timestamp=498, 
             device_id=device_2_id, 
-            payload=Payload(type=0, encoding=EncodingType.JSON, data={"message":"Device is running"})
+            payload=Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is running"})
         )
         send_statuses(
             company_name="the_company", 
@@ -162,7 +162,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
         status = Message(
             timestamp=456, 
             device_id=device_id, 
-            payload=Payload(type=0, encoding=EncodingType.JSON, data={"message":"Device is running"})
+            payload=Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is running"})
         )
         
         with self.assertRaises(Unmatched_Device_Ids_In_Argument_And_Message):
@@ -179,7 +179,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
         status = Message(
             timestamp=456, 
             device_id=device_id, 
-            payload=Payload(type=0, encoding=EncodingType.JSON, data={"message":"Device is running"})
+            payload=Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is running"})
         )
         send_statuses(
             company_name="test_company", 
@@ -339,7 +339,7 @@ class Test_Statuses_In_Time(unittest.TestCase):
         self.sdevice_id = "2_5_test_device"
 
     def test_by_default_only_the_NEWEST_STATUS_is_returned_and_if_all_is_specified_all_statuses_are_returned(self):
-        payload = Payload(type=0, encoding=EncodingType.JSON, data={"message":"Device is running"})
+        payload = Payload(type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is running"})
         device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
         
         message_1 = Message(timestamp=10, device_id=device_id, payload = payload)
@@ -521,7 +521,7 @@ class Test_Listing_Commands_And_Statuses_Of_Nonexistent_Cars(unittest.TestCase):
             timestamp=456, 
             device_id=device_id, 
             payload=Payload(
-                type=0, 
+                type=MessageType.STATUS_TYPE, 
                 encoding=EncodingType.JSON, 
                 data={"message":"Device is running"}
             )
