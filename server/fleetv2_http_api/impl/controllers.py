@@ -41,7 +41,7 @@ def available_cars()->List[str]:
     return cars
 
 
-def available_devices(company_name:str, car_name:str, module_id:Optional[int]=None)->Module|List[Module]:  # noqa: E501
+def available_devices(company_name:str, car_name:str, module_id:Optional[int]=None)->Tuple[Module|List[Module], int]:  # noqa: E501
     """Return a list of serialized device ids for devices available in a given car.
     If a module_id is not specified, return all available devices in a given car.
     """
@@ -54,12 +54,12 @@ def available_devices(company_name:str, car_name:str, module_id:Optional[int]=No
     
     if module_id is None: 
         car_modules = device_dict[company_name][car_name]
-        return [__available_module(company_name, car_name, id) for id in car_modules] # type: ignore
+        return [__available_module(company_name, car_name, id) for id in car_modules], 200
     else: 
         if module_id not in device_dict[company_name][car_name]: 
             return [], 404 # type: ignore
         else:
-            return __available_module(company_name, car_name, module_id) # type: ignore
+            return __available_module(company_name, car_name, module_id), 200
 
 
 def list_commands(
@@ -138,22 +138,20 @@ def send_commands(
     If for any command the device_id does not correspond to the sdevice_id, exception is raised.
     """
 
-    device_dict = device_ids()
     if messages is None: messages = []
     messages.extend([Message.from_dict(b) for b in body])
     if len(messages) == 0: return "", 200
-
     errors = __check_messages(MessageType.COMMAND_TYPE, sdevice_id, *messages)
-    if errors.strip() != "": return errors, 500
+    if errors[0] != "": return errors
  
-    if company_name not in device_dict:
-        return f"No car is available under a company '{company_name}'.", 404 # type: ignore
-    elif car_name not in device_dict[company_name]:
-        return f"Car named '{car_name}' is not available under a company '{company_name}'.", 404
-    elif messages[-1].device_id.module_id not in device_dict[company_name][car_name]:
-        return \
-            f"No module with id '{messages[-1].device_id.module_id}' is available in car " \
-            f"'{car_name}' under the company '{company_name}'", 404
+    device_availablility_msg, code = __check_device_availability(
+        company_name, 
+        car_name, 
+        messages[0].device_id.module_id, 
+        sdevice_id,
+    )
+    if code==404: 
+        return device_availablility_msg, code
     else:
         commands_to_db = [
             Message_DB(
@@ -169,9 +167,27 @@ def send_commands(
             ) 
             for message in messages
         ]
-        msg = send_messages_to_database(company_name, car_name, *commands_to_db)
-        return msg
+        return send_messages_to_database(company_name, car_name, *commands_to_db)
     
+
+def __check_device_availability(company_name:str, car_name:str, module_id:int, sdevice_id:str)->Tuple[str, int]:
+    device_dict = device_ids()
+    if company_name not in device_dict:
+        return f"No car is available under a company '{company_name}'.", 404 # type: ignore
+    elif car_name not in device_dict[company_name]:
+        return f"Car named '{car_name}' is not available under a company '{company_name}'.", 404
+    
+    elif module_id not in device_dict[company_name][car_name]:
+        return \
+            f"No module with id '{module_id}' is available in car " \
+            f"'{car_name}' under the company '{company_name}'", 404
+    elif sdevice_id not in device_dict[company_name][car_name][module_id]:
+        return \
+            f"No device with id '{sdevice_id}' is available in module " \
+            f"'{module_id}' in car '{car_name}' under the company '{company_name}'", 404
+    else: 
+        return "", 200
+
 
 def send_statuses(
     company_name:str, 
@@ -190,7 +206,7 @@ def send_statuses(
     if messages == []: return "", 200
 
     errors = __check_messages(MessageType.STATUS_TYPE, sdevice_id, *messages)
-    if errors.strip() != "": return errors, 500
+    if errors[0] != "": return errors
 
     statuses_to_db = [
         Message_DB(
@@ -239,13 +255,17 @@ def __check_messages(
     expected_message_type:str,
     sdevice_id:str,
     *messages:Message
-    )->str:
+    )->Tuple[str, int]:
 
     errors:str = ""
     errors = __check_message_types(expected_message_type, *messages)
     if errors.strip() == "": 
         errors = __check_equal_device_id_in_path_and_messages(sdevice_id, *messages)
-    return errors
+
+    if not errors.strip()=="": 
+        return errors, 500
+    else:
+        return "", 200
 
 def __check_message_types(expected_message_type:str, *messages:Message)->str:
     """Check that type of every message matches the method (send command or send status)."""

@@ -81,7 +81,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
         send_statuses("test_company", "test_car", sdevice_id, messages=[self.status_example])
 
         self.assertEqual(
-            available_devices("test_company", "test_car"), 
+            available_devices("test_company", "test_car")[0], 
             [
                 Module(module_id=42, device_list=[self.device_id]),
             ]
@@ -145,11 +145,11 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
             messages=[status_2]
         )
         self.assertEqual(
-            available_devices("the_company", "available_car", module_id=18), 
+            available_devices("the_company", "available_car", module_id=18)[0], 
             Module(module_id=18, device_list=[device_1_id])
         )
         self.assertEqual(
-            available_devices("the_company", "available_car", module_id=173), 
+            available_devices("the_company", "available_car", module_id=173)[0], 
             Module(module_id=173, device_list=[device_2_id])
         )
 
@@ -466,7 +466,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         send_statuses(*self.args, [status])
 
         self.assertEqual(
-            available_devices(self.COMPANY_1_NAME, self.CAR_A_NAME), 
+            available_devices(self.COMPANY_1_NAME, self.CAR_A_NAME)[0], 
             [Module(module_id=42, device_list=[self.device_id])]
         )
         self.assertEqual(available_cars(),[f"{self.COMPANY_1_NAME}_{self.CAR_A_NAME}"])
