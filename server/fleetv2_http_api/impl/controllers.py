@@ -140,17 +140,17 @@ def send_commands(
 
     device_dict = device_ids()
     messages.extend([Message.from_dict(b) for b in body])
-    __check_messages(MessageType.COMMAND_TYPE, sdevice_id, *messages)
+    errors = __check_messages(MessageType.COMMAND_TYPE, sdevice_id, *messages)
+    if errors.strip() != "": return errors, 500
  
     if company_name not in device_dict:
-        return [], 404 # type: ignore
-    
+        return f"No car is available under a company '{company_name}'.", 404 # type: ignore
     elif car_name not in device_dict[company_name]:
-        return "", 404
-    
+        return f"Car named '{car_name}' is not available under a company '{company_name}'.", 404
     elif messages[-1].device_id.module_id not in device_dict[company_name][car_name]:
-        return "", 404
-
+        return \
+            f"No module with id '{messages[-1].device_id.module_id}' is available in car " \
+            f"'{car_name}' under the company '{company_name}'", 404
     else:
         commands_to_db = [
             Message_DB(
@@ -167,7 +167,7 @@ def send_commands(
             for message in messages
         ]
         send_messages_to_database(company_name, car_name, *commands_to_db)
-        return "", 200
+        return f"{len(messages)} commands have been posted.", 200
 
 
 def send_statuses(
@@ -180,15 +180,12 @@ def send_statuses(
 
     """Send a list of statuses to given device. 
     The device specified in the statuses is then automatically considered available.
-
-    The body of the request should contain a list of statuses, each in the form of a dictionary.
-
-    If for any status the device_id does not correspond to the sdevice_id, exception is raised.
     """
 
     messages.extend([Message.from_dict(b) for b in body])
     if messages == []: return "", 200
-    __check_messages(MessageType.STATUS_TYPE, sdevice_id, *messages)
+    errors = __check_messages(MessageType.STATUS_TYPE, sdevice_id, *messages)
+    if errors.strip() != "": return errors, 500
 
     statuses_to_db = [
         Message_DB(
@@ -211,19 +208,18 @@ def send_statuses(
         car_name = car_name,
         device_id = messages[-1].device_id
     )
+    command_removal_warnings = ""
     if first_status_was_sent: 
-        return __handle_first_status_and_return_warnings(
+        command_removal_warnings = "\n".join(__handle_first_status_and_return_warnings(
             timestamp = messages[-1].timestamp, 
             company_name = company_name, 
             car_name = car_name, 
             serialized_device_id=sdevice_id
-        ), 200
+        ))
 
-    return "", 200
-
-
-class SendingCommandAsStatus(Exception): pass
-class SendingStatusAsCommand(Exception): pass
+    if command_removal_warnings.strip() != "":
+        return f"{len(messages)} statuses have been posted." + "\n\n" + command_removal_warnings, 200
+    return f"{len(messages)} statuses have been posted.", 200
 
 
 def _serialized_car_info(company_name:str, car_name:str)->str:
@@ -234,36 +230,36 @@ def __check_messages(
     expected_message_type:str,
     sdevice_id:str,
     *messages:Message
-    )->None:
+    )->str:
 
-    __check_message_types(expected_message_type, *messages)
-    __check_equal_device_id_in_path_and_messages(sdevice_id, *messages)
+    errors:str = ""
+    errors = __check_message_types(expected_message_type, *messages)
+    if errors.strip() == "": 
+        errors = __check_equal_device_id_in_path_and_messages(sdevice_id, *messages)
+    return errors
 
-def __check_message_types(expected_message_type:str, *messages:Message)->None:
+def __check_message_types(expected_message_type:str, *messages:Message)->str:
     """Check that type of every message matches the method (send command or send status)."""
     for message in messages:
-        if message.payload.type != expected_message_type:
+        if message.payload.message_type != expected_message_type:
             if expected_message_type == MessageType.COMMAND_TYPE:
-                raise SendingStatusAsCommand(
-                    f"Cannot send a status as a command: {message}"
-                )
+                return f"Cannot send a status as a command: {message}"
             else:
-                raise SendingCommandAsStatus(
-                    f"Cannot send a command as a status: {message}"
-                )
-
+                return f"Cannot send a command as a status: {message}"
+    return ""
+            
 def __check_equal_device_id_in_path_and_messages(
     sdevice_id:str,
     *messages:Message  
-    )->None:
+    )->str:
 
     for message in messages:
         sdevice_id_from_message = serialized_device_id(message.device_id)
         if sdevice_id_from_message != sdevice_id:
-            raise Unmatched_Device_Ids_In_Argument_And_Message(
-                f"The device Id in path (.../{sdevice_id}) is not equal "
+            return \
+                f"The device Id in path (.../{sdevice_id}) is not equal " \
                 f"to a device Id from the message ({sdevice_id_from_message})"
-            )
+    return ""
 
 
 def __available_module(company_name:str, car_name:str, module_id:int)->Module:
@@ -294,11 +290,9 @@ def __message_from_db(message_db:Message_DB)->Message:
             message_db.device_role
         ),
         payload=Payload(
-            type=message_db.message_type, 
+            message_type=message_db.message_type, 
             encoding=message_db.payload_encoding,
             data=message_db.payload_data
         )
     )
 
-
-class Unmatched_Device_Ids_In_Argument_And_Message(Exception): pass

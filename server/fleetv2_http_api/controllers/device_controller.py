@@ -12,9 +12,9 @@ def list_commands(company_name, car_name, sdevice_id, all_available=None, since=
 
     Returns list of the Device Commands. # noqa: E501
 
-    :param company_name: Name of the company, following a pattern &#39;^[0-9a-z_]+$&#39;.
+    :param company_name: Name of the company, following a pattern ^[0-9a-z_]+$.
     :type company_name: str
-    :param car_name: Name of the Car, following a pattern &#39;^[0-9a-z_]+$&#39;.
+    :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
     :type car_name: str
     :param sdevice_id: The Id of the Device, described with an object.
     :type sdevice_id: str
@@ -33,9 +33,9 @@ def list_statuses(company_name, car_name, sdevice_id, all_available=None, since=
 
     It returns list of the Device Statuses. # noqa: E501
 
-    :param company_name: Name of the company, following a pattern &#39;^[0-9a-z_]+$&#39;.
+    :param company_name: Name of the company, following a pattern ^[0-9a-z_]+$.
     :type company_name: str
-    :param car_name: Name of the Car, following a pattern &#39;^[0-9a-z_]+$&#39;.
+    :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
     :type car_name: str
     :param sdevice_id: The Id of the Device, described with an object.
     :type sdevice_id: str
@@ -54,9 +54,9 @@ def send_commands(company_name, car_name, sdevice_id, message=None):  # noqa: E5
 
     It adds new device Commands. # noqa: E501
 
-    :param company_name: Name of the company, following a pattern &#39;^[0-9a-z_]+$&#39;.
+    :param company_name: Name of the company, following a pattern ^[0-9a-z_]+$.
     :type company_name: str
-    :param car_name: Name of the Car, following a pattern &#39;^[0-9a-z_]+$&#39;.
+    :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
     :type car_name: str
     :param sdevice_id: The Id of the Device, described with an object.
     :type sdevice_id: str
@@ -75,9 +75,9 @@ def send_statuses(company_name, car_name, sdevice_id, message=None):  # noqa: E5
 
     Add statuses received from the Device. # noqa: E501
 
-    :param company_name: Name of the company, following a pattern &#39;^[0-9a-z_]+$&#39;.
+    :param company_name: Name of the company, following a pattern ^[0-9a-z_]+$.
     :type company_name: str
-    :param car_name: Name of the Car, following a pattern &#39;^[0-9a-z_]+$&#39;.
+    :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
     :type car_name: str
     :param sdevice_id: The Id of the Device, described with an object.
     :type sdevice_id: str

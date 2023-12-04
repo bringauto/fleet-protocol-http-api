@@ -16,29 +16,29 @@ class Payload(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, type=None, encoding=None, data=None):  # noqa: E501
+    def __init__(self, message_type=None, encoding=None, data=None):  # noqa: E501
         """Payload - a model defined in OpenAPI
 
-        :param type: The type of this Payload.  # noqa: E501
-        :type type: str
+        :param message_type: The message_type of this Payload.  # noqa: E501
+        :type message_type: str
         :param encoding: The encoding of this Payload.  # noqa: E501
         :type encoding: str
         :param data: The data of this Payload.  # noqa: E501
         :type data: PayloadData
         """
         self.openapi_types = {
-            'type': str,
+            'message_type': str,
             'encoding': str,
             'data': PayloadData
         }
 
         self.attribute_map = {
-            'type': 'type',
+            'message_type': 'message_type',
             'encoding': 'encoding',
             'data': 'data'
         }
 
-        self._type = type
+        self._message_type = message_type
         self._encoding = encoding
         self._data = data
 
@@ -54,29 +54,29 @@ class Payload(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def type(self) -> str:
-        """Gets the type of this Payload.
+    def message_type(self) -> str:
+        """Gets the message_type of this Payload.
 
         Type of the payload  # noqa: E501
 
-        :return: The type of this Payload.
+        :return: The message_type of this Payload.
         :rtype: str
         """
-        return self._type
+        return self._message_type
 
-    @type.setter
-    def type(self, type: str):
-        """Sets the type of this Payload.
+    @message_type.setter
+    def message_type(self, message_type: str):
+        """Sets the message_type of this Payload.
 
         Type of the payload  # noqa: E501
 
-        :param type: The type of this Payload.
-        :type type: str
+        :param message_type: The message_type of this Payload.
+        :type message_type: str
         """
-        if type is not None and not re.search(r'^(STATUS)|(COMMAND)$', type):  # noqa: E501
-            raise ValueError("Invalid value for `type`, must be a follow pattern or equal to `/^(STATUS)|(COMMAND)$/`")  # noqa: E501
+        if message_type is not None and not re.search(r'^(STATUS)|(COMMAND)$', message_type):  # noqa: E501
+            raise ValueError("Invalid value for `message_type`, must be a follow pattern or equal to `/^(STATUS)|(COMMAND)$/`")  # noqa: E501
 
-        self._type = type
+        self._message_type = message_type
 
     @property
     def encoding(self) -> str:

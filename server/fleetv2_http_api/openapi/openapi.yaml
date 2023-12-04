@@ -44,7 +44,7 @@ paths:
         If a module Id is specified, only a single such object is returned. <br> Otherwise, a list of such objects is returned, one for each module contained in the car. <br>
       operationId: available_devices
       parameters:
-      - description: "Name of the company, following a pattern '^[0-9a-z_]+$'."
+      - description: "Name of the company, following a pattern ^[0-9a-z_]+$."
         example: test_company
         explode: false
         in: path
@@ -54,7 +54,7 @@ paths:
           pattern: "^[0-9a-z_]+$"
           type: string
         style: simple
-      - description: "Name of the Car, following a pattern '^[0-9a-z_]+$'."
+      - description: "Name of the Car, following a pattern ^[0-9a-z_]+$."
         example: test_car
         explode: false
         in: path
@@ -96,7 +96,7 @@ paths:
       description: Returns list of the Device Commands.
       operationId: list_commands
       parameters:
-      - description: "Name of the company, following a pattern '^[0-9a-z_]+$'."
+      - description: "Name of the company, following a pattern ^[0-9a-z_]+$."
         example: test_company
         explode: false
         in: path
@@ -106,7 +106,7 @@ paths:
           pattern: "^[0-9a-z_]+$"
           type: string
         style: simple
-      - description: "Name of the Car, following a pattern '^[0-9a-z_]+$'."
+      - description: "Name of the Car, following a pattern ^[0-9a-z_]+$."
         example: test_car
         explode: false
         in: path
@@ -160,7 +160,7 @@ paths:
                   role: test_device
                   name: Test Device
                 payload:
-                  payload_type: COMMAND
+                  message_type: COMMAND
                   encoding: BASE64
                   data: U2F5IGhlbGxv
               schema:
@@ -168,6 +168,9 @@ paths:
                   $ref: '#/components/schemas/Message'
                 type: array
           description: A list of commands.
+        "404":
+          description: "The commands cannot be displayed. Either company, car or device\
+            \ specified in the request does not exist."
         "500":
           description: The commands cannot be displayed due to internal server error.
       tags:
@@ -177,7 +180,7 @@ paths:
       description: It adds new device Commands.
       operationId: send_commands
       parameters:
-      - description: "Name of the company, following a pattern '^[0-9a-z_]+$'."
+      - description: "Name of the company, following a pattern ^[0-9a-z_]+$."
         example: test_company
         explode: false
         in: path
@@ -187,7 +190,7 @@ paths:
           pattern: "^[0-9a-z_]+$"
           type: string
         style: simple
-      - description: "Name of the Car, following a pattern '^[0-9a-z_]+$'."
+      - description: "Name of the Car, following a pattern ^[0-9a-z_]+$."
         example: test_car
         explode: false
         in: path
@@ -218,7 +221,7 @@ paths:
                 role: test_device
                 name: Test Device
               payload:
-                payload_type: COMMAND
+                message_type: COMMAND
                 encoding: BASE64
                 data: U2F5IGhlbGxv
             schema:
@@ -229,6 +232,9 @@ paths:
       responses:
         "200":
           description: The commands have been sent.
+        "404":
+          description: "The commands have not been sent. Either company, car or device\
+            \ specified in the request does not exist.'"
         "500":
           description: The commands have not been sent due to internal server error.
       tags:
@@ -239,7 +245,7 @@ paths:
       description: It returns list of the Device Statuses.
       operationId: list_statuses
       parameters:
-      - description: "Name of the company, following a pattern '^[0-9a-z_]+$'."
+      - description: "Name of the company, following a pattern ^[0-9a-z_]+$."
         example: test_company
         explode: false
         in: path
@@ -249,7 +255,7 @@ paths:
           pattern: "^[0-9a-z_]+$"
           type: string
         style: simple
-      - description: "Name of the Car, following a pattern '^[0-9a-z_]+$'."
+      - description: "Name of the Car, following a pattern ^[0-9a-z_]+$."
         example: test_car
         explode: false
         in: path
@@ -303,7 +309,7 @@ paths:
                   role: test_device
                   name: Test Device
                 payload:
-                  payload_type: STATUS
+                  message_type: STATUS
                   encoding: BASE64
                   data: V2FpdGluZw==
               - timestamp: 1700145485
@@ -313,7 +319,7 @@ paths:
                   role: test_device
                   name: Test Device
                 payload:
-                  payload_type: STATUS
+                  message_type: STATUS
                   encoding: BASE64
                   data: U3RpbGwgd29ya2luZw==
               - timestamp: 1700145490
@@ -323,7 +329,7 @@ paths:
                   role: test_device
                   name: Test Device
                 payload:
-                  payload_type: STATUS
+                  message_type: STATUS
                   encoding: JSON
                   data:
                     description: Still working
@@ -332,6 +338,9 @@ paths:
                   $ref: '#/components/schemas/Message'
                 type: array
           description: A list of device statuses.
+        "404":
+          description: "The statuses cannot be displayed. Either company, car or device\
+            \ specified in the request does not exist."
         "500":
           description: The statuses cannot be displayed due to internal server error.
       tags:
@@ -341,7 +350,7 @@ paths:
       description: Add statuses received from the Device.
       operationId: send_statuses
       parameters:
-      - description: "Name of the company, following a pattern '^[0-9a-z_]+$'."
+      - description: "Name of the company, following a pattern ^[0-9a-z_]+$."
         example: test_company
         explode: false
         in: path
@@ -351,7 +360,7 @@ paths:
           pattern: "^[0-9a-z_]+$"
           type: string
         style: simple
-      - description: "Name of the Car, following a pattern '^[0-9a-z_]+$'."
+      - description: "Name of the Car, following a pattern ^[0-9a-z_]+$."
         example: test_car
         explode: false
         in: path
@@ -382,30 +391,9 @@ paths:
                 role: test_device
                 name: Test Device
               payload:
-                payload_type: STATUS
+                message_type: STATUS
                 encoding: BASE64
                 data: QnJpbmdBdXRv
-            - timestamp: 1700145485
-              device_id:
-                module_id: 47
-                type: 2
-                role: test_device
-                name: Test Device
-              payload:
-                payload_type: STATUS
-                encoding: BASE64
-                data: U3RhcnQgd29ya2luZw==
-            - timestamp: 1700145490
-              device_id:
-                module_id: 47
-                type: 2
-                role: test_device
-                name: Test Device
-              payload:
-                payload_type: STATUS
-                encoding: JSON
-                data:
-                  description: Just keep working
             schema:
               items:
                 $ref: '#/components/schemas/Message'
@@ -414,6 +402,9 @@ paths:
       responses:
         "200":
           description: The statuses have been sent.
+        "404":
+          description: "The statuses could not been sent. Either company, car or device\
+            \ specified in the request does not exist."
         "500":
           description: The statuses could not been sent due to internal server error.
       tags:
@@ -483,7 +474,7 @@ components:
         type: string
       style: simple
     CarName:
-      description: "Name of the Car, following a pattern '^[0-9a-z_]+$'."
+      description: "Name of the Car, following a pattern ^[0-9a-z_]+$."
       example: test_car
       explode: false
       in: path
@@ -494,7 +485,7 @@ components:
         type: string
       style: simple
     CompanyName:
-      description: "Name of the company, following a pattern '^[0-9a-z_]+$'."
+      description: "Name of the company, following a pattern ^[0-9a-z_]+$."
       example: test_company
       explode: false
       in: path
@@ -514,7 +505,7 @@ components:
           role: test_device
           name: Test Device
         payload:
-          type: STATUS
+          message_type: STATUS
           encoding: BASE64
           data: QnJpbmdBdXRv
         timestamp: 1699262836
@@ -574,7 +565,7 @@ components:
           type: integer
         role:
           description: "String description of the device role. It follows pattern\
-            \ '^[a-z0-9_]+$'."
+            \ ^[a-z0-9_]+$."
           format: utf-8
           pattern: "^[a-z0-9_]+$"
           type: string
@@ -588,11 +579,11 @@ components:
       description: "Payload of the message, containing message type (status or command),\
         \ encoding and data."
       example:
-        type: STATUS
+        message_type: STATUS
         encoding: BASE64
         data: QnJpbmdBdXRv
       properties:
-        type:
+        message_type:
           description: Type of the payload
           pattern: ^(STATUS)|(COMMAND)$
           type: string

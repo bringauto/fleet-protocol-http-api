@@ -110,7 +110,7 @@ class DeviceId(Model):
     def role(self) -> str:
         """Gets the role of this DeviceId.
 
-        String description of the device role. It follows pattern '^[a-z0-9_]+$'.  # noqa: E501
+        String description of the device role. It follows pattern ^[a-z0-9_]+$.  # noqa: E501
 
         :return: The role of this DeviceId.
         :rtype: str
@@ -121,7 +121,7 @@ class DeviceId(Model):
     def role(self, role: str):
         """Sets the role of this DeviceId.
 
-        String description of the device role. It follows pattern '^[a-z0-9_]+$'.  # noqa: E501
+        String description of the device role. It follows pattern ^[a-z0-9_]+$.  # noqa: E501
 
         :param role: The role of this DeviceId.
         :type role: str
