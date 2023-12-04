@@ -12,32 +12,7 @@ tags:
 - name: device
 - name: module
 paths:
-  /cars:
-    get:
-      description: "Return list of available cars for all companies registered in\
-        \ the database.<br> Each item list has the format: '&lt;company name&gt;_&lt;car\
-        \ name&gt;'."
-      operationId: available_cars
-      responses:
-        "200":
-          content:
-            application/json:
-              example:
-              - company_x_basic_car
-              - company_x_better_car
-              - competing_company_even_better_car
-              schema:
-                items:
-                  pattern: "^[a-z0-9_]+$"
-                  type: string
-                type: array
-          description: A list of available cars.
-        "500":
-          description: Cannot display available cars due to internal server error.
-      tags:
-      - car
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
-  /{company_name}/{car_name}/available-devices:
+  /available-devices/{company_name}/{car_name}:
     get:
       description: |-
         Return device Ids for all devices available for contained in the specified car.<br> For a single car module, the device Ids are returned as an object containing module Id and the list of device Ids. <br>
@@ -91,7 +66,32 @@ paths:
       tags:
       - module
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
-  /{company_name}/{car_name}/command/{sdevice_id}:
+  /cars:
+    get:
+      description: "Return list of available cars for all companies registered in\
+        \ the database.<br> Each item list has the format: '&lt;company name&gt;_&lt;car\
+        \ name&gt;'."
+      operationId: available_cars
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+              - company_x_basic_car
+              - company_x_better_car
+              - competing_company_even_better_car
+              schema:
+                items:
+                  pattern: "^[a-z0-9_]+$"
+                  type: string
+                type: array
+          description: A list of available cars.
+        "500":
+          description: Cannot display available cars due to internal server error.
+      tags:
+      - car
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+  /command/{company_name}/{car_name}/{sdevice_id}:
     get:
       description: Returns list of the Device Commands.
       operationId: list_commands
@@ -240,7 +240,7 @@ paths:
       tags:
       - device
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
-  /{company_name}/{car_name}/status/{sdevice_id}:
+  /status/{company_name}/{car_name}/{sdevice_id}:
     get:
       description: It returns list of the Device Statuses.
       operationId: list_statuses
