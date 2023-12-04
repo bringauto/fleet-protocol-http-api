@@ -152,7 +152,7 @@ paths:
             example:
               [
                 {
-                  timestamp: 1700139157, 
+                  timestamp: 33237563440, 
                   device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
                   payload: {message_type: STATUS, encoding: BASE64, data: QnJpbmdBdXRv}
                 },
@@ -214,7 +214,7 @@ paths:
             example:
               [
                 {
-                  timestamp: 1700139157, 
+                  timestamp: 33237563445, 
                   device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
                   payload: {message_type: COMMAND, encoding: BASE64, data: U2F5IGhlbGxv}
                 },

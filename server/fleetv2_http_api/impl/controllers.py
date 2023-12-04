@@ -126,7 +126,7 @@ def send_commands(
     company_name:str, 
     car_name:str, 
     sdevice_id:str, 
-    messages:List[Message] = [],
+    messages:Optional[List[Message]] = None,
     body:List[Dict] = []
     )->Tuple[str, int]:  # noqa: E501
 
@@ -139,7 +139,10 @@ def send_commands(
     """
 
     device_dict = device_ids()
+    if messages is None: messages = []
     messages.extend([Message.from_dict(b) for b in body])
+    if len(messages) == 0: return "", 200
+
     errors = __check_messages(MessageType.COMMAND_TYPE, sdevice_id, *messages)
     if errors.strip() != "": return errors, 500
  
@@ -166,15 +169,15 @@ def send_commands(
             ) 
             for message in messages
         ]
-        send_messages_to_database(company_name, car_name, *commands_to_db)
-        return f"{len(messages)} commands have been posted.", 200
-
+        msg = send_messages_to_database(company_name, car_name, *commands_to_db)
+        return msg
+    
 
 def send_statuses(
     company_name:str, 
     car_name:str, 
     sdevice_id:str, 
-    messages:List[Message] = [],
+    messages:Optional[List[Message]] = None,
     body:List[Dict] = []
     )->Tuple[str|List[str],int]:  # noqa: E501
 
@@ -182,8 +185,10 @@ def send_statuses(
     The device specified in the statuses is then automatically considered available.
     """
 
+    if messages is None: messages = []
     messages.extend([Message.from_dict(b) for b in body])
     if messages == []: return "", 200
+
     errors = __check_messages(MessageType.STATUS_TYPE, sdevice_id, *messages)
     if errors.strip() != "": return errors, 500
 
@@ -202,13 +207,16 @@ def send_statuses(
         for message in messages
     ]
 
-    send_messages_to_database(company_name, car_name, *statuses_to_db)
+    msg = send_messages_to_database(company_name, car_name, *statuses_to_db)
+    
     first_status_was_sent = store_device_id_if_new(
         company_name = company_name,
         car_name = car_name,
         device_id = messages[-1].device_id
     )
+
     command_removal_warnings = ""
+
     if first_status_was_sent: 
         command_removal_warnings = "\n".join(__handle_first_status_and_return_warnings(
             timestamp = messages[-1].timestamp, 
@@ -217,9 +225,10 @@ def send_statuses(
             serialized_device_id=sdevice_id
         ))
 
-    if command_removal_warnings.strip() != "":
-        return f"{len(messages)} statuses have been posted." + "\n\n" + command_removal_warnings, 200
-    return f"{len(messages)} statuses have been posted.", 200
+    if command_removal_warnings.strip() == "":
+        return msg
+    else:
+        return msg[0] + "\n\n" + command_removal_warnings, msg[1]
 
 
 def _serialized_car_info(company_name:str, car_name:str)->str:

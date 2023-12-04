@@ -11,8 +11,8 @@
         },
         "cleanup": {
             "timing_in_seconds": {
-                "retention_period": 5,
-                "cleanup_period": 1
+                "retention_period": 120,
+                "cleanup_period": 60
                 
             }
         }
