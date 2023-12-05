@@ -14,7 +14,7 @@ These files are included in the `server/.openapi-generator-ignore`. This file al
 Python 3.5.2+
 
 ## Server re-generation
-You must have the OpenAPI Generator installed (see [link](https://openapi-generator.tech/docs/installation/)).
+You must have the OpenAPI Generator installed (see [link](https://openapi-generator.tech/docs/installation/)). Before the server generation, the server must be STOPPED.
 
 To regenerate the server run (in the `server` directory):
 ```bash
@@ -61,7 +61,7 @@ To add generate new api_key (passed as a query parameter "api_key") run the foll
 python scripts/new_admin.py -usr '<db-username>' -pwd '<db-password>' '<new-admin-name>' 
 ```
 
-Working example for test database build from docker compose (username and password can be found in the config.json):
+Working example for test database build from docker compose (username and password can be found in the `config.json`).
 ```bash 
 python scripts/new_admin.py -usr 'postgres' -pwd '1234' 'Bob' 
 ```
@@ -71,6 +71,10 @@ New key for admin 'Bob':
 
 MzLwgWGitBSDTNLjqktSnzNZQAjKaC
 ```
+
+### Configuration
+The server settings can be found in the `config.json`, including the database logging information and parameters for the database cleanup.
+
 
 
 
