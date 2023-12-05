@@ -33,6 +33,7 @@ from fleetv2_http_api.impl.controllers import (
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Payload, Message
 from fleetv2_http_api.models.module import Module
+from fleetv2_http_api.models.car import Car
 
 
 class Test_Device_Id_Validity(unittest.TestCase):
@@ -97,7 +98,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
             messages=[self.status_example]
         )
         self.assertEqual(code, 200)
-        self.assertListEqual(available_cars(), ["test_company_test_car"])
+        self.assertListEqual(available_cars(), [Car("test_company","test_car")])
 
     def test_listing_device_for_unavailable_car_returns_empty_list_and_code_404(self):
         device_id = DeviceId(module_id=18, type=3, role="available_device", name="Available device")
@@ -468,7 +469,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
             available_devices(self.COMPANY_1_NAME, self.CAR_A_NAME)[0], 
             [Module(module_id=42, device_list=[self.device_id])]
         )
-        self.assertEqual(available_cars(),[f"{self.COMPANY_1_NAME}_{self.CAR_A_NAME}"])
+        self.assertEqual(available_cars(),[Car(self.COMPANY_1_NAME, self.CAR_A_NAME)])
 
         send_commands(*self.args, [command_1])
         send_commands(*self.args, [command_2])
@@ -584,7 +585,7 @@ class Test_Store_Available_Device_Ids_After_Connecting_To_Database_Already_Conta
             conn.execute(stmt, data_list)
 
         get_available_devices_from_database()
-        self.assertListEqual(available_cars(), ["company_xy_car_abc"])
+        self.assertListEqual(available_cars(), [Car("company_xy", "car_abc")])
         
 
 
