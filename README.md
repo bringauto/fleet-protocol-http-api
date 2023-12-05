@@ -46,16 +46,15 @@ Your OpenAPI definition lives here:
 ```
 http://localhost:8080/openapi.json
 ```
-## Running with Docker
+### Running with Docker
 
-To run the server on a Docker container, execute the following from the root directory:
+To run the server on a Docker container, run:
 
 ```bash
-# build all and start in detached mode
 docker compose up --build -d
 ```
 
-## Adding new admin to the database
+### Adding new admin to the database
 
 To add generate new api_key (passed as a query parameter "api_key") run the following:
 ```bash 
@@ -72,4 +71,6 @@ New key for admin 'Bob':
 
 MzLwgWGitBSDTNLjqktSnzNZQAjKaC
 ```
+
+
 
