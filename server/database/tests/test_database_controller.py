@@ -1,7 +1,4 @@
 import sys
-sys.path.append("server")
-sys.path.append("server/fleetv2_http_api")
-print(sys.path)
 
 from unittest.mock import patch, Mock
 from fleetv2_http_api.models.device_id import DeviceId
