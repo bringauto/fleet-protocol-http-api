@@ -20,7 +20,7 @@ To regenerate the server run (in the `server` directory):
 ```bash
 openapi-generator-cli generate -g python-flask -i ../openapi.yaml -o . -p=packageName=fleetv2_http_api
 ```
-Example with specifiyng port number (the default is `8080`):
+Below is an example of specifiyng port number (the default is `8080`):
 ```bash
 openapi-generator-cli generate -g python-flask -i ../openapi.yaml -o . -p=packageName=fleetv2_http_api,serverPort=<port-number>
 ```
@@ -54,18 +54,18 @@ To run the server on a Docker container, run:
 docker compose up --build -d
 ```
 
-### Adding new admin to the database
+### Adding a new admin to the database
 
-To add generate new api_key (passed as a query parameter "api_key") run the following:
+To generate a new api_key (passed as a query parameter "api_key") run the following:
 ```bash 
 python scripts/new_admin.py -usr '<db-username>' -pwd '<db-password>' '<new-admin-name>' 
 ```
 
-Working example for test database build from docker compose (username and password can be found in the `config.json`).
+Working example for test database built from docker-compose (username and password can be found in the `config.json`).
 ```bash 
 python scripts/new_admin.py -usr 'postgres' -pwd '1234' 'Bob' 
 ```
-After running the script, the api_key is printed to console: 
+After running the script, the api_key is printed to the console: 
 ```bash
 New key for admin 'Bob':
 
