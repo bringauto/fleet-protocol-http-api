@@ -5,6 +5,8 @@ info:
   title: Fleet v2 HTTP API
   version: 0.1.0
   description: Development version of a the API
+  contact: 
+    email: jiri.strouhal@bringauto.com
 
 
 servers:
