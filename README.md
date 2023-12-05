@@ -20,7 +20,7 @@ To regenerate the server run (in the `server` directory):
 ```bash
 openapi-generator-cli generate -g python-flask -i ../openapi.yaml -o . -p=packageName=fleetv2_http_api
 ```
-Below is an example of running generator with the port number being specified (the default is `8080`):
+Below is an example of running the Generator with the port number being specified (the default is `8080`):
 ```bash
 openapi-generator-cli generate -g python-flask -i ../openapi.yaml -o . -p=packageName=fleetv2_http_api,serverPort=<port-number>
 ```
