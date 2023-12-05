@@ -22,7 +22,7 @@ openapi-generator-cli generate -g python-flask -i ../openapi.yaml -o . -p=packag
 ```
 Example with specifiyng port number (the default is `8080`):
 ```bash
-openapi-generator-cli generate -g python-flask -i ../openapi.yaml -o . -p=packageName=fleetv2_http_api, serverPort=<port-number>
+openapi-generator-cli generate -g python-flask -i ../openapi.yaml -o . -p=packageName=fleetv2_http_api,serverPort=<port-number>
 ```
 If you have trouble with running the generator, visit [docs](https://openapi-generator.tech/docs/installation/).
 
