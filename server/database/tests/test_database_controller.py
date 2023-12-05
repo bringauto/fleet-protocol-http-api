@@ -1,5 +1,8 @@
 import sys
 sys.path.append("server")
+sys.path.append("server/fleetv2_http_api")
+print(sys.path)
+
 from unittest.mock import patch, Mock
 from fleetv2_http_api.models.device_id import DeviceId
 from database.device_ids import serialized_device_id
@@ -18,9 +21,10 @@ from database.database_controller import (
     cleanup_device_commands_and_warn_before_future_commands,
     remove_old_messages,
     Message_DB,
-    MessageType,
     MessageBase
 )
+from enums import EncodingType, MessageType
+
 
 
 from fleetv2_http_api.impl.controllers import DeviceId
@@ -39,7 +43,7 @@ class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
             device_role=device_id.role,
             device_name=device_id.name,
             message_type=MessageType.STATUS_TYPE,
-            payload_encoding=1,
+            payload_encoding=EncodingType.JSON,
             payload_data={"content": "..."}
         )
         message_base = MessageBase.from_message(company_name, car_name, message_db)
@@ -51,7 +55,7 @@ class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
         self.assertEqual(message_base.device_role, device_id.role)
         self.assertEqual(message_base.device_name, device_id.name)
         self.assertEqual(message_base.message_type, MessageType.STATUS_TYPE)
-        self.assertEqual(message_base.payload_encoding, 1)
+        self.assertEqual(message_base.payload_encoding, EncodingType.JSON)
         self.assertEqual(message_base.payload_data, {"content": "..."})
 
     def test_creating_message_from_base_object(self):
@@ -64,7 +68,7 @@ class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
             device_role="role1",
             device_name="device1",
             message_type=MessageType.STATUS_TYPE,
-            payload_encoding=1,
+            payload_encoding=EncodingType.JSON,
             payload_data={"content": "..."}
         )
         message_db = MessageBase.to_message(base)
@@ -74,7 +78,7 @@ class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
         self.assertEqual(message_db.device_role, "role1")
         self.assertEqual(message_db.device_name, "device1")
         self.assertEqual(message_db.message_type, MessageType.STATUS_TYPE)
-        self.assertEqual(message_db.payload_encoding, 1)
+        self.assertEqual(message_db.payload_encoding, EncodingType.JSON)
         self.assertEqual(message_db.payload_data, {"content": "..."})
 
 
@@ -105,8 +109,8 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
             device_role=device_id_1.role,
             device_name=device_id_1.name,
 
-            message_type=2,
-            payload_encoding=1,
+            message_type=MessageType.STATUS_TYPE,
+            payload_encoding=EncodingType.BASE64,
             payload_data={"key1": "value1"},
         )
         message2 = Message_DB(
@@ -118,8 +122,8 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
             device_role=device_id_2.role,
             device_name=device_id_2.name,
 
-            message_type=2,
-            payload_encoding=2,
+            message_type=MessageType.STATUS_TYPE,
+            payload_encoding=EncodingType.BASE64,
             payload_data={"key2": "value2"},
         )
         send_messages_to_database("company1", "car1", message1, message2)
@@ -128,7 +132,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         messages = list_messages(
             company_name="company1", 
             car_name="car1",
-            message_type=2,
+            message_type=MessageType.STATUS_TYPE,
             serialized_device_id=sdevice_id_1,
             all_available=""
         )
@@ -148,7 +152,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
                 device_role=device_id.role,
                 device_name=device_id.name,
                 message_type=MessageType.STATUS_TYPE,
-                payload_encoding=1,
+                payload_encoding=EncodingType.JSON,
                 payload_data={"key1": "value1"},
             )
         )  
@@ -160,7 +164,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
                 device_role=device_id.role,
                 device_name=device_id.name,
                 message_type=MessageType.COMMAND_TYPE,
-                payload_encoding=1,
+                payload_encoding=EncodingType.JSON,
                 payload_data={"key1": "value1"},
             )
         )  
@@ -172,7 +176,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
                 device_role=device_id.role,
                 device_name=device_id.name,
                 message_type=MessageType.COMMAND_TYPE,
-                payload_encoding=1,
+                payload_encoding=EncodingType.JSON,
                 payload_data={"key1": "value1"},
             )
         )  
@@ -215,7 +219,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
             device_role=device_id.role,
             device_name=device_id.name,
             message_type=MessageType.STATUS_TYPE,
-            payload_encoding=1,
+            payload_encoding=EncodingType.JSON,
             payload_data={"key1": "value1"},
         )
         message2 = Message_DB(
@@ -227,7 +231,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
             device_role=device_id.role,
             device_name=device_id.name,
             message_type=MessageType.STATUS_TYPE,
-            payload_encoding=2,
+            payload_encoding=EncodingType.BASE64,
             payload_data={"key2": "value2"},
         )
         send_messages_to_database("company1", "car1", message1, message2)
@@ -311,7 +315,7 @@ class Test_Send_And_Read_Message(unittest.TestCase):
             device_role=device_id.role, 
             device_name=device_id.name, 
             message_type=MessageType.STATUS_TYPE, 
-            payload_encoding=1, 
+            payload_encoding=EncodingType.BASE64,
             payload_data={"content": "..."}
         )
         message_2 = Message_DB(
@@ -322,7 +326,7 @@ class Test_Send_And_Read_Message(unittest.TestCase):
             device_role=device_id.role, 
             device_name=device_id.name, 
             message_type=MessageType.STATUS_TYPE, 
-            payload_encoding=1, 
+            payload_encoding=EncodingType.BASE64,
             payload_data={"content": "other content"}
         )
         send_messages_to_database("test_company", "test_car", message_1, message_2)
