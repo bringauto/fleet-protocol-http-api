@@ -26,8 +26,7 @@ paths:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: available_cars
       description: 
-        "Return list of available cars for all companies registered in the database.<br>
-        Each item list has the format: '&lt;company name&gt;_&lt;car name&gt;'."
+        "Return list of available cars for all companies registered in the database."
       tags: 
         - car
 
@@ -39,10 +38,15 @@ paths:
               schema:
                 type: array
                 items:
-                  type: string
-                  pattern: "^[a-z0-9_]+$"
+                  $ref: '#/components/schemas/Car'
+
               example:
-                ['company_x_basic_car', 'company_x_better_car', "competing_company_even_better_car"]
+                - company_name: 'company_x'
+                  car_name: 'basic_car'
+                - company_name: 'company_x'
+                  car_name: 'better_car'
+                - company_name: 'competing_company'
+                  car_name: 'even_better_car'
         '500':
           description: Cannot display available cars due to internal server error.
 
@@ -346,6 +350,21 @@ components:
               {module_id: 47, device_type: 2, device_role: test_device, device_name: Test Device},
               {module_id: 47, device_type: 2, device_role: test_device, device_name: Test Device},
             ]
+
+    Car: 
+      description: A car assigned to a particular company.
+      type: object
+      properties:
+        company_name: 
+          description: Name of the company, following a pattern ^[0-9a-z_]+$
+          type: string
+          pattern: ^[0-9a-z_]+$
+          example: test_company
+        car_name:
+          description: Name of the Car, following a pattern ^[0-9a-z_]+$
+          type: string
+          pattern: ^[0-9a-z_]+$
+          example: test_car
 
     DeviceId: 
       description: Id of the device described with an object.

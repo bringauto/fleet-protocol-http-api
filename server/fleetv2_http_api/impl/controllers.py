@@ -24,6 +24,7 @@ from fleetv2_http_api.models.payload import Payload  # noqa: E501
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Message
 from fleetv2_http_api.models.module import Module
+from fleetv2_http_api.models.car import Car
 from database.database_controller import send_messages_to_database, Message_DB
 from database.database_controller import list_messages as __list_messages
 from database.device_ids import store_device_id_if_new, device_ids, serialized_device_id
@@ -31,13 +32,13 @@ from database.database_controller import cleanup_device_commands_and_warn_before
 from enums import MessageType
 
        
-def available_cars()->List[str]:
+def available_cars()->List[Car]:
     """Return a list of serialized car info for cars owning at least one available device."""
-    cars:List[str] = list()
+    cars:List[Car] = list()
     device_dict = device_ids()
     for company_name in device_dict:
         for car_name in device_dict[company_name]:
-            cars.append(_serialized_car_info(company_name, car_name))
+            cars.append(Car(company_name, car_name))
     return cars
 
 

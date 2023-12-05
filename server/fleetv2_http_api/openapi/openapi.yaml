@@ -1,5 +1,7 @@
 openapi: 3.0.2
 info:
+  contact:
+    email: jiri.strouhal@bringauto.com
   description: Development version of a the API
   title: Fleet v2 HTTP API
   version: 0.1.0
@@ -68,22 +70,23 @@ paths:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
   /cars:
     get:
-      description: "Return list of available cars for all companies registered in\
-        \ the database.<br> Each item list has the format: '&lt;company name&gt;_&lt;car\
-        \ name&gt;'."
+      description: Return list of available cars for all companies registered in the
+        database.
       operationId: available_cars
       responses:
         "200":
           content:
             application/json:
               example:
-              - company_x_basic_car
-              - company_x_better_car
-              - competing_company_even_better_car
+              - company_name: company_x
+                car_name: basic_car
+              - company_name: company_x
+                car_name: better_car
+              - company_name: competing_company
+                car_name: even_better_car
               schema:
                 items:
-                  pattern: "^[a-z0-9_]+$"
-                  type: string
+                  $ref: '#/components/schemas/Car'
                 type: array
           description: A list of available cars.
         "500":
@@ -546,6 +549,26 @@ components:
           title: device_list
           type: array
       title: Module
+      type: object
+    Car:
+      description: A car assigned to a particular company.
+      example:
+        car_name: test_car
+        company_name: test_company
+      properties:
+        company_name:
+          description: "Name of the company, following a pattern ^[0-9a-z_]+$"
+          example: test_company
+          pattern: "^[0-9a-z_]+$"
+          title: company_name
+          type: string
+        car_name:
+          description: "Name of the Car, following a pattern ^[0-9a-z_]+$"
+          example: test_car
+          pattern: "^[0-9a-z_]+$"
+          title: car_name
+          type: string
+      title: Car
       type: object
     DeviceId:
       description: Id of the device described with an object.
