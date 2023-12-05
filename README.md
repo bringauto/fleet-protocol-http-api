@@ -26,18 +26,6 @@ openapi-generator-cli generate -g python-flask -i ../openapi.yaml -o . -p=packag
 ```
 If you have trouble with running the generator, visit [docs](https://openapi-generator.tech/docs/installation/).
 
-## Server re-generation
-You must have the OpenAPI Generator installed (see [link](https://openapi-generator.tech/docs/installation/)).
-
-To regenerate the server run (in the `server` directory):
-```bash
-openapi-generator-cli generate -g python-flask -i ../openapi.yaml -o . -p=packageName=fleetv2_http_api
-```
-Example with specifiyng port number (the default is `8080`):
-```bash
-openapi-generator-cli generate -g python-flask -i ../openapi.yaml -o . -p=packageName=fleetv2_http_api, serverPort=<port-number>
-```
-If you have trouble with running the generator, visit [docs](https://openapi-generator.tech/docs/installation/).
 
 ## Usage
 To run the server execute the following from the root directory:
@@ -60,7 +48,7 @@ http://localhost:8080/openapi.json
 ```
 ## Running with Docker
 
-To run the server on a Docker container (together with the PostgreSQL database), execute the following from the root directory:
+To run the server on a Docker container, execute the following from the root directory:
 
 ```bash
 # build all and start in detached mode
