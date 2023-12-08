@@ -32,12 +32,6 @@ from fleetv2_http_api.__main__ import main as run_server
 from database.security import add_admin_key, number_of_admin_keys
 
 
-def __add_first_admin()->None:
-    """Add an admin key if there are no admin keys yet. Store the newly created default api key in a file."""
-    if number_of_admin_keys()==0:
-        add_admin_key("admin_01", get_connection_source())
-
-
 def __clean_up_messages()->None:
     """Clean up messages from the database."""
     remove_old_messages(current_timestamp=timestamp())
@@ -70,6 +64,5 @@ def __set_up_database_jobs(db_cleanup_config:Dict[str,int])->None:
 if __name__ == '__main__':
     config:Dict[str,Any] = json.load(open("config.json"))
     __connect_to_database(config["database"]["server"])
-    __add_first_admin()
     __set_up_database_jobs(config["database"]["cleanup"]["timing_in_seconds"])
     run_server()
