@@ -11,7 +11,7 @@ from sqlalchemy.engine import Engine
 import json
 
 
-from server.database.security import add_admin
+from server.database.security import add_admin_key
 from server.database.connection import get_db_connection
 
 
@@ -52,7 +52,7 @@ def get_connection_to_database(
     
 
 def try_to_add_key(connection_source:Engine, arguments:Dict[str,Any])->None:
-    new_key = add_admin(name=arguments["<admin-name>"], connection_source=connection_source)
+    new_key = add_admin_key(name=arguments["<admin-name>"], connection_source=connection_source)
     if new_key != "": 
         print(f"\nNew key for admin '{arguments['<admin-name>']}':\n\n{new_key}\n")
     else: 

@@ -38,7 +38,8 @@ class Admin_DB:
 
 from typing import Optional
 from sqlalchemy import select
-def add_admin(name:str, connection_source:Optional[Engine]=None)->str:
+def add_admin_key(name:str, connection_source:Optional[Engine]=None)->str:
+    """Add an admin to the database and return the key."""
     if connection_source is None: connection_source = get_connection_source()
     with Session(connection_source) as session:
         existing_admin = session.query(AdminBase).filter(AdminBase.name==name).first()
@@ -76,7 +77,7 @@ def admin_selection(key:str)->Select:
 
 
 from sqlalchemy import func
-def number_of_admins(connection:Engine|None = None)->int:
+def number_of_admin_keys(connection:Engine|None = None)->int:
     if connection is None: connection = get_connection_source()
     with Session(connection) as session:
         return session.query(func.count(AdminBase.__table__.c.id)).scalar()

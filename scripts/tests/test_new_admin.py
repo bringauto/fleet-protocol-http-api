@@ -9,7 +9,7 @@ sys.path.append("server")
 import subprocess
 import unittest
 from server.database.connection import get_db_connection
-from server.database.security import number_of_admins
+from server.database.security import number_of_admin_keys
 import os
 
 
@@ -37,15 +37,15 @@ class Test_Adding_Admin(unittest.TestCase):
             capture_output=True
         )
         assert(self.connection is not None)
-        self.assertEqual(number_of_admins(self.connection), 1)
+        self.assertEqual(number_of_admin_keys(self.connection), 1)
 
     def test_repeatedly_adding_admin_with_the_name_has_no_effect(self):
         args = ['python3', 'new_admin.py', 'Alice', "sqlite", "pysqlite", DB_FILE_LOCATION]
         assert(self.connection is not None)
         subprocess.run(args, capture_output=True)
-        self.assertEqual(number_of_admins(self.connection), 1)
+        self.assertEqual(number_of_admin_keys(self.connection), 1)
         subprocess.run(args, capture_output=True)
-        self.assertEqual(number_of_admins(self.connection), 1)
+        self.assertEqual(number_of_admin_keys(self.connection), 1)
 
     def test_printing_new_admin_key_to_console(self):
         args = ['python3', 'new_admin.py', 'Bob', "sqlite", "pysqlite", DB_FILE_LOCATION]

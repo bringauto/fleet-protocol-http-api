@@ -21,7 +21,7 @@ sys.path.append("server")
 
 from apscheduler.schedulers.background import BackgroundScheduler
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 
 from database.database_controller import remove_old_messages, set_message_retention_period
@@ -29,14 +29,18 @@ from database.device_ids import clear_device_ids
 from database.connection import set_db_connection, get_connection_source
 from database.time import timestamp
 from fleetv2_http_api.__main__ import main as run_server
-from database.security import add_admin, number_of_admins
+from database.security import add_admin_key, number_of_admin_keys
 
 
-def add_first_clients()->List[str]:
-    clients:List[str] = list()
-    if number_of_admins() == 0:
-        clients.append(add_admin("admin_01", get_connection_source()))
-    return clients
+def __add_first_admin()->None:
+    """Add an admin key if there are no admin keys yet. Store the newly created default api key in a file."""
+    if number_of_admin_keys()==0:
+        add_admin_key("admin_01", get_connection_source())
+
+
+def __clean_up_messages()->None:
+    """Clean up messages from the database."""
+    remove_old_messages(current_timestamp=timestamp())
 
 
 def __connect_to_database(db_server_config:Dict[str,Any])->None:
@@ -51,7 +55,7 @@ def __connect_to_database(db_server_config:Dict[str,Any])->None:
     )
 
 
-def set_up_database_jobs(db_cleanup_config:Dict[str,int])->None:
+def __set_up_database_jobs(db_cleanup_config:Dict[str,int])->None:
     """Set message cleanup job and other customary jobs defined by the example method."""
     scheduler = BackgroundScheduler()
     set_message_retention_period(db_cleanup_config["retention_period"])
@@ -63,14 +67,9 @@ def set_up_database_jobs(db_cleanup_config:Dict[str,int])->None:
     scheduler.start()
 
 
-def __clean_up_messages()->None:
-    """Clean up messages from the database."""
-    remove_old_messages(current_timestamp=timestamp())
-
-
 if __name__ == '__main__':
     config:Dict[str,Any] = json.load(open("config.json"))
     __connect_to_database(config["database"]["server"])
-    add_first_clients()
-    set_up_database_jobs(config["database"]["cleanup"]["timing_in_seconds"])
+    __add_first_admin()
+    __set_up_database_jobs(config["database"]["cleanup"]["timing_in_seconds"])
     run_server()
