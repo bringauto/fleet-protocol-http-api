@@ -3,19 +3,18 @@ version: '3.0'
 services: 
 
   server:
-    image: python:3-alpine
     restart: always
     build: 
       context: .
       dockerfile: Dockerfile
     depends_on:
-      - database
+      - postgresql-database
     ports:
       - 8080:8080
     networks:
       - api-network
 
-  database:
+  postgresql-database:
     image: postgres:16
     restart: always
     environment:
