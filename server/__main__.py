@@ -24,7 +24,7 @@ import json
 from typing import Any, Dict
 
 
-from database.database_controller import remove_old_messages, set_message_retention_period
+from database.database_controller import remove_old_messages, set_message_retention_period, MessageBase
 from database.device_ids import clear_device_ids
 from database.connection import set_db_connection
 from database.time import timestamp
@@ -50,8 +50,8 @@ def __connect_to_database(db_server_config:Dict[str,Any])->None:
 
 def __set_up_database_jobs(db_cleanup_config:Dict[str,int])->None:
     """Set message cleanup job and other customary jobs defined by the example method."""
-    scheduler = BackgroundScheduler()
     set_message_retention_period(db_cleanup_config["retention_period"])
+    scheduler = BackgroundScheduler()
     scheduler.add_job(
         func=__clean_up_messages, 
         trigger="interval", 
