@@ -217,7 +217,7 @@ paths:
         content:
           application/json:
             example:
-            - timestamp: 33237563445
+            - timestamp: 2017917595000
               device_id:
                 module_id: 47
                 type: 2
@@ -387,7 +387,7 @@ paths:
         content:
           application/json:
             example:
-            - timestamp: 33237563440
+            - timestamp: 2017917594000
               device_id:
                 module_id: 47
                 type: 2
