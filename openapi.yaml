@@ -132,6 +132,7 @@ paths:
       - $ref: '#/components/parameters/CompanyName'
       - $ref: '#/components/parameters/CarName'
       - $ref: '#/components/parameters/SerializedDeviceId'
+      - $ref: '#/components/parameters/Wait'
 
 
     post:
@@ -285,6 +286,17 @@ components:
         minimum: 0
         nullable: true
       example: 47
+
+    Wait:
+      name: wait
+      description: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
+      in: query
+      allowEmptyValue: true
+      schema: 
+        type: string
+        nullable: true
+      example: ""
+
 
     SerializedDeviceId:
       name: sdevice_id
