@@ -28,7 +28,7 @@ def list_commands(company_name, car_name, sdevice_id, all_available=None, since=
     return 'do some magic!'
 
 
-def list_statuses(company_name, car_name, sdevice_id, all_available=None, since=None):  # noqa: E501
+def list_statuses(company_name, car_name, sdevice_id, wait=None, all_available=None, since=None):  # noqa: E501
     """list_statuses
 
     It returns list of the Device Statuses. # noqa: E501
@@ -39,6 +39,8 @@ def list_statuses(company_name, car_name, sdevice_id, all_available=None, since=
     :type car_name: str
     :param sdevice_id: The Id of the Device, described with an object.
     :type sdevice_id: str
+    :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
+    :type wait: str
     :param all_available: If set, the method returns a complete history of statuses/commands.
     :type all_available: str
     :param since: A Unix timestamp; if specified, the method returns all device statuses inclusivelly older than value of specified timestamp.
@@ -70,7 +72,7 @@ def send_commands(company_name, car_name, sdevice_id, message=None):  # noqa: E5
     return 'do some magic!'
 
 
-def send_statuses(company_name, car_name, sdevice_id, message=None):  # noqa: E501
+def send_statuses(company_name, car_name, sdevice_id, wait=None, message=None):  # noqa: E501
     """send_statuses
 
     Add statuses received from the Device. # noqa: E501
@@ -81,6 +83,8 @@ def send_statuses(company_name, car_name, sdevice_id, message=None):  # noqa: E5
     :type car_name: str
     :param sdevice_id: The Id of the Device, described with an object.
     :type sdevice_id: str
+    :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
+    :type wait: str
     :param message: Statuses to be send by the device.
     :type message: list | bytes
 

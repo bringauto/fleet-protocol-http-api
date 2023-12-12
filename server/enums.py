@@ -10,4 +10,4 @@ class EncodingType(UpperStrEnum):
     BASE64 = "BASE64"
     JSON = "JSON"
 
- 
+    

@@ -31,6 +31,7 @@ from database.device_ids import store_device_id_if_new, device_ids, serialized_d
 from database.database_controller import cleanup_device_commands_and_warn_before_future_commands
 from enums import MessageType
 
+
        
 def available_cars()->List[Car]:
     """Return a list of serialized car info for cars owning at least one available device."""
@@ -98,7 +99,8 @@ def list_statuses(
     car_name:str, 
     sdevice_id:str, 
     all_available:Optional[str]=None, 
-    since:Optional[int]=None
+    since:Optional[int]=None,
+    wait:Optional[str]=None,
     )->Tuple[List[Message], int]:  # noqa: E501
 
     """Return list containing the NEWEST status currently stored for an AVAILABLE device. 

@@ -279,6 +279,18 @@ paths:
           type: string
         style: simple
       - allowEmptyValue: true
+        description: "An empty parameter. If specified, the method waits for predefined\
+          \ period of time, until some data to be sent in response are available."
+        example: ""
+        explode: true
+        in: query
+        name: wait
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
+      - allowEmptyValue: true
         description: "If set, the method returns a complete history of statuses/commands."
         explode: true
         in: query
@@ -383,6 +395,18 @@ paths:
           pattern: "^[0-9]+_[0-9]+_[a-z0-9_]+$"
           type: string
         style: simple
+      - allowEmptyValue: true
+        description: "An empty parameter. If specified, the method waits for predefined\
+          \ period of time, until some data to be sent in response are available."
+        example: ""
+        explode: true
+        in: query
+        name: wait
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
       requestBody:
         content:
           application/json:
@@ -464,6 +488,19 @@ components:
         minimum: 0
         nullable: true
         type: integer
+      style: form
+    Wait:
+      allowEmptyValue: true
+      description: "An empty parameter. If specified, the method waits for predefined\
+        \ period of time, until some data to be sent in response are available."
+      example: ""
+      explode: true
+      in: query
+      name: wait
+      required: false
+      schema:
+        nullable: true
+        type: string
       style: form
     SerializedDeviceId:
       description: "The Id of the Device, described with an object."
