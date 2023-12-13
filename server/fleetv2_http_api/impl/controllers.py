@@ -34,7 +34,8 @@ from enums import MessageType
 
 from fleetv2_http_api.impl.wait import Wait_Manager
 
-__wait_manager = Wait_Manager()
+
+__status_wait_manager = Wait_Manager()
 
        
 def available_cars()->List[Car]:
@@ -97,43 +98,6 @@ def list_commands(
 
     return commands, 200
 
-
-def list_statuses(
-    company_name:str, 
-    car_name:str, 
-    sdevice_id:str, 
-    all_available:Optional[str]=None, 
-    since:Optional[int]=None,
-    wait:Optional[str]=None,
-    )->Tuple[List[Message], int]:  # noqa: E501
-
-    """Return list containing the NEWEST status currently stored for an AVAILABLE device. 
-    If a device is not available, return empty list and code 404.
-
-    If 'all_available' is not None, return ALL statuses stored for a given device.
-    If 'since' is specified (unix timestamp in milliseconds), return all stored statuses
-    having the timestamp equal or lower than 'since'.
-    """
-
-    if company_name not in device_ids(): return [], 404 # type: ignore
-    elif car_name not in device_ids()[company_name]: return [], 404 # type: ignore
-
-    statuses = [__message_from_db(m) for m in __list_messages(
-        company_name=company_name,
-        car_name=car_name,
-        message_type=MessageType.STATUS_TYPE,
-        serialized_device_id=sdevice_id,
-        all_available=all_available, 
-        limit_timestamp=since
-    )]
-
-    if statuses == [] and wait is not None:
-        
-        return statuses, 404
-    
-    return statuses, 200
-
-
 def send_commands(
     company_name:str, 
     car_name:str, 
@@ -180,25 +144,47 @@ def send_commands(
             for message in messages
         ]
         return send_messages_to_database(company_name, car_name, *commands_to_db)
-    
 
-def __check_device_availability(company_name:str, car_name:str, module_id:int, sdevice_id:str)->Tuple[str, int]:
-    device_dict = device_ids()
-    if company_name not in device_dict:
-        return f"No car is available under a company '{company_name}'.", 404 # type: ignore
-    elif car_name not in device_dict[company_name]:
-        return f"Car named '{car_name}' is not available under a company '{company_name}'.", 404
-    
-    elif module_id not in device_dict[company_name][car_name]:
-        return \
-            f"No module with id '{module_id}' is available in car " \
-            f"'{car_name}' under the company '{company_name}'", 404
-    elif sdevice_id not in device_dict[company_name][car_name][module_id]:
-        return \
-            f"No device with id '{sdevice_id}' is available in module " \
-            f"'{module_id}' in car '{car_name}' under the company '{company_name}'", 404
-    else: 
-        return "", 200
+
+def list_statuses(
+    company_name:str, 
+    car_name:str, 
+    sdevice_id:str, 
+    all_available:Optional[str]=None, 
+    since:Optional[int]=None,
+    wait:Optional[str]=None,
+    )->Tuple[List[Message], int]:  # noqa: E501
+
+    """Return list containing the NEWEST status currently stored for an AVAILABLE device. 
+    If a device is not available, return empty list and code 404.
+
+    If 'all_available' is not None, return ALL statuses stored for a given device.
+    If 'since' is specified (unix timestamp in milliseconds), return all stored statuses
+    having the timestamp equal or lower than 'since'.
+    """
+
+    db_statuses = __list_messages(
+        company_name,
+        car_name,
+        MessageType.STATUS_TYPE,
+        sdevice_id,
+        all_available, 
+        since
+    )
+
+    if db_statuses: 
+        return [__message_from_db(m) for m in db_statuses], 200
+    elif wait is None: # no statuses mean device is unavailable and not found
+        return [], 404
+    else:
+        timestamp_ms = 0
+        awaited_statuses = __status_wait_manager.wait_for(
+            company_name, 
+            car_name, 
+            sdevice_id,
+            timestamp_ms
+        )
+        return awaited_statuses, (200 if awaited_statuses else 404)
 
 
 def send_statuses(
@@ -217,6 +203,8 @@ def send_statuses(
     if messages == []: return "", 200
     errors = __check_messages(MessageType.STATUS_TYPE, sdevice_id, *messages)
     if errors[0] != "": return errors
+
+    __status_wait_manager.stop_waiting_for(company_name, car_name, sdevice_id, content=messages)
     response_msg = send_messages_to_database(company_name, car_name, *__message_db(messages, sdevice_id))
     cmd_warnings = __check_and_handle_first_status(company_name, car_name, sdevice_id, messages)
     return response_msg[0] + cmd_warnings, response_msg[1]
@@ -265,6 +253,24 @@ def __check_message_types(expected_message_type:str, *messages:Message)->str:
             else:
                 return f"Cannot send a command as a status: {message}"
     return ""
+
+def __check_device_availability(company_name:str, car_name:str, module_id:int, sdevice_id:str)->Tuple[str, int]:
+    device_dict = device_ids()
+    if company_name not in device_dict:
+        return f"No car is available under a company '{company_name}'.", 404 # type: ignore
+    elif car_name not in device_dict[company_name]:
+        return f"Car named '{car_name}' is not available under a company '{company_name}'.", 404
+    
+    elif module_id not in device_dict[company_name][car_name]:
+        return \
+            f"No module with id '{module_id}' is available in car " \
+            f"'{car_name}' under the company '{company_name}'", 404
+    elif sdevice_id not in device_dict[company_name][car_name][module_id]:
+        return \
+            f"No device with id '{sdevice_id}' is available in module " \
+            f"'{module_id}' in car '{car_name}' under the company '{company_name}'", 404
+    else: 
+        return "", 200
             
 def __check_equal_device_id_in_path_and_messages(
     sdevice_id:str,

@@ -54,17 +54,17 @@ class Test_Creating_Wait_Objects(unittest.TestCase):
 
     def test_adding_new_wait_obj(self):
         self.wd.add("test_company", "test_car", "id_xyz")
-        self.assertTrue(self.wd.is_waiting_for("test_company", "test_car", "id_xyz"))
-        self.assertFalse(self.wd.is_waiting_for("test_company", "other_car", "id_ABC"))
+        self.assertTrue(self.wd.wait_obj_exists("test_company", "test_car", "id_xyz"))
+        self.assertFalse(self.wd.wait_obj_exists("test_company", "other_car", "id_ABC"))
 
         self.wd.add("test_company", "other_car", "id_ABC")
-        self.assertTrue(self.wd.is_waiting_for("test_company", "other_car", "id_ABC"))
+        self.assertTrue(self.wd.wait_obj_exists("test_company", "other_car", "id_ABC"))
 
     def test_removing_waiting_object(self)->None:
         self.wd.add("test_company", "test_car", "id_xyz")
-        self.assertTrue(self.wd.is_waiting_for("test_company", "test_car", "id_xyz"))
+        self.assertTrue(self.wd.wait_obj_exists("test_company", "test_car", "id_xyz"))
         self.wd.remove("test_company", "test_car", "id_xyz")
-        self.assertFalse(self.wd.is_waiting_for("test_company", "test_car", "id_xyz"))
+        self.assertFalse(self.wd.wait_obj_exists("test_company", "test_car", "id_xyz"))
 
 
 class Test_Wait_Manager(unittest.TestCase):
@@ -73,16 +73,16 @@ class Test_Wait_Manager(unittest.TestCase):
         self.mg = wait.Wait_Manager()
 
     def test_wait_for(self)->None:
-        self.mg.wait_for("test_company", "test_car", "id_xyz", 78)
+        self.mg.add_wait_obj("test_company", "test_car", "id_xyz", 78)
         self.mg.is_waiting_for("test_company", "test_car", "id_xyz")
 
     def test_object_is_removed_after_manually_stopping_waiting_for_it(self):
-        self.mg.wait_for("test_company", "test_car", "id_xyz", 78)
+        self.mg.add_wait_obj("test_company", "test_car", "id_xyz", 78)
         self.mg.stop_waiting_for("test_company", "test_car", "id_xyz")
         self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
 
     def test_timeout_of_a_single_obj(self):
-        self.mg.wait_for("test_company", "test_car", "id_xyz", 78)
+        self.mg.add_wait_obj("test_company", "test_car", "id_xyz", 78)
         self.mg.set_timeout(100)
         self.mg.check_timeouts(curr_time_ms=177)
         self.assertTrue(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
@@ -92,10 +92,10 @@ class Test_Wait_Manager(unittest.TestCase):
         self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
 
     def test_when_checking_timeout_objects_with_timestamp_older_than_current_minus_timeout_are_removed(self):
-        self.mg.wait_for("test_company", "test_car", "id_1", 40)
-        self.mg.wait_for("test_company", "test_car", "id_2", 45)
-        self.mg.wait_for("test_company", "test_car", "id_3", 50)
-        self.mg.wait_for("test_company", "test_car", "id_4", 55)
+        self.mg.add_wait_obj("test_company", "test_car", "id_1", 40)
+        self.mg.add_wait_obj("test_company", "test_car", "id_2", 45)
+        self.mg.add_wait_obj("test_company", "test_car", "id_3", 50)
+        self.mg.add_wait_obj("test_company", "test_car", "id_4", 55)
 
         self.mg.set_timeout(10)
         self.mg.check_timeouts(curr_time_ms=60)
@@ -106,9 +106,9 @@ class Test_Wait_Manager(unittest.TestCase):
         self.assertTrue(self.mg.waiting_for_anything)
 
     def test_timeout_of_all_objects(self):
-        self.mg.wait_for("test_company", "test_car", "id_1", 40)
-        self.mg.wait_for("test_company", "test_car", "id_2", 45)
-        self.mg.wait_for("test_company", "test_car", "id_3", 50)
+        self.mg.add_wait_obj("test_company", "test_car", "id_1", 40)
+        self.mg.add_wait_obj("test_company", "test_car", "id_2", 45)
+        self.mg.add_wait_obj("test_company", "test_car", "id_3", 50)
         self.mg.set_timeout(10)
         self.mg.check_timeouts(curr_time_ms=100000000)
         self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_1"))
@@ -120,6 +120,7 @@ class Test_Wait_Manager(unittest.TestCase):
 
 import threading
 import os 
+import time
 class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.TestCase):
 
     def setUp(self) -> None:
@@ -139,21 +140,20 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         )
 
 
-    def __test_return_statuses_sent_after_the_request(self):
+    def test_return_statuses_sent_after_the_request(self):
+        resp = list_statuses("test_company", "test_car", self.sdevice_id)
+        self.assertEqual(resp[1], 404)
+
         def list_test_statuses():
-            statuses, code = list_statuses(
-                company_name="test_company", 
-                car_name="test_car", 
-                sdevice_id=self.sdevice_id, 
-                wait=""
-            )
+            msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
             self.assertEqual(code, 200)
 
         def send_test_statuses():
+            time.sleep(1) 
             send_statuses(
-                company_name="test_company", 
-                car_name="test_car", 
-                sdevice_id=self.sdevice_id, 
+                "test_company", 
+                "test_car", 
+                self.sdevice_id, 
                 messages=[self.status_example]
             )
 
@@ -163,9 +163,8 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         t_list.start()
         t_send.start()
 
-        t_send.join()
         t_list.join()
-
+        t_send.join()
 
     def tearDown(self) -> None:
         if os.path.exists("./example.db"):
@@ -174,4 +173,6 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
     
 
 if __name__=="__main__": 
+    # runner = unittest.TextTestRunner()
+    # runner.run(Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request("test_return_statuses_sent_after_the_request"))
     unittest.main()
