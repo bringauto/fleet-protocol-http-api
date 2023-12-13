@@ -7,7 +7,7 @@ from fleetv2_http_api.models.message import Message  # noqa: E501
 from fleetv2_http_api import util
 
 
-def list_commands(company_name, car_name, sdevice_id, all_available=None, since=None):  # noqa: E501
+def list_commands(company_name, car_name, sdevice_id, all_available=None, since=None, wait=None):  # noqa: E501
     """list_commands
 
     Returns list of the Device Commands. # noqa: E501
@@ -22,13 +22,15 @@ def list_commands(company_name, car_name, sdevice_id, all_available=None, since=
     :type all_available: str
     :param since: A Unix timestamp; if specified, the method returns all device commands inclusivelly newer than value of specified timestamp.
     :type since: int
+    :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
+    :type wait: str
 
     :rtype: Union[List[Message], Tuple[List[Message], int], Tuple[List[Message], int, Dict[str, str]]
     """
     return 'do some magic!'
 
 
-def list_statuses(company_name, car_name, sdevice_id, wait=None, all_available=None, since=None):  # noqa: E501
+def list_statuses(company_name, car_name, sdevice_id, all_available=None, since=None, wait=None):  # noqa: E501
     """list_statuses
 
     It returns list of the Device Statuses. # noqa: E501
@@ -39,12 +41,12 @@ def list_statuses(company_name, car_name, sdevice_id, wait=None, all_available=N
     :type car_name: str
     :param sdevice_id: The Id of the Device, described with an object.
     :type sdevice_id: str
-    :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
-    :type wait: str
     :param all_available: If set, the method returns a complete history of statuses/commands.
     :type all_available: str
     :param since: A Unix timestamp; if specified, the method returns all device statuses inclusivelly older than value of specified timestamp.
     :type since: int
+    :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
+    :type wait: str
 
     :rtype: Union[List[Message], Tuple[List[Message], int], Tuple[List[Message], int, Dict[str, str]]
     """
@@ -72,7 +74,7 @@ def send_commands(company_name, car_name, sdevice_id, message=None):  # noqa: E5
     return 'do some magic!'
 
 
-def send_statuses(company_name, car_name, sdevice_id, wait=None, message=None):  # noqa: E501
+def send_statuses(company_name, car_name, sdevice_id, message=None):  # noqa: E501
     """send_statuses
 
     Add statuses received from the Device. # noqa: E501
@@ -83,8 +85,6 @@ def send_statuses(company_name, car_name, sdevice_id, wait=None, message=None): 
     :type car_name: str
     :param sdevice_id: The Id of the Device, described with an object.
     :type sdevice_id: str
-    :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
-    :type wait: str
     :param message: Statuses to be send by the device.
     :type message: list | bytes
 

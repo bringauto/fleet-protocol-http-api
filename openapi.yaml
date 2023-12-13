@@ -50,6 +50,9 @@ paths:
         '500':
           description: Cannot display available cars due to internal server error.
 
+    parameters:
+      - $ref: '#/components/parameters/Wait'
+
   /available-devices/{company_name}/{car_name}:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
@@ -78,14 +81,20 @@ paths:
           description: Cannot display available devices. Either company, car or module specified in the request does not exist.
         '500':
           description: Cannot display available devices due to internal server error.
-      
+
       parameters:
       - $ref: '#/components/parameters/CompanyName'
       - $ref: '#/components/parameters/CarName'
       - $ref: "#/components/parameters/ModuleId"
+      - $ref: '#/components/parameters/Wait'
 
 
   /status/{company_name}/{car_name}/{sdevice_id}:
+    parameters:
+      - $ref: '#/components/parameters/CompanyName'
+      - $ref: '#/components/parameters/CarName'
+      - $ref: '#/components/parameters/SerializedDeviceId'
+
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: list_statuses
@@ -127,12 +136,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/All'
         - $ref: '#/components/parameters/Since'
-
-    parameters:
-      - $ref: '#/components/parameters/CompanyName'
-      - $ref: '#/components/parameters/CarName'
-      - $ref: '#/components/parameters/SerializedDeviceId'
-      - $ref: '#/components/parameters/Wait'
+        - $ref: '#/components/parameters/Wait'
 
 
     post:
@@ -198,6 +202,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/All'
         - $ref: '#/components/parameters/Until'
+        - $ref: '#/components/parameters/Wait'
 
     parameters:
       - $ref: '#/components/parameters/CompanyName'
