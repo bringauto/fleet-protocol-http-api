@@ -140,29 +140,26 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         )
 
 
-    def test_return_statuses_sent_after_the_request(self):
-        resp = list_statuses("test_company", "test_car", self.sdevice_id)
-        self.assertEqual(resp[1], 404)
-
+    def test_return_statuses_sent_after_the_request_when_wait_mechanism_is_applied(self):
         def list_test_statuses():
             msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
             self.assertEqual(code, 200)
-
-        def send_test_statuses():
-            time.sleep(1) 
-            send_statuses(
-                "test_company", 
-                "test_car", 
-                self.sdevice_id, 
-                messages=[self.status_example]
-            )
-
         t_list = threading.Thread(target=list_test_statuses)
-        t_send = threading.Thread(target=send_test_statuses)
-
+        t_send = threading.Thread(target=self.__send_single_status)
         t_list.start()
         t_send.start()
+        t_list.join()
+        t_send.join()
 
+
+    def test_return_statuses_sent_after_the_request_without_applying_wait_mechanism(self):
+        def list_test_statuses():
+            msg, code = list_statuses("test_company", "test_car", self.sdevice_id)
+            self.assertEqual(code, 404) # 404 is returned as the list_statuses does not wait for the statuses to arrive
+        t_list = threading.Thread(target=list_test_statuses)
+        t_send = threading.Thread(target=self.__send_single_status)
+        t_list.start()
+        t_send.start()
         t_list.join()
         t_send.join()
 
@@ -170,9 +167,16 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         if os.path.exists("./example.db"):
             os.remove("./example.db")
 
+    def __send_single_status(self):
+        time.sleep(0.01) 
+        send_statuses(
+            "test_company", 
+            "test_car", 
+            self.sdevice_id, 
+            messages=[self.status_example]
+        )
+
     
 
 if __name__=="__main__": 
-    # runner = unittest.TextTestRunner()
-    # runner.run(Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request("test_return_statuses_sent_after_the_request"))
     unittest.main()
