@@ -16,5 +16,8 @@
                 
             }
         }
+    },
+    "server_response": {
+        "timeout_in_seconds": 10
     }
 }

@@ -29,6 +29,8 @@ from database.device_ids import clear_device_ids
 from database.connection import set_db_connection
 from database.time import timestamp
 from fleetv2_http_api.__main__ import main as run_server
+from fleetv2_http_api.impl.controllers import set_status_wait_timeout_s 
+
 
 
 def __clean_up_messages()->None:
@@ -64,4 +66,5 @@ if __name__ == '__main__':
     config:Dict[str,Any] = json.load(open("config.json"))
     __connect_to_database(config["database"]["server"])
     __set_up_database_jobs(config["database"]["cleanup"]["timing_in_seconds"])
+    set_status_wait_timeout_s(config["server_response"]["timeout_in_seconds"])
     run_server()
