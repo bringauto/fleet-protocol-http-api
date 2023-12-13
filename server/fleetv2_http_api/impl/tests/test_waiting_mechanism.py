@@ -76,7 +76,7 @@ class Test_Wait_Manager(unittest.TestCase):
         self.mg.wait_for("test_company", "test_car", "id_xyz", 78)
         self.mg.is_waiting_for("test_company", "test_car", "id_xyz")
 
-    def test_stop_waiting_for(self):
+    def test_object_is_removed_after_manually_stopping_waiting_for_it(self):
         self.mg.wait_for("test_company", "test_car", "id_xyz", 78)
         self.mg.stop_waiting_for("test_company", "test_car", "id_xyz")
         self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
@@ -91,7 +91,7 @@ class Test_Wait_Manager(unittest.TestCase):
         self.mg.check_timeouts(curr_time_ms=179)
         self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
 
-    def test_multiple_obj_timeout(self):
+    def test_when_checking_timeout_objects_with_timestamp_older_than_current_minus_timeout_are_removed(self):
         self.mg.wait_for("test_company", "test_car", "id_1", 40)
         self.mg.wait_for("test_company", "test_car", "id_2", 45)
         self.mg.wait_for("test_company", "test_car", "id_3", 50)
@@ -103,8 +103,19 @@ class Test_Wait_Manager(unittest.TestCase):
         self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_2"))
         self.assertTrue(self.mg.is_waiting_for("test_company", "test_car", "id_3"))
         self.assertTrue(self.mg.is_waiting_for("test_company", "test_car", "id_4"))
+        self.assertTrue(self.mg.waiting_for_anything)
 
-    
+
+    def test_timeout_of_all_objects(self):
+        self.mg.wait_for("test_company", "test_car", "id_1", 40)
+        self.mg.wait_for("test_company", "test_car", "id_2", 45)
+        self.mg.wait_for("test_company", "test_car", "id_3", 50)
+        self.mg.set_timeout(10)
+        self.mg.check_timeouts(curr_time_ms=100000000)
+        self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_1"))
+        self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_2"))
+        self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_3"))
+        self.assertFalse(self.mg.waiting_for_anything)
     
 
 if __name__=="__main__": 

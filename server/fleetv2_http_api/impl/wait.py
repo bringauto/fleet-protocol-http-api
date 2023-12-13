@@ -44,6 +44,10 @@ class Wait_Manager:
         self.__timeout_ms = timeout_ms
         self.__wait_objs:List[Wait_Obj] = list()
 
+    @property
+    def waiting_for_anything(self)->bool:
+        return bool(self.__wait_objs)
+
     def check_timeouts(self, curr_time_ms:int)->None:
         while self.__wait_objs:
             oldest =self.__wait_objs[0]
@@ -85,3 +89,6 @@ class Wait_Manager:
 
     def __timeout(self, curr_time_ms:int, obj:Wait_Obj)->bool:
         return obj.timestamp_ms + self.__timeout_ms < curr_time_ms
+    
+
+
