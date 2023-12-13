@@ -50,24 +50,62 @@ class Test_Listing_Statuses(unittest.TestCase):
 class Test_Creating_Wait_Objects(unittest.TestCase):
 
     def setUp(self) -> None:
+        self.wd = wait.Wait_Dict()
+
+    def test_adding_new_wait_obj(self):
+        self.wd.add("test_company", "test_car", "id_xyz")
+        self.assertTrue(self.wd.is_waiting_for("test_company", "test_car", "id_xyz"))
+        self.assertFalse(self.wd.is_waiting_for("test_company", "other_car", "id_ABC"))
+
+        self.wd.add("test_company", "other_car", "id_ABC")
+        self.assertTrue(self.wd.is_waiting_for("test_company", "other_car", "id_ABC"))
+
+    def test_removing_waiting_object(self)->None:
+        self.wd.add("test_company", "test_car", "id_xyz")
+        self.assertTrue(self.wd.is_waiting_for("test_company", "test_car", "id_xyz"))
+        self.wd.remove("test_company", "test_car", "id_xyz")
+        self.assertFalse(self.wd.is_waiting_for("test_company", "test_car", "id_xyz"))
+
+
+class Test_Wait_Manager(unittest.TestCase):
+
+    def setUp(self) -> None:
         self.mg = wait.Wait_Manager()
 
-    def test_creating_new_wait_obj(self):
-        self.mg.wait_for("test_company", "test_car", "id_xyz")
-        self.assertTrue(self.mg.is_waiting("test_company", "test_car", "id_xyz"))
-        self.assertFalse(self.mg.is_waiting("test_company", "other_car", "id_ABC"))
+    def test_wait_for(self)->None:
+        self.mg.wait_for("test_company", "test_car", "id_xyz", 78)
+        self.mg.is_waiting_for("test_company", "test_car", "id_xyz")
 
-        self.mg.wait_for("test_company", "other_car", "id_ABC")
-        self.assertTrue(self.mg.is_waiting("test_company", "other_car", "id_ABC"))
+    def test_stop_waiting_for(self):
+        self.mg.wait_for("test_company", "test_car", "id_xyz", 78)
+        self.mg.stop_waiting_for("test_company", "test_car", "id_xyz")
+        self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
 
-    def test_stop_waiting(self)->None:
-        self.mg.wait_for("test_company", "test_car", "id_xyz")
-        self.assertTrue(self.mg.is_waiting("test_company", "test_car", "id_xyz"))
-        self.mg.stop_waiting("test_company", "test_car", "id_xyz")
-        self.assertFalse(self.mg.is_waiting("test_company", "test_car", "id_xyz"))
+    def test_timeout_of_a_single_obj(self):
+        self.mg.wait_for("test_company", "test_car", "id_xyz", 78)
+        self.mg.set_timeout(100)
+        self.mg.check_timeouts(curr_time_ms=177)
+        self.assertTrue(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
+        self.mg.check_timeouts(curr_time_ms=178)
+        self.assertTrue(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
+        self.mg.check_timeouts(curr_time_ms=179)
+        self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
+
+    def test_multiple_obj_timeout(self):
+        self.mg.wait_for("test_company", "test_car", "id_1", 40)
+        self.mg.wait_for("test_company", "test_car", "id_2", 45)
+        self.mg.wait_for("test_company", "test_car", "id_3", 50)
+        self.mg.wait_for("test_company", "test_car", "id_4", 55)
+
+        self.mg.set_timeout(10)
+        self.mg.check_timeouts(curr_time_ms=60)
+        self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_1"))
+        self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_2"))
+        self.assertTrue(self.mg.is_waiting_for("test_company", "test_car", "id_3"))
+        self.assertTrue(self.mg.is_waiting_for("test_company", "test_car", "id_4"))
 
     
-
+    
 
 if __name__=="__main__": 
     unittest.main()
