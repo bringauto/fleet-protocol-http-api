@@ -36,6 +36,8 @@ from fleetv2_http_api.impl.wait import Wait_Manager
 
 
 __status_wait_manager = Wait_Manager()
+def set_status_wait_timeout_ms(timeout_ms:int)->None: __status_wait_manager.set_timeout(timeout_ms)
+def set_status_wait_timeout_s(timeout_s:float)->None: __status_wait_manager.set_timeout(int(1000*timeout_s))
 
        
 def available_cars()->List[Car]:
@@ -177,12 +179,10 @@ def list_statuses(
     elif wait is None: # no statuses mean device is unavailable and not found
         return [], 404
     else:
-        timestamp_ms = 0
         awaited_statuses = __status_wait_manager.wait_for(
             company_name, 
             car_name, 
-            sdevice_id,
-            timestamp_ms
+            sdevice_id
         )
         return awaited_statuses, (200 if awaited_statuses else 404)
 

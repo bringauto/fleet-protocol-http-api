@@ -11,8 +11,7 @@ from fleetv2_http_api.impl.controllers import (
 )
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Payload, Message
-from fleetv2_http_api.models.module import Module
-from fleetv2_http_api.models.car import Car
+
 
 
 import fleetv2_http_api.impl.wait as wait
@@ -121,6 +120,8 @@ class Test_Wait_Manager(unittest.TestCase):
 import threading
 import os 
 import time
+from fleetv2_http_api.impl.controllers import set_status_wait_timeout_s
+
 class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.TestCase):
 
     def setUp(self) -> None:
@@ -133,7 +134,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         )
         self.device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
         self.sdevice_id = serialized_device_id(self.device_id)
-        self.status_example = Message(
+        self.st = Message(
             timestamp=123456789,
             device_id=self.device_id,
             payload=payload_example
@@ -141,11 +142,17 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
 
 
     def test_return_statuses_sent_after_the_request_when_wait_mechanism_is_applied(self):
+
         def list_test_statuses():
             msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
             self.assertEqual(code, 200)
+
+        def send_single_status():
+            time.sleep(0.01) 
+            send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.st])
+
         t_list = threading.Thread(target=list_test_statuses)
-        t_send = threading.Thread(target=self.__send_single_status)
+        t_send = threading.Thread(target=send_single_status)
         t_list.start()
         t_send.start()
         t_list.join()
@@ -153,30 +160,54 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
 
 
     def test_return_statuses_sent_after_the_request_without_applying_wait_mechanism(self):
+
         def list_test_statuses():
             msg, code = list_statuses("test_company", "test_car", self.sdevice_id)
             self.assertEqual(code, 404) # 404 is returned as the list_statuses does not wait for the statuses to arrive
+
+        def send_single_status():
+            time.sleep(0.01) 
+            send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.st])
+
         t_list = threading.Thread(target=list_test_statuses)
-        t_send = threading.Thread(target=self.__send_single_status)
+        t_send = threading.Thread(target=send_single_status)
         t_list.start()
         t_send.start()
         t_list.join()
         t_send.join()
 
+    def test_return_statuses_sent_after_the_request_with_wait_mechanism_with_timeout_exceeded(self):
+
+        def list_test_statuses():
+            set_status_wait_timeout_s(0.01)
+            msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
+            self.assertEqual(code, 404) # 404 is returned as the list_statuses does not wait for the statuses to arrive
+
+        def send_single_status():
+            time.sleep(0.02) 
+            send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.st])
+
+        t_list = threading.Thread(target=list_test_statuses)
+        t_send = threading.Thread(target=send_single_status)
+        t_list.start()
+        t_send.start()
+        t_list.join()
+
+
     def tearDown(self) -> None:
         if os.path.exists("./example.db"):
             os.remove("./example.db")
 
-    def __send_single_status(self):
-        time.sleep(0.01) 
-        send_statuses(
-            "test_company", 
-            "test_car", 
-            self.sdevice_id, 
-            messages=[self.status_example]
-        )
-
-    
 
 if __name__=="__main__": 
-    unittest.main()
+    runner = unittest.TextTestRunner()
+    runner.run(Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(
+        "test_return_statuses_sent_after_the_request_without_applying_wait_mechanism"
+    ))
+    runner.run(Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(
+        "test_return_statuses_sent_after_the_request_when_wait_mechanism_is_applied"
+    ))
+    runner.run(Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(
+        "test_return_statuses_sent_after_the_request_with_wait_mechanism_with_timeout_exceeded"
+    ))
+    # unittest.main()

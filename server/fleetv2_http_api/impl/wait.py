@@ -4,18 +4,18 @@ from typing import Dict, List, Any, Optional
 
 class Wait_Manager:
 
-    def __init__(self, timeout_ms:int=1000)->None:
+    def __init__(self, timeout_ms:int = 5000)->None:
         self.__wait_dict = Wait_Dict()
         self.__wait_objs:List[Wait_Obj] = list()
-        if timeout_ms < 0: raise ValueError("timeout_ms must be >= 0 ms")
+        self.__check_nonnegative_timeout(timeout_ms)
         self.__timeout_ms = timeout_ms
 
     @property
     def waiting_for_anything(self)->bool:
         return bool(self.__wait_objs)
     
-    def add_wait_obj(self, company_name:str, car_name:str, sdevice_id:str, timestamp_ms:int)->Wait_Obj:
-        wait_obj = Wait_Obj(timestamp_ms, company_name, car_name, sdevice_id)
+    def add_wait_obj(self, company_name:str, car_name:str, sdevice_id:str, timestamp_ms:Optional[int]=None)->Wait_Obj:
+        wait_obj = Wait_Obj(company_name, car_name, sdevice_id, self.__timeout_ms, timestamp_ms)
         self.__wait_dict.add(company_name, car_name, sdevice_id, wait_obj)
         self.__insert_into_list(wait_obj)
         return wait_obj
@@ -32,7 +32,11 @@ class Wait_Manager:
         return self.__wait_dict.wait_obj_exists(company_name, car_name, sdevice_id)
 
     def set_timeout(self, timeout_ms:int)->None:
+        self.__check_nonnegative_timeout(timeout_ms)
         self.__timeout_ms = timeout_ms
+
+    def __check_nonnegative_timeout(self, timeout_ms:int)->None:
+        if timeout_ms < 0: raise ValueError("timeout_ms must be >= 0 ms")
 
     def stop_waiting_for(
         self, 
@@ -50,7 +54,7 @@ class Wait_Manager:
             wait_obj.add_reponse_content(content)
 
 
-    def wait_for(self, company_name:str, car_name:str, sdevice_id:str, curr_timestamp_ms:int)->List[Any]:
+    def wait_for(self, company_name:str, car_name:str, sdevice_id:str, curr_timestamp_ms:Optional[int]=None)->List[Any]:
         wait_obj = self.add_wait_obj(company_name, car_name, sdevice_id, curr_timestamp_ms)
         return wait_obj.response()
 
@@ -105,13 +109,17 @@ class Wait_Dict:
         )
 
 
+
+import time
 class Wait_Obj:
-    def __init__(self, timestamp_ms:int, company_name:str, car_name:str, sdevice_id:str)->None:
+    def __init__(self, company_name:str, car_name:str, sdevice_id:str, timeout_ms:int, timestamp_ms:Optional[int]=None, )->None:
+        if timestamp_ms is None: timestamp_ms = Wait_Obj.timestamp()
         self.__timestamp_ms = timestamp_ms
         self.__company_name = company_name
         self.__car_name = car_name
         self.__sdevice_id = sdevice_id
         self.__response_content:List[Any] = list()
+        self.__timeout_ms = timeout_ms
 
     @property
     def timestamp_ms(self)->int: return self.__timestamp_ms
@@ -127,5 +135,13 @@ class Wait_Obj:
 
     def response(self)->List[Any]:
         while True:
-            if self.__response_content: break
+            if self.__response_content: 
+                break
+            if self.__timestamp_ms + self.__timeout_ms < Wait_Obj.timestamp(): 
+                break
         return self.__response_content
+
+    @staticmethod
+    def timestamp()->int: 
+        """Timestamp in milliseconds."""
+        return int(time.time()*1000)
