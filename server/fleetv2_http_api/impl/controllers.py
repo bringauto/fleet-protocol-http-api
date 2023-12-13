@@ -32,6 +32,10 @@ from database.database_controller import cleanup_device_commands_and_warn_before
 from enums import MessageType
 
 
+from fleetv2_http_api.impl.wait import Wait_Manager
+
+__wait_manager = Wait_Manager()
+
        
 def available_cars()->List[Car]:
     """Return a list of serialized car info for cars owning at least one available device."""
@@ -122,6 +126,11 @@ def list_statuses(
         all_available=all_available, 
         limit_timestamp=since
     )]
+
+    if statuses == [] and wait is not None:
+        
+        return statuses, 404
+    
     return statuses, 200
 
 
@@ -199,7 +208,6 @@ def send_statuses(
     messages:Optional[List[Message]] = None,
     body:List[Dict] = []
     )->Tuple[str|List[str],int]:  # noqa: E501
-
     """Send a list of statuses to given device. 
     The device specified in the statuses is then automatically considered available.
     """
@@ -207,51 +215,26 @@ def send_statuses(
     if messages is None: messages = []
     messages.extend([Message.from_dict(b) for b in body])
     if messages == []: return "", 200
-
     errors = __check_messages(MessageType.STATUS_TYPE, sdevice_id, *messages)
     if errors[0] != "": return errors
-
-    statuses_to_db = [
-        Message_DB(
-            timestamp=message.timestamp,
-            serialized_device_id=sdevice_id,
-            module_id=message.device_id.module_id,
-            device_type=message.device_id.type,
-            device_role=message.device_id.role,
-            device_name=message.device_id.name,
-            message_type=MessageType.STATUS_TYPE,
-            payload_encoding=message.payload.encoding,
-            payload_data=message.payload.data # type: ignore
-        ) 
-        for message in messages
-    ]
-
-    msg = send_messages_to_database(company_name, car_name, *statuses_to_db)
+    response_msg = send_messages_to_database(company_name, car_name, *__message_db(messages, sdevice_id))
+    cmd_warnings = __check_and_handle_first_status(company_name, car_name, sdevice_id, messages)
+    return response_msg[0] + cmd_warnings, response_msg[1]
     
-    first_status_was_sent = store_device_id_if_new(
-        company_name = company_name,
-        car_name = car_name,
-        device_id = messages[-1].device_id
-    )
 
+def __check_and_handle_first_status(company:str, car:str, sdevice_id:str, messages:List[Message])->str:
+    first_status_was_sent = store_device_id_if_new(company,car,messages[-1].device_id)
     command_removal_warnings = ""
-
     if first_status_was_sent: 
         command_removal_warnings = "\n".join(__handle_first_status_and_return_warnings(
-            timestamp = messages[-1].timestamp, 
-            company_name = company_name, 
-            car_name = car_name, 
-            serialized_device_id=sdevice_id
+            messages[-1].timestamp, 
+            company, 
+            car, 
+            sdevice_id
         ))
-
-    if command_removal_warnings.strip() == "":
-        return msg
-    else:
-        return msg[0] + "\n\n" + command_removal_warnings, msg[1]
-
-
-def _serialized_car_info(company_name:str, car_name:str)->str:
-    return f"{company_name}_{car_name}"
+    if command_removal_warnings.strip() != "": 
+        command_removal_warnings =  "\n\n" + command_removal_warnings
+    return command_removal_warnings
 
 
 def __check_messages(
@@ -328,3 +311,19 @@ def __message_from_db(message_db:Message_DB)->Message:
         )
     )
 
+
+def __message_db(messages:List[Message], sdevice_id:str)->List[Message_DB]:
+    return [
+        Message_DB(
+            timestamp=message.timestamp,
+            serialized_device_id=sdevice_id,
+            module_id=message.device_id.module_id,
+            device_type=message.device_id.type,
+            device_role=message.device_id.role,
+            device_name=message.device_id.name,
+            message_type=MessageType.STATUS_TYPE,
+            payload_encoding=message.payload.encoding,
+            payload_data=message.payload.data # type: ignore
+        ) 
+        for message in messages
+    ]
