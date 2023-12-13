@@ -13,6 +13,8 @@ class Wait_Manager:
     @property
     def waiting_for_anything(self)->bool:
         return bool(self.__wait_objs)
+    @property
+    def timeout_ms(self)->int: return self.__timeout_ms
     
     def add_wait_obj(self, company_name:str, car_name:str, sdevice_id:str, timestamp_ms:Optional[int]=None)->Wait_Obj:
         wait_obj = Wait_Obj(company_name, car_name, sdevice_id, self.__timeout_ms, timestamp_ms)

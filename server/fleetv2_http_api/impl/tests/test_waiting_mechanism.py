@@ -20,7 +20,7 @@ import fleetv2_http_api.impl.wait as wait
 class Test_Listing_Statuses(unittest.TestCase):
 
     def setUp(self) -> None:
-        set_db_connection("sqlite","pysqlite","/:memory:")
+        set_db_connection("sqlite","pysqlite","/example.db")
         clear_device_ids()
         payload_example = Payload(
             message_type='STATUS', 
@@ -44,6 +44,10 @@ class Test_Listing_Statuses(unittest.TestCase):
         )
         statuses, code = list_statuses(company_name="test_company", car_name="test_car", sdevice_id=self.sdevice_id, wait="")
         self.assertEqual(len(statuses), 1)
+
+    def tearDown(self) -> None:
+        if os.path.exists("./example.db"):
+            os.remove("./example.db")
 
 
 class Test_Creating_Wait_Objects(unittest.TestCase):
@@ -120,7 +124,7 @@ class Test_Wait_Manager(unittest.TestCase):
 import threading
 import os 
 import time
-from fleetv2_http_api.impl.controllers import set_status_wait_timeout_s
+from fleetv2_http_api.impl.controllers import set_status_wait_timeout_s, get_status_wait_timeout_s
 
 class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.TestCase):
 
@@ -139,6 +143,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             device_id=self.device_id,
             payload=payload_example
         )
+        self.original_timeout = get_status_wait_timeout_s()
 
 
     def test_return_statuses_sent_after_the_request_when_wait_mechanism_is_applied(self):
@@ -193,21 +198,50 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         t_send.start()
         t_list.join()
 
+    def test_sending_empty_statuses_list_does_not_stop_the_waiting(self):
+
+        def list_test_statuses():
+            msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
+            self.assertEqual(code, 200) # 404 is returned as the list_statuses does not wait for the statuses to arrive
+            self.assertEqual(len(msg), 1)
+
+        def send_single_status():
+            time.sleep(0.05) 
+            send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.st])
+
+        def send_no_status():
+            time.sleep(0.02) 
+            send_statuses("test_company", "test_car", self.sdevice_id, messages=[])
+
+        t_list = threading.Thread(target=list_test_statuses)
+        t_send_1 = threading.Thread(target=send_no_status)
+        t_send_2 = threading.Thread(target=send_single_status)
+        t_list.start()
+        t_send_1.start()
+        t_send_2.start()
+        t_list.join()
+        t_send_1.join()
+        t_send_2.join()
+
 
     def tearDown(self) -> None:
+        set_status_wait_timeout_s(self.original_timeout)
         if os.path.exists("./example.db"):
             os.remove("./example.db")
 
 
 if __name__=="__main__": 
-    runner = unittest.TextTestRunner()
-    runner.run(Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(
-        "test_return_statuses_sent_after_the_request_without_applying_wait_mechanism"
-    ))
-    runner.run(Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(
-        "test_return_statuses_sent_after_the_request_when_wait_mechanism_is_applied"
-    ))
-    runner.run(Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(
-        "test_return_statuses_sent_after_the_request_with_wait_mechanism_with_timeout_exceeded"
-    ))
-    # unittest.main()
+    # runner = unittest.TextTestRunner()
+    # runner.run(Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(
+    #     "test_return_statuses_sent_after_the_request_without_applying_wait_mechanism"
+    # ))
+    # runner.run(Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(
+    #     "test_return_statuses_sent_after_the_request_when_wait_mechanism_is_applied"
+    # ))
+    # runner.run(Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(
+    #     "test_return_statuses_sent_after_the_request_with_wait_mechanism_with_timeout_exceeded"
+    # ))
+    # runner.run(Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(
+    #     "test_sending_empty_statuses_list_does_not_stop_the_waiting"
+    # ))
+    unittest.main()
