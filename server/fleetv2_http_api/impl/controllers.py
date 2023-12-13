@@ -222,6 +222,10 @@ def send_statuses(
     return response_msg[0] + cmd_warnings, response_msg[1]
     
 
+def __available_module(company_name:str, car_name:str, module_id:int)->Module:
+    device_id_list = list((device_ids()[company_name][car_name][module_id]).values())
+    return Module(module_id, device_id_list)
+
 def __check_and_handle_first_status(company:str, car:str, sdevice_id:str, messages:List[Message])->str:
     first_status_was_sent = store_device_id_if_new(company,car,messages[-1].device_id)
     command_removal_warnings = ""
@@ -235,7 +239,6 @@ def __check_and_handle_first_status(company:str, car:str, sdevice_id:str, messag
     if command_removal_warnings.strip() != "": 
         command_removal_warnings =  "\n\n" + command_removal_warnings
     return command_removal_warnings
-
 
 def __check_messages(
     expected_message_type:str,
@@ -275,12 +278,6 @@ def __check_equal_device_id_in_path_and_messages(
                 f"The device Id in path (.../{sdevice_id}) is not equal " \
                 f"to a device Id from the message ({sdevice_id_from_message})"
     return ""
-
-
-def __available_module(company_name:str, car_name:str, module_id:int)->Module:
-    device_id_list = list((device_ids()[company_name][car_name][module_id]).values())
-    return Module(module_id, device_id_list)
-
 
 def __handle_first_status_and_return_warnings(
     timestamp:int, 
