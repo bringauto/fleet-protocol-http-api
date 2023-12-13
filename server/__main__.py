@@ -24,7 +24,7 @@ import json
 from typing import Any, Dict
 
 
-from database.database_controller import remove_old_messages, set_message_retention_period, MessageBase
+from database.database_controller import remove_old_messages, set_message_retention_period
 from database.device_ids import clear_device_ids
 from database.connection import set_db_connection
 from database.time import timestamp

@@ -186,7 +186,7 @@ def list_statuses(
             car_name, 
             sdevice_id
         )
-        return awaited_statuses, (200 if awaited_statuses else 404)
+        return awaited_statuses, (200 if awaited_statuses else 408)
 
 
 def send_statuses(

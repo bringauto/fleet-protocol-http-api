@@ -139,7 +139,7 @@ class Wait_Obj:
         while True:
             if self.__response_content: 
                 break
-            if self.__timestamp_ms + self.__timeout_ms < Wait_Obj.timestamp(): 
+            elif self.__timestamp_ms + self.__timeout_ms < Wait_Obj.timestamp(): 
                 break
         return self.__response_content
 

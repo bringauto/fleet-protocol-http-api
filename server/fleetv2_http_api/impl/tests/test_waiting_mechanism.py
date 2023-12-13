@@ -186,7 +186,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         def list_test_statuses():
             set_status_wait_timeout_s(0.01)
             msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
-            self.assertEqual(code, 404) # 404 is returned as the list_statuses does not wait for the statuses to arrive
+            self.assertEqual(code, 408)
 
         def send_single_status():
             time.sleep(0.02) 
@@ -202,7 +202,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
 
         def list_test_statuses():
             msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
-            self.assertEqual(code, 200) # 404 is returned as the list_statuses does not wait for the statuses to arrive
+            self.assertEqual(code, 200) 
             self.assertEqual(len(msg), 1)
 
         def send_single_status():
