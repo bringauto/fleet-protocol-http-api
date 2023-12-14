@@ -167,6 +167,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         t_send.start()
         t_list.join()
 
+
     def test_sending_empty_statuses_list_does_not_stop_the_waiting(self):
 
         def list_test_statuses():
@@ -191,6 +192,36 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         t_list.join()
         t_send_1.join()
         t_send_2.join()
+
+    def test_sending_second_request_does_not_affect_response_for_the_first_one(self):
+
+        set_status_wait_timeout_s(0.02)
+
+        def list_test_statuses_1():
+            msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
+            self.assertEqual(code, 408) 
+
+        def list_test_statuses_2():
+            time.sleep(0.06)
+            msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
+            self.assertEqual(code, 200) 
+
+        def send_single_status():
+            time.sleep(0.04)
+            send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.st])
+
+
+        t_list_1 = threading.Thread(target=list_test_statuses_1)
+        t_list_2 = threading.Thread(target=list_test_statuses_2)
+        t_send = threading.Thread(target=send_single_status)
+        t_list_1.start()
+        t_list_2.start()
+        t_send.start()
+        t_list_1.join()
+        t_list_2.join()
+        t_send.join()
+
+    
 
 
     def tearDown(self) -> None:
