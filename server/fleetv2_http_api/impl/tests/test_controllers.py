@@ -590,5 +590,8 @@ class Test_Store_Available_Device_Ids_After_Connecting_To_Database_Already_Conta
         
 
 
-if __name__=="__main__": 
-    unittest.main()
+if __name__=="__main__":
+    runner = unittest.TextTestRunner()
+    runner.run(unittest.makeSuite(Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_Methods))
+
+    # unittest.main()
