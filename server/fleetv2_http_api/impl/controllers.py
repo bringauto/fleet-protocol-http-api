@@ -78,7 +78,8 @@ def list_commands(
     car_name:str, 
     sdevice_id:str, 
     all_available:Optional[str]=None, 
-    until:Optional[int]=None
+    until:Optional[int]=None,
+    wait:Optional[str]=None
     )->Tuple[List[Message], int]:  # noqa: E501
     """Return list containing the OLDEST command currently stored for an AVAILABLE device. 
     If a device is not available, return empty list and code 404.
@@ -125,7 +126,7 @@ def send_commands(
     if errors[0] != "": return errors
  
     device_availablility_msg, code = __check_device_availability(
-        company_name, 
+        company_name,
         car_name, 
         messages[0].device_id.module_id, 
         sdevice_id,
@@ -133,20 +134,7 @@ def send_commands(
     if code==404: 
         return device_availablility_msg, code
     else:
-        commands_to_db = [
-            Message_DB(
-                timestamp=message.timestamp,
-                serialized_device_id=sdevice_id,
-                module_id=message.device_id.module_id,
-                device_type=message.device_id.type,
-                device_role=message.device_id.role,
-                device_name=message.device_id.name,
-                message_type=MessageType.COMMAND_TYPE,
-                payload_encoding=message.payload.encoding,
-                payload_data=message.payload.data # type: ignore
-            ) 
-            for message in messages
-        ]
+        commands_to_db = __message_db_list(messages, sdevice_id, MessageType.COMMAND_TYPE)
         return send_messages_to_database(company_name, car_name, *commands_to_db)
 
 
@@ -209,7 +197,7 @@ def send_statuses(
     if errors[0] != "": return errors
 
     __status_wait_manager.stop_waiting_for(company_name, car_name, sdevice_id, reponse_content=messages)
-    response_msg = send_messages_to_database(company_name, car_name, *__message_db(messages, sdevice_id))
+    response_msg = send_messages_to_database(company_name, car_name, *__message_db_list(messages, sdevice_id, MessageType.STATUS_TYPE))
     cmd_warnings = __check_and_handle_first_status(company_name, car_name, sdevice_id, messages)
     return response_msg[0] + cmd_warnings, response_msg[1]
     
@@ -319,7 +307,7 @@ def __message_from_db(message_db:Message_DB)->Message:
     )
 
 
-def __message_db(messages:List[Message], sdevice_id:str)->List[Message_DB]:
+def __message_db_list(messages:List[Message], sdevice_id:str, message_type:str)->List[Message_DB]:
     return [
         Message_DB(
             timestamp=message.timestamp,
@@ -328,7 +316,7 @@ def __message_db(messages:List[Message], sdevice_id:str)->List[Message_DB]:
             device_type=message.device_id.type,
             device_role=message.device_id.role,
             device_name=message.device_id.name,
-            message_type=MessageType.STATUS_TYPE,
+            message_type=message_type,
             payload_encoding=message.payload.encoding,
             payload_data=message.payload.data # type: ignore
         ) 
