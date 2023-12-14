@@ -43,9 +43,9 @@ def get_status_wait_timeout_s()->float:
 
 __command_wait_manager = Wait_Obj_Manager()
 def set_command_wait_timeout_s(timeout_s:float)->None: 
-    __status_wait_manager.set_timeout(int(1000*timeout_s))
+    __command_wait_manager.set_timeout(int(1000*timeout_s))
 def get_command_wait_timeout_s()->float: 
-    return __status_wait_manager.timeout_ms*0.001
+    return __command_wait_manager.timeout_ms*0.001
 
        
 def available_cars()->List[Car]:
@@ -181,8 +181,11 @@ def send_commands(
 
     If for any command the device_id does not correspond to the sdevice_id, exception is raised.
     """
-    msg, code = __check_sent_commands(company_name, car_name, sdevice_id, messages, body)
-    if code==404: return msg, code
+    if messages is None: messages = []
+    messages.extend([Message.from_dict(b) for b in body])
+    if len(messages) == 0: return "", 200
+    msg, code = __check_sent_commands(company_name, car_name, sdevice_id, messages)
+    if msg.strip()!="": return msg, code
     assert messages is not None
     
     __command_wait_manager.stop_waiting_for(company_name, car_name, sdevice_id, reponse_content=messages)
@@ -231,12 +234,10 @@ def __check_and_handle_first_status(company:str, car:str, sdevice_id:str, messag
         command_removal_warnings =  "\n\n" + command_removal_warnings
     return command_removal_warnings
 
-def __check_sent_commands(company_name:str, car_name:str, sdevice_id:str, messages:None|List[Message], body:List[Dict] = [])->Tuple[str, int]:
-    if messages is None: messages = []
-    messages.extend([Message.from_dict(b) for b in body])
-    if len(messages) == 0: return "", 200
-    errors = __check_messages(MessageType.COMMAND_TYPE, sdevice_id, *messages)
-    if errors[0] != "": return errors
+def __check_sent_commands(company_name:str, car_name:str, sdevice_id:str, messages:List[Message])->Tuple[str, int]:
+    errors, code = __check_messages(MessageType.COMMAND_TYPE, sdevice_id, *messages)
+    if errors != "" or code != 200: 
+        return errors, code
     module_id = messages[0].device_id.module_id
     return __check_device_availability(company_name, car_name, module_id, sdevice_id)
 

@@ -23,8 +23,8 @@ import unittest
 from database.device_ids import clear_device_ids, serialized_device_id
 from database.database_controller import set_db_connection
 from fleetv2_http_api.impl.controllers import (
-    send_statuses, 
-    list_statuses, 
+    send_commands, 
+    list_commands, 
 )
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Payload, Message

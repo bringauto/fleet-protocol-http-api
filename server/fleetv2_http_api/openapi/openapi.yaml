@@ -53,18 +53,6 @@ paths:
           nullable: true
           type: integer
         style: form
-      - allowEmptyValue: true
-        description: "An empty parameter. If specified, the method waits for predefined\
-          \ period of time, until some data to be sent in response are available."
-        example: ""
-        explode: true
-        in: query
-        name: wait
-        required: false
-        schema:
-          nullable: true
-          type: string
-        style: form
       responses:
         "200":
           content:
@@ -85,19 +73,6 @@ paths:
       description: Return list of available cars for all companies registered in the
         database.
       operationId: available_cars
-      parameters:
-      - allowEmptyValue: true
-        description: "An empty parameter. If specified, the method waits for predefined\
-          \ period of time, until some data to be sent in response are available."
-        example: ""
-        explode: true
-        in: query
-        name: wait
-        required: false
-        schema:
-          nullable: true
-          type: string
-        style: form
       responses:
         "200":
           content:

@@ -16,6 +16,7 @@
 
 
 import sys
+sys.path.append("server")
 
 
 import unittest
@@ -537,9 +538,12 @@ class Test_Listing_Commands_And_Statuses_Of_Nonexistent_Cars(unittest.TestCase):
         self.assertEqual(list_commands("a_company", "nonexistent_car", "7_4_role"), ([], 404))
 
 
-
-
+import os
 class Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_Methods(unittest.TestCase):
+    
+    def setUp(self) -> None:
+        if os.path.exists("./example.db"): os.remove("./example.db")
+        set_db_connection("sqlite","pysqlite","/example.db")
 
     def test_send_statuses_accepts_only_statuses(self):
         payload = Payload(message_type=MessageType.COMMAND_TYPE, encoding=EncodingType.JSON, data={"message":"Beep"})
@@ -555,6 +559,9 @@ class Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_
         status = Message(timestamp=10, device_id=device_id, payload=payload)
         _, code = send_commands("test_company", "test_car", sdevice_id, [status])
         self.assertEqual(code, 500)
+
+    def tearDown(self) -> None:
+        if os.path.exists("./example.db"): os.remove("./example.db")
 
 
 from sqlalchemy import insert
@@ -591,7 +598,8 @@ class Test_Store_Available_Device_Ids_After_Connecting_To_Database_Already_Conta
 
 
 if __name__=="__main__":
-    runner = unittest.TextTestRunner()
-    runner.run(unittest.makeSuite(Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_Methods))
+    # runner = unittest.TextTestRunner()
+    # runner.run(Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_Methods("test_send_statuses_accepts_only_statuses"))
+    # runner.run(Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_Methods("test_send_commands_accepts_only_commands"))
 
-    # unittest.main()
+    unittest.main()

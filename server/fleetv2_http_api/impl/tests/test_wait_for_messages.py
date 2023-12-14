@@ -36,7 +36,11 @@ from fleetv2_http_api.impl.controllers import (
 )
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Payload, Message
-from fleetv2_http_api.impl.controllers import set_status_wait_timeout_s, get_status_wait_timeout_s
+from fleetv2_http_api.impl.controllers import (
+    set_status_wait_timeout_s, 
+    get_status_wait_timeout_s,
+    set_command_wait_timeout_s
+)
 
 
 def run_in_threads(*functions:Callable[[],None])->None:
@@ -168,7 +172,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         self.sdevice_id = serialized_device_id(self.device_id)
         self.status = Message(123456789, self.device_id, Payload('STATUS', 'JSON', {}))
         self.command = Message(123456789, self.device_id, Payload('COMMAND', 'JSON', {}))
-        set_status_wait_timeout_s(1)
+        set_command_wait_timeout_s(1)
 
     def test_return_commands_sent_to_available_device_after_the_request_when_wait_mechanism_is_applied(self):
         def list_test_commands():
@@ -181,10 +185,46 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             send_commands("test_company", "test_car", self.sdevice_id, messages=[self.command])
         run_in_threads(list_test_commands, send_single_status_and_command)
 
+    def test_return_commands_sent_after_the_request_without_applying_wait_mechanism(self):
+        send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.status])
+        def list_test_commands():
+            msg, code = list_commands("test_company", "test_car", self.sdevice_id)
+            self.assertEqual(code, 200)
+            self.assertEqual(len(msg), 0) # no commands are present in the moment of the request
+        def send_single_command():
+            time.sleep(0.01) 
+            send_commands("test_company", "test_car", self.sdevice_id, messages=[self.command])
+        run_in_threads(list_test_commands, send_single_command)
+
+    def test_return_commands_sent_after_the_request_with_wait_mechanism_with_timeout_exceeded(self):
+        send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.status])
+        def list_test_commands():
+            set_command_wait_timeout_s(0.01)
+            cmds, code = list_commands("test_company", "test_car", self.sdevice_id, wait="")
+            self.assertEqual(code, 200)
+            self.assertEqual(len(cmds), 0)
+        def send_single_command():
+            time.sleep(0.05) 
+            send_commands("test_company", "test_car", self.sdevice_id, messages=[self.command])
+        run_in_threads(list_test_commands, send_single_command)
+
+    def test_sending_empty_command_list_does_not_stop_the_waiting_process(self):
+        send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.status])
+        def list_test_commands():
+            msg, code = list_commands("test_company", "test_car", self.sdevice_id, wait="")
+            self.assertEqual(code, 200) 
+            self.assertEqual(len(msg), 1)
+        def send_single_command():
+            time.sleep(0.05) 
+            send_commands("test_company", "test_car", self.sdevice_id, messages=[self.command])
+        def send_no_command():
+            time.sleep(0.02) 
+            send_commands("test_company", "test_car", self.sdevice_id, messages=[])
+        run_in_threads(list_test_commands, send_no_command, send_single_command)
+
+
     def tearDown(self) -> None:
         if os.path.exists("./example.db"): os.remove("./example.db")
-
-
 
 
 if __name__=="__main__": 
