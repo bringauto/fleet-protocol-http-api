@@ -25,7 +25,7 @@ from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Message
 from fleetv2_http_api.models.module import Module
 from fleetv2_http_api.models.car import Car
-from database.database_controller import send_messages_to_database, Message_DB
+from database.database_controller import send_messages_to_database, Message_DB, deserialize_device_id
 from database.database_controller import list_messages as __list_messages
 from database.device_ids import store_device_id_if_new, device_ids, serialized_device_id
 from database.database_controller import cleanup_device_commands_and_warn_before_future_commands
@@ -105,7 +105,8 @@ def list_commands(
     )
 
     if db_commands or wait is None:
-        msg, code = __check_device_availability(company_name, car_name, db_commands[0].module_id, sdevice_id)
+        module_id, _, _ = deserialize_device_id(sdevice_id)
+        msg, code = __check_device_availability(company_name, car_name, module_id, sdevice_id)
         if code == 200: # device is available and has commands, return them
             return [__message_from_db(m) for m in db_commands], 200
         else:

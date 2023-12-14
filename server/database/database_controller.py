@@ -300,7 +300,7 @@ def __clean_up_disconnected_devices(company:str, car:str, module_id:int)->None:
     """Remove all device ids from the device_ids dictionary that do not have any messages."""
     module_devices = device_ids()[company][car][module_id]
     for sdevice_id in module_devices:
-        _, device_type, device_role = _deserialize_device_id(sdevice_id)
+        _, device_type, device_role = deserialize_device_id(sdevice_id)
         with Session(get_connection_source()) as session: 
             table = MessageBase.__table__
             select_stmt = select(MessageBase).where(
@@ -317,7 +317,7 @@ def __clean_up_disconnected_devices(company:str, car:str, module_id:int)->None:
 
 
 from typing import Tuple
-def _deserialize_device_id(serialized_id:str)->Tuple[int,int,str]:
+def deserialize_device_id(serialized_id:str)->Tuple[int,int,str]:
     """Split the serialized device id into its component parts.
     """
     module_id, device_type, device_role = serialized_id.split("_",2)
