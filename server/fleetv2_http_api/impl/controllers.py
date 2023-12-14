@@ -103,36 +103,6 @@ def list_commands(
 
     return commands, 200
 
-def send_commands(
-    company_name:str, 
-    car_name:str, 
-    sdevice_id:str, 
-    messages:Optional[List[Message]] = None,
-    body:List[Dict] = []
-    )->Tuple[str, int]:  # noqa: E501
-
-    """Send a list of commands to given device. If the device specified is not available,
-    return code 404.
-
-    The body of the request should contain a list of commands, each in the form of a dictionary.
-
-    If for any command the device_id does not correspond to the sdevice_id, exception is raised.
-    """
-
-    if messages is None: messages = []
-    messages.extend([Message.from_dict(b) for b in body])
-    if len(messages) == 0: return "", 200
-    errors = __check_messages(MessageType.COMMAND_TYPE, sdevice_id, *messages)
-    if errors[0] != "": return errors
- 
-    module_id = messages[0].device_id.module_id
-    msg, code = __check_device_availability(company_name, car_name, module_id, sdevice_id)
-    if code==404: 
-        return msg, code
-    else:
-        commands_to_db = __message_db_list(messages, sdevice_id, MessageType.COMMAND_TYPE)
-        return send_messages_to_database(company_name, car_name, *commands_to_db)
-
 
 def list_statuses(
     company_name:str, 
@@ -174,6 +144,36 @@ def list_statuses(
         else:
             return [], 404
 
+
+def send_commands(
+    company_name:str, 
+    car_name:str, 
+    sdevice_id:str, 
+    messages:Optional[List[Message]] = None,
+    body:List[Dict] = []
+    )->Tuple[str, int]:  # noqa: E501
+
+    """Send a list of commands to given device. If the device specified is not available,
+    return code 404.
+
+    The body of the request should contain a list of commands, each in the form of a dictionary.
+
+    If for any command the device_id does not correspond to the sdevice_id, exception is raised.
+    """
+
+    if messages is None: messages = []
+    messages.extend([Message.from_dict(b) for b in body])
+    if len(messages) == 0: return "", 200
+    errors = __check_messages(MessageType.COMMAND_TYPE, sdevice_id, *messages)
+    if errors[0] != "": return errors
+ 
+    module_id = messages[0].device_id.module_id
+    msg, code = __check_device_availability(company_name, car_name, module_id, sdevice_id)
+    if code==404: 
+        return msg, code
+    else:
+        commands_to_db = __message_db_list(messages, sdevice_id, MessageType.COMMAND_TYPE)
+        return send_messages_to_database(company_name, car_name, *commands_to_db)
 
 def send_statuses(
     company_name:str, 

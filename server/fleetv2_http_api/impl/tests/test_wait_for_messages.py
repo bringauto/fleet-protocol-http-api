@@ -218,7 +218,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         self.command = Message(123456789, self.device_id, Payload('COMMAND', 'JSON', {}))
         set_status_wait_timeout_s(1)
 
-    def __test_return_commands_sent_to_available_device_after_the_request_when_wait_mechanism_is_applied(self):
+    def test_return_commands_sent_to_available_device_after_the_request_when_wait_mechanism_is_applied(self):
         def list_test_commands():
             msg, code = list_commands("test_company", "test_car", self.sdevice_id, wait="")
             self.assertEqual(code, 200)
