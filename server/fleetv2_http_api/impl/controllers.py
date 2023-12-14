@@ -125,14 +125,10 @@ def send_commands(
     errors = __check_messages(MessageType.COMMAND_TYPE, sdevice_id, *messages)
     if errors[0] != "": return errors
  
-    device_availablility_msg, code = __check_device_availability(
-        company_name,
-        car_name, 
-        messages[0].device_id.module_id, 
-        sdevice_id,
-    )
+    module_id = messages[0].device_id.module_id
+    msg, code = __check_device_availability(company_name, car_name, module_id, sdevice_id)
     if code==404: 
-        return device_availablility_msg, code
+        return msg, code
     else:
         commands_to_db = __message_db_list(messages, sdevice_id, MessageType.COMMAND_TYPE)
         return send_messages_to_database(company_name, car_name, *commands_to_db)
