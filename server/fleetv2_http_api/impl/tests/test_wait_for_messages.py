@@ -260,6 +260,17 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             send_commands("test_company", "test_car", self.sdevice_id, messages=[self.command])
         run_in_threads(list_test_commands_1, list_test_commands_2, send_single_command)
 
+    def test_sending_commands_to_unavailable_device_does_not_affect_the_waiting(self):
+        set_command_wait_timeout_s(0.05)
+        def list_test_commands():
+            cmds, code = list_commands("test_company", "test_car", self.sdevice_id, wait="")
+            self.assertEqual(code, 404) # the device did not become available before timeout was exceeded
+            self.assertEqual(len(cmds), 0)
+        def send_single_command():
+            time.sleep(0.01) 
+            send_commands("test_company", "test_car", self.sdevice_id, messages=[self.command])
+        run_in_threads(list_test_commands, send_single_command)
+
     def tearDown(self) -> None:
         if os.path.exists("./example.db"): os.remove("./example.db")
 
