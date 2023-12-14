@@ -134,8 +134,6 @@ class Wait_Obj:
         self.__timeout_ms = timeout_ms
 
     @property
-    def timestamp_ms(self)->int: return self.__timestamp_ms
-    @property
     def company_name(self)->str: return self.__company_name
     @property
     def car_name(self)->str: return self.__car_name
