@@ -2,9 +2,10 @@ openapi: 3.0.2
 info:
   contact:
     email: jiri.strouhal@bringauto.com
-  description: Development version of a the API
+  description: HTTP-based API for Fleet Protocol v2 serving for communication between
+    the External Server and the end users.
   title: Fleet v2 HTTP API
-  version: 0.1.0
+  version: 1.0.0
 servers:
 - url: http://localhost
 security:
