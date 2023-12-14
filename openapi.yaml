@@ -272,7 +272,7 @@ components:
       example: 1699262836
 
     Until:
-      name: since
+      name: until
       description: A Unix timestamp; if specified, the method returns all device commands inclusivelly newer than value of specified timestamp.
       in: query
       allowEmptyValue: false 

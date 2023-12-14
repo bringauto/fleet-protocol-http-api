@@ -181,12 +181,14 @@ def list_statuses(
     elif wait is None: # no statuses mean device is unavailable and not found
         return [], 404
     else:
-        awaited_statuses = __status_wait_manager.wait_and_get_reponse(
-            company_name, 
-            car_name, 
-            sdevice_id
-        )
-        return awaited_statuses, (200 if awaited_statuses else 404)
+        awaited_statuses:List[Message] = __status_wait_manager.wait_and_get_reponse(company_name, car_name, sdevice_id)
+        if awaited_statuses:
+            if since is not None and awaited_statuses[-1].timestamp < since: 
+                return [], 200
+            else:
+                return awaited_statuses, 200
+        else:
+            return [], 404
 
 
 def send_statuses(

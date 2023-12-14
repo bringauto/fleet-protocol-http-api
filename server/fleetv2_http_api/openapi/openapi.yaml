@@ -170,7 +170,7 @@ paths:
         example: 1699262836
         explode: true
         in: query
-        name: since
+        name: until
         required: false
         schema:
           nullable: true
@@ -495,7 +495,7 @@ components:
       example: 1699262836
       explode: true
       in: query
-      name: since
+      name: until
       required: false
       schema:
         nullable: true

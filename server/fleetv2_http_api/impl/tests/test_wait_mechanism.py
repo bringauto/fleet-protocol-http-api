@@ -257,10 +257,32 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         t_list_2.join()
         t_send.join()
 
+    def test_requesting_late_statuses_with_the_since_parameter_newer_than_the_statuses_timestamp_returns_empty_list(self):
+
+        set_status_wait_timeout_s(0.1)
+
+        def list_test_statuses():
+            msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="", since=self.st.timestamp+1)
+            self.assertEqual(code, 200)
+            self.assertEqual(len(msg), 0)
+
+        def send_single_status():
+            time.sleep(0.02) 
+            send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.st])
+
+        t_list = threading.Thread(target=list_test_statuses)
+        t_send = threading.Thread(target=send_single_status)
+        t_list.start()
+        t_send.start()
+        t_list.join()
+        t_send.join()
 
     def tearDown(self) -> None:
         set_status_wait_timeout_s(self.original_timeout)
         if os.path.exists("./example.db"): os.remove("./example.db")
+
+
+
 
 
 if __name__=="__main__": 

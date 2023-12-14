@@ -7,7 +7,7 @@ from fleetv2_http_api.models.message import Message  # noqa: E501
 from fleetv2_http_api import util
 
 
-def list_commands(company_name, car_name, sdevice_id, all_available=None, since=None, wait=None):  # noqa: E501
+def list_commands(company_name, car_name, sdevice_id, all_available=None, until=None, wait=None):  # noqa: E501
     """list_commands
 
     Returns list of the Device Commands. # noqa: E501
@@ -20,8 +20,8 @@ def list_commands(company_name, car_name, sdevice_id, all_available=None, since=
     :type sdevice_id: str
     :param all_available: If set, the method returns a complete history of statuses/commands.
     :type all_available: str
-    :param since: A Unix timestamp; if specified, the method returns all device commands inclusivelly newer than value of specified timestamp.
-    :type since: int
+    :param until: A Unix timestamp; if specified, the method returns all device commands inclusivelly newer than value of specified timestamp.
+    :type until: int
     :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
     :type wait: str
 
