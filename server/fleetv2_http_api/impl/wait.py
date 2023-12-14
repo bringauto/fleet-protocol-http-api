@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Dict, List, Any, Optional
 
 
-class Wait_Manager:
+class Wait_Obj_Manager:
 
     def __init__(self, timeout_ms:int = 5000)->None:
         self.__wait_dict = Wait_Queue_Dict()
@@ -28,6 +28,15 @@ class Wait_Manager:
 
     def next_in_queue(self, company_name:str, car_name:str, sdevice_id:str)->Any:
         return self.__wait_dict.next_in_queue(company_name, car_name, sdevice_id)
+    
+    def remove_wait_obj(self, wait_obj:Wait_Obj)->None:
+        queue = self.__wait_dict.get_queue(
+            wait_obj.company_name, 
+            wait_obj.car_name, 
+            wait_obj.sdevice_id
+        )
+        if queue is None: return
+        else: queue.remove(wait_obj)
 
     def set_timeout(self, timeout_ms:int)->None:
         self.__check_nonnegative_timeout(timeout_ms)
@@ -38,19 +47,20 @@ class Wait_Manager:
         company:str, 
         car:str, 
         device:str, 
-        content:Optional[List]=None
+        reponse_content:Optional[List]=None
         )->None:
 
-        if content is None: content = list()
+        if reponse_content is None: reponse_content = list()
 
         if self.__wait_dict.obj_exists(company, car, device):
             wait_obj:Wait_Obj|None = self.__wait_dict.remove(company, car, device)
             if wait_obj is not None:
-                wait_obj.add_reponse_content(content)
+                wait_obj.add_reponse_content(reponse_content)
 
-    def wait_for(self, company_name:str, car_name:str, sdevice_id:str)->List[Any]:
+    def wait_and_get_reponse(self, company_name:str, car_name:str, sdevice_id:str)->List[Any]:
         wait_obj = self.new_wait_obj(company_name, car_name, sdevice_id, Wait_Obj.timestamp())
-        reponse = wait_obj.response()
+        reponse = wait_obj.reponse()
+        self.remove_wait_obj(wait_obj)
         return reponse
 
     def __check_nonnegative_timeout(self, timeout_ms:int)->None:
@@ -65,7 +75,14 @@ class Wait_Queue_Dict:
     def add(self, company_name:str, car_name:str, sdevice_id:str, obj:Optional[Any]=None)->None:
         queue = self.__add_new_queue_if_new_device(company_name, car_name, sdevice_id)
         queue.append(obj)
-
+    
+    def get_queue(self, company_name:str, car_name:str, sdevice_id:str)->List[Any]|None:
+        if company_name in self.__wait_objs:
+            if car_name in self.__wait_objs[company_name]:
+                if sdevice_id in self.__wait_objs[company_name][car_name]:
+                    return self.__wait_objs[company_name][car_name][sdevice_id]
+        return None
+    
     def next_in_queue(self, company_name:str, car_name:str, sdevice_id:str)->Any:
         queue = self.get_queue(company_name, car_name, sdevice_id)
         if queue is None or not queue: return None
@@ -95,13 +112,6 @@ class Wait_Queue_Dict:
         if sdevice_id not in self.__wait_objs[company_name][car_name]:
             self.__wait_objs[company_name][car_name][sdevice_id] = list()
         return self.__wait_objs[company_name][car_name][sdevice_id]
-    
-    def get_queue(self, company_name:str, car_name:str, sdevice_id:str)->List[Any]|None:
-        if company_name in self.__wait_objs:
-            if car_name in self.__wait_objs[company_name]:
-                if sdevice_id in self.__wait_objs[company_name][car_name]:
-                    return self.__wait_objs[company_name][car_name][sdevice_id]
-        return None
     
     def __remove_empty_dict_part(self, company_name:str, car_name:str, sdevice_id:str)->None:
         if not self.__wait_objs[company_name][car_name][sdevice_id]: 
@@ -143,7 +153,7 @@ class Wait_Obj:
     def add_reponse_content(self, content:List[Any])->None:
         self.__response_content.append(content)
 
-    def response(self)->List[Any]:
+    def reponse(self)->List[Any]:
         while True:
             if self.__response_content: 
                 break

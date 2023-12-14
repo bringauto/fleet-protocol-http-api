@@ -32,10 +32,10 @@ from database.database_controller import cleanup_device_commands_and_warn_before
 from enums import MessageType
 
 
-from fleetv2_http_api.impl.wait import Wait_Manager
+from fleetv2_http_api.impl.wait import Wait_Obj_Manager
 
 
-__status_wait_manager = Wait_Manager()
+__status_wait_manager = Wait_Obj_Manager()
 def set_status_wait_timeout_s(timeout_s:float)->None: __status_wait_manager.set_timeout(int(1000*timeout_s))
 def get_status_wait_timeout_s()->float: return __status_wait_manager.timeout_ms*0.001
 
@@ -179,7 +179,7 @@ def list_statuses(
     elif wait is None: # no statuses mean device is unavailable and not found
         return [], 404
     else:
-        awaited_statuses = __status_wait_manager.wait_for(
+        awaited_statuses = __status_wait_manager.wait_and_get_reponse(
             company_name, 
             car_name, 
             sdevice_id
@@ -204,7 +204,7 @@ def send_statuses(
     errors = __check_messages(MessageType.STATUS_TYPE, sdevice_id, *messages)
     if errors[0] != "": return errors
 
-    __status_wait_manager.stop_waiting_for(company_name, car_name, sdevice_id, content=messages)
+    __status_wait_manager.stop_waiting_for(company_name, car_name, sdevice_id, reponse_content=messages)
     response_msg = send_messages_to_database(company_name, car_name, *__message_db(messages, sdevice_id))
     cmd_warnings = __check_and_handle_first_status(company_name, car_name, sdevice_id, messages)
     return response_msg[0] + cmd_warnings, response_msg[1]

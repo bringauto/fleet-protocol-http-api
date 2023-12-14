@@ -53,7 +53,7 @@ class Test_Creating_Wait_Objects(unittest.TestCase):
 class Test_Wait_Manager(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.mg = wait.Wait_Manager()
+        self.mg = wait.Wait_Obj_Manager()
 
     def test_adding_a_wait_object(self)->None:
         wait_obj = self.mg.new_wait_obj("test_company", "test_car", "id_xyz")
@@ -82,6 +82,12 @@ class Test_Wait_Manager(unittest.TestCase):
 
         self.mg.stop_waiting_for("test_company", "test_car", "id_xyz")
         self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
+        self.assertEqual(self.mg.next_in_queue("test_company", "test_car", "id_xyz"), None)
+
+    def test_remove_given_wait_object(self):
+        obj = self.mg.new_wait_obj("test_company", "test_car", "id_xyz")
+        self.assertEqual(self.mg.next_in_queue("test_company", "test_car", "id_xyz"), obj)
+        self.mg.remove_wait_obj(obj)
         self.assertEqual(self.mg.next_in_queue("test_company", "test_car", "id_xyz"), None)
 
 
@@ -219,7 +225,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         t_list_2.join()
         t_send.join()
 
-    def __test_sending_second_request_after_statuses_are_available_but_before_timeout_succeeds(self):
+    def test_sending_second_request_after_statuses_are_available_but_before_timeout_succeeds(self):
         TIMEOUT =           0.05
         T_FIRST_REQUEST =   0.00
         T_SECOND_REQUEST =  0.08
