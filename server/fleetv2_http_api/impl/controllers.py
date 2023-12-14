@@ -105,7 +105,7 @@ def list_commands(
     )
 
     if db_commands or wait is None:
-        module_id, _, _ = deserialize_device_id(sdevice_id)
+        module_id, device_type, device_role = deserialize_device_id(sdevice_id)
         msg, code = __check_device_availability(company_name, car_name, module_id, sdevice_id)
         if code == 200: # device is available and has commands, return them
             return [__message_from_db(m) for m in db_commands], 200
