@@ -48,6 +48,7 @@ def __connect_to_database(db_server_config:Dict[str,Any])->None:
         username = db_server_config["username"],
         password = db_server_config["password"]
     )
+    
 
 
 def __set_up_database_jobs(db_cleanup_config:Dict[str,int])->None:

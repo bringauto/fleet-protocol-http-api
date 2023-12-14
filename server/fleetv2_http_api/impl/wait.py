@@ -16,12 +16,7 @@ class Wait_Obj_Manager:
         return self.__wait_dict.next_in_queue(company_name, car_name, sdevice_id) is not None
     
     def new_wait_obj(self, company_name:str, car_name:str, sdevice_id:str)->Wait_Obj:
-        wait_obj = Wait_Obj(
-            company_name, 
-            car_name, 
-            sdevice_id, 
-            self.__timeout_ms
-        )
+        wait_obj = Wait_Obj(company_name, car_name, sdevice_id, self.__timeout_ms)
         self.__wait_dict.add(company_name, car_name, sdevice_id, wait_obj)
         return wait_obj
 

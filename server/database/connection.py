@@ -44,7 +44,7 @@ def unset_connection_source()->None:
 class Connection_Source_Not_Set(Exception): pass
 class Invalid_Connection_Arguments(Exception): pass
 
-import sqlalchemy.exc
+
 def _new_connection_source(
     dialect:str, 
     dbapi:str, 
@@ -82,7 +82,7 @@ def set_db_connection(
     source = _new_connection_source(dialect, dbapi, dblocation, username, password)
     _connection_source = source
     assert(_connection_source is not None)
-    __create_all_tables(source)
+    create_all_tables(source)
     for foo in after_connect: foo()
 
 
@@ -98,7 +98,7 @@ def get_db_connection(
     return source
 
 
-def __create_all_tables(source:Engine)->None:
+def create_all_tables(source:Engine)->None:
     Base.metadata.create_all(source)
 
 
