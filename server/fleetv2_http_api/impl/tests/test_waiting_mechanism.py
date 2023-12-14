@@ -232,17 +232,4 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
 
 
 if __name__=="__main__": 
-    # runner = unittest.TextTestRunner()
-    # runner.run(Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(
-    #     "test_return_statuses_sent_after_the_request_without_applying_wait_mechanism"
-    # ))
-    # runner.run(Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(
-    #     "test_return_statuses_sent_after_the_request_when_wait_mechanism_is_applied"
-    # ))
-    # runner.run(Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(
-    #     "test_return_statuses_sent_after_the_request_with_wait_mechanism_with_timeout_exceeded"
-    # ))
-    # runner.run(Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(
-    #     "test_sending_empty_statuses_list_does_not_stop_the_waiting"
-    # ))
     unittest.main()
