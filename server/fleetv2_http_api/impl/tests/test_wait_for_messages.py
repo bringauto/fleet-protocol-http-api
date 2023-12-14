@@ -271,6 +271,29 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             send_commands("test_company", "test_car", self.sdevice_id, messages=[self.command])
         run_in_threads(list_test_commands, send_single_command)
 
+    def test_sending_commands_to_device_that_becomes_available_before_request_timeout(self):
+        T_REQUEST =             0.02
+        T_DEVICE_AVAILABLE =    0.05
+        T_COMMAND_TO_UNAVAIL =  0.01
+        T_COMMAND_TO_AVAIL =    0.08
+        TIMEOUT =               0.10
+        set_command_wait_timeout_s(TIMEOUT)
+        def list_test_commands():
+            time.sleep(T_REQUEST)
+            cmds, code = list_commands("test_company", "test_car", self.sdevice_id, wait="")
+            self.assertEqual(code, 200) 
+            self.assertEqual(len(cmds), 1)
+        def make_device_available():
+            time.sleep(T_DEVICE_AVAILABLE) 
+            send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.status])
+        def send_first_single_command():
+            time.sleep(T_COMMAND_TO_UNAVAIL)
+            send_commands("test_company", "test_car", self.sdevice_id, messages=[self.command])
+        def send_second_single_command():
+            time.sleep(T_COMMAND_TO_AVAIL) 
+            send_commands("test_company", "test_car", self.sdevice_id, messages=[self.command])
+        run_in_threads(list_test_commands, send_first_single_command, make_device_available, send_second_single_command)
+
     def test_requesting_late_commands_with_the_since_parameter_newer_than_the_commands_timestamp_returns_empty_list(self):
         send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.status])
         set_command_wait_timeout_s(0.1)
