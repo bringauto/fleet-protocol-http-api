@@ -5,7 +5,7 @@ from typing import Dict, List, Any, Optional
 class Wait_Manager:
 
     def __init__(self, timeout_ms:int = 5000)->None:
-        self.__wait_dict = Wait_Dict()
+        self.__wait_dict = Wait_Queue_Dict()
         self.__check_nonnegative_timeout(timeout_ms)
         self.__timeout_ms = timeout_ms
 
@@ -34,7 +34,7 @@ class Wait_Manager:
         return wait_obj
 
     def is_waiting_for(self, company_name:str, car_name:str, sdevice_id:str)->bool:
-        return self.__wait_dict.wait_obj_exists(company_name, car_name, sdevice_id)
+        return self.__wait_dict.obj_exists(company_name, car_name, sdevice_id)
 
     def set_timeout(self, timeout_ms:int)->None:
         self.__check_nonnegative_timeout(timeout_ms)
@@ -50,7 +50,7 @@ class Wait_Manager:
 
         if content is None: content = list()
 
-        if self.__wait_dict.wait_obj_exists(company, car, device):
+        if self.__wait_dict.obj_exists(company, car, device):
             wait_obj = self.__wait_dict.remove(company, car, device)
             if wait_obj is not None:
                 wait_obj.add_reponse_content(content)
@@ -65,16 +65,16 @@ class Wait_Manager:
         if timeout_ms < 0: raise ValueError("timeout_ms must be >= 0 ms")
 
 
-class Wait_Dict:
+class Wait_Queue_Dict:
 
     def __init__(self)->None:
         self.__wait_objs:Dict[str, Dict[str, Dict[str, List[Any]]]] = dict()
 
-    def add(self, company_name:str, car_name:str, sdevice_id:str, obj:Optional[Wait_Obj]=None)->None:
+    def add(self, company_name:str, car_name:str, sdevice_id:str, obj:Optional[Any]=None)->None:
         queue = self.__add_new_queue_if_new_device(company_name, car_name, sdevice_id)
         queue.append(obj)
     
-    def remove(self, company_name:str, car_name:str, sdevice_id:str)->Wait_Obj|None:
+    def remove(self, company_name:str, car_name:str, sdevice_id:str)->Any:
         queue = self.get_queue(company_name, car_name, sdevice_id)
         if queue is None or not queue: 
             return None
@@ -83,7 +83,7 @@ class Wait_Dict:
             self.__remove_empty_dict_part(company_name, car_name, sdevice_id)
             return obj
 
-    def wait_obj_exists(self, company_name:str, car_name:str, sdevice_id:str)->bool:
+    def obj_exists(self, company_name:str, car_name:str, sdevice_id:str)->bool:
         return (
             company_name in self.__wait_objs and
             car_name in self.__wait_objs[company_name] and

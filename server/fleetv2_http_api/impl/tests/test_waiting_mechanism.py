@@ -20,30 +20,30 @@ import fleetv2_http_api.impl.wait as wait
 class Test_Creating_Wait_Objects(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.wd = wait.Wait_Dict()
+        self.wd = wait.Wait_Queue_Dict()
 
-    def test_adding_new_wait_obj(self):
+    def test_adding_new_obj(self):
         self.wd.add("test_company", "test_car", "id_xyz")
-        self.assertTrue(self.wd.wait_obj_exists("test_company", "test_car", "id_xyz"))
-        self.assertFalse(self.wd.wait_obj_exists("test_company", "other_car", "id_ABC"))
+        self.assertTrue(self.wd.obj_exists("test_company", "test_car", "id_xyz"))
+        self.assertFalse(self.wd.obj_exists("test_company", "other_car", "id_ABC"))
 
         self.wd.add("test_company", "other_car", "id_ABC")
-        self.assertTrue(self.wd.wait_obj_exists("test_company", "other_car", "id_ABC"))
+        self.assertTrue(self.wd.obj_exists("test_company", "other_car", "id_ABC"))
 
-    def test_removing_waiting_object(self)->None:
+    def test_removing_object(self)->None:
         self.wd.add("test_company", "test_car", "id_xyz")
-        self.assertTrue(self.wd.wait_obj_exists("test_company", "test_car", "id_xyz"))
+        self.assertTrue(self.wd.obj_exists("test_company", "test_car", "id_xyz"))
         self.wd.remove("test_company", "test_car", "id_xyz")
-        self.assertFalse(self.wd.wait_obj_exists("test_company", "test_car", "id_xyz"))
+        self.assertFalse(self.wd.obj_exists("test_company", "test_car", "id_xyz"))
 
-    def test_after_adding_two_wait_objects_and_removing_one_the_wait_obj_exists_method_still_returns_true(self)->None:
+    def test_after_adding_two_wait_objects_and_removing_one_the_obj_exists_method_still_returns_true(self)->None:
         self.wd.add("test_company", "test_car", "id_xyz")
         self.wd.add("test_company", "test_car", "id_xyz")
         self.wd.remove("test_company", "test_car", "id_xyz")
-        self.assertTrue(self.wd.wait_obj_exists("test_company", "test_car", "id_xyz"))
+        self.assertTrue(self.wd.obj_exists("test_company", "test_car", "id_xyz"))
 
         self.wd.remove("test_company", "test_car", "id_xyz")
-        self.assertFalse(self.wd.wait_obj_exists("test_company", "test_car", "id_xyz"))
+        self.assertFalse(self.wd.obj_exists("test_company", "test_car", "id_xyz"))
 
 
 class Test_Wait_Manager(unittest.TestCase):
