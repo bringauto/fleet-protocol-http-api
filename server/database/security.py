@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import ClassVar, List
 
 import dataclasses
-from sqlalchemy import String, Integer, Engine
+from sqlalchemy import String, Integer, Engine, MetaData
 from sqlalchemy.orm import Mapped, mapped_column, Session
 from database.connection import Base, get_connection_source
 
@@ -41,6 +41,7 @@ from sqlalchemy import select
 def add_admin_key(name:str, connection_source:Optional[Engine]=None)->str:
     """Add an admin to the database and return the key."""
     if connection_source is None: connection_source = get_connection_source()
+    __create_admin_table_if_it_does_not_exist(connection_source)
     with Session(connection_source) as session:
         existing_admin = session.query(AdminBase).filter(AdminBase.name==name).first()
         if existing_admin is None:
@@ -51,15 +52,25 @@ def add_admin_key(name:str, connection_source:Optional[Engine]=None)->str:
             return key
         else:
             return ""
+        
+
+def __create_admin_table_if_it_does_not_exist(connection_source:Engine)->None:
+    with connection_source.connect() as connection:
+        if not connection_source.dialect.has_table(connection, AdminBase.__tablename__):
+            AdminBase.metadata.create_all(connection_source)
 
 
-from sqlalchemy import select
 def get_admin(key:str)->Admin_DB|None:
     loaded_admins  = get_loaded_admins()
     for admin in loaded_admins:
         if admin.key == key:
             return admin
     
+    source = get_connection_source()
+    if source is None: return None
+
+    __create_admin_table_if_it_does_not_exist(source)
+
     with Session(get_connection_source()) as session:
         result = session.execute(select(AdminBase).where(AdminBase.key==key)).first()
         if result is None: return None
