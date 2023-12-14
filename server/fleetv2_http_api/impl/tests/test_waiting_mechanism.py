@@ -129,6 +129,7 @@ from fleetv2_http_api.impl.controllers import set_status_wait_timeout_s, get_sta
 class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.TestCase):
 
     def setUp(self) -> None:
+        if os.path.exists("./example.db"): os.remove("./example.db")
         set_db_connection("sqlite","pysqlite","/example.db")
         clear_device_ids()
         payload_example = Payload(
@@ -143,6 +144,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             device_id=self.device_id,
             payload=payload_example
         )
+        set_status_wait_timeout_s(1)
         self.original_timeout = get_status_wait_timeout_s()
 
 
@@ -226,8 +228,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
 
     def tearDown(self) -> None:
         set_status_wait_timeout_s(self.original_timeout)
-        if os.path.exists("./example.db"):
-            os.remove("./example.db")
+        if os.path.exists("./example.db"): os.remove("./example.db")
 
 
 if __name__=="__main__": 
