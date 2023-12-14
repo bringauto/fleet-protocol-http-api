@@ -13,7 +13,7 @@ class Wait_Obj_Manager:
     def timeout_ms(self)->int: return self.__timeout_ms
 
     def is_waiting_for(self, company_name:str, car_name:str, sdevice_id:str)->bool:
-        return self.__wait_dict.obj_exists(company_name, car_name, sdevice_id)
+        return self.__wait_dict.next_in_queue(company_name, car_name, sdevice_id) is not None
     
     def new_wait_obj(self, company_name:str, car_name:str, sdevice_id:str, timestamp_ms:Optional[int]=None)->Wait_Obj:
         wait_obj = Wait_Obj(
@@ -87,6 +87,13 @@ class Wait_Queue_Dict:
         queue = self.get_queue(company_name, car_name, sdevice_id)
         if queue is None or not queue: return None
         else: return queue[0]
+
+    def obj_exists(self, company_name:str, car_name:str, sdevice_id:str)->bool:
+        return (
+            company_name in self.__wait_objs and
+            car_name in self.__wait_objs[company_name] and
+            sdevice_id in self.__wait_objs[company_name][car_name]
+        )
     
     def remove(self, company_name:str, car_name:str, sdevice_id:str)->Any:
         queue = self.get_queue(company_name, car_name, sdevice_id)
@@ -96,13 +103,6 @@ class Wait_Queue_Dict:
             obj = self.__wait_objs[company_name][car_name][sdevice_id].pop(0)
             self.__remove_empty_dict_part(company_name, car_name, sdevice_id)
             return obj
-
-    def obj_exists(self, company_name:str, car_name:str, sdevice_id:str)->bool:
-        return (
-            company_name in self.__wait_objs and
-            car_name in self.__wait_objs[company_name] and
-            sdevice_id in self.__wait_objs[company_name][car_name]
-        )
     
     def __add_new_queue_if_new_device(self, company_name:str, car_name:str, sdevice_id:str)->List[Any]:
         if company_name not in self.__wait_objs:
