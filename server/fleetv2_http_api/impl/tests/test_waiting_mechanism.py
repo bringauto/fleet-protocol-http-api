@@ -76,47 +76,13 @@ class Test_Wait_Manager(unittest.TestCase):
         self.mg = wait.Wait_Manager()
 
     def test_adding_a_wait_object(self)->None:
-        self.mg.add_wait_obj("test_company", "test_car", "id_xyz", 78)
+        self.mg.add_wait_obj("test_company", "test_car", "id_xyz")
         self.mg.is_waiting_for("test_company", "test_car", "id_xyz")
 
     def test_object_is_removed_after_manually_stopping_waiting_for_it(self):
-        self.mg.add_wait_obj("test_company", "test_car", "id_xyz", 78)
+        self.mg.add_wait_obj("test_company", "test_car", "id_xyz")
         self.mg.stop_waiting_for("test_company", "test_car", "id_xyz")
         self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
-
-    def test_timeout_of_a_single_obj(self):
-        self.mg.add_wait_obj("test_company", "test_car", "id_xyz", 78)
-        self.mg.set_timeout(100)
-        self.mg.check_timeouts(curr_time_ms=177)
-        self.assertTrue(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
-        self.mg.check_timeouts(curr_time_ms=178)
-        self.assertTrue(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
-        self.mg.check_timeouts(curr_time_ms=179)
-        self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
-
-    def test_when_checking_timeout_objects_with_timestamp_older_than_current_minus_timeout_are_removed(self):
-        self.mg.add_wait_obj("test_company", "test_car", "id_1", 40)
-        self.mg.add_wait_obj("test_company", "test_car", "id_2", 45)
-        self.mg.add_wait_obj("test_company", "test_car", "id_3", 50)
-        self.mg.add_wait_obj("test_company", "test_car", "id_4", 55)
-
-        self.mg.set_timeout(10)
-        self.mg.check_timeouts(curr_time_ms=60)
-        self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_1"))
-        self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_2"))
-        self.assertTrue(self.mg.is_waiting_for("test_company", "test_car", "id_3"))
-        self.assertTrue(self.mg.is_waiting_for("test_company", "test_car", "id_4"))
-
-
-    def test_timeout_of_all_objects(self):
-        self.mg.add_wait_obj("test_company", "test_car", "id_1", 40)
-        self.mg.add_wait_obj("test_company", "test_car", "id_2", 45)
-        self.mg.add_wait_obj("test_company", "test_car", "id_3", 50)
-        self.mg.set_timeout(10)
-        self.mg.check_timeouts(curr_time_ms=100000000)
-        self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_1"))
-        self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_2"))
-        self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_3"))
 
 
 
