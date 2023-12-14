@@ -271,6 +271,18 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             send_commands("test_company", "test_car", self.sdevice_id, messages=[self.command])
         run_in_threads(list_test_commands, send_single_command)
 
+    def test_requesting_late_commands_with_the_since_parameter_newer_than_the_commands_timestamp_returns_empty_list(self):
+        send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.status])
+        set_command_wait_timeout_s(0.1)
+        def list_test_commands():
+            cmds, code = list_commands("test_company", "test_car", self.sdevice_id, wait="", until=self.command.timestamp-1)
+            self.assertEqual(code, 200)
+            self.assertEqual(len(cmds), 0)
+        def send_single_command():
+            time.sleep(0.02) 
+            send_commands("test_company", "test_car", self.sdevice_id, messages=[self.command])
+        run_in_threads(list_test_commands, send_single_command)
+
     def tearDown(self) -> None:
         if os.path.exists("./example.db"): os.remove("./example.db")
 
