@@ -33,6 +33,8 @@ You can run unittests for the server by running `./test_server.sh` in the root d
 
 
 ## Usage
+
+Before run, ensure the `"host*` value in the `config.json` is set to `"localhost"`.
 To run the server execute the following from the root directory:
 
 ```bash
@@ -52,7 +54,7 @@ Your OpenAPI definition lives here:
 http://localhost:8080/openapi.json
 ```
 ### Running with Docker
-
+Before run, ensure the `"host*` value in the `config.json` is set to `"postgresql-database"`.
 To run the server on a Docker container, run:
 
 ```bash
