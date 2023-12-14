@@ -41,6 +41,12 @@ def set_status_wait_timeout_s(timeout_s:float)->None:
 def get_status_wait_timeout_s()->float: 
     return __status_wait_manager.timeout_ms*0.001
 
+__command_wait_manager = Wait_Obj_Manager()
+def set_command_wait_timeout_s(timeout_s:float)->None: 
+    __status_wait_manager.set_timeout(int(1000*timeout_s))
+def get_command_wait_timeout_s()->float: 
+    return __status_wait_manager.timeout_ms*0.001
+
        
 def available_cars()->List[Car]:
     """Return a list of serialized car info for cars owning at least one available device."""
@@ -89,19 +95,33 @@ def list_commands(
     having the timestamp equal or lower than 'until'.
     """
 
-    if company_name not in device_ids(): return [], 404 # type: ignore
-    elif car_name not in device_ids()[company_name]: return [], 404 # type: ignore
+    db_commands = __list_messages(
+        company_name,
+        car_name,
+        MessageType.COMMAND_TYPE,
+        sdevice_id,
+        all_available, 
+        until
+    )
 
-    commands = [__message_from_db(m) for m in __list_messages(
-        company_name=company_name,
-        car_name=car_name,
-        message_type=MessageType.COMMAND_TYPE,
-        serialized_device_id=sdevice_id,
-        all_available=all_available, 
-        limit_timestamp=until
-    )]
-
-    return commands, 200
+    if db_commands or wait is None:
+        msg, code = __check_device_availability(company_name, car_name, db_commands[0].module_id, sdevice_id)
+        if code == 200: # device is available and has commands, return them
+            return [__message_from_db(m) for m in db_commands], 200
+        else:
+            return [], code # type: ignore
+    else:
+        awaited_commands:List[Message] = __command_wait_manager.wait_and_get_reponse(company_name, car_name, sdevice_id)
+        if awaited_commands:
+            if until is not None and awaited_commands[-1].timestamp > until: 
+                return [], 200
+            return awaited_commands, 200
+        else:
+            if company_name not in device_ids(): 
+                return [], 404 # type: ignore
+            elif car_name not in device_ids()[company_name]: 
+                return [], 404 # type: ignore
+            return [], 200
 
 
 def list_statuses(
@@ -160,20 +180,14 @@ def send_commands(
 
     If for any command the device_id does not correspond to the sdevice_id, exception is raised.
     """
+    msg, code = __check_sent_commands(company_name, car_name, sdevice_id, messages, body)
+    if code==404: return msg, code
+    assert messages is not None
+    
+    __command_wait_manager.stop_waiting_for(company_name, car_name, sdevice_id, reponse_content=messages)
+    commands_to_db = __message_db_list(messages, sdevice_id, MessageType.COMMAND_TYPE)
+    return send_messages_to_database(company_name, car_name, *commands_to_db)
 
-    if messages is None: messages = []
-    messages.extend([Message.from_dict(b) for b in body])
-    if len(messages) == 0: return "", 200
-    errors = __check_messages(MessageType.COMMAND_TYPE, sdevice_id, *messages)
-    if errors[0] != "": return errors
- 
-    module_id = messages[0].device_id.module_id
-    msg, code = __check_device_availability(company_name, car_name, module_id, sdevice_id)
-    if code==404: 
-        return msg, code
-    else:
-        commands_to_db = __message_db_list(messages, sdevice_id, MessageType.COMMAND_TYPE)
-        return send_messages_to_database(company_name, car_name, *commands_to_db)
 
 def send_statuses(
     company_name:str, 
@@ -215,6 +229,15 @@ def __check_and_handle_first_status(company:str, car:str, sdevice_id:str, messag
     if command_removal_warnings.strip() != "": 
         command_removal_warnings =  "\n\n" + command_removal_warnings
     return command_removal_warnings
+
+def __check_sent_commands(company_name:str, car_name:str, sdevice_id:str, messages:None|List[Message], body:List[Dict] = [])->Tuple[str, int]:
+    if messages is None: messages = []
+    messages.extend([Message.from_dict(b) for b in body])
+    if len(messages) == 0: return "", 200
+    errors = __check_messages(MessageType.COMMAND_TYPE, sdevice_id, *messages)
+    if errors[0] != "": return errors
+    module_id = messages[0].device_id.module_id
+    return __check_device_availability(company_name, car_name, module_id, sdevice_id)
 
 def __check_messages(
     expected_message_type:str,

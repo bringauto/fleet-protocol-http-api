@@ -2,6 +2,12 @@ import sys
 sys.path.append("server")
 
 
+import threading
+import os 
+import time
+from typing import Callable
+
+
 import unittest
 from database.device_ids import clear_device_ids, serialized_device_id
 from database.database_controller import set_db_connection
@@ -13,12 +19,14 @@ from fleetv2_http_api.impl.controllers import (
 )
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Payload, Message
-
-
-import threading
-import os 
-import time
 from fleetv2_http_api.impl.controllers import set_status_wait_timeout_s, get_status_wait_timeout_s
+
+
+def run_in_threads(*functions:Callable[[],None])->None:
+    threads = [threading.Thread(target=f) for f in functions]
+    for t in threads: t.start()
+    for t in threads: t.join()
+        
 
 class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.TestCase):
 
@@ -41,165 +49,92 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         set_status_wait_timeout_s(1)
         self.original_timeout = get_status_wait_timeout_s()
 
-
     def test_return_statuses_sent_after_the_request_when_wait_mechanism_is_applied(self):
-
         def list_test_statuses():
             msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
             self.assertEqual(code, 200)
             self.assertEqual(len(msg), 1)
-
         def send_single_status():
             time.sleep(0.01) 
             send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.st])
-
-        t_list = threading.Thread(target=list_test_statuses)
-        t_send = threading.Thread(target=send_single_status)
-        t_list.start()
-        t_send.start()
-        t_list.join()
-        t_send.join()
-
+        run_in_threads(list_test_statuses, send_single_status)
 
     def test_return_statuses_sent_after_the_request_without_applying_wait_mechanism(self):
-
         def list_test_statuses():
             msg, code = list_statuses("test_company", "test_car", self.sdevice_id)
             self.assertEqual(code, 404) # 404 is returned as the list_statuses does not wait for the statuses to arrive
             self.assertEqual(len(msg), 0)
-
         def send_single_status():
             time.sleep(0.01) 
             send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.st])
-
-        t_list = threading.Thread(target=list_test_statuses)
-        t_send = threading.Thread(target=send_single_status)
-        t_list.start()
-        t_send.start()
-        t_list.join()
-        t_send.join()
+        run_in_threads(list_test_statuses, send_single_status)
 
     def test_return_statuses_sent_after_the_request_with_wait_mechanism_with_timeout_exceeded(self):
-
         def list_test_statuses():
             set_status_wait_timeout_s(0.01)
             msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
             self.assertEqual(code, 404)
-
         def send_single_status():
             time.sleep(0.02) 
             send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.st])
-
-        t_list = threading.Thread(target=list_test_statuses)
-        t_send = threading.Thread(target=send_single_status)
-        t_list.start()
-        t_send.start()
-        t_list.join()
-
+        run_in_threads(list_test_statuses, send_single_status)
 
     def test_sending_empty_statuses_list_does_not_stop_the_waiting(self):
-
         def list_test_statuses():
             msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
             self.assertEqual(code, 200) 
             self.assertEqual(len(msg), 1)
-
         def send_single_status():
             time.sleep(0.05) 
             send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.st])
-
         def send_no_status():
             time.sleep(0.02) 
             send_statuses("test_company", "test_car", self.sdevice_id, messages=[])
-
-        t_list = threading.Thread(target=list_test_statuses)
-        t_send_1 = threading.Thread(target=send_no_status)
-        t_send_2 = threading.Thread(target=send_single_status)
-        t_list.start()
-        t_send_1.start()
-        t_send_2.start()
-        t_list.join()
-        t_send_1.join()
-        t_send_2.join()
+        run_in_threads(list_test_statuses, send_no_status, send_single_status)
 
     def test_sending_second_request_does_not_affect_response_for_the_first_one(self):
-
         set_status_wait_timeout_s(0.02)
-
         def list_test_statuses_1():
-            msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
+            _, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
             self.assertEqual(code, 404) 
-
         def list_test_statuses_2():
             time.sleep(0.06)
-            msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
+            _, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
             self.assertEqual(code, 200) 
-
         def send_single_status():
             time.sleep(0.04)
             send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.st])
-
-        t_list_1 = threading.Thread(target=list_test_statuses_1)
-        t_list_2 = threading.Thread(target=list_test_statuses_2)
-        t_send = threading.Thread(target=send_single_status)
-        t_list_1.start()
-        t_list_2.start()
-        t_send.start()
-        t_list_1.join()
-        t_list_2.join()
-        t_send.join()
+        run_in_threads(list_test_statuses_1, list_test_statuses_2, send_single_status)
 
     def test_sending_second_request_after_statuses_are_available_but_before_timeout_succeeds(self):
         TIMEOUT =           0.05
         T_FIRST_REQUEST =   0.00
         T_SECOND_REQUEST =  0.08
         T_STATUSES_SENT =   0.1
-
         set_status_wait_timeout_s(TIMEOUT)
-
         def list_test_statuses_1():
             time.sleep(T_FIRST_REQUEST)
             msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
             self.assertEqual(code, 404) 
-
         def list_test_statuses_2():
             time.sleep(T_SECOND_REQUEST)
             msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
             self.assertEqual(code, 200) 
-
         def send_single_status():
             time.sleep(T_STATUSES_SENT)
             send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.st])
-
-        t_list_1 = threading.Thread(target=list_test_statuses_1)
-        t_list_2 = threading.Thread(target=list_test_statuses_2)
-        t_send = threading.Thread(target=send_single_status)
-        t_list_1.start()
-        t_list_2.start()
-        t_send.start()
-        t_list_1.join()
-        t_list_2.join()
-        t_send.join()
+        run_in_threads(list_test_statuses_1, list_test_statuses_2, send_single_status)
 
     def test_requesting_late_statuses_with_the_since_parameter_newer_than_the_statuses_timestamp_returns_empty_list(self):
-
         set_status_wait_timeout_s(0.1)
-
         def list_test_statuses():
             msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="", since=self.st.timestamp+1)
             self.assertEqual(code, 200)
             self.assertEqual(len(msg), 0)
-
         def send_single_status():
             time.sleep(0.02) 
             send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.st])
-
-        t_list = threading.Thread(target=list_test_statuses)
-        t_send = threading.Thread(target=send_single_status)
-        t_list.start()
-        t_send.start()
-        t_list.join()
-        t_send.join()
+        run_in_threads(list_test_statuses, send_single_status)
 
     def tearDown(self) -> None:
         set_status_wait_timeout_s(self.original_timeout)
@@ -223,18 +158,11 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             msg, code = list_commands("test_company", "test_car", self.sdevice_id, wait="")
             self.assertEqual(code, 200)
             self.assertEqual(len(msg), 1)
-
         def send_single_status_and_command():
             time.sleep(0.01) 
             send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.status])
             send_commands("test_company", "test_car", self.sdevice_id, messages=[self.command])
-
-        t_list = threading.Thread(target=list_test_commands)
-        t_send = threading.Thread(target=send_single_status_and_command)
-        t_list.start()
-        t_send.start()
-        t_list.join()
-        t_send.join()
+        run_in_threads(list_test_commands, send_single_status_and_command)
 
     def tearDown(self) -> None:
         if os.path.exists("./example.db"): os.remove("./example.db")
