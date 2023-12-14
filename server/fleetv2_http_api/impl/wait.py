@@ -15,13 +15,12 @@ class Wait_Obj_Manager:
     def is_waiting_for(self, company_name:str, car_name:str, sdevice_id:str)->bool:
         return self.__wait_dict.next_in_queue(company_name, car_name, sdevice_id) is not None
     
-    def new_wait_obj(self, company_name:str, car_name:str, sdevice_id:str, timestamp_ms:Optional[int]=None)->Wait_Obj:
+    def new_wait_obj(self, company_name:str, car_name:str, sdevice_id:str)->Wait_Obj:
         wait_obj = Wait_Obj(
             company_name, 
             car_name, 
             sdevice_id, 
-            self.__timeout_ms, 
-            timestamp_ms
+            self.__timeout_ms
         )
         self.__wait_dict.add(company_name, car_name, sdevice_id, wait_obj)
         return wait_obj
@@ -58,7 +57,7 @@ class Wait_Obj_Manager:
                 wait_obj.add_reponse_content(reponse_content)
 
     def wait_and_get_reponse(self, company_name:str, car_name:str, sdevice_id:str)->List[Any]:
-        wait_obj = self.new_wait_obj(company_name, car_name, sdevice_id, Wait_Obj.timestamp())
+        wait_obj = self.new_wait_obj(company_name, car_name, sdevice_id)
         reponse = wait_obj.reponse()
         self.remove_wait_obj(wait_obj)
         return reponse
@@ -129,12 +128,10 @@ class Wait_Obj:
         company_name:str, 
         car_name:str, 
         sdevice_id:str, 
-        timeout_ms:int, 
-        timestamp_ms:Optional[int]=None,
+        timeout_ms:int
         )->None:
     
-        if timestamp_ms is None: timestamp_ms = Wait_Obj.timestamp()
-        self.__timestamp_ms = timestamp_ms
+        self.__timestamp_ms = Wait_Obj.timestamp()
         self.__company_name = company_name
         self.__car_name = car_name
         self.__sdevice_id = sdevice_id
