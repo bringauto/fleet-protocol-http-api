@@ -525,16 +525,16 @@ class Test_Listing_Commands_And_Statuses_Of_Nonexistent_Cars(unittest.TestCase):
         )
 
     def test_listing_statuses_of_nonexistent_company_returns_code_404(self):
-        self.assertEqual(list_statuses("nonexistent_company", "a_car", "..."), ([], 404))
+        self.assertEqual(list_statuses("nonexistent_company", "a_car", "7_4_role"), ([], 404))
 
     def test_listing_commands_of_nonexistent_company_returns_code_404(self):
-        self.assertEqual(list_commands("nonexistent_company", "a_car", "..."), ([], 404))
+        self.assertEqual(list_commands("nonexistent_company", "a_car", "7_4_role"), ([], 404))
 
     def test_listing_statuses_of_nonexistent_car(self):
-        self.assertEqual(list_statuses("a_company", "nonexistent_car", "..."), ([], 404))
+        self.assertEqual(list_statuses("a_company", "nonexistent_car", "7_4_role"), ([], 404))
 
     def test_listing_commands_of_nonexistent_car(self):
-        self.assertEqual(list_commands("a_company", "nonexistent_car", "..."), ([], 404))
+        self.assertEqual(list_commands("a_company", "nonexistent_car", "7_4_role"), ([], 404))
 
 
 
@@ -545,7 +545,7 @@ class Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_
         payload = Payload(message_type=MessageType.COMMAND_TYPE, encoding=EncodingType.JSON, data={"message":"Beep"})
         device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
         command = Message(timestamp=10, device_id=device_id, payload=payload)
-        _, code = send_statuses("test_company", "test_car", "...", [command])
+        _, code = send_statuses("test_company", "test_car", "7_4_role", [command])
         self.assertEqual(code, 500)
 
     def test_send_commands_accepts_only_commands(self):
