@@ -11,9 +11,6 @@ class Wait_Manager:
         self.__timeout_ms = timeout_ms
 
     @property
-    def waiting_for_anything(self)->bool:
-        return bool(self.__wait_objs)
-    @property
     def timeout_ms(self)->int: return self.__timeout_ms
     
     def add_wait_obj(self, company_name:str, car_name:str, sdevice_id:str, timestamp_ms:Optional[int]=None)->Wait_Obj:
@@ -56,8 +53,8 @@ class Wait_Manager:
             wait_obj.add_reponse_content(content)
 
 
-    def wait_for(self, company_name:str, car_name:str, sdevice_id:str, curr_timestamp_ms:Optional[int]=None)->List[Any]:
-        wait_obj = self.add_wait_obj(company_name, car_name, sdevice_id, curr_timestamp_ms)
+    def wait_for(self, company_name:str, car_name:str, sdevice_id:str)->List[Any]:
+        wait_obj = self.add_wait_obj(company_name, car_name, sdevice_id, Wait_Obj.timestamp())
         return wait_obj.response()
 
     def __insert_into_list(self, wait_obj:Wait_Obj)->None:

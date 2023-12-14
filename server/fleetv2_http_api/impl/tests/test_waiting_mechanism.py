@@ -75,7 +75,7 @@ class Test_Wait_Manager(unittest.TestCase):
     def setUp(self) -> None:
         self.mg = wait.Wait_Manager()
 
-    def test_wait_for(self)->None:
+    def test_adding_a_wait_object(self)->None:
         self.mg.add_wait_obj("test_company", "test_car", "id_xyz", 78)
         self.mg.is_waiting_for("test_company", "test_car", "id_xyz")
 
@@ -106,7 +106,7 @@ class Test_Wait_Manager(unittest.TestCase):
         self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_2"))
         self.assertTrue(self.mg.is_waiting_for("test_company", "test_car", "id_3"))
         self.assertTrue(self.mg.is_waiting_for("test_company", "test_car", "id_4"))
-        self.assertTrue(self.mg.waiting_for_anything)
+
 
     def test_timeout_of_all_objects(self):
         self.mg.add_wait_obj("test_company", "test_car", "id_1", 40)
@@ -117,7 +117,6 @@ class Test_Wait_Manager(unittest.TestCase):
         self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_1"))
         self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_2"))
         self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_3"))
-        self.assertFalse(self.mg.waiting_for_anything)
 
 
 
@@ -153,6 +152,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         def list_test_statuses():
             msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
             self.assertEqual(code, 200)
+            self.assertEqual(len(msg), 1)
 
         def send_single_status():
             time.sleep(0.01) 
@@ -171,6 +171,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         def list_test_statuses():
             msg, code = list_statuses("test_company", "test_car", self.sdevice_id)
             self.assertEqual(code, 404) # 404 is returned as the list_statuses does not wait for the statuses to arrive
+            self.assertEqual(len(msg), 0)
 
         def send_single_status():
             time.sleep(0.01) 
