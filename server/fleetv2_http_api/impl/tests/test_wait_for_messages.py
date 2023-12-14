@@ -127,7 +127,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.st])
         run_in_threads(list_test_statuses_1, list_test_statuses_2, send_single_status)
 
-    def test_sending_second_request_after_statuses_are_available_but_before_timeout_succeeds(self):
+    def test_sending_second_request_after_statuses_are_available_but_before_timeout(self):
         TIMEOUT =           0.05
         T_FIRST_REQUEST =   0.00
         T_SECOND_REQUEST =  0.08
@@ -222,6 +222,43 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             send_commands("test_company", "test_car", self.sdevice_id, messages=[])
         run_in_threads(list_test_commands, send_no_command, send_single_command)
 
+    def test_sending_second_request_does_not_affect_response_for_the_first_one(self):
+        send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.status])
+        set_command_wait_timeout_s(0.02)
+        def list_test_commands_1():
+            cmds, code = list_commands("test_company", "test_car", self.sdevice_id, wait="")
+            self.assertEqual(code, 200) 
+            self.assertEqual(len(cmds), 0)
+        def list_test_commands_2():
+            time.sleep(0.06)
+            _, code = list_commands("test_company", "test_car", self.sdevice_id, wait="")
+            self.assertEqual(code, 200) 
+        def send_single_command():
+            time.sleep(0.04)
+            send_commands("test_company", "test_car", self.sdevice_id, messages=[self.command])
+        run_in_threads(list_test_commands_1, list_test_commands_2, send_single_command)
+
+    def test_sending_second_request_after_commands_are_available_but_before_timeout(self):
+        TIMEOUT =           0.05
+        T_FIRST_REQUEST =   0.00
+        T_SECOND_REQUEST =  0.08
+        T_COMMANDS_SENT =   0.1
+        send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.status])
+        set_command_wait_timeout_s(TIMEOUT)
+        def list_test_commands_1():
+            time.sleep(T_FIRST_REQUEST)
+            cmds, code = list_commands("test_company", "test_car", self.sdevice_id, wait="")
+            self.assertEqual(code, 200) 
+            self.assertEqual(len(cmds), 0)
+        def list_test_commands_2():
+            time.sleep(T_SECOND_REQUEST)
+            cmds, code = list_commands("test_company", "test_car", self.sdevice_id, wait="")
+            self.assertEqual(code, 200) 
+            self.assertEqual(len(cmds), 1)
+        def send_single_command():
+            time.sleep(T_COMMANDS_SENT)
+            send_commands("test_company", "test_car", self.sdevice_id, messages=[self.command])
+        run_in_threads(list_test_commands_1, list_test_commands_2, send_single_command)
 
     def tearDown(self) -> None:
         if os.path.exists("./example.db"): os.remove("./example.db")
