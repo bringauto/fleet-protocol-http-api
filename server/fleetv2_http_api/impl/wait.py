@@ -12,11 +12,6 @@ class Wait_Manager:
     @property
     def timeout_ms(self)->int: return self.__timeout_ms
 
-    def number_of_waiting_objects(self,company_name:str, car_name:str, sdevice_id:str)->int:
-        queue = self.__wait_dict.get_queue(company_name, car_name, sdevice_id)
-        if queue is None: return 0
-        else: return len(queue)
-
     def add_wait_obj(self, company_name:str, car_name:str, sdevice_id:str, timestamp_ms:Optional[int]=None)->Wait_Obj:
         wait_obj = Wait_Obj(
             company_name, 
@@ -49,7 +44,7 @@ class Wait_Manager:
         if content is None: content = list()
 
         if self.__wait_dict.obj_exists(company, car, device):
-            wait_obj = self.__wait_dict.remove(company, car, device)
+            wait_obj:Wait_Obj|None = self.__wait_dict.remove(company, car, device)
             if wait_obj is not None:
                 wait_obj.add_reponse_content(content)
 
