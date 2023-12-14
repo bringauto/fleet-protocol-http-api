@@ -18,6 +18,6 @@
         }
     },
     "server_response": {
-        "timeout_in_seconds": 10
+        "timeout_in_seconds": 5
     }
 }

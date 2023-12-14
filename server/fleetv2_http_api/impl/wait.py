@@ -53,7 +53,7 @@ class Wait_Obj_Manager:
 
     def wait_and_get_reponse(self, company_name:str, car_name:str, sdevice_id:str)->List[Any]:
         wait_obj = self.new_wait_obj(company_name, car_name, sdevice_id)
-        reponse = wait_obj.reponse()
+        reponse = wait_obj.response()
         self.remove_wait_obj(wait_obj)
         return reponse
 
@@ -130,7 +130,7 @@ class Wait_Obj:
         self.__company_name = company_name
         self.__car_name = car_name
         self.__sdevice_id = sdevice_id
-        self.__response_content:List[Any] = list()
+        self.__response_content:List[Any]|None = None
         self.__timeout_ms = timeout_ms
 
     @property
@@ -143,13 +143,14 @@ class Wait_Obj:
     def sdevice_id(self)->str: return self.__sdevice_id
 
     def add_reponse_content(self, content:List[Any])->None:
-        self.__response_content.append(content)
+        self.__response_content = content.copy()
 
-    def reponse(self)->List[Any]:
+    def response(self)->List[Any]:
         while True:
-            if self.__response_content: 
+            if self.__response_content is not None: 
                 break
             elif self.__timestamp_ms + self.__timeout_ms < Wait_Obj.timestamp(): 
+                self.__response_content = list()
                 break
         return self.__response_content
 

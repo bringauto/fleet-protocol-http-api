@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import ClassVar, List
 
 import dataclasses
-from sqlalchemy import String, Integer, Engine, MetaData
+from sqlalchemy import String, Integer, Engine
 from sqlalchemy.orm import Mapped, mapped_column, Session
 from database.connection import Base, get_connection_source
 

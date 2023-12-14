@@ -36,8 +36,10 @@ from fleetv2_http_api.impl.wait import Wait_Obj_Manager
 
 
 __status_wait_manager = Wait_Obj_Manager()
-def set_status_wait_timeout_s(timeout_s:float)->None: __status_wait_manager.set_timeout(int(1000*timeout_s))
-def get_status_wait_timeout_s()->float: return __status_wait_manager.timeout_ms*0.001
+def set_status_wait_timeout_s(timeout_s:float)->None: 
+    __status_wait_manager.set_timeout(int(1000*timeout_s))
+def get_status_wait_timeout_s()->float: 
+    return __status_wait_manager.timeout_ms*0.001
 
        
 def available_cars()->List[Car]:
@@ -184,7 +186,7 @@ def list_statuses(
             car_name, 
             sdevice_id
         )
-        return awaited_statuses, (200 if awaited_statuses else 408)
+        return awaited_statuses, (200 if awaited_statuses else 404)
 
 
 def send_statuses(

@@ -160,7 +160,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         def list_test_statuses():
             set_status_wait_timeout_s(0.01)
             msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
-            self.assertEqual(code, 408)
+            self.assertEqual(code, 404)
 
         def send_single_status():
             time.sleep(0.02) 
@@ -204,7 +204,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
 
         def list_test_statuses_1():
             msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
-            self.assertEqual(code, 408) 
+            self.assertEqual(code, 404) 
 
         def list_test_statuses_2():
             time.sleep(0.06)
@@ -236,7 +236,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         def list_test_statuses_1():
             time.sleep(T_FIRST_REQUEST)
             msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
-            self.assertEqual(code, 408) 
+            self.assertEqual(code, 404) 
 
         def list_test_statuses_2():
             time.sleep(T_SECOND_REQUEST)
