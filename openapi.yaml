@@ -50,9 +50,6 @@ paths:
         '500':
           description: Cannot display available cars due to internal server error.
 
-    parameters:
-      - $ref: '#/components/parameters/Wait'
-
   /available-devices/{company_name}/{car_name}:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
@@ -86,7 +83,6 @@ paths:
       - $ref: '#/components/parameters/CompanyName'
       - $ref: '#/components/parameters/CarName'
       - $ref: "#/components/parameters/ModuleId"
-      - $ref: '#/components/parameters/Wait'
 
 
   /status/{company_name}/{car_name}/{sdevice_id}:
