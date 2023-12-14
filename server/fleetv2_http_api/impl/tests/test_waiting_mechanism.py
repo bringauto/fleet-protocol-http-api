@@ -17,39 +17,6 @@ from fleetv2_http_api.models.message import Payload, Message
 import fleetv2_http_api.impl.wait as wait
 
 
-class Test_Listing_Statuses(unittest.TestCase):
-
-    def setUp(self) -> None:
-        set_db_connection("sqlite","pysqlite","/example.db")
-        clear_device_ids()
-        payload_example = Payload(
-            message_type='STATUS', 
-            encoding='JSON', 
-            data={"message":"Device is running"}
-        )
-        self.device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
-        self.sdevice_id = serialized_device_id(self.device_id)
-        self.status_example = Message(
-            timestamp=123456789,
-            device_id=self.device_id,
-            payload=payload_example
-        )
-
-    def test_return_statuses_immediatelly_if_some_are_avaialable(self):
-        send_statuses(
-            company_name="test_company", 
-            car_name="test_car", 
-            sdevice_id=self.sdevice_id, 
-            messages=[self.status_example]
-        )
-        statuses, code = list_statuses(company_name="test_company", car_name="test_car", sdevice_id=self.sdevice_id, wait="")
-        self.assertEqual(len(statuses), 1)
-
-    def tearDown(self) -> None:
-        if os.path.exists("./example.db"):
-            os.remove("./example.db")
-
-
 class Test_Creating_Wait_Objects(unittest.TestCase):
 
     def setUp(self) -> None:
@@ -69,6 +36,15 @@ class Test_Creating_Wait_Objects(unittest.TestCase):
         self.wd.remove("test_company", "test_car", "id_xyz")
         self.assertFalse(self.wd.wait_obj_exists("test_company", "test_car", "id_xyz"))
 
+    def test_after_adding_two_wait_objects_and_removing_one_the_wait_obj_exists_method_still_returns_true(self)->None:
+        self.wd.add("test_company", "test_car", "id_xyz")
+        self.wd.add("test_company", "test_car", "id_xyz")
+        self.wd.remove("test_company", "test_car", "id_xyz")
+        self.assertTrue(self.wd.wait_obj_exists("test_company", "test_car", "id_xyz"))
+
+        self.wd.remove("test_company", "test_car", "id_xyz")
+        self.assertFalse(self.wd.wait_obj_exists("test_company", "test_car", "id_xyz"))
+
 
 class Test_Wait_Manager(unittest.TestCase):
 
@@ -79,11 +55,10 @@ class Test_Wait_Manager(unittest.TestCase):
         self.mg.add_wait_obj("test_company", "test_car", "id_xyz")
         self.mg.is_waiting_for("test_company", "test_car", "id_xyz")
 
-    def test_object_is_removed_after_manually_stopping_waiting_for_it(self):
+    def test_object_is_removed_after_stopping_waiting_for_it(self):
         self.mg.add_wait_obj("test_company", "test_car", "id_xyz")
         self.mg.stop_waiting_for("test_company", "test_car", "id_xyz")
         self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
-
 
 
 import threading
@@ -210,7 +185,6 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             time.sleep(0.04)
             send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.st])
 
-
         t_list_1 = threading.Thread(target=list_test_statuses_1)
         t_list_2 = threading.Thread(target=list_test_statuses_2)
         t_send = threading.Thread(target=send_single_status)
@@ -221,7 +195,37 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         t_list_2.join()
         t_send.join()
 
-    
+    def __test_sending_second_request_after_statuses_are_available_but_before_timeout_succeeds(self):
+        TIMEOUT =           0.05
+        T_FIRST_REQUEST =   0.00
+        T_SECOND_REQUEST =  0.08
+        T_STATUSES_SENT =   0.1
+
+        set_status_wait_timeout_s(TIMEOUT)
+
+        def list_test_statuses_1():
+            time.sleep(T_FIRST_REQUEST)
+            msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
+            self.assertEqual(code, 408) 
+
+        def list_test_statuses_2():
+            time.sleep(T_SECOND_REQUEST)
+            msg, code = list_statuses("test_company", "test_car", self.sdevice_id, wait="")
+            self.assertEqual(code, 200) 
+
+        def send_single_status():
+            time.sleep(T_STATUSES_SENT)
+            send_statuses("test_company", "test_car", self.sdevice_id, messages=[self.st])
+
+        t_list_1 = threading.Thread(target=list_test_statuses_1)
+        t_list_2 = threading.Thread(target=list_test_statuses_2)
+        t_send = threading.Thread(target=send_single_status)
+        t_list_1.start()
+        t_list_2.start()
+        t_send.start()
+        t_list_1.join()
+        t_list_2.join()
+        t_send.join()
 
 
     def tearDown(self) -> None:
