@@ -17,11 +17,6 @@ class Wait_Manager:
         if queue is None: return 0
         else: return len(queue)
 
-    def is_object_in_queue(self, wait_obj:Wait_Obj)->bool:
-        queue = self.__wait_dict.get_queue(wait_obj.company_name, wait_obj.car_name, wait_obj.sdevice_id)
-        if queue is None: return False
-        else: return wait_obj in queue
-
     def add_wait_obj(self, company_name:str, car_name:str, sdevice_id:str, timestamp_ms:Optional[int]=None)->Wait_Obj:
         wait_obj = Wait_Obj(
             company_name, 
@@ -35,6 +30,9 @@ class Wait_Manager:
 
     def is_waiting_for(self, company_name:str, car_name:str, sdevice_id:str)->bool:
         return self.__wait_dict.obj_exists(company_name, car_name, sdevice_id)
+
+    def next_in_queue(self, company_name:str, car_name:str, sdevice_id:str)->Any:
+        return self.__wait_dict.next_in_queue(company_name, car_name, sdevice_id)
 
     def set_timeout(self, timeout_ms:int)->None:
         self.__check_nonnegative_timeout(timeout_ms)
@@ -54,7 +52,6 @@ class Wait_Manager:
             wait_obj = self.__wait_dict.remove(company, car, device)
             if wait_obj is not None:
                 wait_obj.add_reponse_content(content)
-                assert(self.is_object_in_queue(wait_obj) is False)
 
     def wait_for(self, company_name:str, car_name:str, sdevice_id:str)->List[Any]:
         wait_obj = self.add_wait_obj(company_name, car_name, sdevice_id, Wait_Obj.timestamp())
@@ -73,6 +70,11 @@ class Wait_Queue_Dict:
     def add(self, company_name:str, car_name:str, sdevice_id:str, obj:Optional[Any]=None)->None:
         queue = self.__add_new_queue_if_new_device(company_name, car_name, sdevice_id)
         queue.append(obj)
+
+    def next_in_queue(self, company_name:str, car_name:str, sdevice_id:str)->Any:
+        queue = self.get_queue(company_name, car_name, sdevice_id)
+        if queue is None or not queue: return None
+        else: return queue[0]
     
     def remove(self, company_name:str, car_name:str, sdevice_id:str)->Any:
         queue = self.get_queue(company_name, car_name, sdevice_id)

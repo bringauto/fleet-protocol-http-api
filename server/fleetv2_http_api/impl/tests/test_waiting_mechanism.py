@@ -37,13 +37,17 @@ class Test_Creating_Wait_Objects(unittest.TestCase):
         self.assertFalse(self.wd.obj_exists("test_company", "test_car", "id_xyz"))
 
     def test_after_adding_two_wait_objects_and_removing_one_the_obj_exists_method_still_returns_true(self)->None:
-        self.wd.add("test_company", "test_car", "id_xyz")
-        self.wd.add("test_company", "test_car", "id_xyz")
+        self.wd.add("test_company", "test_car", "id_xyz", obj = "obj_1")
+        self.wd.add("test_company", "test_car", "id_xyz", obj = "obj_2")
+        self.assertEqual(self.wd.next_in_queue("test_company", "test_car", "id_xyz"), "obj_1")
+
         self.wd.remove("test_company", "test_car", "id_xyz")
         self.assertTrue(self.wd.obj_exists("test_company", "test_car", "id_xyz"))
+        self.assertEqual(self.wd.next_in_queue("test_company", "test_car", "id_xyz"), "obj_2")
 
         self.wd.remove("test_company", "test_car", "id_xyz")
         self.assertFalse(self.wd.obj_exists("test_company", "test_car", "id_xyz"))
+        self.assertEqual(self.wd.next_in_queue("test_company", "test_car", "id_xyz"), None)
 
 
 class Test_Wait_Manager(unittest.TestCase):
@@ -52,13 +56,33 @@ class Test_Wait_Manager(unittest.TestCase):
         self.mg = wait.Wait_Manager()
 
     def test_adding_a_wait_object(self)->None:
-        self.mg.add_wait_obj("test_company", "test_car", "id_xyz")
+        wait_obj = self.mg.add_wait_obj("test_company", "test_car", "id_xyz")
         self.mg.is_waiting_for("test_company", "test_car", "id_xyz")
+        self.assertEqual(self.mg.next_in_queue("test_company", "test_car", "id_xyz"), wait_obj)
 
     def test_object_is_removed_after_stopping_waiting_for_it(self):
         self.mg.add_wait_obj("test_company", "test_car", "id_xyz")
         self.mg.stop_waiting_for("test_company", "test_car", "id_xyz")
         self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
+        self.assertEqual(self.mg.next_in_queue("test_company", "test_car", "id_xyz"), None)
+
+    def test_stop_waiting_for_one_of_three_objects_at_a_time(self):
+        obj_1 = self.mg.add_wait_obj("test_company", "test_car", "id_xyz")
+        obj_2 = self.mg.add_wait_obj("test_company", "test_car", "id_xyz")
+        obj_3 = self.mg.add_wait_obj("test_company", "test_car", "id_xyz")
+        self.assertEqual(self.mg.next_in_queue("test_company", "test_car", "id_xyz"), obj_1)
+
+        self.mg.stop_waiting_for("test_company", "test_car", "id_xyz")
+        self.assertTrue(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
+        self.assertEqual(self.mg.next_in_queue("test_company", "test_car", "id_xyz"), obj_2)
+
+        self.mg.stop_waiting_for("test_company", "test_car", "id_xyz")
+        self.assertTrue(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
+        self.assertEqual(self.mg.next_in_queue("test_company", "test_car", "id_xyz"), obj_3)
+
+        self.mg.stop_waiting_for("test_company", "test_car", "id_xyz")
+        self.assertFalse(self.mg.is_waiting_for("test_company", "test_car", "id_xyz"))
+        self.assertEqual(self.mg.next_in_queue("test_company", "test_car", "id_xyz"), None)
 
 
 import threading
