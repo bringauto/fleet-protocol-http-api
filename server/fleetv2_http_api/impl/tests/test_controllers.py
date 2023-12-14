@@ -551,8 +551,9 @@ class Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_
     def test_send_commands_accepts_only_commands(self):
         payload = Payload(message_type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is running"})
         device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
+        sdevice_id = serialized_device_id(device_id)
         status = Message(timestamp=10, device_id=device_id, payload=payload)
-        _, code = send_commands("test_company", "test_car", "7_4_role", [status])
+        _, code = send_commands("test_company", "test_car", sdevice_id, [status])
         self.assertEqual(code, 500)
 
 
