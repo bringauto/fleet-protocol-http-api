@@ -12,7 +12,10 @@ class Wait_Manager:
     @property
     def timeout_ms(self)->int: return self.__timeout_ms
 
-    def add_wait_obj(self, company_name:str, car_name:str, sdevice_id:str, timestamp_ms:Optional[int]=None)->Wait_Obj:
+    def is_waiting_for(self, company_name:str, car_name:str, sdevice_id:str)->bool:
+        return self.__wait_dict.obj_exists(company_name, car_name, sdevice_id)
+    
+    def new_wait_obj(self, company_name:str, car_name:str, sdevice_id:str, timestamp_ms:Optional[int]=None)->Wait_Obj:
         wait_obj = Wait_Obj(
             company_name, 
             car_name, 
@@ -22,9 +25,6 @@ class Wait_Manager:
         )
         self.__wait_dict.add(company_name, car_name, sdevice_id, wait_obj)
         return wait_obj
-
-    def is_waiting_for(self, company_name:str, car_name:str, sdevice_id:str)->bool:
-        return self.__wait_dict.obj_exists(company_name, car_name, sdevice_id)
 
     def next_in_queue(self, company_name:str, car_name:str, sdevice_id:str)->Any:
         return self.__wait_dict.next_in_queue(company_name, car_name, sdevice_id)
@@ -49,9 +49,9 @@ class Wait_Manager:
                 wait_obj.add_reponse_content(content)
 
     def wait_for(self, company_name:str, car_name:str, sdevice_id:str)->List[Any]:
-        wait_obj = self.add_wait_obj(company_name, car_name, sdevice_id, Wait_Obj.timestamp())
+        wait_obj = self.new_wait_obj(company_name, car_name, sdevice_id, Wait_Obj.timestamp())
         reponse = wait_obj.response()
-        return wait_obj.response()
+        return reponse
 
     def __check_nonnegative_timeout(self, timeout_ms:int)->None:
         if timeout_ms < 0: raise ValueError("timeout_ms must be >= 0 ms")
