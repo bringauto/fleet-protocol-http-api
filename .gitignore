@@ -3,7 +3,10 @@
 *.pyc
 __pycache__
 example.db
+.coverage
 
 /*.sh
+!test_server.sh
+!regen.sh
 
 /uml
