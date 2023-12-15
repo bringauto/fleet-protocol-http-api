@@ -38,12 +38,14 @@ from fleetv2_http_api.impl.wait import Wait_Obj_Manager
 __status_wait_manager = Wait_Obj_Manager()
 def set_status_wait_timeout_s(timeout_s:float)->None: 
     __status_wait_manager.set_timeout(int(1000*timeout_s))
+
 def get_status_wait_timeout_s()->float: 
     return __status_wait_manager.timeout_ms*0.001
 
 __command_wait_manager = Wait_Obj_Manager()
 def set_command_wait_timeout_s(timeout_s:float)->None: 
     __command_wait_manager.set_timeout(int(1000*timeout_s))
+
 def get_command_wait_timeout_s()->float: 
     return __command_wait_manager.timeout_ms*0.001
 
@@ -93,6 +95,9 @@ def list_commands(
     If 'all_available' is not None, return ALL commands stored for a given device.
     If 'until' is specified (unix timestamp in milliseconds), return all stored commands
     having the timestamp equal or lower than 'until'.
+    The 'wait' parameter specifies the maximum time (in seconds) the function should wait for commands,
+    in case there are no commands currently available. If 'wait' is None, the function will immediatelly 
+    return an empty list.
     """
 
     db_commands = __list_messages(
@@ -140,6 +145,9 @@ def list_statuses(
     If 'all_available' is not None, return ALL statuses stored for a given device.
     If 'since' is specified (unix timestamp in milliseconds), return all stored statuses
     having the timestamp equal or lower than 'since'.
+    The 'wait' parameter specifies the maximum time (in seconds) the function should wait for statuses,
+    in case there are no statuses currently available. If 'wait' is None, the function will immediatelly
+    return an empty list.
     """
 
     db_statuses = __list_messages(
