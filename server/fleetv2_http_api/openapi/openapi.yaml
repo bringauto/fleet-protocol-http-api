@@ -4,6 +4,9 @@ info:
     email: jiri.strouhal@bringauto.com
   description: HTTP-based API for Fleet Protocol v2 serving for communication between
     the External Server and the end users.
+  license:
+    name: GPLv3
+    url: https://www.gnu.org/licenses/gpl-3.0.en.html
   title: Fleet v2 HTTP API
   version: 1.0.0
 servers:
