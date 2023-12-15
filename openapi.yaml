@@ -68,11 +68,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/Module'
-                - $ref: '#/components/schemas/Module'
+                $ref: '#/components/schemas/AvailableDevices'
                 
         '404':
           description: Cannot display available devices. Either company, car or module specified in the request does not exist.
@@ -343,6 +339,13 @@ components:
           $ref: '#/components/schemas/DeviceId'
         payload:
           $ref: '#/components/schemas/Payload'
+
+    AvailableDevices:
+      oneOf:
+      - type: array
+        items:
+          $ref: '#/components/schemas/Module'
+      - $ref: '#/components/schemas/Module'
 
     Module: 
       description: A module containing at least one device (specified by device Id).

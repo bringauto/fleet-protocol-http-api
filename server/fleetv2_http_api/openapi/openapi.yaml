@@ -59,7 +59,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/available_devices_200_response'
+                $ref: '#/components/schemas/AvailableDevices'
           description: A list of available devices.
         "404":
           description: "Cannot display available devices. Either company, car or module\
@@ -562,6 +562,13 @@ components:
           $ref: '#/components/schemas/Payload'
       title: Message
       type: object
+    AvailableDevices:
+      oneOf:
+      - items:
+          $ref: '#/components/schemas/Module'
+        type: array
+      - $ref: '#/components/schemas/Module'
+      title: AvailableDevices
     Module:
       description: A module containing at least one device (specified by device Id).
       properties:
@@ -656,13 +663,6 @@ components:
           $ref: '#/components/schemas/Payload_data'
       title: Payload
       type: object
-    available_devices_200_response:
-      oneOf:
-      - items:
-          $ref: '#/components/schemas/Module'
-        type: array
-      - $ref: '#/components/schemas/Module'
-      title: available_devices_200_response
     Payload_data:
       description: "Payload data in JSON or BASE64 format, depending on the encoding."
       oneOf:

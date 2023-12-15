@@ -3,7 +3,7 @@ from typing import Dict
 from typing import Tuple
 from typing import Union
 
-from fleetv2_http_api.models.available_devices200_response import AvailableDevices200Response  # noqa: E501
+from fleetv2_http_api.models.available_devices import AvailableDevices  # noqa: E501
 from fleetv2_http_api import util
 
 
@@ -19,6 +19,6 @@ def available_devices(company_name, car_name, module_id=None):  # noqa: E501
     :param module_id: An Id of module, an unsigned integer.
     :type module_id: int
 
-    :rtype: Union[AvailableDevices200Response, Tuple[AvailableDevices200Response, int], Tuple[AvailableDevices200Response, int, Dict[str, str]]
+    :rtype: Union[AvailableDevices, Tuple[AvailableDevices, int], Tuple[AvailableDevices, int, Dict[str, str]]
     """
     return 'do some magic!'
