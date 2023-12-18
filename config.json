@@ -4,8 +4,6 @@
             "host": "postgresql-database",
             "location": "localhost",
             "port": 5432,
-            "dialect": "postgresql",
-            "api": "psycopg",
             "username": "postgres",
             "password": "1234"
         },
