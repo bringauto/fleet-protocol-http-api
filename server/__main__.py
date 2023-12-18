@@ -42,14 +42,11 @@ def __connect_to_database(db_server_config:Dict[str,Any])->None:
     """Clear previously stored available devices and connect to the database."""
     clear_device_ids()
     set_db_connection(
-        dialect = db_server_config["dialect"],
-        dbapi = db_server_config["api"],
         dblocation = str(db_server_config["host"]) + ":" + str(db_server_config["port"]),
         username = db_server_config["username"],
         password = db_server_config["password"]
     )
     
-
 
 def __set_up_database_jobs(db_cleanup_config:Dict[str,int])->None:
     """Set message cleanup job and other customary jobs defined by the example method."""

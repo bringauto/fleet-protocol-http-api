@@ -32,20 +32,24 @@ def set_message_retention_period(seconds:int)->None:
 
 
 def set_db_connection(
-    dialect:str, 
-    dbapi:str, 
     dblocation:str, 
     username:str="", 
     password:str=""
     )->None:
 
     database.connection.set_db_connection(
-        dialect=dialect, 
-        dbapi=dbapi, 
         dblocation=dblocation, 
         username=username, 
         password=password,
         after_connect=(load_available_devices_from_database, )
+    )
+
+
+def set_test_db_connection(
+    dblocation:str
+    )->None:
+    database.connection.set_test_db_connection(
+        dblocation=dblocation
     )
 
 

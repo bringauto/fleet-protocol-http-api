@@ -27,7 +27,7 @@ from typing import Callable
 
 import unittest
 from database.device_ids import clear_device_ids, serialized_device_id
-from database.database_controller import set_db_connection
+from database.database_controller import set_test_db_connection
 from fleetv2_http_api.impl.controllers import (
     send_statuses, 
     list_statuses,
@@ -53,7 +53,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
 
     def setUp(self) -> None:
         if os.path.exists("./example.db"): os.remove("./example.db")
-        set_db_connection("sqlite","pysqlite","/example.db")
+        set_test_db_connection("/example.db")
         clear_device_ids()
         payload_example = Payload(
             message_type='STATUS', 
@@ -166,7 +166,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
 
     def setUp(self) -> None:
         if os.path.exists("./example.db"): os.remove("./example.db")
-        set_db_connection("sqlite","pysqlite","/example.db")
+        set_test_db_connection("/example.db")
         clear_device_ids()
         self.device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
         self.sdevice_id = serialized_device_id(self.device_id)

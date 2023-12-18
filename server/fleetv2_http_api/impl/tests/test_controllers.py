@@ -22,7 +22,7 @@ sys.path.append("server")
 import unittest
 from enums import MessageType, EncodingType
 from database.device_ids import clear_device_ids, serialized_device_id
-from database.database_controller import set_db_connection
+from database.database_controller import set_test_db_connection
 from fleetv2_http_api.impl.controllers import (
     available_devices, 
     available_cars,
@@ -60,7 +60,7 @@ class Test_Device_Id_Validity(unittest.TestCase):
 class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
     
     def setUp(self) -> None:
-        set_db_connection("sqlite","pysqlite","/:memory:")
+        set_test_db_connection("/:memory:")
         payload_example = Payload(
             message_type=MessageType.STATUS_TYPE, 
             encoding=EncodingType.JSON, 
@@ -193,7 +193,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
 class Test_Sending_And_Listing_Multiple_Messages(unittest.TestCase):
 
     def setUp(self) -> None:
-        set_db_connection("sqlite","pysqlite","/:memory:")
+        set_test_db_connection("/:memory:")
         self.device_id = DeviceId(module_id=42, type=7, role="test_device", name="Test Device X")
         self.sdevice_id = serialized_device_id(self.device_id)
 
@@ -332,7 +332,7 @@ class Test_Statuses_In_Time(unittest.TestCase):
     CAR_B_NAME = "car_B"
 
     def setUp(self) -> None:
-        set_db_connection("sqlite", "pysqlite", "/:memory:")
+        set_test_db_connection("/:memory:")
         self.sdevice_id = "2_5_test_device"
 
     def test_by_default_only_the_NEWEST_STATUS_is_returned_and_if_all_is_specified_all_statuses_are_returned(self):
@@ -417,7 +417,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
 
 
     def setUp(self) -> None:
-        set_db_connection("sqlite", "pysqlite", "/:memory:")
+        set_test_db_connection("/:memory:")
         clear_device_ids()
 
         self.device_id = DeviceId(module_id=42, type=5, role="left_light", name="Left light")
@@ -506,7 +506,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
 class Test_Listing_Commands_And_Statuses_Of_Nonexistent_Cars(unittest.TestCase):
 
     def setUp(self) -> None:
-        set_db_connection("sqlite", "pysqlite", "/:memory:")
+        set_test_db_connection("/:memory:")
         device_id = DeviceId(module_id=15, type=3, role="available_device", name="Available device")
         sdevice_id = serialized_device_id(device_id)
         status = Message(
@@ -543,7 +543,7 @@ class Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_
     
     def setUp(self) -> None:
         if os.path.exists("./example.db"): os.remove("./example.db")
-        set_db_connection("sqlite","pysqlite","/example.db")
+        set_test_db_connection("/example.db")
 
     def test_send_statuses_accepts_only_statuses(self):
         payload = Payload(message_type=MessageType.COMMAND_TYPE, encoding=EncodingType.JSON, data={"message":"Beep"})
@@ -573,7 +573,7 @@ class Test_Store_Available_Device_Ids_After_Connecting_To_Database_Already_Conta
         clear_device_ids()
 
     def test_list_available_cars(self):
-        set_db_connection("sqlite", "pysqlite", "/:memory:")
+        set_test_db_connection("/:memory:")
         with get_connection_source().begin() as conn:
             stmt = insert(MessageBase.__table__) # type: ignore
             msg_base = MessageBase(

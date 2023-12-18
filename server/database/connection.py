@@ -45,7 +45,56 @@ class Connection_Source_Not_Set(Exception): pass
 class Invalid_Connection_Arguments(Exception): pass
 
 
-def _new_connection_source(
+from typing import Callable, Tuple
+def set_db_connection(
+    dblocation:str, 
+    username:str="", 
+    password:str="", 
+    after_connect:Tuple[Callable[[], None],...] = (),
+    )->None:
+
+    """Create SQLAlchemy engine object used to connect to the database."""
+
+    global _connection_source
+    source = __new_connection_source("postgresql", "psycopg", dblocation, username, password)
+    _connection_source = source
+    assert(_connection_source is not None)
+    create_all_tables(source)
+    for foo in after_connect: foo()
+
+
+from typing import Callable, Tuple
+def set_test_db_connection(
+    dblocation:str, 
+    )->None:
+
+    """Create test SQLAlchemy engine object used to connect to the database using SQLite.
+    No username or password required."""
+    global _connection_source
+    source = __new_connection_source(dialect="sqlite", dbapi="pysqlite", dblocation=dblocation)
+    _connection_source = source
+    assert(_connection_source is not None)
+    create_all_tables(source)
+
+
+def get_db_connection(
+    dialect:str, 
+    dbapi:str, 
+    dblocation:str, 
+    username:str="", 
+    password:str="", 
+    )->Engine|None:
+
+    source = __new_connection_source(dialect, dbapi, dblocation, username, password)
+    return source
+
+
+def create_all_tables(source:Engine)->None:
+    Base.metadata.create_all(source)
+
+
+
+def __new_connection_source(
     dialect:str, 
     dbapi:str, 
     dblocation:str, 
@@ -66,40 +115,6 @@ def _new_connection_source(
             f"{dialect},'+',{dbapi},://...{dblocation})") 
 
     return engine
-
-
-from typing import Callable, Tuple
-def set_db_connection(
-    dialect:str, 
-    dbapi:str, 
-    dblocation:str, 
-    username:str="", 
-    password:str="", 
-    after_connect:Tuple[Callable[[], None],...] = (),
-    )->None:
-
-    global _connection_source
-    source = _new_connection_source(dialect, dbapi, dblocation, username, password)
-    _connection_source = source
-    assert(_connection_source is not None)
-    create_all_tables(source)
-    for foo in after_connect: foo()
-
-
-def get_db_connection(
-    dialect:str, 
-    dbapi:str, 
-    dblocation:str, 
-    username:str="", 
-    password:str="", 
-    )->Engine|None:
-
-    source = _new_connection_source(dialect, dbapi, dblocation, username, password)
-    return source
-
-
-def create_all_tables(source:Engine)->None:
-    Base.metadata.create_all(source)
 
 
 class Base(DeclarativeBase):  

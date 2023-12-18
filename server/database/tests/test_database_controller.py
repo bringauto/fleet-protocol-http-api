@@ -1,10 +1,12 @@
 import sys
+sys.path.append("server")
 
 from unittest.mock import patch, Mock
 from fleetv2_http_api.models.device_id import DeviceId
 from database.device_ids import serialized_device_id
 from database.connection import (
-    set_db_connection, 
+    set_db_connection,
+    set_test_db_connection,
     unset_connection_source, 
     Connection_Source_Not_Set,
     Invalid_Connection_Arguments,
@@ -83,7 +85,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
 
     def setUp(self):
         # Set up the database connection before running the tests
-        set_db_connection(dialect="sqlite", dbapi="pysqlite", dblocation="/:memory:")
+        set_test_db_connection(dblocation="/:memory:")
 
     def test_accessing_not_set_connection_source_raises_exception(self):
         unset_connection_source()
@@ -248,35 +250,12 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         self.assertEqual(len(messages), 1)
 
 
-from database.connection import (
-    Invalid_Connection_Arguments
-)
-class Test_Invalid_Database_Connection_Credentials(unittest.TestCase):
-
-    def test_invalid_dialect_raises_exception(self):
-        self.assertRaises(
-            Invalid_Connection_Arguments, 
-            set_db_connection, 
-            "invalid_dialect", "pysqlite", "/:memory:"
-        )
-        self.assertRaises(
-            Invalid_Connection_Arguments, 
-            set_db_connection, 
-            "postgresql", "invalid_dialect$$$$$", "/:memory:"
-        )
-        self.assertRaises(
-            Invalid_Connection_Arguments, 
-            set_db_connection, 
-            "postgresql", "pysqlite", "asjgnsdifn____invalid_location"
-        )
-
-
 from database.database_controller import set_message_retention_period
 class Test_Database_Cleanup(unittest.TestCase):
 
     def setUp(self):
         # Set up the database connection before running the tests
-        set_db_connection(dialect="sqlite", dbapi="pysqlite", dblocation="/:memory:")
+        set_test_db_connection(dblocation="/:memory:")
 
     def test_setting_and_accessing_data_retention_period(self):
         MessageBase.set_data_retention_period(seconds=3)
@@ -299,7 +278,7 @@ class Test_Send_And_Read_Message(unittest.TestCase):
 
     def setUp(self):
         # Set up the database connection before running the tests
-        set_db_connection(dialect="sqlite", dbapi="pysqlite", dblocation="/:memory:")
+        set_test_db_connection(dblocation="/:memory:")
 
     def test_send_and_read_message(self):
         device_id = DeviceId(module_id=45, type=2, role="role1", name="device1")

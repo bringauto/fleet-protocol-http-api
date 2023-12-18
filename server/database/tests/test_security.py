@@ -4,7 +4,7 @@ sys.path.append("server")
 
 import unittest
 from unittest.mock import patch, Mock
-from database.connection import set_db_connection
+from database.connection import set_test_db_connection
 from database.security import (
     get_admin,
     add_admin_key, 
@@ -18,12 +18,8 @@ from database.security import (
 class Test_Getting_Admin(unittest.TestCase):
 
     def setUp(self) -> None:
-        set_db_connection(
-            dialect="sqlite",
-            dbapi="pysqlite",
-            dblocation="/:memory:",
-            username="",
-            password=""
+        set_test_db_connection(
+            dblocation="/:memory:"
         )
         clear_loaded_admins()
 
