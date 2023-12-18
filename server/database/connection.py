@@ -53,10 +53,17 @@ def set_db_connection(
     after_connect:Tuple[Callable[[], None],...] = (),
     )->None:
 
-    """Create SQLAlchemy engine object used to connect to the database."""
+    """Create SQLAlchemy engine object used to connect to the database. 
+    Set module-level variable _connection_source to the new engine object."""
 
     global _connection_source
-    source = __new_connection_source("postgresql", "psycopg", dblocation, username, password)
+    source = __new_connection_source(
+        dialect="postgresql", 
+        dbapi="psycopg", 
+        dblocation=dblocation, 
+        username=username, 
+        password=password
+    )
     _connection_source = source
     assert(_connection_source is not None)
     create_all_tables(source)
@@ -69,23 +76,46 @@ def set_test_db_connection(
     )->None:
 
     """Create test SQLAlchemy engine object used to connect to the database using SQLite.
-    No username or password required."""
+    No username or password required. 
+    Set module-level variable _connection_source to the new engine object."""
     global _connection_source
-    source = __new_connection_source(dialect="sqlite", dbapi="pysqlite", dblocation=dblocation)
+    source = __new_connection_source(
+        dialect="sqlite",
+        dbapi="pysqlite",
+        dblocation=dblocation
+    )
     _connection_source = source
     assert(_connection_source is not None)
     create_all_tables(source)
 
 
 def get_db_connection(
-    dialect:str, 
-    dbapi:str, 
     dblocation:str, 
     username:str="", 
     password:str="", 
     )->Engine|None:
 
-    source = __new_connection_source(dialect, dbapi, dblocation, username, password)
+    """Create SQLAlchemy engine object used to connect to the database. 
+    Do not modify module-level variable _connection_source."""
+    source = __new_connection_source(
+        dialect="postgresql", 
+        dbapi="psycopg", 
+        dblocation=dblocation, 
+        username=username, 
+        password=password
+    )
+    return source
+
+
+def get_test_db_connection(
+    dblocation:str
+    )->Engine|None:
+
+    """Create test SQLAlchemy engine object used to connect to the database using SQLite.
+    No username or password required."""
+    source = __new_connection_source(
+        dblocation=dblocation
+    )
     return source
 
 

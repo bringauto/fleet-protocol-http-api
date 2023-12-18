@@ -29,16 +29,13 @@ def parse_arguments()->Tuple[ArgumentParser, Dict[str,Any]]:
 
 def get_connection_to_database(
     parser:argparse.ArgumentParser,
-    dialect:str,
-    dbapi:str,
     dblocation:str,
     username:str,
     password:str
     )->Engine:
+    
     try:
         source = get_db_connection(
-            dialect,
-            dbapi,
             dblocation,
             username,
             password
@@ -67,8 +64,6 @@ if __name__=="__main__":
     parser, arguments = parse_arguments()
     source = get_connection_to_database(
         parser, 
-        dbapi=config["api"],
-        dialect=config["dialect"],
         dblocation=(config["location"]+":"+str(config["port"])),
         username=arguments["username"],
         password=arguments["password"]
