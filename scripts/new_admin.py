@@ -15,10 +15,42 @@ from server.database.security import add_admin_key
 from server.database.connection import get_db_connection
 
 
+import dataclasses
+@dataclasses.dataclass(frozen=True)
+class Arg_Values:
+    config:Dict[str,Any]
+    sysargs:Dict[str,str]
+
+    def get(self, key:str)->Any:
+        """Return the value of the argument with the given key. If the value is not specified by user running the script,
+        take value from the config file."""
+        if key in self.sysargs and not (self.sysargs[key].strip()=="" or self.sysargs[key] is None): 
+            return self.sysargs[key]
+        elif key in self.config: 
+            return self.config[key]
+        else: 
+            raise KeyError(f"Argument '{key}' not found in sysargs nor the config file.")
+
+
 def parse_arguments()->Tuple[ArgumentParser, Dict[str,Any]]:
-    parser = argparse.ArgumentParser(description="Add a new admin to the database and if successfull, print his or hers API key.")
+    parser = argparse.ArgumentParser(
+        description="Add a new admin to the database and if successfull, print his or hers API key."
+    )
     parser.add_argument("<admin-name>", type=str, help="The name of the new admin.")
-    return parser, parser.parse_args().__dict__
+    parser.add_argument(
+        "-usr", "--username", type=str, help="The username for the database server.", default="", required=False
+    )
+    parser.add_argument(
+        "-pwd", "--password", type=str, help="The password for the database server.", default="", required=False
+    )
+    parser.add_argument(
+        "-l", "--location", type=str, help="The location/address of the database", default="", required=False
+    )
+    parser.add_argument(
+        "-p", "--port", type=str, help="The database port number.", default="", required=False
+    )
+    args = parser.parse_args().__dict__
+    return parser, args
 
 
 def get_connection_to_database(
@@ -54,12 +86,14 @@ import os
 if __name__=="__main__":
     root_dir = os.path.dirname(os.path.dirname(__file__))
     config:Dict[str,Any] = json.load(open(os.path.join(root_dir, "config.json")))["database"]["server"]
-    
     parser, arguments = parse_arguments()
+    arg_vals = Arg_Values(config, arguments)
+
     source = get_connection_to_database(
         parser, 
-        dblocation=(config["location"]+":"+str(config["port"])),
-        username=config["username"],
-        password=config["password"]
+        dblocation=(arg_vals.get("location")+":"+str(arg_vals.get("port"))),
+        username=arg_vals.get("username"),
+        password=arg_vals.get("password")
     )
+
     try_to_add_key(source, arguments)
