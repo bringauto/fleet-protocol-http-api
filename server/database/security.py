@@ -52,10 +52,10 @@ def add_admin_key(name:str, connection_source:Optional[Engine]=None)->str:
             session.add(admin)
             session.commit()
             return __admin_added_msg(name, key)
-    
-        
+
+
 def __admin_added_msg(name:str, key:str)->str:
-    return f"Admin '{name}' added with key '{key}'."
+    return f"Admin '{name}' added with key:\n\n{key}\n\n"
         
 
 def __admin_already_exists_msg(name:str)->str:

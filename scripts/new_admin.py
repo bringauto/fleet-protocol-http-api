@@ -74,10 +74,10 @@ def get_connection_to_database(
         parser.error("Error when connecting to the database. Cannot connect to the database. Invalid database connection parameters.")
     
 
-def try_to_add_key(connection_source:Engine, arguments:Dict[str,Any])->None:
-    msg = add_admin_key(name=arguments["<admin-name>"], connection_source=connection_source)
+def try_to_add_key(connection_source:Engine, admin_name:str)->None:
+    msg = add_admin_key(name=admin_name, connection_source=connection_source)
     print(msg)
-    
+
 
 import os
 if __name__=="__main__":
@@ -93,4 +93,4 @@ if __name__=="__main__":
         password=arg_vals.get("password")
     )
 
-    try_to_add_key(source, arguments)
+    try_to_add_key(source, arguments["<admin-name>"])
