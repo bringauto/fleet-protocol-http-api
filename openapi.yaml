@@ -258,7 +258,7 @@ components:
 
     Since:
       name: since
-      description: A Unix timestamp; if specified, the method returns all device statuses inclusivelly older than value of specified timestamp.
+      description: A Unix timestamp; if specified, the method returns all device statuses inclusivelly newer than value of specified timestamp.
       in: query
       allowEmptyValue: false 
       schema: 
@@ -268,7 +268,7 @@ components:
 
     Until:
       name: until
-      description: A Unix timestamp; if specified, the method returns all device commands inclusivelly newer than value of specified timestamp.
+      description: A Unix timestamp; if specified, the method returns all device commands inclusivelly older than value of specified timestamp.
       in: query
       allowEmptyValue: false 
       schema: 
