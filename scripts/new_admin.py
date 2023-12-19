@@ -18,11 +18,16 @@ from server.database.connection import get_db_connection
 EMPTY_VALUE = ""
 
 
-def parse_arguments(config:Dict[str,str])->Dict[str,str]:
+def __new_arg_parser()->argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Add a new admin to the database and if successfull, print his or hers API key."
     )
+    return parser
+
+
+def add_args_to_parser(parser:argparse.ArgumentParser)->None:
     parser.add_argument("<admin-name>", type=str, help="The name of the new admin.")
+    parser.add_argument("-c", "--config-file-path", type=str, help="The path to the config file.", default="config.json", required=True)
     parser.add_argument(
         "-usr", "--username", type=str, help="The username for the database server.", default=EMPTY_VALUE, required=False
     )
@@ -35,10 +40,28 @@ def parse_arguments(config:Dict[str,str])->Dict[str,str]:
     parser.add_argument(
         "-p", "--port", type=str, help="The database port number.", default=EMPTY_VALUE, required=False
     )
+
+
+def parse_arguments(parser:argparse.ArgumentParser)->Dict[str,str]:
     args = parser.parse_args().__dict__
+    print(args)
+    config = __load_condig_file(args.pop("config_file_path"))
+    db_config = config["database"]["server"]
     for key in args:
-        if args[key] == EMPTY_VALUE: args[key] = config[key]
+        if args[key] == EMPTY_VALUE: args[key] = db_config[key]
     return args
+
+
+def __load_condig_file(path:str)->Dict[str,Any]:
+    try:
+        config = json.load(open(path))
+    except:
+        raise Config_File_Not_Found(f"Could not load config file from path '{path}'.")
+    return config
+
+
+class Config_File_Not_Found(Exception):
+    pass
 
 
 def try_to_add_key(connection_source:Engine, admin_name:str)->None:
@@ -51,8 +74,11 @@ def try_to_add_key(connection_source:Engine, admin_name:str)->None:
 import os
 if __name__=="__main__":
     root_dir = os.path.dirname(os.path.dirname(__file__))
-    config:Dict[str,Any] = json.load(open(os.path.join(root_dir, "config.json")))["database"]["server"]
-    arguments = parse_arguments(config)
+
+    parser = __new_arg_parser()
+    add_args_to_parser(parser)
+    arguments = parse_arguments(parser)
+
     source = get_db_connection(
         dblocation=(arguments["location"]+":"+str(arguments["port"])),
         username=arguments["username"],
