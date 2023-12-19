@@ -42,7 +42,6 @@ def parse_arguments(config:Dict[str,str])->Tuple[ArgumentParser, Dict[str,str]]:
 
 
 def get_connection_to_database(
-    parser:argparse.ArgumentParser,
     dblocation:str,
     username:str,
     password:str
@@ -53,22 +52,8 @@ def get_connection_to_database(
         username,
         password
     )
-
     return source
 
-    # try:
-    #     source = get_db_connection(
-    #         dblocation,
-    #         username,
-    #         password
-    #     )
-    #     if source == None:
-    #         parser.error("No connection source obtained. Cannot connect to the database. Invalid database connection parameters.")
-    #     return source
-    
-    # except Exception as e:
-    #     parser.error("Error when connecting to the database. Cannot connect to the database. Invalid database connection parameters.")
-    
 
 def try_to_add_key(connection_source:Engine, admin_name:str)->None:
     msg = add_admin_key(name=admin_name, connection_source=connection_source)
@@ -79,10 +64,8 @@ import os
 if __name__=="__main__":
     root_dir = os.path.dirname(os.path.dirname(__file__))
     config:Dict[str,Any] = json.load(open(os.path.join(root_dir, "config.json")))["database"]["server"]
-    parser, arguments = parse_arguments(config)
-
+    arguments = parse_arguments(config)
     source = get_connection_to_database(
-        parser, 
         dblocation=(arguments["location"]+":"+str(arguments["port"])),
         username=arguments["username"],
         password=arguments["password"]
