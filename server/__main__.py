@@ -42,7 +42,7 @@ def __connect_to_database(db_server_config:Dict[str,Any])->None:
     """Clear previously stored available devices and connect to the database."""
     clear_device_ids()
     set_db_connection(
-        dblocation = str(db_server_config["host"]) + ":" + str(db_server_config["port"]),
+        dblocation = str(db_server_config["location"]) + ":" + str(db_server_config["port"]),
         username = db_server_config["username"],
         password = db_server_config["password"]
     )
