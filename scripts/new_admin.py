@@ -33,7 +33,7 @@ def __new_arg_parser()->argparse.ArgumentParser:
 
 def __add_args_to_parser(parser:argparse.ArgumentParser)->None:
     parser.add_argument(
-        "<admin-name>", type=str, help="The name of the new admin.", required=True
+        "<admin-name>", type=str, help="The name of the new admin."
     )
     parser.add_argument(
         "-c", "--config-file-path", type=str, help="The path to the config file.", default="config.json", required=True
