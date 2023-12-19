@@ -17,16 +17,16 @@ from server.database.connection import get_db_connection
 EMPTY_VALUE = ""
 
 
-def __get_arguments()->Dict[str,str]:
-    parser = __new_arg_parser()
+def request_and_get_script_arguments(script_description:str)->Dict[str,str]:
+    parser = __new_arg_parser(script_description)
     __add_args_to_parser(parser)
     arguments = __parse_arguments(parser)
     return arguments
 
 
-def __new_arg_parser()->argparse.ArgumentParser:
+def __new_arg_parser(script_description:str)->argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Add a new admin to the database and if successful, print his or hers API key."
+        description=script_description
     )
     return parser
 
@@ -52,20 +52,22 @@ def __add_args_to_parser(parser:argparse.ArgumentParser)->None:
     )
 
 
-def __load_condig_file(path:str)->Dict[str,Any]:
+def __load_config_file(path:str)->Dict[str,Any]:
     try:
         config = json.load(open(path))
     except:
         raise Config_File_Not_Found(f"Could not load config file from path '{path}'.")
     return config
 
+
 def __parse_arguments(parser:argparse.ArgumentParser)->Dict[str,str]:
     args = parser.parse_args().__dict__
-    config = __load_condig_file(args.pop("config_file_path"))
+    config = __load_config_file(args.pop("config_file_path"))
     db_config = config["database"]["server"]
     for key in args:
         if args[key] == EMPTY_VALUE: args[key] = db_config[key]
     return args
+
 
 def __try_to_add_key(connection_source:Engine, admin_name:str)->None:
     """Try to add a new admin key to the database. If successfull, print the new API key, otherwise print 
@@ -78,7 +80,9 @@ class Config_File_Not_Found(Exception): pass
 
 
 if __name__=="__main__":
-    arguments = __get_arguments()
+    arguments = request_and_get_script_arguments(
+        script_description="Add a new admin to the database and if successful, print his or hers API key."
+    )
     source = get_db_connection(
         dblocation=(arguments["location"]+":"+str(arguments["port"])),
         username=arguments["username"],
