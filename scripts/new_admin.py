@@ -20,10 +20,12 @@ def __try_to_add_key(connection_source:Engine, admin_name:str)->None:
 
 
 if __name__=="__main__":
-    arguments = request_and_get_script_arguments(
+    vals = request_and_get_script_arguments(
         "Add a new admin to the database and if successful, print his or hers API key.",
         Positional_Arg_Info("<admin-name>", str, "The name of the new admin.")
     )
+    arguments = vals.argvals
+    config = vals.config
     source = get_db_connection(
         dblocation=(arguments["location"]+":"+str(arguments["port"])),
         username=arguments["username"],

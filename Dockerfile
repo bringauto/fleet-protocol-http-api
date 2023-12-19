@@ -12,5 +12,5 @@ COPY . /usr/src/app
 EXPOSE 8080
 
 ENTRYPOINT ["python3"]
-CMD ["-m", "server"]
+CMD ["-m", "server", "config.json", "--location", "postgresql-database"]
 

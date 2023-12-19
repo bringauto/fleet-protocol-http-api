@@ -108,9 +108,7 @@ def get_db_connection(
     return source
 
 
-def get_test_db_connection(
-    dblocation:str
-    )->Engine|None:
+def get_test_db_connection(dblocation:str)->Engine|None:
 
     """Create test SQLAlchemy engine object used to connect to the database using SQLite.
     No username or password required."""
@@ -152,7 +150,7 @@ def __new_connection_source(
         raise Cannot_Connect_To_Database(
             "Could not connect to the database with the given connection parameters: \n"
             f"{engine.url}\n\n"
-            "Check the port number, username and password."
+            "Check the location, port number, username and password."
         )
     return engine
 

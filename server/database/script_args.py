@@ -15,6 +15,12 @@ class Positional_Arg_Info:
 EMPTY_VALUE = ""
 
 
+@dataclasses.dataclass(frozen=True)
+class Script_Args:
+    argvals:Dict[str,str]
+    config:Dict[str,Any] = dataclasses.field(default_factory=dict)
+
+
 def request_and_get_script_arguments(
     script_description:str, 
     *positional_args:Positional_Arg_Info, 
@@ -23,19 +29,17 @@ def request_and_get_script_arguments(
     )->Dict[str,str]:
 
     parser = __new_arg_parser(script_description)
+
     __add_positional_args_to_parser(parser, *positional_args)
-    if include_db_args:
-        __add_db_args_to_parser(parser)
     if use_config:
         __add_config_arg_to_parser(parser)
-    arguments = __parse_arguments(parser, use_config)
-    return arguments
+    if include_db_args:
+        __add_db_args_to_parser(parser)
+    return __parse_arguments(parser, use_config)
 
 
 def __add_config_arg_to_parser(parser:argparse.ArgumentParser)->None:
-    parser.add_argument(
-        "-c", "--config-file-path", type=str, help="The path to the config file.", default="config.json", required=True
-    )
+    parser.add_argument("<config-file-path>", type=str, help="The path to the config file.", default="config.json")
 
 
 def __add_db_args_to_parser(parser:argparse.ArgumentParser)->None:
@@ -59,10 +63,7 @@ def __add_positional_args_to_parser(parser:argparse.ArgumentParser, *args:Positi
 
 
 def __new_arg_parser(script_description:str)->argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description=script_description
-    )
-    return parser
+    return argparse.ArgumentParser(description=script_description)
 
 
 def __load_config_file(path:str)->Dict[str,Any]:
@@ -75,14 +76,14 @@ def __load_config_file(path:str)->Dict[str,Any]:
 
 def __parse_arguments(parser:argparse.ArgumentParser, use_config:bool)->Dict[str,str]:
     args = parser.parse_args().__dict__
-    config = __load_config_file(args.pop("config_file_path"))
+    config = __load_config_file(args.pop("<config-file-path>"))
     db_config = config["database"]["server"]
 
     if use_config:
         for key in args:
             if args[key] == EMPTY_VALUE: args[key] = db_config[key]
 
-    return args
+    return Script_Args(args, config)
 
 
 class Config_File_Not_Found(Exception): pass
