@@ -18,7 +18,7 @@ from server.database.connection import get_db_connection
 EMPTY_VALUE = ""
 
 
-def parse_arguments(config:Dict[str,str])->Tuple[ArgumentParser, Dict[str,str]]:
+def parse_arguments(config:Dict[str,str])->Dict[str,str]:
     parser = argparse.ArgumentParser(
         description="Add a new admin to the database and if successfull, print his or hers API key."
     )
@@ -38,7 +38,7 @@ def parse_arguments(config:Dict[str,str])->Tuple[ArgumentParser, Dict[str,str]]:
     args = parser.parse_args().__dict__
     for key in args:
         if args[key] == EMPTY_VALUE: args[key] = config[key]
-    return parser, args
+    return args
 
 
 def try_to_add_key(connection_source:Engine, admin_name:str)->None:
