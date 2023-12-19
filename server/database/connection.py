@@ -41,6 +41,7 @@ def unset_connection_source()->None:
     _connection_data = None
 
 
+class Cannot_Connect_To_Database(Exception): pass
 class Connection_Source_Not_Set(Exception): pass
 class Invalid_Connection_Arguments(Exception): pass
 
@@ -123,7 +124,6 @@ def create_all_tables(source:Engine)->None:
     Base.metadata.create_all(source)
 
 
-
 def __new_connection_source(
     dialect:str, 
     dbapi:str, 
@@ -134,8 +134,8 @@ def __new_connection_source(
     **kwargs
     )->Engine:
 
-    url = ('').join([dialect,'+',dbapi,"://",username,":",password,"@",dblocation])
     try:
+        url = __engine_url(dialect, dbapi, username, password, dblocation)
         engine = create_engine(url, *args, **kwargs)
         if engine is None: 
             raise Invalid_Connection_Arguments("Could not create new connection source ("
@@ -143,8 +143,20 @@ def __new_connection_source(
     except:
         raise Invalid_Connection_Arguments("Could not create new connection source ("
             f"{dialect},'+',{dbapi},://...{dblocation})") 
-
+    
+    try:
+        with engine.connect(): pass
+    except:
+        raise Cannot_Connect_To_Database(
+            "Could not connect to the database with the given connection parameters: \n"
+            f"{engine.url}\n\n"
+            "Check the port number, username and password."
+        )
     return engine
+
+
+def __engine_url(dialect:str, dbapi:str, username:str, password:str, dblocation:str)->str:
+    return ('').join([dialect,'+',dbapi,"://",username,":",password,"@",dblocation])
 
 
 class Base(DeclarativeBase):  

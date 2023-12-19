@@ -1,9 +1,12 @@
 from __future__ import annotations
 from typing import ClassVar, List
-
 import dataclasses
-from sqlalchemy import String, Integer, Engine
+import random
+import string
+from sqlalchemy import String, Integer, Engine, Select, func
 from sqlalchemy.orm import Mapped, mapped_column, Session
+
+
 from database.connection import Base, get_connection_source
 
 
@@ -38,9 +41,8 @@ class Admin_DB:
 
 from typing import Optional
 from sqlalchemy import select
-def add_admin_key(name:str, connection_source:Optional[Engine]=None)->str:
+def add_admin_key(name:str, connection_source:Engine)->str:
     """Add an admin to the database and return the key."""
-    if connection_source is None: connection_source = get_connection_source()
     __create_admin_table_if_it_does_not_exist(connection_source)
     with Session(connection_source) as session:
         existing_admin = session.query(AdminBase).filter(AdminBase.name==name).first()
@@ -89,21 +91,17 @@ def get_admin(key:str)->Admin_DB|None:
             return admin
 
 
-from sqlalchemy import Select, func
 
 def admin_selection(key:str)->Select:
     return select(AdminBase).where(AdminBase.key==key)
 
 
-from sqlalchemy import func
 def number_of_admin_keys(connection:Engine|None = None)->int:
     if connection is None: connection = get_connection_source()
     with Session(connection) as session:
         return session.query(func.count(AdminBase.__table__.c.id)).scalar()
 
 
-import random
-import string
 def __generate_key()->str: # pragma: no cover
     return ''.join(random.choice(string.ascii_letters) for _ in range(30))
 
