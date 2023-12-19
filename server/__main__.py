@@ -30,6 +30,7 @@ from database.connection import set_db_connection
 from database.time import timestamp
 from fleetv2_http_api.__main__ import main as run_server
 from fleetv2_http_api.impl.controllers import set_status_wait_timeout_s, set_command_wait_timeout_s
+import database.script_args as script_args
 
 
 
