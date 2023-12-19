@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import ClassVar, List
+from typing import ClassVar, List, Optional
 import dataclasses
 import random
 import string
@@ -39,9 +39,9 @@ class Admin_DB:
     key:str
 
 
-from typing import Optional
 from sqlalchemy import select
-def add_admin_key(name:str, connection_source:Engine)->str:
+def add_admin_key(name:str, connection_source:Optional[Engine]=None)->str:
+    if connection_source is None: connection_source = get_connection_source()
     """Add an admin to the database and return the key."""
     __create_admin_table_if_it_does_not_exist(connection_source)
     with Session(connection_source) as session:

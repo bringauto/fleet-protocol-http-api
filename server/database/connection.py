@@ -115,7 +115,9 @@ def get_test_db_connection(
     """Create test SQLAlchemy engine object used to connect to the database using SQLite.
     No username or password required."""
     source = __new_connection_source(
-        dblocation=dblocation
+        dialect="sqlite",
+        dbapi="pysqlite",
+        dblocation=dblocation,
     )
     return source
 
