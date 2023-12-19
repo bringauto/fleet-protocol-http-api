@@ -15,6 +15,23 @@ class Positional_Arg_Info:
 EMPTY_VALUE = ""
 
 
+def request_and_get_script_arguments(
+    script_description:str, 
+    *positional_args:Positional_Arg_Info, 
+    use_config:bool=True, 
+    include_db_args:bool=True
+    )->Dict[str,str]:
+
+    parser = __new_arg_parser(script_description)
+    __add_positional_args_to_parser(parser, *positional_args)
+    if include_db_args:
+        __add_db_args_to_parser(parser)
+    if use_config:
+        __add_config_arg_to_parser(parser)
+    arguments = __parse_arguments(parser, use_config)
+    return arguments
+
+
 def __add_config_arg_to_parser(parser:argparse.ArgumentParser)->None:
     parser.add_argument(
         "-c", "--config-file-path", type=str, help="The path to the config file.", default="config.json", required=True
@@ -54,23 +71,6 @@ def __load_config_file(path:str)->Dict[str,Any]:
     except:
         raise Config_File_Not_Found(f"Could not load config file from path '{path}'.")
     return config
-
-
-def request_and_get_script_arguments(
-    script_description:str, 
-    *positional_args:Positional_Arg_Info, 
-    use_config:bool=True, 
-    include_db_args:bool=True
-    )->Dict[str,str]:
-
-    parser = __new_arg_parser(script_description)
-    __add_positional_args_to_parser(parser, *positional_args)
-    if include_db_args:
-        __add_db_args_to_parser(parser)
-    if use_config:
-        __add_config_arg_to_parser(parser)
-    arguments = __parse_arguments(parser, use_config)
-    return arguments
 
 
 def __parse_arguments(parser:argparse.ArgumentParser, use_config:bool)->Dict[str,str]:
