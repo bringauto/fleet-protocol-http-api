@@ -41,20 +41,6 @@ def parse_arguments(config:Dict[str,str])->Tuple[ArgumentParser, Dict[str,str]]:
     return parser, args
 
 
-def get_connection_to_database(
-    dblocation:str,
-    username:str,
-    password:str
-    )->Engine:
-    
-    source = get_db_connection(
-        dblocation,
-        username,
-        password
-    )
-    return source
-
-
 def try_to_add_key(connection_source:Engine, admin_name:str)->None:
     """Try to add a new admin key to the database. If successfull, print the new API key, otherwise print 
     message about already existing admin."""
@@ -67,7 +53,7 @@ if __name__=="__main__":
     root_dir = os.path.dirname(os.path.dirname(__file__))
     config:Dict[str,Any] = json.load(open(os.path.join(root_dir, "config.json")))["database"]["server"]
     arguments = parse_arguments(config)
-    source = get_connection_to_database(
+    source = get_db_connection(
         dblocation=(arguments["location"]+":"+str(arguments["port"])),
         username=arguments["username"],
         password=arguments["password"]
