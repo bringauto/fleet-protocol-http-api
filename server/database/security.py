@@ -44,15 +44,23 @@ def add_admin_key(name:str, connection_source:Optional[Engine]=None)->str:
     __create_admin_table_if_it_does_not_exist(connection_source)
     with Session(connection_source) as session:
         existing_admin = session.query(AdminBase).filter(AdminBase.name==name).first()
-        if existing_admin is None:
+        if existing_admin is not None: 
+            return __admin_already_exists_msg(existing_admin.name)
+        else:
             key = __generate_key()
             admin = AdminBase(name=name, key=key)
             session.add(admin)
             session.commit()
-            return key
-        else:
-            return ""
+            return __admin_added_msg(name, key)
+    
         
+def __admin_added_msg(name:str, key:str)->str:
+    return f"Admin '{name}' added with key '{key}'."
+        
+
+def __admin_already_exists_msg(name:str)->str:
+    return f"Admin with name '{name}' already exists."
+
 
 def __create_admin_table_if_it_does_not_exist(connection_source:Engine)->None:
     with connection_source.connect() as connection:

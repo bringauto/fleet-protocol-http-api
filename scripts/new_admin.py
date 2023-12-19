@@ -75,12 +75,9 @@ def get_connection_to_database(
     
 
 def try_to_add_key(connection_source:Engine, arguments:Dict[str,Any])->None:
-    new_key = add_admin_key(name=arguments["<admin-name>"], connection_source=connection_source)
-    if new_key != "": 
-        print(f"\nNew key for admin '{arguments['<admin-name>']}':\n\n{new_key}\n")
-    else: 
-        print(f"Admin '{arguments['<admin-name>']}' already exists.")
-
+    msg = add_admin_key(name=arguments["<admin-name>"], connection_source=connection_source)
+    print(msg)
+    
 
 import os
 if __name__=="__main__":
