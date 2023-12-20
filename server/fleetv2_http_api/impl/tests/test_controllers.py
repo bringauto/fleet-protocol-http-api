@@ -15,6 +15,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+
+import os
 import sys
 sys.path.append("server")
 
@@ -35,6 +37,9 @@ from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Payload, Message
 from fleetv2_http_api.models.module import Module
 from fleetv2_http_api.models.car import Car
+
+
+from unittest.mock import patch, Mock
 
 
 class Test_Device_Id_Validity(unittest.TestCase):
@@ -264,8 +269,6 @@ class Test_Sending_And_Listing_Multiple_Messages(unittest.TestCase):
         self.assertEqual(response[1], 404)
 
 
-from unittest.mock import patch
-@unittest.skip("showing class skipping")
 class Test_Statuses_In_Time(unittest.TestCase):
 
     COMPANY_1_NAME = "company_1"
@@ -274,16 +277,19 @@ class Test_Statuses_In_Time(unittest.TestCase):
 
     def setUp(self) -> None:
         set_test_db_connection("/:memory:")
-        self.sdevice_id = "2_5_test_device"
 
-    def test_by_default_only_the_NEWEST_STATUS_is_returned_and_if_all_is_specified_all_statuses_are_returned(self):
+    @patch('database.time._time_in_ms')
+    def test_by_default_only_the_NEWEST_STATUS_is_returned_and_if_all_is_specified_all_statuses_are_returned(self, mock_ms:Mock):
         payload = Payload(message_type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is running"})
         device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
         
+        mock_ms.return_value = 10
         message_1 = Message(timestamp=10, device_id=device_id, payload = payload)
+        mock_ms.return_value = 20
         message_2 = Message(timestamp=20, device_id=device_id, payload = payload)
+        mock_ms.return_value = 37
         message_3 = Message(timestamp=37, device_id=device_id, payload = payload)
-        args = self.COMPANY_1_NAME, self.CAR_A_NAME, self.sdevice_id
+        args = self.COMPANY_1_NAME, self.CAR_A_NAME
 
         send_statuses(*args, messages=[message_1])
         send_statuses(*args, messages=[message_2])
@@ -320,7 +326,7 @@ class Test_Statuses_In_Time(unittest.TestCase):
         command_2 = Message(timestamp=30, device_id=device_id, payload=command_payload)
         command_3 = Message(timestamp=45, device_id=device_id, payload=command_payload)
 
-        args = self.COMPANY_1_NAME, self.CAR_A_NAME, sdevice
+        args = self.COMPANY_1_NAME, self.CAR_A_NAME
 
         send_statuses(*args, [status])
         send_commands(*args, [command_1])
@@ -478,7 +484,6 @@ class Test_Listing_Commands_And_Statuses_Of_Nonexistent_Cars(unittest.TestCase):
         self.assertEqual(list_commands("a_company", "nonexistent_car"), ([], 404))
 
 
-import os
 class Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_Methods(unittest.TestCase):
     
     def setUp(self) -> None:
