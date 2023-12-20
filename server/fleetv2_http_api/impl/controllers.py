@@ -25,7 +25,7 @@ from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Message
 from fleetv2_http_api.models.module import Module
 from fleetv2_http_api.models.car import Car
-from database.database_controller import send_messages_to_database, Message_DB, deserialize_device_id
+from database.database_controller import send_messages_to_database, Message_DB
 from database.database_controller import list_messages as __list_messages
 from database.device_ids import store_device_id_if_new, device_ids, serialized_device_id
 from database.database_controller import cleanup_device_commands_and_warn_before_future_commands
@@ -294,19 +294,6 @@ def __check_car_availability(company_name:str, car_name:str)->Tuple[str, int]:
     else: 
         return "", 200
             
-def __check_equal_device_id_in_path_and_messages(
-    sdevice_id:str,
-    *messages:Message  
-    )->str:
-
-    for message in messages:
-        sdevice_id_from_message = serialized_device_id(message.device_id)
-        if sdevice_id_from_message != sdevice_id:
-            return \
-                f"The device Id in path (.../{sdevice_id}) is not equal " \
-                f"to a device Id from the message ({sdevice_id_from_message})"
-    return ""
-
 def __handle_first_status_and_return_warnings(
     timestamp:int, 
     company_name:str,

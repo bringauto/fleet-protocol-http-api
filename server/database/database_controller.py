@@ -24,6 +24,7 @@ from sqlalchemy import Integer, String, JSON, select, insert, BigInteger
 from enums import MessageType
 from database.device_ids import remove_device_id, clear_device_ids
 from database.connection import get_connection_source, Base
+from database.time import timestamp
 import database.connection
 
 
@@ -148,22 +149,28 @@ class Message_DB:
 
 def send_messages_to_database(company_name:str, car_name:str, *messages:Message_DB)->Tuple[str, int]: 
     """Send a list of messages to the database, returns number of succesfully sent messages (int)."""
+    _update_messages_timestamp(messages)
     try: 
         with get_connection_source().begin() as conn:
             stmt = insert(MessageBase.__table__) # type: ignore
             msg_base = MessageBase.from_messages(company_name, car_name, *messages)
             data_list = [msg.__dict__ for msg in msg_base]
             conn.execute(stmt, data_list)
-            return __get_message_for_n_messages_succesfully_sent(len(messages)), 200
+            return _get_message_for_n_messages_succesfully_sent(len(messages)), 200
     except:
         return "Error: Some of the messages are identical to those sent previously, including their timestamps.", 500
 
 
-def __get_message_for_n_messages_succesfully_sent(number_of_sent_messages:int)->str:
+def _get_message_for_n_messages_succesfully_sent(number_of_sent_messages:int)->str:
     if number_of_sent_messages == 1:
         return "1 message has been sent."
     else:
         return f"{number_of_sent_messages} messages have been sent."
+    
+def _update_messages_timestamp(messages:Tuple[Message_DB])->None:
+    timestamp_now = timestamp()
+    for message in messages:
+        message.timestamp = timestamp_now
 
 
 from sqlalchemy import func, and_

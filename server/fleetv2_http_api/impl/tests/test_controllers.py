@@ -269,93 +269,123 @@ class Test_Sending_And_Listing_Multiple_Messages(unittest.TestCase):
         self.assertEqual(response[1], 404)
 
 
-class Test_Statuses_In_Time(unittest.TestCase):
-
-    COMPANY_1_NAME = "company_1"
-    CAR_A_NAME = "car_A"
-    CAR_B_NAME = "car_B"
-
-    def setUp(self) -> None:
-        set_test_db_connection("/:memory:")
+class Test_Timestamp_Of_A_Sent_Message_Is_Set_To_Time_Of_Its_Sending(unittest.TestCase):
 
     @patch('database.time._time_in_ms')
-    def test_by_default_only_the_NEWEST_STATUS_is_returned_and_if_all_is_specified_all_statuses_are_returned(self, mock_ms:Mock):
+    def test_status_original_timestamp_is_set_to_the_current_timestamp_when_sending_the_status(self, mock_time_ms:Mock):
+        payload = Payload(message_type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is running"})
+        device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
+        message_1 = Message(timestamp=10, device_id=device_id, payload = payload)
+
+        mock_time_ms.return_value = 25       
+        send_statuses("test_company", "test_car", messages=[message_1])
+        statuses, code = list_statuses("test_company", "test_car")
+        self.assertEqual(statuses[0].timestamp, 25)
+
+
+class Test_Options_For_Listing_Multiple_Statuses(unittest.TestCase):
+
+    @patch('database.time._time_in_ms')
+    def setUp(self, mock_time_in_ms:Mock) -> None:
+        set_test_db_connection("/:memory:")
         payload = Payload(message_type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is running"})
         device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
         
-        mock_ms.return_value = 10
         message_1 = Message(timestamp=10, device_id=device_id, payload = payload)
-        mock_ms.return_value = 20
         message_2 = Message(timestamp=20, device_id=device_id, payload = payload)
-        mock_ms.return_value = 37
         message_3 = Message(timestamp=37, device_id=device_id, payload = payload)
-        args = self.COMPANY_1_NAME, self.CAR_A_NAME
 
-        send_statuses(*args, messages=[message_1])
-        send_statuses(*args, messages=[message_2])
-        send_statuses(*args, messages=[message_3])
+        mock_time_in_ms.return_value = 10
+        send_statuses("company", "car", messages=[message_1])
+        mock_time_in_ms.return_value = 20
+        send_statuses("company", "car", messages=[message_2])
+        mock_time_in_ms.return_value = 37
+        send_statuses("company", "car", messages=[message_3])
 
-        statuses, code = list_statuses(*args)
+
+    def test_by_default_only_the_NEWEST_STATUS_is_returned(self):
+        statuses, _ = list_statuses("company", "car")
         self.assertEqual(len(statuses), 1)
         self.assertEqual(statuses[-1].timestamp, 37)
 
+    def test_since_parameter_equal_to_newest_status_timestamp_yields_the_newest_status(self):
+        statuses, _ = list_statuses("company", "car", since=37)
+        self.assertEqual(len(statuses), 1)
+        self.assertEqual(statuses[-1].timestamp, 37)
+
+    def test_since_parameter_larger_to_newest_status_timestamp_yields_empty_status_list(self):
+        statuses, _ = list_statuses("company", "car", since=38)
+        self.assertEqual(len(statuses), 0)
+
+    def test_since_option_returns_all_statuses_inclusivelly_newer_than_the_specified_time(self):
+        statuses, _ = list_statuses("company", "car", since=20)
+        self.assertEqual(statuses[0].timestamp, 20)
+        self.assertEqual(statuses[1].timestamp, 37)
+
+    def test_if_all_is_specified_all_statuses_are_returned(self):
         # any value passed as 'all' attribute makes the list_statuses to return all the statuses
-        statuses, code = list_statuses(*args, all_available="")
+        statuses, _ = list_statuses("company", "car", all_available="")
         self.assertEqual(len(statuses), 3)
         self.assertEqual(statuses[0].timestamp, 10)
         self.assertEqual(statuses[1].timestamp, 20)
         self.assertEqual(statuses[2].timestamp, 37)
 
-        statuses, code = list_statuses(*args, since=20)
-        self.assertEqual(len(statuses), 2)
-        self.assertEqual(statuses[0].timestamp, 20)
-        self.assertEqual(statuses[1].timestamp, 37)
-    
-        statuses, code = list_statuses(*args, since=38)
-        self.assertEqual(len(statuses), 0)
 
+class Test_Options_For_Listing_Multiple_Commands(unittest.TestCase):
 
-    def test_by_default_only_the_OLDEST_COMMAND_is_returned(self):
+    @patch('database.time._time_in_ms')
+    def setUp(self, mock_time_in_ms:Mock) -> None:
+        set_test_db_connection("/:memory:")
         device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
-        sdevice = serialized_device_id(device_id)
         status_payload = Payload(message_type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is running"})
         command_payload = Payload(message_type=MessageType.COMMAND_TYPE, encoding=EncodingType.JSON, data={"message":"Beep"})
-        
-        status = Message(timestamp=10, device_id=device_id, payload=status_payload)
-        command_1 = Message(timestamp=20, device_id=device_id, payload=command_payload)
-        command_2 = Message(timestamp=30, device_id=device_id, payload=command_payload)
-        command_3 = Message(timestamp=45, device_id=device_id, payload=command_payload)
 
-        args = self.COMPANY_1_NAME, self.CAR_A_NAME
+        status = Message(timestamp=0, device_id=device_id, payload=status_payload)
+        command_1 = Message(timestamp=0, device_id=device_id, payload=command_payload)
+        command_2 = Message(timestamp=0, device_id=device_id, payload=command_payload)
+        command_3 = Message(timestamp=0, device_id=device_id, payload=command_payload)
 
-        send_statuses(*args, [status])
-        send_commands(*args, [command_1])
-        send_commands(*args, [command_2])
-        send_commands(*args, [command_3])
+        mock_time_in_ms.return_value = 10
+        send_statuses("company", "car", [status])
+        mock_time_in_ms.return_value = 20
+        send_commands("company", "car", [command_1])
+        mock_time_in_ms.return_value = 30
+        send_commands("company", "car", [command_2])
+        mock_time_in_ms.return_value = 45
+        send_commands("company", "car", [command_3])
 
-        commands, code = list_commands(*args)
+    def test_by_default_only_the_OLDEST_COMMAND_is_returned(self):
+        commands, code = list_commands("company", "car")
         self.assertEqual(len(commands), 1)
         self.assertEqual(commands[0].timestamp, 20)
 
-        commands, code = list_commands(*args, all_available="")
+    def test_until_parameter_equal_to_oldest_command_timestamp_yields_the_oldest_command(self):
+        commands, code = list_commands("company", "car", until=20)
+        self.assertEqual(len(commands), 1)
+        self.assertEqual(commands[0].timestamp, 20)
+
+    def test_until_parameter_smaller_than_oldest_command_timestamp_yields_empty_command_list(self):
+        commands, code = list_commands("company", "car", until=19)
+        self.assertEqual(len(commands), 0)
+    
+    def test_until_option_returns_all_commands_inclusivelly_older_than_the_specified_time(self):
+        commands, code = list_commands("company", "car", until=30)
+        self.assertEqual(len(commands), 2)
+        self.assertEqual(commands[0].timestamp, 20)
+        self.assertEqual(commands[1].timestamp, 30)
+
+    def test_if_all_is_specified_all_commands_are_returned(self):
+        commands, code = list_commands("company", "car", all_available="")
         self.assertEqual(len(commands), 3)
         self.assertEqual(commands[0].timestamp, 20)
         self.assertEqual(commands[1].timestamp, 30)
         self.assertEqual(commands[2].timestamp, 45)
 
-        commands, code = list_commands(*args, until=30)
-        self.assertEqual(len(commands), 2)
-        self.assertEqual(commands[0].timestamp, 20)
-        self.assertEqual(commands[1].timestamp, 30)
-
-        commands, code = list_commands(*args, until=5)
-        self.assertEqual(len(commands), 0)
 
 
 from database.database_controller import remove_old_messages
 from database.database_controller import future_command_warning, MessageBase
-
-@unittest.skip("showing class skipping")
+@unittest.skip("this test case will be enabled after implementiung setting of the timestamp update")
 class Test_Cleaning_Up_Commands(unittest.TestCase):
 
     COMPANY_1_NAME = "company_1"
