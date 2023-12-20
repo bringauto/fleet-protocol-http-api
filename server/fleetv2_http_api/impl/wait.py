@@ -68,7 +68,7 @@ class Wait_Obj_Manager:
         """Make the next wait object in the queue to respond with specified 'reponse_content' and remove it from the queue."""
 
         if reponse_content is None:
-            eponse_content = list()
+            reponse_content = list()
 
         if self.__wait_dict.obj_exists(company, car):
             wait_obj:Wait_Obj|None = self.__wait_dict.remove(company, car)
