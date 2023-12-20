@@ -11,7 +11,7 @@ These files are included in the `server/.openapi-generator-ignore`. This file al
 
 
 ## Requirements
-Python 3.5.2+
+Python 3.10.12+
 
 ## Server re-generation
 You must have the OpenAPI Generator installed (see [link](https://openapi-generator.tech/docs/installation/)). Before the server generation, the server must be STOPPED.
@@ -29,20 +29,29 @@ If you have trouble with running the generator, visit [docs](https://openapi-gen
 
 ## Tests
 
-You can run unittests for the server by running `./test_server.sh` in the root directory.
+You can run unittests for the server by running `./test_server.sh` in the root directory. Do not forget to install requirements as shown in the [usage](#usage) section.
 
 
 ## Usage
 
-Before run, ensure the `"host*` value in the `config.json` is set to `"localhost"`.
 To run the server execute the following from the root directory:
 
 ```bash
 pip3 install -r requirements.txt
-python3 -m server
+python3 -m server <path-to-config-file> [OPTIONS]
 ```
+The server automatically connects to the PostgreSQL database using data from the config file. If you want to override these values, start the server with some of the following options:
 
-and open your browser to here:
+|Option|Short|Description|
+|------------|-----|--|
+|`--username`|`-usr`|Username for the PostgreSQL database|
+|`--password`|`-pwd`|Password for the PostgreSQL database|
+|`--location`|`-l`  |Location of the database (e.g., `localhost`)|
+|`--port`    |`-p`  |Port number (e.g., `5430`)|
+
+Note that these data should comply with the requirements specified in SQLAlchemy [documentation](https://docs.sqlalchemy.org/en/20/core/engines.html#database-urls).
+
+To visualize the API, open your browser to here:
 
 ```
 http://localhost:8080/ui/
@@ -54,7 +63,6 @@ Your OpenAPI definition lives here:
 http://localhost:8080/openapi.json
 ```
 ### Running with Docker
-Before run, ensure the `"host*` value in the `config.json` is set to `"postgresql-database"`.
 To run the server on a Docker container, run:
 
 ```bash
@@ -64,15 +72,26 @@ docker compose up --build -d
 ### Adding a new admin to the database
 
 To generate a new api_key (passed as a query parameter "api_key") run the following:
-```bash 
-python scripts/new_admin.py -usr '<db-username>' -pwd '<db-password>' '<new-admin-name>' 
+```bash
+python scripts/new_admin.py <new-admin-name> <path-to-config-file> [OPTIONS]
 ```
+The script automatically connects to the PostgreSQL database using the config file. To override any of those values, run the script with some of the following options:
+
+|Option|Short|Description|
+|------------|-----|--|
+|`--username`|`-usr`|Username for the PostgreSQL database|
+|`--password`|`-pwd`|Password for the PostgreSQL database|
+|`--location`|`-l`  |Location of the database (e.g., `localhost`)|
+|`--port`    |`-p`  |Port number (e.g., `5430`)|
+
+Note that these data should comply with the requirements specified in SQLAlchemy [documentation](https://docs.sqlalchemy.org/en/20/core/engines.html#database-urls).
+
 
 Working example for test database built from docker-compose (username and password can be found in the `config.json`).
-```bash 
-python scripts/new_admin.py -usr 'postgres' -pwd '1234' 'Bob' 
+```bash
+python scripts/new_admin.py 'Bob' config.json
 ```
-After running the script, the api_key is printed to the console: 
+After running the script, the api_key is printed to the console:
 ```bash
 New key for admin 'Bob':
 
