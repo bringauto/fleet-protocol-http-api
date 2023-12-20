@@ -42,7 +42,7 @@ def set_db_connection(
         dblocation=dblocation, 
         username=username, 
         password=password,
-        after_connect=(load_available_devices_from_database, )
+        after_connect=(load_available_devices_from_database,)
     )
 
 

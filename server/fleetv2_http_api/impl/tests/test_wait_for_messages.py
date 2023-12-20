@@ -1,53 +1,33 @@
-# Fleet Protocol v2 HTTP API 
-# Copyright (C) 2023 BringAuto s.r.o.
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-
 import sys
 sys.path.append("server")
 
-
 import threading
-import os 
+import os
 import time
 from typing import Callable
-
-
 import unittest
+
 from database.device_ids import clear_device_ids, serialized_device_id
 from database.database_controller import set_test_db_connection
 from fleetv2_http_api.impl.controllers import (
-    send_statuses, 
+    send_statuses,
     list_statuses,
     send_commands,
-    list_commands 
+    list_commands
 )
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Payload, Message
 from fleetv2_http_api.impl.controllers import (
-    set_status_wait_timeout_s, 
+    set_status_wait_timeout_s,
     get_status_wait_timeout_s,
     set_command_wait_timeout_s
 )
-
 
 def run_in_threads(*functions:Callable[[],None])->None:
     threads = [threading.Thread(target=f) for f in functions]
     for t in threads: t.start()
     for t in threads: t.join()
-        
+
 
 class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.TestCase):
 
@@ -56,8 +36,8 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         set_test_db_connection("/example.db")
         clear_device_ids()
         payload_example = Payload(
-            message_type='STATUS', 
-            encoding='JSON', 
+            message_type='STATUS',
+            encoding='JSON',
             data={"message":"Device is running"}
         )
         self.device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
@@ -76,7 +56,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             self.assertEqual(code, 200)
             self.assertEqual(len(msg), 1)
         def send_single_status():
-            time.sleep(0.01) 
+            time.sleep(0.01)
             send_statuses("test_company", "test_car", messages=[self.st])
         run_in_threads(list_test_statuses, send_single_status)
 
@@ -86,7 +66,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             self.assertEqual(code, 404) # 404 is returned as the list_statuses does not wait for the statuses to arrive
             self.assertEqual(len(msg), 0)
         def send_single_status():
-            time.sleep(0.01) 
+            time.sleep(0.01)
             send_statuses("test_company", "test_car", messages=[self.st])
         run_in_threads(list_test_statuses, send_single_status)
 
@@ -96,20 +76,20 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             msg, code = list_statuses("test_company", "test_car", wait="")
             self.assertEqual(code, 404)
         def send_single_status():
-            time.sleep(0.02) 
+            time.sleep(0.02)
             send_statuses("test_company", "test_car", messages=[self.st])
         run_in_threads(list_test_statuses, send_single_status)
 
     def test_sending_empty_statuses_list_does_not_stop_the_waiting(self):
         def list_test_statuses():
             msg, code = list_statuses("test_company", "test_car", wait="")
-            self.assertEqual(code, 200) 
+            self.assertEqual(code, 200)
             self.assertEqual(len(msg), 1)
         def send_single_status():
-            time.sleep(0.05) 
+            time.sleep(0.05)
             send_statuses("test_company", "test_car", messages=[self.st])
         def send_no_status():
-            time.sleep(0.02) 
+            time.sleep(0.02)
             send_statuses("test_company", "test_car", messages=[])
         run_in_threads(list_test_statuses, send_no_status, send_single_status)
 
@@ -117,30 +97,30 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         set_status_wait_timeout_s(0.02)
         def list_test_statuses_1():
             _, code = list_statuses("test_company", "test_car", wait="")
-            self.assertEqual(code, 404) 
+            self.assertEqual(code, 404)
         def list_test_statuses_2():
             time.sleep(0.06)
             _, code = list_statuses("test_company", "test_car", wait="")
-            self.assertEqual(code, 200) 
+            self.assertEqual(code, 200)
         def send_single_status():
             time.sleep(0.04)
             send_statuses("test_company", "test_car", messages=[self.st])
         run_in_threads(list_test_statuses_1, list_test_statuses_2, send_single_status)
 
     def test_sending_second_request_after_statuses_are_available_but_before_timeout(self):
-        TIMEOUT =           0.05
-        T_FIRST_REQUEST =   0.00
-        T_SECOND_REQUEST =  0.08
-        T_STATUSES_SENT =   0.1
+        TIMEOUT = 0.05
+        T_FIRST_REQUEST = 0.00
+        T_SECOND_REQUEST = 0.08
+        T_STATUSES_SENT = 0.1
         set_status_wait_timeout_s(TIMEOUT)
         def list_test_statuses_1():
             time.sleep(T_FIRST_REQUEST)
             msg, code = list_statuses("test_company", "test_car", wait="")
-            self.assertEqual(code, 404) 
+            self.assertEqual(code, 404)
         def list_test_statuses_2():
             time.sleep(T_SECOND_REQUEST)
             msg, code = list_statuses("test_company", "test_car", wait="")
-            self.assertEqual(code, 200) 
+            self.assertEqual(code, 200)
         def send_single_status():
             time.sleep(T_STATUSES_SENT)
             send_statuses("test_company", "test_car", messages=[self.st])
@@ -153,7 +133,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             self.assertEqual(code, 200)
             self.assertEqual(len(msg), 0)
         def send_single_status():
-            time.sleep(0.02) 
+            time.sleep(0.02)
             send_statuses("test_company", "test_car", messages=[self.st])
         run_in_threads(list_test_statuses, send_single_status)
 
@@ -179,7 +159,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             self.assertEqual(code, 200)
             self.assertEqual(len(msg), 1)
         def send_single_status_and_command():
-            time.sleep(0.01) 
+            time.sleep(0.01)
             send_statuses("test_company", "test_car",messages=[self.status])
             send_commands("test_company", "test_car", messages=[self.command])
         run_in_threads(list_test_commands, send_single_status_and_command)
@@ -191,7 +171,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             self.assertEqual(code, 200)
             self.assertEqual(len(msg), 0) # no commands are present in the moment of the request
         def send_single_command():
-            time.sleep(0.01) 
+            time.sleep(0.01)
             send_commands("test_company", "test_car", messages=[self.command])
         run_in_threads(list_test_commands, send_single_command)
 
@@ -203,7 +183,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             self.assertEqual(code, 200)
             self.assertEqual(len(cmds), 0)
         def send_single_command():
-            time.sleep(0.05) 
+            time.sleep(0.05)
             send_commands("test_company", "test_car", messages=[self.command])
         run_in_threads(list_test_commands, send_single_command)
 
@@ -211,13 +191,13 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         send_statuses("test_company", "test_car", messages=[self.status])
         def list_test_commands():
             msg, code = list_commands("test_company", "test_car", wait="")
-            self.assertEqual(code, 200) 
+            self.assertEqual(code, 200)
             self.assertEqual(len(msg), 1)
         def send_single_command():
-            time.sleep(0.05) 
+            time.sleep(0.05)
             send_commands("test_company", "test_car", messages=[self.command])
         def send_no_command():
-            time.sleep(0.02) 
+            time.sleep(0.02)
             send_commands("test_company", "test_car", messages=[])
         run_in_threads(list_test_commands, send_no_command, send_single_command)
 
@@ -226,33 +206,33 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         set_command_wait_timeout_s(0.02)
         def list_test_commands_1():
             cmds, code = list_commands("test_company", "test_car", wait="")
-            self.assertEqual(code, 200) 
+            self.assertEqual(code, 200)
             self.assertEqual(len(cmds), 0)
         def list_test_commands_2():
             time.sleep(0.06)
             _, code = list_commands("test_company", "test_car", wait="")
-            self.assertEqual(code, 200) 
+            self.assertEqual(code, 200)
         def send_single_command():
             time.sleep(0.04)
             send_commands("test_company", "test_car", messages=[self.command])
         run_in_threads(list_test_commands_1, list_test_commands_2, send_single_command)
 
     def test_sending_second_request_after_commands_are_available_but_before_timeout(self):
-        TIMEOUT =           0.05
-        T_FIRST_REQUEST =   0.00
-        T_SECOND_REQUEST =  0.08
-        T_COMMANDS_SENT =   0.1
+        TIMEOUT = 0.05
+        T_FIRST_REQUEST = 0.00
+        T_SECOND_REQUEST = 0.08
+        T_COMMANDS_SENT = 0.1
         send_statuses("test_company", "test_car", messages=[self.status])
         set_command_wait_timeout_s(TIMEOUT)
         def list_test_commands_1():
             time.sleep(T_FIRST_REQUEST)
             cmds, code = list_commands("test_company", "test_car", wait="")
-            self.assertEqual(code, 200) 
+            self.assertEqual(code, 200)
             self.assertEqual(len(cmds), 0)
         def list_test_commands_2():
             time.sleep(T_SECOND_REQUEST)
             cmds, code = list_commands("test_company", "test_car", wait="")
-            self.assertEqual(code, 200) 
+            self.assertEqual(code, 200)
             self.assertEqual(len(cmds), 1)
         def send_single_command():
             time.sleep(T_COMMANDS_SENT)
@@ -266,30 +246,30 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             self.assertEqual(code, 404) # the device did not become available before timeout was exceeded
             self.assertEqual(len(cmds), 0)
         def send_single_command():
-            time.sleep(0.01) 
+            time.sleep(0.01)
             send_commands("test_company", "test_car", messages=[self.command])
         run_in_threads(list_test_commands, send_single_command)
 
     def test_sending_commands_to_device_that_becomes_available_before_request_timeout(self):
-        T_REQUEST =             0.02
-        T_DEVICE_AVAILABLE =    0.05
-        T_COMMAND_TO_UNAVAIL =  0.01
-        T_COMMAND_TO_AVAIL =    0.08
-        TIMEOUT =               0.10
+        T_REQUEST = 0.02
+        T_DEVICE_AVAILABLE = 0.05
+        T_COMMAND_TO_UNAVAIL = 0.01
+        T_COMMAND_TO_AVAIL = 0.08
+        TIMEOUT = 0.10
         set_command_wait_timeout_s(TIMEOUT)
         def list_test_commands():
             time.sleep(T_REQUEST)
             cmds, code = list_commands("test_company", "test_car", wait="")
-            self.assertEqual(code, 200) 
+            self.assertEqual(code, 200)
             self.assertEqual(len(cmds), 1)
         def make_device_available():
-            time.sleep(T_DEVICE_AVAILABLE) 
+            time.sleep(T_DEVICE_AVAILABLE)
             send_statuses("test_company", "test_car", messages=[self.status])
         def send_first_single_command():
             time.sleep(T_COMMAND_TO_UNAVAIL)
             send_commands("test_company", "test_car", messages=[self.command])
         def send_second_single_command():
-            time.sleep(T_COMMAND_TO_AVAIL) 
+            time.sleep(T_COMMAND_TO_AVAIL)
             send_commands("test_company", "test_car", messages=[self.command])
         run_in_threads(list_test_commands, send_first_single_command, make_device_available, send_second_single_command)
 
@@ -301,7 +281,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             self.assertEqual(code, 200)
             self.assertEqual(len(cmds), 0)
         def send_single_command():
-            time.sleep(0.02) 
+            time.sleep(0.02)
             send_commands("test_company", "test_car", messages=[self.command])
         run_in_threads(list_test_commands, send_single_command)
 
@@ -309,5 +289,5 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         if os.path.exists("./example.db"): os.remove("./example.db")
 
 
-if __name__=="__main__": 
+if __name__=="__main__":
     unittest.main()

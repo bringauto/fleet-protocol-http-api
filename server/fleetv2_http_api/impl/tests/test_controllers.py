@@ -2,11 +2,20 @@ import os
 import sys
 sys.path.append("server")
 
-
-import unittest
 from enums import MessageType, EncodingType
+import unittest
+from unittest.mock import patch, Mock
+from sqlalchemy import insert
+
 from database.device_ids import clear_device_ids, serialized_device_id
-from database.database_controller import set_test_db_connection
+from database.connection import get_connection_source
+from database.database_controller import (
+    set_test_db_connection,
+    MessageBase,
+    remove_old_messages,
+    future_command_warning,
+    get_available_devices_from_database
+)
 from fleetv2_http_api.impl.controllers import (
     available_devices, 
     available_cars,
@@ -19,12 +28,6 @@ from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Payload, Message
 from fleetv2_http_api.models.module import Module
 from fleetv2_http_api.models.car import Car
-
-from database.database_controller import remove_old_messages
-from database.database_controller import future_command_warning, MessageBase
-
-
-from unittest.mock import patch, Mock
 
 
 class Test_Device_Id_Validity(unittest.TestCase):
@@ -62,7 +65,6 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
             device_id=self.device_id,
             payload=payload_example
         )
-    
         clear_device_ids()
 
     def test_device_is_considered_available_if_at_least_one_status_is_in_the_database(self):
@@ -275,7 +277,6 @@ class Test_Options_For_Listing_Multiple_Statuses(unittest.TestCase):
         mock_time_in_ms.return_value = 37
         send_statuses("company", "car", messages=[message_3])
 
-
     def test_by_default_only_the_newest_status_is_returned(self):
         statuses, _ = list_statuses("company", "car")
         self.assertEqual(len(statuses), 1)
@@ -365,7 +366,6 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         self.device_id = DeviceId(module_id=42, type=5, role="left_light", name="Left light")
         self.status_payload = Payload(message_type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is conected"})
         self.command_payload = Payload(message_type=MessageType.COMMAND_TYPE, encoding=EncodingType.JSON, data={"message":"Beep"})
-    
 
     @patch('database.time._time_in_ms')
     def test_cleaning_up_commands(self, mock_time_in_ms:Mock):
@@ -396,7 +396,6 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         send_statuses("company", "car", [status])
         self.assertEqual(len(list_statuses("company", "car", all_available="")[0]), 1)
         self.assertEqual(len(list_commands("company", "car", all_available="")[0]), 0)
-
 
     @patch('database.time._time_in_ms')
     def test_cleaning_up_command_with_newer_timestamp_relative_to_the_first_status_raises_warning(self, mock_time_in_ms:Mock):
@@ -505,9 +504,6 @@ class Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_
         if os.path.exists("./example.db"): os.remove("./example.db")
 
 
-from sqlalchemy import insert
-from database.connection import get_connection_source
-from database.database_controller import MessageBase, get_available_devices_from_database
 class Test_Store_Available_Device_Ids_After_Connecting_To_Database_Already_Containing_Data(unittest.TestCase):
 
     def setUp(self) -> None:
@@ -537,10 +533,5 @@ class Test_Store_Available_Device_Ids_After_Connecting_To_Database_Already_Conta
         self.assertListEqual(available_cars(), [Car("company_xy", "car_abc")])
         
 
-
 if __name__=="__main__":
-    # runner = unittest.TextTestRunner()
-    # runner.run(Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_Methods("test_send_statuses_accepts_only_statuses"))
-    # runner.run(Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_Methods("test_send_commands_accepts_only_commands"))
-
     unittest.main()
