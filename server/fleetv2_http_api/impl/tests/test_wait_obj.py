@@ -26,7 +26,7 @@ import fleetv2_http_api.impl.wait as wait
 class Test_Creating_Wait_Objects(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.wd = wait.Wait_Queue_Dict()
+        self.wd = wait.WaitQueueDict()
 
     def test_adding_new_obj(self):
         self.wd.add("test_company", "test_car")
@@ -59,7 +59,7 @@ class Test_Creating_Wait_Objects(unittest.TestCase):
 class Test_Wait_Manager(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.mg = wait.Wait_Obj_Manager()
+        self.mg = wait.WaitObjManager()
 
     def test_adding_a_wait_object(self) -> None:
         wait_obj = self.mg.new_wait_obj("test_company", "test_car")

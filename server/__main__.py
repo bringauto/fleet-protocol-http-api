@@ -38,7 +38,7 @@ def __clean_up_messages() -> None:
     remove_old_messages(current_timestamp=timestamp())
 
 
-def __connect_to_database(vals:script_args.Script_Args) -> None:
+def __connect_to_database(vals:script_args.ScriptArgs) -> None:
     """Clear previously stored available devices and connect to the database."""
     clear_device_ids()
     set_db_connection(

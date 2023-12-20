@@ -19,10 +19,10 @@ from __future__ import annotations
 from typing import Dict, List, Any, Optional
 
 
-class Wait_Obj_Manager:
+class WaitObjManager:
 
     def __init__(self, timeout_ms: int = 5000) -> None:
-        self.__wait_dict = Wait_Queue_Dict()
+        self.__wait_dict = WaitQueueDict()
         self.__check_nonnegative_timeout(timeout_ms)
         self.__timeout_ms = timeout_ms
 
@@ -88,7 +88,7 @@ class Wait_Obj_Manager:
             raise ValueError("timeout_ms must be >= 0 ms")
 
 
-class Wait_Queue_Dict:
+class WaitQueueDict:
 
     def __init__(self) -> None:
         self.__wait_objs: Dict[str, Dict[str, Dict[str, List[Any]]]] = dict()

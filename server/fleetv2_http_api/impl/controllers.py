@@ -30,17 +30,17 @@ from database.database_controller import list_messages as __list_messages
 from database.device_ids import store_device_id_if_new, device_ids, serialized_device_id
 from database.database_controller import cleanup_device_commands_and_warn_before_future_commands
 from enums import MessageType
-from fleetv2_http_api.impl.wait import Wait_Obj_Manager
+from fleetv2_http_api.impl.wait import WaitObjManager
 
 
-__status_wait_manager = Wait_Obj_Manager()
+__status_wait_manager = WaitObjManager()
 def set_status_wait_timeout_s(timeout_s: float) -> None:
     __status_wait_manager.set_timeout(int(1000*timeout_s))
 
 def get_status_wait_timeout_s() -> float:
     return __status_wait_manager.timeout_ms*0.001
 
-__command_wait_manager = Wait_Obj_Manager()
+__command_wait_manager = WaitObjManager()
 def set_command_wait_timeout_s(timeout_s: float) -> None:
     __command_wait_manager.set_timeout(int(1000*timeout_s))
 

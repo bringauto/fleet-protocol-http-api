@@ -7,7 +7,7 @@ from database.device_ids import serialized_device_id
 from database.connection import (
     set_test_db_connection,
     unset_connection_source,
-    Connection_Source_Not_Set,
+    ConnectionSourceNotSet,
     get_connection_source
 )
 
@@ -87,7 +87,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
 
     def test_accessing_not_set_connection_source_raises_exception(self):
         unset_connection_source()
-        self.assertRaises(Connection_Source_Not_Set, get_connection_source)
+        self.assertRaises(ConnectionSourceNotSet, get_connection_source)
 
     @patch("database.time._time_in_ms")
     def test_send_messages_to_database(self, mock_time_in_ms:Mock):

@@ -8,7 +8,7 @@ from server.database.security import add_admin_key
 from server.database.connection import get_db_connection
 from server.database.script_args import (
     request_and_get_script_arguments,
-    Positional_Arg_Info,
+    PositionalArgInfo,
 )
 
 
@@ -22,7 +22,7 @@ def __try_to_add_key(connection_source: Engine, admin_name: str) -> None:
 if __name__=="__main__":
     vals = request_and_get_script_arguments(
         "Add a new admin to the database and if successful, print his or hers API key.",
-        Positional_Arg_Info("<admin-name>", str, "The name of the new admin.")
+        PositionalArgInfo("<admin-name>", str, "The name of the new admin.")
     )
     arguments = vals.argvals
     config = vals.config

@@ -29,7 +29,7 @@ def get_connection_source() -> Engine:
     """
     global _connection_source
     if _connection_source is None:
-        raise Connection_Source_Not_Set()
+        raise ConnectionSourceNotSet()
     else:
         assert isinstance(_connection_source, Engine)
         return _connection_source
@@ -41,8 +41,8 @@ def unset_connection_source() -> None:
     _connection_data = None
 
 
-class Cannot_Connect_To_Database(Exception): pass
-class Connection_Source_Not_Set(Exception): pass
+class CannotConnectToDatabase(Exception): pass
+class ConnectionSourceNotSet(Exception): pass
 class Invalid_Connection_Arguments(Exception): pass
 
 
@@ -148,7 +148,7 @@ def __new_connection_source(
     try:
         with engine.connect(): pass
     except:
-        raise Cannot_Connect_To_Database(
+        raise CannotConnectToDatabase(
             "Could not connect to the database with the given connection parameters: \n"
             f"{engine.url}\n\n"
             "Check the location, port number, username and password."

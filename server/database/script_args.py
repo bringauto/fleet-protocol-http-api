@@ -5,7 +5,7 @@ import json
 
 
 @dataclasses.dataclass
-class Positional_Arg_Info:
+class PositionalArgInfo:
     name: str
     type:Type
     help: str
@@ -16,14 +16,14 @@ EMPTY_VALUE = ""
 
 
 @dataclasses.dataclass(frozen=True)
-class Script_Args:
+class ScriptArgs:
     argvals: Dict[str,str]
     config: Dict[str,Any] = dataclasses.field(default_factory=dict)
 
 
 def request_and_get_script_arguments(
     script_description: str,
-    *positional_args:Positional_Arg_Info,
+    *positional_args:PositionalArgInfo,
     use_config:bool=True,
     include_db_args:bool=True
     ) -> Dict[str,str]:
@@ -57,7 +57,7 @@ def __add_db_args_to_parser(parser:argparse.ArgumentParser) -> None:
     )
 
 
-def __add_positional_args_to_parser(parser:argparse.ArgumentParser, *args:Positional_Arg_Info) -> None:
+def __add_positional_args_to_parser(parser:argparse.ArgumentParser, *args:PositionalArgInfo) -> None:
     for arg in args:
         parser.add_argument(arg.name, type=arg.type, help=arg.help)
 
@@ -70,7 +70,7 @@ def __load_config_file(path: str) -> Dict[str,Any]:
     try:
         config = json.load(open(path))
     except:
-        raise Config_File_Not_Found(f"Could not load config file from path '{path}'.")
+        raise ConfigFileNotFound(f"Could not load config file from path '{path}'.")
     return config
 
 
@@ -83,7 +83,7 @@ def __parse_arguments(parser:argparse.ArgumentParser, use_config:bool) -> Dict[s
         for key in args:
             if args[key] == EMPTY_VALUE: args[key] = db_config[key]
 
-    return Script_Args(args, config)
+    return ScriptArgs(args, config)
 
 
-class Config_File_Not_Found(Exception): pass
+class ConfigFileNotFound(Exception): pass

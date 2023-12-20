@@ -9,7 +9,7 @@ from database.security import (
     get_admin,
     add_admin_key,
     clear_loaded_admins,
-    Admin_DB,
+    AdminDB,
     get_loaded_admins,
     number_of_admin_keys
 )
@@ -35,7 +35,7 @@ class Test_Getting_Admin(unittest.TestCase):
         mock_generate_key.return_value = "abcdef"
 
         add_admin_key("Alice")
-        expected_admin = Admin_DB(id=1, name="Alice", key="abcdef")
+        expected_admin = AdminDB(id=1, name="Alice", key="abcdef")
 
         self.assertListEqual(get_loaded_admins(), [])
         # if the admin is accessed for the first time, it is loaded from the database

@@ -20,7 +20,7 @@ class AdminBase(Base):
     key: Mapped[str] = mapped_column(String)
 
 
-__loaded_admins: List[Admin_DB] = []
+__loaded_admins: List[AdminDB] = []
 
 
 def clear_loaded_admins() -> None:
@@ -28,12 +28,12 @@ def clear_loaded_admins() -> None:
     __loaded_admins.clear()
 
 
-def get_loaded_admins() -> List[Admin_DB]:
+def get_loaded_admins() -> List[AdminDB]:
     return __loaded_admins.copy()
 
 
 @dataclasses.dataclass
-class Admin_DB:
+class AdminDB:
     id: int
     name: str
     key: str
@@ -71,7 +71,7 @@ def __create_admin_table_if_it_does_not_exist(connection_source: Engine) -> None
             AdminBase.metadata.create_all(connection_source)
 
 
-def get_admin(key: str) -> Admin_DB|None:
+def get_admin(key: str) -> AdminDB|None:
     loaded_admins  = get_loaded_admins()
     for admin in loaded_admins:
         if admin.key == key:
@@ -89,7 +89,7 @@ def get_admin(key: str) -> Admin_DB|None:
             return None
         else:
             admin_base:AdminBase = result[0]
-            admin = Admin_DB(id=admin_base.id, name=admin_base.name, key=admin_base.key)
+            admin = AdminDB(id=admin_base.id, name=admin_base.name, key=admin_base.key)
             __loaded_admins.append(admin)
             return admin
 
