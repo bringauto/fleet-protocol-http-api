@@ -83,8 +83,7 @@ def available_devices(company_name:str, car_name:str, module_id:Optional[int]=No
 
 def list_commands(
     company_name:str, 
-    car_name:str, 
-    sdevice_id:str, 
+    car_name:str,
     all_available:Optional[str]=None, 
     until:Optional[int]=None,
     wait:Optional[str]=None
@@ -104,20 +103,18 @@ def list_commands(
         company_name,
         car_name,
         MessageType.COMMAND_TYPE,
-        sdevice_id,
         all_available, 
         until
     )
 
     if db_commands or wait is None:
-        module_id, device_type, device_role = deserialize_device_id(sdevice_id)
-        msg, code = __check_device_availability(company_name, car_name, module_id, sdevice_id)
+        msg, code = __check_car_availability(company_name, car_name)
         if code == 200: # device is available and has commands, return them
             return [__message_from_db(m) for m in db_commands], 200
         else:
             return [], code # type: ignore
     else:
-        awaited_commands:List[Message] = __command_wait_manager.wait_and_get_reponse(company_name, car_name, sdevice_id)
+        awaited_commands:List[Message] = __command_wait_manager.wait_and_get_reponse(company_name, car_name)
         if awaited_commands:
             if until is not None and awaited_commands[-1].timestamp > until: 
                 return [], 200
@@ -133,10 +130,9 @@ def list_commands(
 def list_statuses(
     company_name:str, 
     car_name:str, 
-    sdevice_id:str, 
     all_available:Optional[str]=None, 
-    since:Optional[int]=None,
     wait:Optional[str]=None,
+    since:Optional[int]=None
     )->Tuple[List[Message], int]:  # noqa: E501
 
     """Return list containing the NEWEST status currently stored for an AVAILABLE device. 
@@ -154,7 +150,6 @@ def list_statuses(
         company_name,
         car_name,
         MessageType.STATUS_TYPE,
-        sdevice_id,
         all_available, 
         since
     )
@@ -164,7 +159,7 @@ def list_statuses(
     elif wait is None: # no statuses mean device is unavailable and not found
         return [], 404
     else:
-        awaited_statuses:List[Message] = __status_wait_manager.wait_and_get_reponse(company_name, car_name, sdevice_id)
+        awaited_statuses:List[Message] = __status_wait_manager.wait_and_get_reponse(company_name, car_name)
         if awaited_statuses:
             if since is not None and awaited_statuses[-1].timestamp < since: 
                 return [], 200
@@ -177,7 +172,6 @@ def list_statuses(
 def send_commands(
     company_name:str, 
     car_name:str, 
-    sdevice_id:str, 
     messages:Optional[List[Message]] = None,
     body:List[Dict] = []
     )->Tuple[str, int]:  # noqa: E501
@@ -192,19 +186,18 @@ def send_commands(
     if messages is None: messages = []
     messages.extend([Message.from_dict(b) for b in body])
     if len(messages) == 0: return "", 200
-    msg, code = __check_sent_commands(company_name, car_name, sdevice_id, messages)
+    msg, code = __check_sent_commands(company_name, car_name, messages)
     if msg.strip()!="": return msg, code
     assert messages is not None
     
-    __command_wait_manager.stop_waiting_for(company_name, car_name, sdevice_id, reponse_content=messages)
-    commands_to_db = __message_db_list(messages, sdevice_id, MessageType.COMMAND_TYPE)
+    __command_wait_manager.stop_waiting_for(company_name, car_name, reponse_content=messages)
+    commands_to_db = __message_db_list(messages, MessageType.COMMAND_TYPE)
     return send_messages_to_database(company_name, car_name, *commands_to_db)
 
 
 def send_statuses(
     company_name:str, 
     car_name:str, 
-    sdevice_id:str, 
     messages:Optional[List[Message]] = None,
     body:List[Dict] = []
     )->Tuple[str|List[str],int]:  # noqa: E501
@@ -215,12 +208,12 @@ def send_statuses(
     if messages is None: messages = []
     messages.extend([Message.from_dict(b) for b in body])
     if messages == []: return "", 200
-    errors = __check_messages(MessageType.STATUS_TYPE, sdevice_id, *messages)
+    errors = __check_messages(MessageType.STATUS_TYPE, *messages)
     if errors[0] != "": return errors
 
-    __status_wait_manager.stop_waiting_for(company_name, car_name, sdevice_id, reponse_content=messages)
-    response_msg = send_messages_to_database(company_name, car_name, *__message_db_list(messages, sdevice_id, MessageType.STATUS_TYPE))
-    cmd_warnings = __check_and_handle_first_status(company_name, car_name, sdevice_id, messages)
+    __status_wait_manager.stop_waiting_for(company_name, car_name, reponse_content=messages)
+    response_msg = send_messages_to_database(company_name, car_name, *__message_db_list(messages, MessageType.STATUS_TYPE))
+    cmd_warnings = __check_and_handle_first_status(company_name, car_name, messages)
     return response_msg[0] + cmd_warnings, response_msg[1]
     
 
@@ -228,37 +221,36 @@ def __available_module(company_name:str, car_name:str, module_id:int)->Module:
     device_id_list = list((device_ids()[company_name][car_name][module_id]).values())
     return Module(module_id, device_id_list)
 
-def __check_and_handle_first_status(company:str, car:str, sdevice_id:str, messages:List[Message])->str:
+def __check_and_handle_first_status(company:str, car:str, messages:List[Message])->str:
     first_status_was_sent = store_device_id_if_new(company,car,messages[-1].device_id)
     command_removal_warnings = ""
+    sdevice_id = serialized_device_id(messages[-1].device_id)
     if first_status_was_sent: 
         command_removal_warnings = "\n".join(__handle_first_status_and_return_warnings(
             messages[-1].timestamp, 
             company, 
-            car, 
+            car,
             sdevice_id
         ))
     if command_removal_warnings.strip() != "": 
         command_removal_warnings =  "\n\n" + command_removal_warnings
     return command_removal_warnings
 
-def __check_sent_commands(company_name:str, car_name:str, sdevice_id:str, messages:List[Message])->Tuple[str, int]:
-    errors, code = __check_messages(MessageType.COMMAND_TYPE, sdevice_id, *messages)
+def __check_sent_commands(company_name:str, car_name:str, messages:List[Message])->Tuple[str, int]:
+    errors, code = __check_messages(MessageType.COMMAND_TYPE, *messages)
     if errors != "" or code != 200: 
         return errors, code
     module_id = messages[0].device_id.module_id
+    sdevice_id = serialized_device_id(messages[0].device_id)
     return __check_device_availability(company_name, car_name, module_id, sdevice_id)
 
 def __check_messages(
     expected_message_type:str,
-    sdevice_id:str,
     *messages:Message
     )->Tuple[str, int]:
 
     errors:str = ""
     errors = __check_message_types(expected_message_type, *messages)
-    if errors.strip() == "": 
-        errors = __check_equal_device_id_in_path_and_messages(sdevice_id, *messages)
 
     if not errors.strip()=="": 
         return errors, 500
@@ -290,6 +282,15 @@ def __check_device_availability(company_name:str, car_name:str, module_id:int, s
         return \
             f"No device with id '{sdevice_id}' is available in module " \
             f"'{module_id}' in car '{car_name}' under the company '{company_name}'", 404
+    else: 
+        return "", 200
+    
+def __check_car_availability(company_name:str, car_name:str)->Tuple[str, int]:
+    device_dict = device_ids()
+    if company_name not in device_dict:
+        return f"No car is available under a company '{company_name}'.", 404 # type: ignore
+    elif car_name not in device_dict[company_name]:
+        return f"Car named '{car_name}' is not available under a company '{company_name}'.", 404
     else: 
         return "", 200
             
@@ -336,7 +337,9 @@ def __message_from_db(message_db:Message_DB)->Message:
     )
 
 
-def __message_db_list(messages:List[Message], sdevice_id:str, message_type:str)->List[Message_DB]:
+def __message_db_list(messages:List[Message], message_type:str)->List[Message_DB]:
+    assert(len(messages)>0)
+    sdevice_id = serialized_device_id(messages[0].device_id)
     return [
         Message_DB(
             timestamp=message.timestamp,

@@ -171,7 +171,6 @@ def list_messages(
     company_name:str, 
     car_name:str, 
     message_type:str, 
-    serialized_device_id:str,
     all_available:Optional[str]=None, 
     limit_timestamp:Optional[int]=None
     )->List[Message_DB]:  # noqa: 
@@ -190,22 +189,19 @@ def list_messages(
         if all_available is not None:
             selection = selection.where(and_(
                 table.c.company_name == company_name,
-                table.c.car_name == car_name,
-                table.c.serialized_device_id == serialized_device_id,
+                table.c.car_name == car_name
             ))
         elif limit_timestamp is not None:
             if message_type==MessageType.STATUS_TYPE:
                 selection = selection.where(and_(
                     table.c.company_name == company_name,
                     table.c.car_name == car_name,
-                    table.c.serialized_device_id == serialized_device_id,
                     table.c.timestamp >= limit_timestamp
                 ))
             else:
                 selection = selection.where(and_(
                     table.c.company_name == company_name,
                     table.c.car_name == car_name,
-                    table.c.serialized_device_id == serialized_device_id,
                     table.c.timestamp <= limit_timestamp
                 ))
         else:
