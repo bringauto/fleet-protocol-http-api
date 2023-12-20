@@ -12,8 +12,8 @@ from server.database.script_args import (
 )
 
 
-def __try_to_add_key(connection_source:Engine, admin_name:str)->None:
-    """Try to add a new admin key to the database. If successfull, print the new API key, otherwise print 
+def __try_to_add_key(connection_source: Engine, admin_name: str) -> None:
+    """Try to add a new admin key to the database. If successfull, print the new API key, otherwise print
     message about already existing admin."""
     msg = add_admin_key(name=admin_name, connection_source=connection_source)
     print(msg)

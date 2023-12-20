@@ -1,16 +1,16 @@
-# Fleet Protocol v2 HTTP API 
+# Fleet Protocol v2 HTTP API
 # Copyright (C) 2023 BringAuto s.r.o.
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -28,33 +28,31 @@ from database.time import timestamp
 import database.connection
 
 
-def set_message_retention_period(seconds:int)->None:
+def set_message_retention_period(seconds: int) -> None:
     MessageBase.set_data_retention_period(seconds)
 
 
 def set_db_connection(
-    dblocation:str, 
-    username:str="", 
-    password:str=""
-    )->None:
+    dblocation: str,
+    username: str="",
+    password: str=""
+    ) -> None:
 
     database.connection.set_db_connection(
-        dblocation=dblocation, 
-        username=username, 
+        dblocation=dblocation,
+        username=username,
         password=password,
         after_connect=(load_available_devices_from_database,)
     )
 
 
-def set_test_db_connection(
-    dblocation:str
-    )->None:
+def set_test_db_connection(dblocation: str) -> None:
     database.connection.set_test_db_connection(
         dblocation=dblocation
     )
 
 
-def get_available_devices_from_database()->None:
+def get_available_devices_from_database() -> None:
     clear_device_ids()
     load_available_devices_from_database()
 
@@ -62,38 +60,38 @@ def get_available_devices_from_database()->None:
 @dataclasses.dataclass
 class MessageBase(Base):
     """Object defining message table inside the database."""
-    __tablename__:ClassVar[str] = "message"
-    __data_retention_period_in_seconds:ClassVar[int] = 10000
+    __tablename__: ClassVar[str] = "message"
+    __data_retention_period_in_seconds: ClassVar[int] = 10000
 
-    timestamp:Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    sent_order:Mapped[int] = mapped_column(Integer, primary_key=True, default=0)
+    timestamp: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    sent_order: Mapped[int] = mapped_column(Integer, primary_key=True, default=0)
 
-    company_name:Mapped[str] = mapped_column(String, primary_key=True)
-    car_name:Mapped[str] = mapped_column(String, primary_key=True)
-    serialized_device_id:Mapped[str] = mapped_column(String, primary_key=True)
+    company_name: Mapped[str] = mapped_column(String, primary_key=True)
+    car_name: Mapped[str] = mapped_column(String, primary_key=True)
+    serialized_device_id: Mapped[str] = mapped_column(String, primary_key=True)
 
-    module_id:Mapped[int] = mapped_column(Integer)
-    device_type:Mapped[int] = mapped_column(Integer)
-    device_role:Mapped[str] = mapped_column(String)
-    device_name:Mapped[str] = mapped_column(String)
+    module_id: Mapped[int] = mapped_column(Integer)
+    device_type: Mapped[int] = mapped_column(Integer)
+    device_role: Mapped[str] = mapped_column(String)
+    device_name: Mapped[str] = mapped_column(String)
 
-    message_type:Mapped[str] = mapped_column(String, primary_key=True)
-    payload_encoding:Mapped[str] = mapped_column(String)
-    payload_data:Mapped[dict] = mapped_column(JSON)
+    message_type: Mapped[str] = mapped_column(String, primary_key=True)
+    payload_encoding: Mapped[str] = mapped_column(String)
+    payload_data: Mapped[dict] = mapped_column(JSON)
 
     @classmethod
     @property
-    def data_retention_period_ms(cls)->int: 
+    def data_retention_period_ms(cls) -> int:
         """Return the data retention period in milliseconds"""
         return cls.__data_retention_period_in_seconds*1000
 
     @classmethod
-    def set_data_retention_period(cls, seconds:int)->None:
+    def set_data_retention_period(cls, seconds: int) -> None:
         if isinstance(seconds, int) and seconds>0:
             cls.__data_retention_period_in_seconds = seconds
-    
+
     @staticmethod
-    def from_message(company_name:str, car_name:str, message:Message_DB, order:int=0)->MessageBase:
+    def from_message(company_name: str, car_name: str, message: Message_DB, order: int = 0) -> MessageBase:
         return MessageBase(
             timestamp=message.timestamp,
             sent_order=order,
@@ -106,19 +104,19 @@ class MessageBase(Base):
             device_type = message.device_type,
             device_role = message.device_role,
             device_name = message.device_name,
-            message_type = message.message_type, 
+            message_type = message.message_type,
             payload_encoding=message.payload_encoding,
             payload_data=message.payload_data # type: ignore
         )
 
     @staticmethod
-    def from_messages(company_name:str, car_name:str, *messages:Message_DB)->List[MessageBase]:
-        bases:List[MessageBase] = list()
+    def from_messages(company_name: str, car_name: str, *messages: Message_DB) -> List[MessageBase]:
+        bases: List[MessageBase] = list()
         for k in range(len(messages)):
             bases.append(MessageBase.from_message(company_name, car_name, message = messages[k], order=k))
         return bases
 
-    def to_message(self)->Message_DB:
+    def to_message(self) -> Message_DB:
         return Message_DB(
             timestamp=self.timestamp,
             module_id=self.module_id,
@@ -130,27 +128,27 @@ class MessageBase(Base):
             payload_encoding=self.payload_encoding,
             payload_data=self.payload_data
         )
-    
+
 
 from typing import Dict
 @dataclasses.dataclass
 class Message_DB:
     """Object defining the structure of messages sent to and retrieved from the database."""
-    timestamp:int
-    serialized_device_id:str
-    module_id:int
-    device_type:int
-    device_role:str
-    device_name:str
-    message_type:str
-    payload_encoding:str
-    payload_data:Dict[str,str]
+    timestamp: int
+    serialized_device_id: str
+    module_id: int
+    device_type: int
+    device_role: str
+    device_name: str
+    message_type: str
+    payload_encoding: str
+    payload_data: Dict[str,str]
 
 
-def send_messages_to_database(company_name:str, car_name:str, *messages:Message_DB)->Tuple[str, int]: 
+def send_messages_to_database(company_name: str, car_name: str, *messages: Message_DB) -> Tuple[str, int]:
     """Send a list of messages to the database, returns number of succesfully sent messages (int)."""
     _update_messages_timestamp(messages)
-    try: 
+    try:
         with get_connection_source().begin() as conn:
             stmt = insert(MessageBase.__table__) # type: ignore
             msg_base = MessageBase.from_messages(company_name, car_name, *messages)
@@ -161,13 +159,13 @@ def send_messages_to_database(company_name:str, car_name:str, *messages:Message_
         return "Error: Some of the messages are identical to those sent previously, including their timestamps.", 500
 
 
-def _get_message_for_n_messages_succesfully_sent(number_of_sent_messages:int)->str:
+def _get_message_for_n_messages_succesfully_sent(number_of_sent_messages: int) -> str:
     if number_of_sent_messages == 1:
         return "1 message has been sent."
     else:
         return f"{number_of_sent_messages} messages have been sent."
-    
-def _update_messages_timestamp(messages:Tuple[Message_DB])->None:
+
+def _update_messages_timestamp(messages: Tuple[Message_DB]) -> None:
     timestamp_now = timestamp()
     for message in messages:
         message.timestamp = timestamp_now
@@ -175,21 +173,21 @@ def _update_messages_timestamp(messages:Tuple[Message_DB])->None:
 
 from sqlalchemy import func, and_
 def list_messages(
-    company_name:str, 
-    car_name:str, 
-    message_type:str, 
-    all_available:Optional[str]=None, 
-    since:Optional[int]=None
-    )->List[Message_DB]:  # noqa: 
-    
+    company_name: str,
+    car_name: str,
+    message_type: str,
+    all_available: Optional[str] = None,
+    since: Optional[int] = None
+    ) -> List[Message_DB]:  # noqa:
+
     """Return a list of messages of the given type, optionally filtered by the given parameters.
     If all is not None, then all messages of the given type are returned.
 
-    Otherwise, if since is not None, then all messages of the given type with a timestamp 
+    Otherwise, if since is not None, then all messages of the given type with a timestamp
     less or equal to since are returned. Otherwise, the newest message is returned.
     """
-    
-    statuses:List[Message_DB] = list()
+
+    statuses: List[Message_DB] = list()
     with Session(get_connection_source()) as session:
         table = MessageBase.__table__
         selection = select(MessageBase).where(table.c.message_type == message_type)
@@ -212,55 +210,55 @@ def list_messages(
                     table.c.company_name == company_name,
                     table.c.car_name == car_name,
                     table.c.message_type == message_type
-                ).scalar()    
+                ).scalar()
             selection = selection.where(table.c.timestamp == extreme_value)
-            
+
         result = session.execute(selection)
         for row in result:
-            base:MessageBase = row[0]
+            base: MessageBase = row[0]
             statuses.append(base.to_message())
         return statuses
-    
+
 
 from sqlalchemy import delete
 def cleanup_device_commands_and_warn_before_future_commands(
-    current_timestamp:int, 
-    company_name:str,
-    car_name:str,
-    serialized_device_id:str
-    )->List[str]: 
+    current_timestamp: int,
+    company_name: str,
+    car_name: str,
+    serialized_device_id: str
+    ) -> List[str]:
 
     """Remove all device commands assigned to a device before the first status was sent.
 
-    All such commands ought to have timestamp less than or equal to the timestamp 
+    All such commands ought to have timestamp less than or equal to the timestamp
     of the first status.
 
-    If any commands have a timestamp greater than the timestamp of the first status, 
+    If any commands have a timestamp greater than the timestamp of the first status,
     then return a warning.
 
     """
     table = MessageBase.__table__
-    with get_connection_source().begin() as conn: 
+    with get_connection_source().begin() as conn:
         stmt = delete(table).where( # type: ignore
             table.c.message_type == MessageType.COMMAND_TYPE,
             table.c.company_name == company_name,
-            table.c.car_name == car_name,   
+            table.c.car_name == car_name,
             table.c.serialized_device_id == serialized_device_id,
         ).returning(
             table.c.timestamp,
             table.c.company_name,
-            table.c.car_name,   
+            table.c.car_name,
             table.c.serialized_device_id,
             table.c.payload_data
         )
         result = conn.execute(stmt)
-        future_command_warnings:List[str] = []
+        future_command_warnings: List[str] = []
         for row in result:
-            if row[0]>current_timestamp: 
+            if row[0]>current_timestamp:
                 future_command_warnings.append(future_command_warning(
-                    timestamp=row[0], 
-                    company_name=row[1], 
-                    car_name=row[2], 
+                    timestamp=row[0],
+                    company_name=row[1],
+                    car_name=row[2],
                     serialized_device_id=row[3],
                     payload_data=row[4]
                 ))
@@ -269,14 +267,14 @@ def cleanup_device_commands_and_warn_before_future_commands(
 
 from typing import Any
 def future_command_warning(
-    timestamp:int, 
-    company_name:str, 
-    car_name:str, 
-    serialized_device_id:str,
+    timestamp: int,
+    company_name: str,
+    car_name: str,
+    serialized_device_id: str,
     payload_data:Any
-    )->str:
+    ) -> str:
 
-    """Construct a warning message for a command with a timestamp greater 
+    """Construct a warning message for a command with a timestamp greater
     than the timestamp of the first status.
     """
     return "Warning: Removing command existing before first status was sent, " \
@@ -285,23 +283,23 @@ def future_command_warning(
             device id:{serialized_device_id}, payload: {payload_data}."
 
 
-def remove_old_messages(current_timestamp:int)->None:  
-    """Remove all messages with a timestamp older than the current timestamp 
+def remove_old_messages(current_timestamp: int) -> None:
+    """Remove all messages with a timestamp older than the current timestamp
     minus the data retention period.
     """
-    with get_connection_source().begin() as conn: 
+    with get_connection_source().begin() as conn:
         oldest_timestamp_to_be_kept = current_timestamp - MessageBase.data_retention_period_ms
         stmt = delete(MessageBase.__table__).where( # type: ignore
             MessageBase.__table__.c.timestamp < oldest_timestamp_to_be_kept
-        ) 
+        )
         conn.execute(stmt)
     clean_up_disconnected_cars()
 
-    
+
 from database.device_ids import device_ids, clean_up_disconnected_cars_and_modules
 
 import copy
-def clean_up_disconnected_cars()->None:
+def clean_up_disconnected_cars() -> None:
     """Remove all car keys from the device_ids dictionary that do not have any modules.
     Then remove all companies that do not have any cars left.
     """
@@ -310,15 +308,15 @@ def clean_up_disconnected_cars()->None:
         for car in device_dict[company]:
             for module_id in device_dict[company][car]:
                 __clean_up_disconnected_devices(company, car, module_id)
-    clean_up_disconnected_cars_and_modules()          
+    clean_up_disconnected_cars_and_modules()
 
 
-def __clean_up_disconnected_devices(company:str, car:str, module_id:int)->None:
+def __clean_up_disconnected_devices(company: str, car: str, module_id: int) -> None:
     """Remove all device ids from the device_ids dictionary that do not have any messages."""
     module_devices = device_ids()[company][car][module_id]
     for sdevice_id in module_devices:
         _, device_type, device_role = deserialize_device_id(sdevice_id)
-        with Session(get_connection_source()) as session: 
+        with Session(get_connection_source()) as session:
             table = MessageBase.__table__
             select_stmt = select(MessageBase).where(
                 table.c.message_type == MessageType.STATUS_TYPE,
@@ -334,7 +332,7 @@ def __clean_up_disconnected_devices(company:str, car:str, module_id:int)->None:
 
 
 from typing import Tuple
-def deserialize_device_id(serialized_id:str)->Tuple[int,int,str]:
+def deserialize_device_id(serialized_id: str) -> Tuple[int,int,str]:
     """Split the serialized device id into its component parts.
     """
     module_id, device_type, device_role = serialized_id.split("_",2)
@@ -343,12 +341,12 @@ def deserialize_device_id(serialized_id:str)->Tuple[int,int,str]:
 
 from database.device_ids import store_device_id_if_new
 from fleetv2_http_api.models.device_id import DeviceId
-def load_available_devices_from_database()->None:
+def load_available_devices_from_database() -> None:
     with Session(get_connection_source()) as session:
         stmt = select(MessageBase).where(MessageBase.message_type == MessageType.STATUS_TYPE)
         result = session.execute(stmt)
         for row in result:
-            base:MessageBase = row[0]
+            base: MessageBase = row[0]
             device_id = DeviceId(
                 module_id=base.module_id,
                 type=base.device_type,

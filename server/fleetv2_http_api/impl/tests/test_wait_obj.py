@@ -1,16 +1,16 @@
-# Fleet Protocol v2 HTTP API 
+# Fleet Protocol v2 HTTP API
 # Copyright (C) 2023 BringAuto s.r.o.
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -36,13 +36,13 @@ class Test_Creating_Wait_Objects(unittest.TestCase):
         self.wd.add("test_company", "other_car")
         self.assertTrue(self.wd.obj_exists("test_company", "other_car"))
 
-    def test_removing_object(self)->None:
+    def test_removing_object(self) -> None:
         self.wd.add("test_company", "test_car")
         self.assertTrue(self.wd.obj_exists("test_company", "test_car"))
         self.wd.remove("test_company", "test_car")
         self.assertFalse(self.wd.obj_exists("test_company", "test_car"))
 
-    def test_after_adding_two_wait_objects_and_removing_one_the_obj_exists_method_still_returns_true(self)->None:
+    def test_after_adding_two_wait_objects_and_removing_one_the_obj_exists_method_still_returns_true(self) -> None:
         self.wd.add("test_company", "test_car", obj = "obj_1")
         self.wd.add("test_company", "test_car", obj = "obj_2")
         self.assertEqual(self.wd.next_in_queue("test_company", "test_car",), "obj_1")
@@ -61,7 +61,7 @@ class Test_Wait_Manager(unittest.TestCase):
     def setUp(self) -> None:
         self.mg = wait.Wait_Obj_Manager()
 
-    def test_adding_a_wait_object(self)->None:
+    def test_adding_a_wait_object(self) -> None:
         wait_obj = self.mg.new_wait_obj("test_company", "test_car")
         self.mg.is_waiting_for("test_company", "test_car")
         self.assertEqual(self.mg.next_in_queue("test_company", "test_car"), wait_obj)
@@ -98,5 +98,5 @@ class Test_Wait_Manager(unittest.TestCase):
 
 
 
-if __name__=="__main__": 
+if __name__=="__main__":
     unittest.main()

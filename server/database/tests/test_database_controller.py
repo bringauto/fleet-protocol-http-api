@@ -6,7 +6,7 @@ from fleetv2_http_api.models.device_id import DeviceId
 from database.device_ids import serialized_device_id
 from database.connection import (
     set_test_db_connection,
-    unset_connection_source, 
+    unset_connection_source,
     Connection_Source_Not_Set,
     get_connection_source
 )
@@ -33,8 +33,8 @@ class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
         device_id = DeviceId(module_id=45, type=2, role="role1", name="device1")
         sdevice_id = serialized_device_id(device_id)
         message_db = Message_DB(
-            timestamp = 100, 
-            serialized_device_id=sdevice_id, 
+            timestamp = 100,
+            serialized_device_id=sdevice_id,
             module_id=device_id.module_id,
             device_type=device_id.type,
             device_role=device_id.role,
@@ -88,7 +88,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
     def test_accessing_not_set_connection_source_raises_exception(self):
         unset_connection_source()
         self.assertRaises(Connection_Source_Not_Set, get_connection_source)
-        
+
     @patch("database.time._time_in_ms")
     def test_send_messages_to_database(self, mock_time_in_ms:Mock):
         mock_time_in_ms.return_value = 80
@@ -127,7 +127,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
 
         # Check that the messages were added to the database
         messages = list_messages(
-            company_name="company1", 
+            company_name="company1",
             car_name="car1",
             message_type=MessageType.STATUS_TYPE,
             all_available=""
@@ -153,7 +153,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
                 payload_encoding=EncodingType.JSON,
                 payload_data={"key1": "value1"},
             )
-        )  
+        )
         mock_time_in_ms.return_value = MessageBase.data_retention_period_ms + 100
         send_messages_to_database("test_company", "test_car", Message_DB(
                 timestamp=MessageBase.data_retention_period_ms + 100,
@@ -166,7 +166,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
                 payload_encoding=EncodingType.JSON,
                 payload_data={"key1": "value1"},
             )
-        )  
+        )
         mock_time_in_ms.return_value = MessageBase.data_retention_period_ms + 150
         send_messages_to_database("test_company", "test_car", Message_DB(
                 timestamp=MessageBase.data_retention_period_ms + 150,
@@ -179,7 +179,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
                 payload_encoding=EncodingType.JSON,
                 payload_data={"key1": "value1"},
             )
-        )  
+        )
         remove_old_messages(current_timestamp=MessageBase.data_retention_period_ms + 50)
         self.assertEqual(
             len(list_messages(
@@ -198,8 +198,8 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         self.assertEqual(len(warnings), 2)
         # Check that the device commands were cleaned up
         messages = list_messages(
-            company_name="test_company", 
-            car_name="test_car", 
+            company_name="test_company",
+            car_name="test_car",
             message_type=MessageType.COMMAND_TYPE,
             all_available=""
         )
@@ -212,7 +212,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         message1 = Message_DB(
             timestamp=0,
             serialized_device_id=sdevice_id,
-            
+
             module_id=device_id.module_id,
             device_type=device_id.type,
             device_role=device_id.role,
@@ -238,14 +238,14 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         mock_time_in_ms.return_value = 50
         send_messages_to_database("company1", "car1", message2)
 
-        mock_time_in_ms.return_value = MessageBase.data_retention_period_ms + 1 
+        mock_time_in_ms.return_value = MessageBase.data_retention_period_ms + 1
         # Remove old messages from the database
         remove_old_messages(mock_time_in_ms.return_value)
 
         # Check that the old messages were removed from the database
         messages = list_messages(
-            company_name="company1", 
-            car_name="car1", 
+            company_name="company1",
+            car_name="car1",
             message_type=MessageType.STATUS_TYPE,
             all_available=""
         )
@@ -264,14 +264,14 @@ class Test_Database_Cleanup(unittest.TestCase):
         self.assertEqual(MessageBase.data_retention_period_ms, 3000)
         set_message_retention_period(seconds=5)
         self.assertEqual(MessageBase.data_retention_period_ms, 5000)
-    
+
     def test_setting_other_than_positive_integer_retention_period_is_ignored(self):
         set_message_retention_period(1)
         self.assertEqual(MessageBase.data_retention_period_ms, 1000)
         set_message_retention_period(0)
         self.assertEqual(MessageBase.data_retention_period_ms, 1000)
         set_message_retention_period(-9)
-        self.assertEqual(MessageBase.data_retention_period_ms, 1000)  
+        self.assertEqual(MessageBase.data_retention_period_ms, 1000)
         set_message_retention_period("abc") # type: ignore
         self.assertEqual(MessageBase.data_retention_period_ms, 1000)
 
@@ -288,24 +288,24 @@ class Test_Send_And_Read_Message(unittest.TestCase):
         sdevice_id = serialized_device_id(device_id)
 
         message_1 = Message_DB(
-            timestamp=100, 
-            serialized_device_id=sdevice_id, 
-            module_id=device_id.module_id, 
-            device_type=device_id.type, 
-            device_role=device_id.role, 
-            device_name=device_id.name, 
-            message_type=MessageType.STATUS_TYPE, 
+            timestamp=100,
+            serialized_device_id=sdevice_id,
+            module_id=device_id.module_id,
+            device_type=device_id.type,
+            device_role=device_id.role,
+            device_name=device_id.name,
+            message_type=MessageType.STATUS_TYPE,
             payload_encoding=EncodingType.BASE64,
             payload_data={"content": "..."}
         )
         message_2 = Message_DB(
-            timestamp=150, 
-            serialized_device_id=sdevice_id, 
-            module_id=device_id.module_id, 
-            device_type=device_id.type, 
-            device_role=device_id.role, 
-            device_name=device_id.name, 
-            message_type=MessageType.STATUS_TYPE, 
+            timestamp=150,
+            serialized_device_id=sdevice_id,
+            module_id=device_id.module_id,
+            device_type=device_id.type,
+            device_role=device_id.role,
+            device_name=device_id.name,
+            message_type=MessageType.STATUS_TYPE,
             payload_encoding=EncodingType.BASE64,
             payload_data={"content": "other content"}
         )

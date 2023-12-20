@@ -19,7 +19,7 @@ DB_FILE_LOCATION = "/example.db"
 class Test_Adding_Admin(unittest.TestCase):
 
     def setUp(self) -> None: # pragma: no cover
-        if os.path.exists("./scripts/tests/example.db"): 
+        if os.path.exists("./scripts/tests/example.db"):
             os.remove("./scripts/tests/example.db")
         self.connection = get_db_connection("sqlite","pysqlite",DB_FILE_LOCATION)
 
@@ -27,7 +27,7 @@ class Test_Adding_Admin(unittest.TestCase):
         subprocess.run(['cd', '..'])
         subprocess.run(
             [
-                'python3', 
+                'python3',
                 'new_admin.py',
                 'Alice',
                 "sqlite",
@@ -54,4 +54,5 @@ class Test_Adding_Admin(unittest.TestCase):
 
 
 
-if __name__=="__main__": unittest.main()
+if __name__=="__main__":
+    unittest.main()

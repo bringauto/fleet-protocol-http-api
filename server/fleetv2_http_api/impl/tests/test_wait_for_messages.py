@@ -23,16 +23,19 @@ from fleetv2_http_api.impl.controllers import (
     set_command_wait_timeout_s
 )
 
-def run_in_threads(*functions:Callable[[],None])->None:
+def run_in_threads(*functions:Callable[[],None]) -> None:
     threads = [threading.Thread(target=f) for f in functions]
-    for t in threads: t.start()
-    for t in threads: t.join()
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
 
 
 class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.TestCase):
 
     def setUp(self) -> None:
-        if os.path.exists("./example.db"): os.remove("./example.db")
+        if os.path.exists("./example.db"):
+            os.remove("./example.db")
         set_test_db_connection("/example.db")
         clear_device_ids()
         payload_example = Payload(
@@ -139,13 +142,15 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
 
     def tearDown(self) -> None:
         set_status_wait_timeout_s(self.original_timeout)
-        if os.path.exists("./example.db"): os.remove("./example.db")
+        if os.path.exists("./example.db"):
+            os.remove("./example.db")
 
 
 class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.TestCase):
 
     def setUp(self) -> None:
-        if os.path.exists("./example.db"): os.remove("./example.db")
+        if os.path.exists("./example.db"):
+            os.remove("./example.db")
         set_test_db_connection("/example.db")
         clear_device_ids()
         self.device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
@@ -286,7 +291,8 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         run_in_threads(list_test_commands, send_single_command)
 
     def tearDown(self) -> None:
-        if os.path.exists("./example.db"): os.remove("./example.db")
+        if os.path.exists("./example.db"):
+            os.remove("./example.db")
 
 
 if __name__=="__main__":

@@ -2,7 +2,7 @@ from typing import Dict
 from database.security import get_admin
 
 
-def info_from_AdminAuth(api_key, *args)->Dict:
+def info_from_AdminAuth(api_key, *args) -> Dict:
     """
     Check and retrieve authentication information from api_key.
     Returned value will be passed in 'token_info' parameter of your operation function, if there is one.
@@ -14,7 +14,7 @@ def info_from_AdminAuth(api_key, *args)->Dict:
     :rtype: dict | None
     """
     admin = get_admin(api_key)
-    if admin == None: 
+    if admin == None:
         return None # type: ignore
     else:
         return {'id': admin.id,'name': admin.name}
