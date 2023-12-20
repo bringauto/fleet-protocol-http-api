@@ -307,11 +307,11 @@ def clean_up_disconnected_cars() -> None:
     for company in device_dict:
         for car in device_dict[company]:
             for module_id in device_dict[company][car]:
-                __clean_up_disconnected_devices(company, car, module_id)
+                _clean_up_disconnected_devices(company, car, module_id)
     clean_up_disconnected_cars_and_modules()
 
 
-def __clean_up_disconnected_devices(company: str, car: str, module_id: int) -> None:
+def _clean_up_disconnected_devices(company: str, car: str, module_id: int) -> None:
     """Remove all device ids from the device_ids dictionary that do not have any messages."""
     module_devices = device_ids()[company][car][module_id]
     for sdevice_id in module_devices:

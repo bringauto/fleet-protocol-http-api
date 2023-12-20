@@ -33,12 +33,12 @@ import database.script_args as script_args
 
 
 
-def __clean_up_messages() -> None:
+def _clean_up_messages() -> None:
     """Clean up messages from the database."""
     remove_old_messages(current_timestamp=timestamp())
 
 
-def __connect_to_database(vals:script_args.ScriptArgs) -> None:
+def _connect_to_database(vals:script_args.ScriptArgs) -> None:
     """Clear previously stored available devices and connect to the database."""
     clear_device_ids()
     set_db_connection(
@@ -48,12 +48,12 @@ def __connect_to_database(vals:script_args.ScriptArgs) -> None:
     )
 
 
-def __set_up_database_jobs(db_cleanup_config: Dict[str,int]) -> None:
+def _set_up_database_jobs(db_cleanup_config: Dict[str,int]) -> None:
     """Set message cleanup job and other customary jobs defined by the example method."""
     set_message_retention_period(db_cleanup_config["retention_period"])
     scheduler = BackgroundScheduler()
     scheduler.add_job(
-        func=__clean_up_messages,
+        func=_clean_up_messages,
         trigger="interval",
         seconds=db_cleanup_config["cleanup_period"],
     )
@@ -63,8 +63,8 @@ def __set_up_database_jobs(db_cleanup_config: Dict[str,int]) -> None:
 if __name__ == '__main__':
     vals = script_args.request_and_get_script_arguments("Run the Fleet Protocol v2 HTTP API server.")
     config = vals.config
-    __connect_to_database(vals)
-    __set_up_database_jobs(config["database"]["cleanup"]["timing_in_seconds"])
+    _connect_to_database(vals)
+    _set_up_database_jobs(config["database"]["cleanup"]["timing_in_seconds"])
     set_status_wait_timeout_s(config["request_for_messages"]["timeout_in_seconds"])
     set_command_wait_timeout_s(config["request_for_messages"]["timeout_in_seconds"])
 

@@ -20,16 +20,16 @@ class AdminBase(Base):
     key: Mapped[str] = mapped_column(String)
 
 
-__loaded_admins: List[AdminDB] = []
+_loaded_admins: List[AdminDB] = []
 
 
 def clear_loaded_admins() -> None:
-    global __loaded_admins
-    __loaded_admins.clear()
+    global _loaded_admins
+    _loaded_admins.clear()
 
 
 def get_loaded_admins() -> List[AdminDB]:
-    return __loaded_admins.copy()
+    return _loaded_admins.copy()
 
 
 @dataclasses.dataclass
@@ -44,28 +44,28 @@ def add_admin_key(name: str, connection_source: Optional[Engine] = None) -> str:
     if connection_source is None:
         connection_source = get_connection_source()
     """Add an admin to the database and return the key."""
-    __create_admin_table_if_it_does_not_exist(connection_source)
+    _create_admin_table_if_it_does_not_exist(connection_source)
     with Session(connection_source) as session:
         existing_admin = session.query(AdminBase).filter(AdminBase.name==name).first()
         if existing_admin is not None:
-            return __admin_already_exists_msg(existing_admin.name)
+            return _admin_already_exists_msg(existing_admin.name)
         else:
-            key = __generate_key()
+            key = _generate_key()
             admin = AdminBase(name=name, key=key)
             session.add(admin)
             session.commit()
-            return __admin_added_msg(name, key)
+            return _admin_added_msg(name, key)
 
 
-def __admin_added_msg(name: str, key: str) -> str:
+def _admin_added_msg(name: str, key: str) -> str:
     return f"Admin '{name}' added with key:\n\n{key}\n\n"
 
 
-def __admin_already_exists_msg(name: str) -> str:
+def _admin_already_exists_msg(name: str) -> str:
     return f"Admin with name '{name}' already exists."
 
 
-def __create_admin_table_if_it_does_not_exist(connection_source: Engine) -> None:
+def _create_admin_table_if_it_does_not_exist(connection_source: Engine) -> None:
     with connection_source.connect() as connection:
         if not connection_source.dialect.has_table(connection, AdminBase.__tablename__):
             AdminBase.metadata.create_all(connection_source)
@@ -81,7 +81,7 @@ def get_admin(key: str) -> AdminDB|None:
     if source is None:
         return None
 
-    __create_admin_table_if_it_does_not_exist(source)
+    _create_admin_table_if_it_does_not_exist(source)
 
     with Session(get_connection_source()) as session:
         result = session.execute(select(AdminBase).where(AdminBase.key==key)).first()
@@ -90,7 +90,7 @@ def get_admin(key: str) -> AdminDB|None:
         else:
             admin_base:AdminBase = result[0]
             admin = AdminDB(id=admin_base.id, name=admin_base.name, key=admin_base.key)
-            __loaded_admins.append(admin)
+            _loaded_admins.append(admin)
             return admin
 
 
@@ -106,6 +106,6 @@ def number_of_admin_keys(connection: Optional[Engine] = None) -> int:
         return session.query(func.count(AdminBase.__table__.c.id)).scalar()
 
 
-def __generate_key() -> str: # pragma: no cover
+def _generate_key() -> str: # pragma: no cover
     return ''.join(random.choice(string.ascii_letters) for _ in range(30))
 
