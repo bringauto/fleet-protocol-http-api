@@ -80,10 +80,10 @@ def list_commands(
     If a device is not available, return empty list and code 404.
 
     If 'all_available' is not None, return ALL commands stored for a given device.
-    If 'until' is specified (unix timestamp in milliseconds), return all stored commands
-    having the timestamp equal or lower than 'until'.
-    The 'wait' parameter specifies the maximum time (in seconds) the function should wait for commands,
-    in case there are no commands currently available. If 'wait' is None, the function will immediatelly
+    If 'since' is specified (unix timestamp in milliseconds), return all stored commands
+    having the timestamp equal or greater than 'since'.
+    The 'wait' parameter makes the function to wait for available commands, if at the moment of request,
+    there are no commands available. If 'wait' is None, the function will immediatelly
     return an empty list.
     """
 
@@ -130,8 +130,8 @@ def list_statuses(
     If 'all_available' is not None, return ALL statuses stored for a given device.
     If 'since' is specified (unix timestamp in milliseconds), return all stored statuses
     having the timestamp equal or lower than 'since'.
-    The 'wait' parameter specifies the maximum time (in seconds) the function should wait for statuses,
-    in case there are no statuses currently available. If 'wait' is None, the function will immediatelly
+    The 'wait' parameter makes the function to wait for available statuses, if at the moment of request,
+    there are no statuses available. If 'wait' is None, the function will immediatelly
     return an empty list.
     """
 
