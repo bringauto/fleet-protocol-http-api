@@ -132,7 +132,6 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
             company_name="company1", 
             car_name="car1",
             message_type=MessageType.STATUS_TYPE,
-            serialized_device_id=sdevice_id_1,
             all_available=""
         )
         self.assertEqual(len(messages), 2)
