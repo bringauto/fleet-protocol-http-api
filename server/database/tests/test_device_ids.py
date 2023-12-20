@@ -1,8 +1,8 @@
 import sys
 sys.path.append("server")
-
-
 import unittest
+
+from fleetv2_http_api.models.device_id import DeviceId
 from database.device_ids import (
     device_ids,
     clean_up_disconnected_cars_and_modules,
@@ -13,7 +13,6 @@ from database.device_ids import (
 )
 
 
-from fleetv2_http_api.models.device_id import DeviceId
 class TestDeviceIds(unittest.TestCase):
 
     def setUp(self):

@@ -3,9 +3,9 @@ from typing import ClassVar, List, Optional
 import dataclasses
 import random
 import string
-from sqlalchemy import String, Integer, Engine, Select, func
-from sqlalchemy.orm import Mapped, mapped_column, Session
 
+from sqlalchemy import String, Integer, Engine, Select, func, select
+from sqlalchemy.orm import Mapped, mapped_column, Session
 
 from database.connection import Base, get_connection_source
 
@@ -39,7 +39,6 @@ class AdminDB:
     key: str
 
 
-from sqlalchemy import select
 def add_admin_key(name: str, connection_source: Optional[Engine] = None) -> str:
     if connection_source is None:
         connection_source = get_connection_source()

@@ -1,35 +1,19 @@
-# Fleet Protocol v2 HTTP API
-# Copyright (C) 2023 BringAuto s.r.o.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-
 from __future__ import annotations
-
-
 from typing import List, Optional, Tuple, Dict
+from enums import MessageType
 
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Message
 from fleetv2_http_api.models.module import Module
 from fleetv2_http_api.models.car import Car
-from database.database_controller import send_messages_to_database, Message_DB
+from database.database_controller import (
+    send_messages_to_database,
+    Message_DB,
+    cleanup_device_commands_and_warn_before_future_commands
+)
 from database.database_controller import list_messages as _list_messages
 from database.device_ids import store_device_id_if_new, device_ids, serialized_device_id
-from database.database_controller import cleanup_device_commands_and_warn_before_future_commands
-from enums import MessageType
 from fleetv2_http_api.impl.wait import WaitObjManager
 
 

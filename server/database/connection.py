@@ -15,12 +15,20 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from typing import Optional
+from typing import Optional, Callable, Tuple
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import DeclarativeBase
 
-
 _connection_source: Optional[Engine] = None
+
+
+class CannotConnectToDatabase(Exception): pass
+class ConnectionSourceNotSet(Exception): pass
+class InvalidConnectionArguments(Exception): pass
+
+
+class Base(DeclarativeBase):
+    pass
 
 
 def get_connection_source() -> Engine:
@@ -41,12 +49,6 @@ def unset_connection_source() -> None:
     _connection_data = None
 
 
-class CannotConnectToDatabase(Exception): pass
-class ConnectionSourceNotSet(Exception): pass
-class InvalidConnectionArguments(Exception): pass
-
-
-from typing import Callable, Tuple
 def set_db_connection(
     dblocation: str,
     username: str="",
@@ -72,11 +74,7 @@ def set_db_connection(
         foo()
 
 
-from typing import Callable, Tuple
-def set_test_db_connection(
-    dblocation: str,
-    ) -> None:
-
+def set_test_db_connection(dblocation: str) -> None:
     """Create test SQLAlchemy engine object used to connect to the database using SQLite.
     No username or password required.
     Set module-level variable _connection_source to the new engine object."""
@@ -91,12 +89,7 @@ def set_test_db_connection(
     create_all_tables(source)
 
 
-def get_db_connection(
-    dblocation: str,
-    username: str="",
-    password: str="",
-    ) -> Engine|None:
-
+def get_db_connection(dblocation: str,username: str="",password: str="") -> Engine|None:
     """Create SQLAlchemy engine object used to connect to the database.
     Do not modify module-level variable _connection_source."""
     source = _new_connection_source(
@@ -110,7 +103,6 @@ def get_db_connection(
 
 
 def get_test_db_connection(dblocation: str) -> Engine|None:
-
     """Create test SQLAlchemy engine object used to connect to the database using SQLite.
     No username or password required."""
     source = _new_connection_source(
@@ -160,5 +152,3 @@ def _engine_url(dialect: str, dbapi: str, username: str, password: str, dblocati
     return ('').join([dialect,'+',dbapi,"://",username,":",password,"@",dblocation])
 
 
-class Base(DeclarativeBase):
-    pass

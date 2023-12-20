@@ -14,47 +14,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
 from __future__ import annotations
-
-from typing import Optional, List, ClassVar
+from typing import Optional, List, ClassVar, Dict, Any, Tuple
 import dataclasses
-from sqlalchemy.orm import Mapped, mapped_column, Session
-from sqlalchemy import Integer, String, JSON, select, insert, BigInteger
+import copy
 from enums import MessageType
-from database.device_ids import remove_device_id, clear_device_ids
+
+from sqlalchemy.orm import Mapped, mapped_column, Session
+from sqlalchemy import Integer, String, JSON, select, insert, delete, BigInteger, func, and_
+
+from database.device_ids import remove_device_id, clear_device_ids, store_device_id_if_new
+import database.connection
 from database.connection import get_connection_source, Base
 from database.time import timestamp
-import database.connection
-
-
-def set_message_retention_period(seconds: int) -> None:
-    MessageBase.set_data_retention_period(seconds)
-
-
-def set_db_connection(
-    dblocation: str,
-    username: str="",
-    password: str=""
-    ) -> None:
-
-    database.connection.set_db_connection(
-        dblocation=dblocation,
-        username=username,
-        password=password,
-        after_connect=(load_available_devices_from_database,)
-    )
-
-
-def set_test_db_connection(dblocation: str) -> None:
-    database.connection.set_test_db_connection(
-        dblocation=dblocation
-    )
-
-
-def get_available_devices_from_database() -> None:
-    clear_device_ids()
-    load_available_devices_from_database()
+from database.device_ids import device_ids, clean_up_disconnected_cars_and_modules
+from fleetv2_http_api.models.device_id import DeviceId
 
 
 @dataclasses.dataclass
@@ -130,7 +104,6 @@ class MessageBase(Base):
         )
 
 
-from typing import Dict
 @dataclasses.dataclass
 class Message_DB:
     """Object defining the structure of messages sent to and retrieved from the database."""
@@ -144,6 +117,31 @@ class Message_DB:
     payload_encoding: str
     payload_data: Dict[str,str]
 
+
+def set_message_retention_period(seconds: int) -> None:
+    MessageBase.set_data_retention_period(seconds)
+
+def set_db_connection(
+    dblocation: str,
+    username: str="",
+    password: str=""
+    ) -> None:
+
+    database.connection.set_db_connection(
+        dblocation=dblocation,
+        username=username,
+        password=password,
+        after_connect=(load_available_devices_from_database,)
+    )
+
+def set_test_db_connection(dblocation: str) -> None:
+    database.connection.set_test_db_connection(
+        dblocation=dblocation
+    )
+
+def get_available_devices_from_database() -> None:
+    clear_device_ids()
+    load_available_devices_from_database()
 
 def send_messages_to_database(company_name: str, car_name: str, *messages: Message_DB) -> Tuple[str, int]:
     """Send a list of messages to the database, returns number of succesfully sent messages (int)."""
@@ -171,7 +169,6 @@ def _update_messages_timestamp(messages: Tuple[Message_DB]) -> None:
         message.timestamp = timestamp_now
 
 
-from sqlalchemy import func, and_
 def list_messages(
     company_name: str,
     car_name: str,
@@ -220,7 +217,6 @@ def list_messages(
         return statuses
 
 
-from sqlalchemy import delete
 def cleanup_device_commands_and_warn_before_future_commands(
     current_timestamp: int,
     company_name: str,
@@ -264,8 +260,6 @@ def cleanup_device_commands_and_warn_before_future_commands(
                 ))
         return future_command_warnings
 
-
-from typing import Any
 def future_command_warning(
     timestamp: int,
     company_name: str,
@@ -282,7 +276,6 @@ def future_command_warning(
            f"timestamp: {timestamp}, company:{company_name}, car:{car_name}, \
             device id:{serialized_device_id}, payload: {payload_data}."
 
-
 def remove_old_messages(current_timestamp: int) -> None:
     """Remove all messages with a timestamp older than the current timestamp
     minus the data retention period.
@@ -295,10 +288,6 @@ def remove_old_messages(current_timestamp: int) -> None:
         conn.execute(stmt)
     clean_up_disconnected_cars()
 
-
-from database.device_ids import device_ids, clean_up_disconnected_cars_and_modules
-
-import copy
 def clean_up_disconnected_cars() -> None:
     """Remove all car keys from the device_ids dictionary that do not have any modules.
     Then remove all companies that do not have any cars left.
@@ -330,17 +319,12 @@ def _clean_up_disconnected_devices(company: str, car: str, module_id: int) -> No
             if selection.first() is None:
                 remove_device_id(company, car, sdevice_id)
 
-
-from typing import Tuple
 def deserialize_device_id(serialized_id: str) -> Tuple[int,int,str]:
     """Split the serialized device id into its component parts.
     """
     module_id, device_type, device_role = serialized_id.split("_",2)
     return int(module_id), int(device_type), device_role
 
-
-from database.device_ids import store_device_id_if_new
-from fleetv2_http_api.models.device_id import DeviceId
 def load_available_devices_from_database() -> None:
     with Session(get_connection_source()) as session:
         stmt = select(MessageBase).where(MessageBase.message_type == MessageType.STATUS_TYPE)

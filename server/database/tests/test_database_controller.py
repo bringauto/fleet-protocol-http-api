@@ -1,7 +1,9 @@
 import sys
 sys.path.append("server")
-
 from unittest.mock import patch, Mock
+import unittest
+from enums import EncodingType, MessageType
+
 from fleetv2_http_api.models.device_id import DeviceId
 from database.device_ids import serialized_device_id
 from database.connection import (
@@ -10,9 +12,8 @@ from database.connection import (
     ConnectionSourceNotSet,
     get_connection_source
 )
-
-import unittest
 from database.database_controller import (
+    set_message_retention_period,
     send_messages_to_database,
     list_messages,
     cleanup_device_commands_and_warn_before_future_commands,
@@ -20,11 +21,8 @@ from database.database_controller import (
     Message_DB,
     MessageBase
 )
-from enums import EncodingType, MessageType
-
-
-
 from fleetv2_http_api.impl.controllers import DeviceId
+
 class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
 
     def test_creating_message_base_object_from_message(self):
@@ -252,7 +250,6 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         self.assertEqual(len(messages), 1)
 
 
-from database.database_controller import set_message_retention_period
 class Test_Database_Cleanup(unittest.TestCase):
 
     def setUp(self):
