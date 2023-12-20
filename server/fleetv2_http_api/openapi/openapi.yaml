@@ -8,7 +8,7 @@ info:
     name: GPLv3
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
   title: Fleet v2 HTTP API
-  version: 1.0.0
+  version: 2.0.0
 servers:
 - url: http://localhost
 security:
@@ -98,7 +98,7 @@ paths:
       tags:
       - car
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
-  /command/{company_name}/{car_name}/{sdevice_id}:
+  /command/{company_name}/{car_name}:
     get:
       description: Returns list of the Device Commands.
       operationId: list_commands
@@ -123,16 +123,6 @@ paths:
           pattern: "^[0-9a-z_]+$"
           type: string
         style: simple
-      - description: "The Id of the Device, described with an object."
-        example: 47_2_test_device
-        explode: false
-        in: path
-        name: sdevice_id
-        required: true
-        schema:
-          pattern: "^[0-9]+_[0-9]+_[a-z0-9_]+$"
-          type: string
-        style: simple
       - allowEmptyValue: true
         description: "If set, the method returns a complete history of statuses/commands."
         explode: true
@@ -144,12 +134,13 @@ paths:
           type: string
         style: form
       - allowEmptyValue: false
-        description: "A Unix timestamp; if specified, the method returns all device\
-          \ commands inclusivelly newer than value of specified timestamp."
+        description: "A Unix timestamp; if specified, the method returns all messages\
+          \ inclusivelly newer than the specified timestamp \\ (i.e., messages with\
+          \ timestamp greater than or equal to the 'since' timestamp)"
         example: 1699262836
         explode: true
         in: query
-        name: until
+        name: since
         required: false
         schema:
           nullable: true
@@ -219,16 +210,6 @@ paths:
           pattern: "^[0-9a-z_]+$"
           type: string
         style: simple
-      - description: "The Id of the Device, described with an object."
-        example: 47_2_test_device
-        explode: false
-        in: path
-        name: sdevice_id
-        required: true
-        schema:
-          pattern: "^[0-9]+_[0-9]+_[a-z0-9_]+$"
-          type: string
-        style: simple
       requestBody:
         content:
           application/json:
@@ -259,7 +240,7 @@ paths:
       tags:
       - device
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
-  /status/{company_name}/{car_name}/{sdevice_id}:
+  /status/{company_name}/{car_name}:
     get:
       description: It returns list of the Device Statuses.
       operationId: list_statuses
@@ -284,16 +265,6 @@ paths:
           pattern: "^[0-9a-z_]+$"
           type: string
         style: simple
-      - description: "The Id of the Device, described with an object."
-        example: 47_2_test_device
-        explode: false
-        in: path
-        name: sdevice_id
-        required: true
-        schema:
-          pattern: "^[0-9]+_[0-9]+_[a-z0-9_]+$"
-          type: string
-        style: simple
       - allowEmptyValue: true
         description: "If set, the method returns a complete history of statuses/commands."
         explode: true
@@ -305,8 +276,9 @@ paths:
           type: string
         style: form
       - allowEmptyValue: false
-        description: "A Unix timestamp; if specified, the method returns all device\
-          \ statuses inclusivelly older than value of specified timestamp."
+        description: "A Unix timestamp; if specified, the method returns all messages\
+          \ inclusivelly newer than the specified timestamp \\ (i.e., messages with\
+          \ timestamp greater than or equal to the 'since' timestamp)"
         example: 1699262836
         explode: true
         in: query
@@ -401,16 +373,6 @@ paths:
           pattern: "^[0-9a-z_]+$"
           type: string
         style: simple
-      - description: "The Id of the Device, described with an object."
-        example: 47_2_test_device
-        explode: false
-        in: path
-        name: sdevice_id
-        required: true
-        schema:
-          pattern: "^[0-9]+_[0-9]+_[a-z0-9_]+$"
-          type: string
-        style: simple
       requestBody:
         content:
           application/json:
@@ -456,25 +418,13 @@ components:
       style: form
     Since:
       allowEmptyValue: false
-      description: "A Unix timestamp; if specified, the method returns all device\
-        \ statuses inclusivelly older than value of specified timestamp."
+      description: "A Unix timestamp; if specified, the method returns all messages\
+        \ inclusivelly newer than the specified timestamp \\ (i.e., messages with\
+        \ timestamp greater than or equal to the 'since' timestamp)"
       example: 1699262836
       explode: true
       in: query
       name: since
-      required: false
-      schema:
-        nullable: true
-        type: integer
-      style: form
-    Until:
-      allowEmptyValue: false
-      description: "A Unix timestamp; if specified, the method returns all device\
-        \ commands inclusivelly newer than value of specified timestamp."
-      example: 1699262836
-      explode: true
-      in: query
-      name: until
       required: false
       schema:
         nullable: true
@@ -506,17 +456,6 @@ components:
         nullable: true
         type: string
       style: form
-    SerializedDeviceId:
-      description: "The Id of the Device, described with an object."
-      example: 47_2_test_device
-      explode: false
-      in: path
-      name: sdevice_id
-      required: true
-      schema:
-        pattern: "^[0-9]+_[0-9]+_[a-z0-9_]+$"
-        type: string
-      style: simple
     CarName:
       description: "Name of the Car, following a pattern ^[0-9a-z_]+$."
       example: test_car
@@ -566,6 +505,8 @@ components:
       title: Message
       type: object
     AvailableDevices:
+      description: List of Modules containint at least one device (specified by device
+        Id) OR Module containing at least one device (specified by device Id).
       oneOf:
       - items:
           $ref: '#/components/schemas/Module'

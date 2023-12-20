@@ -3,19 +3,19 @@ openapi: 3.0.2
 
 info:
   title: Fleet v2 HTTP API
-  version: 1.0.0
+  version: 2.0.0
   description: HTTP-based API for Fleet Protocol v2 serving for communication between the External Server and the end users.
-  contact: 
+  contact:
     email: jiri.strouhal@bringauto.com
   license:
     name: GPLv3
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
-    
+
 
 servers:
   - url: http://localhost
 
-tags: 
+tags:
 - name: car
 - name: device
 - name: module
@@ -28,14 +28,14 @@ paths:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: available_cars
-      description: 
+      description:
         "Return list of available cars for all companies registered in the database."
-      tags: 
+      tags:
         - car
 
       responses:
         '200':
-          description: A list of available cars. 
+          description: A list of available cars.
           content:
             application/json:
               schema:
@@ -57,22 +57,22 @@ paths:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: available-devices
-      description: 
+      description:
         Return device Ids for all devices available for contained in the specified car.<br>
         For a single car module, the device Ids are returned as an object containing module Id and the list of device Ids. <br>
 
         If a module Id is specified, only a single such object is returned. <br>
         Otherwise, a list of such objects is returned, one for each module contained in the car. <br>
-      tags: 
+      tags:
         - module
       responses:
         '200':
-          description: A list of available devices. 
+          description: A list of available devices.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AvailableDevices'
-                
+
         '404':
           description: Cannot display available devices. Either company, car or module specified in the request does not exist.
         '500':
@@ -84,17 +84,16 @@ paths:
       - $ref: "#/components/parameters/ModuleId"
 
 
-  /status/{company_name}/{car_name}/{sdevice_id}:
+  /status/{company_name}/{car_name}:
     parameters:
       - $ref: '#/components/parameters/CompanyName'
       - $ref: '#/components/parameters/CarName'
-      - $ref: '#/components/parameters/SerializedDeviceId'
 
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: list_statuses
       description: It returns list of the Device Statuses.
-      tags: 
+      tags:
       - device
       responses:
         '200':
@@ -108,17 +107,17 @@ paths:
               example:
                 [
                   {
-                    "timestamp": 1700139157, 
+                    "timestamp": 1700139157,
                     device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
                     payload: {message_type: STATUS, encoding: BASE64, data: V2FpdGluZw==}
                   },
                   {
-                    "timestamp": 1700145485, 
+                    "timestamp": 1700145485,
                     device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
                     payload: {message_type: STATUS, encoding: BASE64, data: U3RpbGwgd29ya2luZw==}
                   },
                   {
-                    "timestamp": 1700145490, 
+                    "timestamp": 1700145490,
                     device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
                     payload: {message_type: STATUS, encoding: JSON, data: {"description": "Still working"}}
                   },
@@ -127,7 +126,7 @@ paths:
           description: The statuses cannot be displayed. Either company, car or device specified in the request does not exist.
         '500':
           description: The statuses cannot be displayed due to internal server error.
-    
+
       parameters:
         - $ref: '#/components/parameters/All'
         - $ref: '#/components/parameters/Since'
@@ -138,7 +137,7 @@ paths:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: send_statuses
       description: Add statuses received from the Device.
-      tags: 
+      tags:
       - device
       responses:
         '200':
@@ -158,19 +157,19 @@ paths:
             example:
               [
                 {
-                  timestamp: 2017917594000, 
+                  timestamp: 2017917594000,
                   device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
                   payload: {message_type: STATUS, encoding: BASE64, data: QnJpbmdBdXRv}
                 },
               ]
 
 
-  /command/{company_name}/{car_name}/{sdevice_id}:
+  /command/{company_name}/{car_name}:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: list_commands
-      description: Returns list of the Device Commands. 
-      tags: 
+      description: Returns list of the Device Commands.
+      tags:
       - device
       responses:
         '200':
@@ -184,7 +183,7 @@ paths:
               example:
                 [
                   {
-                    "timestamp": 1700139157, 
+                    "timestamp": 1700139157,
                     device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
                     payload: {message_type: COMMAND, encoding: BASE64, data: U2F5IGhlbGxv}
                   },
@@ -196,19 +195,18 @@ paths:
 
       parameters:
         - $ref: '#/components/parameters/All'
-        - $ref: '#/components/parameters/Until'
+        - $ref: '#/components/parameters/Since'
         - $ref: '#/components/parameters/Wait'
 
     parameters:
       - $ref: '#/components/parameters/CompanyName'
       - $ref: '#/components/parameters/CarName'
-      - $ref: '#/components/parameters/SerializedDeviceId'
 
     post:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: send_commands
       description: It adds new device Commands.
-      tags: 
+      tags:
       - device
       requestBody:
         description: Commands to be executed by the device.
@@ -221,7 +219,7 @@ paths:
             example:
               [
                 {
-                  timestamp: 2017917595000, 
+                  timestamp: 2017917595000,
                   device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
                   payload: {message_type: COMMAND, encoding: BASE64, data: U2F5IGhlbGxv}
                 },
@@ -239,39 +237,30 @@ paths:
 components:
   securitySchemes:
     AdminAuth:
-      description: Authentication token for a administrator. 
+      description: Authentication token for a administrator.
       type: apiKey
       in: query
       name: api_key
 
 
   parameters:
-    All: 
+    All:
       name: all_available
       description: If set, the method returns a complete history of statuses/commands.
       in: query
       allowEmptyValue: true
-      schema: 
+      schema:
         type: string
         nullable: true
-      example: 
+      example:
 
     Since:
       name: since
-      description: A Unix timestamp; if specified, the method returns all device statuses inclusivelly newer than value of specified timestamp.
+      description: A Unix timestamp; if specified, the method returns all messages inclusivelly newer than the specified timestamp \
+        (i.e., messages with timestamp greater than or equal to the 'since' timestamp)
       in: query
-      allowEmptyValue: false 
-      schema: 
-        type: integer
-        nullable: true
-      example: 1699262836
-
-    Until:
-      name: until
-      description: A Unix timestamp; if specified, the method returns all device commands inclusivelly older than value of specified timestamp.
-      in: query
-      allowEmptyValue: false 
-      schema: 
+      allowEmptyValue: false
+      schema:
         type: integer
         nullable: true
       example: 1699262836
@@ -280,8 +269,8 @@ components:
       name: module_id
       description: An Id of module, an unsigned integer.
       in: query
-      allowEmptyValue: false 
-      schema: 
+      allowEmptyValue: false
+      schema:
         type: integer
         minimum: 0
         nullable: true
@@ -292,69 +281,59 @@ components:
       description: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
       in: query
       allowEmptyValue: true
-      schema: 
+      schema:
         type: string
         nullable: true
       example: ""
 
-
-    SerializedDeviceId:
-      name: sdevice_id
-      description: The Id of the Device, described with an object.
+    CarName:
+      name: car_name
+      description: Name of the Car, following a pattern ^[0-9a-z_]+$.
       in: path
       required: true
       schema:
         type: string
-        pattern: ^[0-9]+_[0-9]+_[a-z0-9_]+$
-      example: 47_2_test_device
-
-    CarName: 
-      name: car_name 
-      description: Name of the Car, following a pattern ^[0-9a-z_]+$.
-      in: path 
-      required: true 
-      schema: 
-        type: string
         pattern: ^[0-9a-z_]+$
       example: test_car
 
-    CompanyName: 
+    CompanyName:
       name: company_name
       description: Name of the company, following a pattern ^[0-9a-z_]+$.
-      in: path 
-      required: true 
-      schema: 
+      in: path
+      required: true
+      schema:
         type: string
         pattern: ^[0-9a-z_]+$
       example: test_company
-  
+
 
   schemas:
-    Message: 
+    Message:
       description: Physical device or program located on the car.
-      type: object 
-      properties: 
-        timestamp: 
+      type: object
+      properties:
+        timestamp:
           description: Unix timestamp of the message in milliseconds.
-          type: integer 
+          type: integer
           example: 1699262836
-        device_id: 
+        device_id:
           $ref: '#/components/schemas/DeviceId'
         payload:
           $ref: '#/components/schemas/Payload'
 
     AvailableDevices:
+      description: List of Modules containint at least one device (specified by device Id) OR Module containing at least one device (specified by device Id).
       oneOf:
       - type: array
         items:
           $ref: '#/components/schemas/Module'
       - $ref: '#/components/schemas/Module'
 
-    Module: 
+    Module:
       description: A module containing at least one device (specified by device Id).
-      type: object 
+      type: object
       properties:
-        module_id: 
+        module_id:
           description: Id (unsigned integer) of the module.
           type: integer
           minimum: 0
@@ -364,17 +343,17 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DeviceId'
-          example: 
+          example:
             [
               {module_id: 47, device_type: 2, device_role: test_device, device_name: Test Device},
               {module_id: 47, device_type: 2, device_role: test_device, device_name: Test Device},
             ]
 
-    Car: 
+    Car:
       description: A car assigned to a particular company.
       type: object
       properties:
-        company_name: 
+        company_name:
           description: Name of the company, following a pattern ^[0-9a-z_]+$
           type: string
           pattern: ^[0-9a-z_]+$
@@ -385,11 +364,11 @@ components:
           pattern: ^[0-9a-z_]+$
           example: test_car
 
-    DeviceId: 
+    DeviceId:
       description: Id of the device described with an object.
       type: object
       properties:
-        module_id: 
+        module_id:
           description: Id (unsigned integer) of the module containing the device.
           type: integer
           minimum: 0
@@ -402,7 +381,7 @@ components:
           type: string
           format: utf-8
           pattern: ^[a-z0-9_]+$
-        name: 
+        name:
           description: UTF-8 encoded string.
           type: string
           format: utf-8
@@ -411,12 +390,12 @@ components:
         type: 2
         role: test_device
         name: Test Device
-          
-    Payload: 
+
+    Payload:
       type: object
       description: Payload of the message, containing message type (status or command), encoding and data.
       properties:
-        message_type: 
+        message_type:
           description: 'Type of the payload'
           type: string
           pattern: ^(STATUS)|(COMMAND)$
@@ -438,23 +417,23 @@ components:
 
 # Cleaning up the statuses/commands:
 #
-# - every command and status has a TIMESTAMP and a KEY denoting a device, 
+# - every command and status has a TIMESTAMP and a KEY denoting a device,
 #   to/by which the command/status was sent
 #
-# - on a regular basis (e.g., every minute), a part of commands/statuses is deleted, 
+# - on a regular basis (e.g., every minute), a part of commands/statuses is deleted,
 #   if their timestamp is less or equal to current timestamp minus some specified period (e.g., 1 hour)
 #
-# - the method for posting new commands automatically detects, if a device key assigned 
-#   to this new command also correspond to at least on status in the database. 
+# - the method for posting new commands automatically detects, if a device key assigned
+#   to this new command also correspond to at least on status in the database.
 #   If not, the command is rejected
 #
-# - it is possible, that some commands remain in the database, whose device key does not now belong 
+# - it is possible, that some commands remain in the database, whose device key does not now belong
 #   to any status
 #
-# - if after N minutes a new status is posted with the device key assigned, that was once assigned 
+# - if after N minutes a new status is posted with the device key assigned, that was once assigned
 #   to other status (now deleted) in the database, all the commands having the same device key assigned
-#   have to be deleted from the database. If the timestamp of such a command is GREATER, a warning 
-#   should be raised/logged (it is an invalid timestamp value, because, as mentioned previously, 
+#   have to be deleted from the database. If the timestamp of such a command is GREATER, a warning
+#   should be raised/logged (it is an invalid timestamp value, because, as mentioned previously,
 #   no command could have been added after deleting the last status with the given device key)
 
 
