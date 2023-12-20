@@ -195,7 +195,7 @@ paths:
 
       parameters:
         - $ref: '#/components/parameters/All'
-        - $ref: '#/components/parameters/Until'
+        - $ref: '#/components/parameters/Since'
         - $ref: '#/components/parameters/Wait'
 
     parameters:
@@ -256,17 +256,8 @@ components:
 
     Since:
       name: since
-      description: A Unix timestamp; if specified, the method returns all device statuses inclusivelly newer than value of specified timestamp.
-      in: query
-      allowEmptyValue: false 
-      schema: 
-        type: integer
-        nullable: true
-      example: 1699262836
-
-    Until:
-      name: until
-      description: A Unix timestamp; if specified, the method returns all device commands inclusivelly older than value of specified timestamp.
+      description: A Unix timestamp; if specified, the method returns all messages inclusivelly newer than the specified timestamp \
+        (i.e., messages with timestamp greater than or equal to the 'since' timestamp)
       in: query
       allowEmptyValue: false 
       schema: 
