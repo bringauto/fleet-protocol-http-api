@@ -84,11 +84,10 @@ paths:
       - $ref: "#/components/parameters/ModuleId"
 
 
-  /status/{company_name}/{car_name}/{sdevice_id}:
+  /status/{company_name}/{car_name}:
     parameters:
       - $ref: '#/components/parameters/CompanyName'
       - $ref: '#/components/parameters/CarName'
-      - $ref: '#/components/parameters/SerializedDeviceId'
 
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
@@ -165,7 +164,7 @@ paths:
               ]
 
 
-  /command/{company_name}/{car_name}/{sdevice_id}:
+  /command/{company_name}/{car_name}:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: list_commands
@@ -202,7 +201,6 @@ paths:
     parameters:
       - $ref: '#/components/parameters/CompanyName'
       - $ref: '#/components/parameters/CarName'
-      - $ref: '#/components/parameters/SerializedDeviceId'
 
     post:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
@@ -297,17 +295,6 @@ components:
         nullable: true
       example: ""
 
-
-    SerializedDeviceId:
-      name: sdevice_id
-      description: The Id of the Device, described with an object.
-      in: path
-      required: true
-      schema:
-        type: string
-        pattern: ^[0-9]+_[0-9]+_[a-z0-9_]+$
-      example: 47_2_test_device
-
     CarName: 
       name: car_name 
       description: Name of the Car, following a pattern ^[0-9a-z_]+$.
@@ -344,6 +331,7 @@ components:
           $ref: '#/components/schemas/Payload'
 
     AvailableDevices:
+      description: List of Modules containint at least one device (specified by device Id) OR Module containing at least one device (specified by device Id).
       oneOf:
       - type: array
         items:
