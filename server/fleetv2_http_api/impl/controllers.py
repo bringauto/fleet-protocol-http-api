@@ -170,8 +170,6 @@ def send_commands(
     return code 404.
 
     The body of the request should contain a list of commands, each in the form of a dictionary.
-
-    If for any command the device_id does not correspond to the sdevice_id, exception is raised.
     """
     if messages is None:
         messages = []
