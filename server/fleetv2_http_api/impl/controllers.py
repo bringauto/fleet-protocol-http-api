@@ -88,7 +88,7 @@ def list_commands(
     until:Optional[int]=None,
     wait:Optional[str]=None
     )->Tuple[List[Message], int]:  # noqa: E501
-    """Return list containing the OLDEST command currently stored for an AVAILABLE device. 
+    """Return list containing the NEWEST command currently stored for an AVAILABLE device. 
     If a device is not available, return empty list and code 404.
 
     If 'all_available' is not None, return ALL commands stored for a given device.

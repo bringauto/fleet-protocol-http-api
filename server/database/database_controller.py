@@ -212,8 +212,8 @@ def list_messages(
                     table.c.timestamp <= limit_timestamp
                 ))
         else:
-            # return newest status or oldest command
-            extreme_func = func.max if message_type==MessageType.STATUS_TYPE else func.min
+            # return newest message
+            extreme_func = func.max
             extreme_value = session.query(extreme_func(table.c.timestamp)).\
                 where(
                     table.c.company_name == company_name,

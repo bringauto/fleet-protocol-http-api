@@ -276,7 +276,7 @@ class Test_Options_For_Listing_Multiple_Statuses(unittest.TestCase):
         send_statuses("company", "car", messages=[message_3])
 
 
-    def test_by_default_only_the_NEWEST_STATUS_is_returned(self):
+    def test_by_default_only_the_newest_status_is_returned(self):
         statuses, _ = list_statuses("company", "car")
         self.assertEqual(len(statuses), 1)
         self.assertEqual(statuses[-1].timestamp, 37)
@@ -327,10 +327,10 @@ class Test_Options_For_Listing_Multiple_Commands(unittest.TestCase):
         mock_time_in_ms.return_value = 45
         send_commands("company", "car", [command_3])
 
-    def test_by_default_only_the_OLDEST_COMMAND_is_returned(self):
+    def test_by_default_only_the_newest_command_is_returned(self):
         commands, code = list_commands("company", "car")
         self.assertEqual(len(commands), 1)
-        self.assertEqual(commands[0].timestamp, 20)
+        self.assertEqual(commands[-1].timestamp, 45)
 
     def test_until_parameter_equal_to_oldest_command_timestamp_yields_the_oldest_command(self):
         commands, code = list_commands("company", "car", until=20)
