@@ -332,20 +332,20 @@ class Test_Options_For_Listing_Multiple_Commands(unittest.TestCase):
         self.assertEqual(len(commands), 1)
         self.assertEqual(commands[-1].timestamp, 45)
 
-    def test_until_parameter_equal_to_oldest_command_timestamp_yields_the_oldest_command(self):
-        commands, code = list_commands("company", "car", until=20)
+    def test_since_parameter_equal_to_newest_command_timestamp_yields_the_oldest_command(self):
+        commands, code = list_commands("company", "car", since=45)
         self.assertEqual(len(commands), 1)
-        self.assertEqual(commands[0].timestamp, 20)
+        self.assertEqual(commands[0].timestamp, 45)
 
-    def test_until_parameter_smaller_than_oldest_command_timestamp_yields_empty_command_list(self):
-        commands, code = list_commands("company", "car", until=19)
+    def test_since_parameter_smaller_than_newest_command_timestamp_yields_empty_command_list(self):
+        commands, code = list_commands("company", "car", since=46)
         self.assertEqual(len(commands), 0)
     
-    def test_until_option_returns_all_commands_inclusivelly_older_than_the_specified_time(self):
-        commands, code = list_commands("company", "car", until=30)
+    def test_since_option_returns_all_commands_inclusivelly_newer_than_the_specified_time(self):
+        commands, code = list_commands("company", "car", since=30)
         self.assertEqual(len(commands), 2)
-        self.assertEqual(commands[0].timestamp, 20)
-        self.assertEqual(commands[1].timestamp, 30)
+        self.assertEqual(commands[0].timestamp, 30)
+        self.assertEqual(commands[1].timestamp, 45)
 
     def test_if_all_is_specified_all_commands_are_returned(self):
         commands, code = list_commands("company", "car", all_available="")

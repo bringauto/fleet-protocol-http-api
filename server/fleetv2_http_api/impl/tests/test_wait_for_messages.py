@@ -297,7 +297,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         send_statuses("test_company", "test_car", messages=[self.status])
         set_command_wait_timeout_s(0.1)
         def list_test_commands():
-            cmds, code = list_commands("test_company", "test_car", wait="", until=self.command.timestamp-1)
+            cmds, code = list_commands("test_company", "test_car", wait="", since=self.command.timestamp-1)
             self.assertEqual(code, 200)
             self.assertEqual(len(cmds), 0)
         def send_single_command():

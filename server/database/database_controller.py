@@ -179,14 +179,14 @@ def list_messages(
     car_name:str, 
     message_type:str, 
     all_available:Optional[str]=None, 
-    limit_timestamp:Optional[int]=None
+    since:Optional[int]=None
     )->List[Message_DB]:  # noqa: 
     
     """Return a list of messages of the given type, optionally filtered by the given parameters.
     If all is not None, then all messages of the given type are returned.
 
     Otherwise, if since is not None, then all messages of the given type with a timestamp 
-    less or equal to since are returned. Otherwise, the newest status or oldest command is returned.
+    less or equal to since are returned. Otherwise, the newest message is returned.
     """
     
     statuses:List[Message_DB] = list()
@@ -198,19 +198,12 @@ def list_messages(
                 table.c.company_name == company_name,
                 table.c.car_name == car_name
             ))
-        elif limit_timestamp is not None:
-            if message_type==MessageType.STATUS_TYPE:
-                selection = selection.where(and_(
-                    table.c.company_name == company_name,
-                    table.c.car_name == car_name,
-                    table.c.timestamp >= limit_timestamp
-                ))
-            else:
-                selection = selection.where(and_(
-                    table.c.company_name == company_name,
-                    table.c.car_name == car_name,
-                    table.c.timestamp <= limit_timestamp
-                ))
+        elif since is not None:
+            selection = selection.where(and_(
+                table.c.company_name == company_name,
+                table.c.car_name == car_name,
+                table.c.timestamp >= since
+            ))
         else:
             # return newest message
             extreme_func = func.max

@@ -321,7 +321,7 @@ class Test_Send_And_Read_Message(unittest.TestCase):
         read_messages = list_messages("test_company", "test_car", MessageType.STATUS_TYPE)
         self.assertEqual(len(read_messages), 1)
         # read only statuses after timestamp 120
-        read_messages = list_messages("test_company", "test_car", MessageType.STATUS_TYPE, limit_timestamp=120)
+        read_messages = list_messages("test_company", "test_car", MessageType.STATUS_TYPE, since=120)
         self.assertEqual(len(read_messages), 1)
         self.assertEqual(read_messages[0].timestamp, 150)
 

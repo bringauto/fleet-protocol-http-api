@@ -85,7 +85,7 @@ def list_commands(
     company_name:str, 
     car_name:str,
     all_available:Optional[str]=None, 
-    until:Optional[int]=None,
+    since:Optional[int]=None,
     wait:Optional[str]=None
     )->Tuple[List[Message], int]:  # noqa: E501
     """Return list containing the NEWEST command currently stored for an AVAILABLE device. 
@@ -104,7 +104,7 @@ def list_commands(
         car_name,
         MessageType.COMMAND_TYPE,
         all_available, 
-        until
+        since
     )
 
     if db_commands or wait is None:
@@ -116,7 +116,7 @@ def list_commands(
     else:
         awaited_commands:List[Message] = __command_wait_manager.wait_and_get_reponse(company_name, car_name)
         if awaited_commands:
-            if until is not None and awaited_commands[-1].timestamp > until: 
+            if since is not None and awaited_commands[-1].timestamp > since: 
                 return [], 200
             return awaited_commands, 200
         else:
