@@ -158,10 +158,9 @@ def send_commands(
     messages = _message_list_from_request_body(body)
     if messages == []:
         return "", 200
-    msg, code = _check_sent_commands(company_name, car_name, messages)
-
-    if msg.strip() != "":
-        return msg, code
+    errors = _check_sent_commands(company_name, car_name, messages)
+    if errors[0] != "":
+        return errors
 
     _update_messages_timestamp(messages)
     _command_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
