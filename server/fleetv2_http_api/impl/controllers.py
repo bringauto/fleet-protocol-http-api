@@ -158,17 +158,17 @@ def send_commands(
     """
     if messages is None:
         messages = []
+
     messages.extend([Message.from_dict(b) for b in body])
     if len(messages) == 0:
         return "", 200
     msg, code = _check_sent_commands(company_name, car_name, messages)
-    if msg.strip()!="":
+
+    if msg.strip() != "":
         return msg, code
-    assert messages is not None
 
     _update_messages_timestamp(messages)
-
-    _command_wait_manager.stop_waiting_for(company_name, car_name, reponse_content=messages)
+    _command_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
     commands_to_db = _message_db_list(messages, MessageType.COMMAND_TYPE)
     return send_messages_to_database(company_name, car_name, *commands_to_db)
 
@@ -183,7 +183,6 @@ def send_statuses(
     """Send a list of statuses to given device.
     The device specified in the statuses is then automatically considered available.
     """
-
     if messages is None:
         messages = []
     messages.extend([Message.from_dict(b) for b in body])
@@ -194,8 +193,7 @@ def send_statuses(
         return errors
 
     _update_messages_timestamp(messages)
-
-    _status_wait_manager.stop_waiting_for(company_name, car_name, reponse_content=messages)
+    _status_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
     response_msg = send_messages_to_database(company_name, car_name, *_message_db_list(messages, MessageType.STATUS_TYPE))
     cmd_warnings = _check_and_handle_first_status(company_name, car_name, messages)
     return response_msg[0] + cmd_warnings, response_msg[1]
