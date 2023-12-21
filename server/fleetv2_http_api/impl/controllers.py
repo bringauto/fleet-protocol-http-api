@@ -71,9 +71,9 @@ def available_devices(
 def list_commands(
     company_name: str,
     car_name: str,
-    all_available: Optional[str] = None,
+    all_available: Optional[bool] = None,
     since: Optional[int] = None,
-    wait: Optional[str] = None
+    wait: Optional[bool] = None
     ) -> Tuple[List[Message], int]:  # noqa: E501
 
     """Return list containing the NEWEST command currently stored for an AVAILABLE device.
@@ -95,7 +95,7 @@ def list_commands(
         since
     )
 
-    if db_commands or wait is None:
+    if db_commands or not wait:
         msg, code = _check_car_availability(company_name, car_name)
         if code == 200:
             # device is available and has commands, return them
@@ -119,9 +119,9 @@ def list_commands(
 def list_statuses(
     company_name: str,
     car_name: str,
-    all_available: Optional[str] = None,
-    wait: Optional[str] = None,
-    since: Optional[int] = None
+    all_available: Optional[bool] = None,
+    since: Optional[int] = None,
+    wait: Optional[bool] = None
     ) -> Tuple[List[Message], int]:  # noqa: E501
 
     """Return list containing the NEWEST status currently stored for an AVAILABLE device.
@@ -145,7 +145,7 @@ def list_statuses(
 
     if db_statuses:
         return [_message_from_db(m) for m in db_statuses], 200
-    elif wait is None:
+    elif not wait:
         # no statuses mean device is unavailable and not found
         return [], 404
     else:

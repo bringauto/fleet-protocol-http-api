@@ -128,7 +128,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
             company_name="company1",
             car_name="car1",
             message_type=MessageType.STATUS_TYPE,
-            all_available=""
+            all_available=True
         )
         self.assertEqual(len(messages), 2)
         self.assertEqual(messages[0].timestamp, 1)
@@ -312,7 +312,7 @@ class Test_Send_And_Read_Message(unittest.TestCase):
         mock_time_in_ms.return_value = 150
         send_messages_to_database("test_company", "test_car", message_2)
         # read all statuses
-        read_messages = list_messages("test_company", "test_car", MessageType.STATUS_TYPE, all_available="")
+        read_messages = list_messages("test_company", "test_car", MessageType.STATUS_TYPE, all_available=True)
         self.assertEqual(len(read_messages), 2)
         # read only the last status
         read_messages = list_messages("test_company", "test_car", MessageType.STATUS_TYPE)

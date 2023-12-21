@@ -17,11 +17,11 @@ def list_commands(company_name, car_name, all_available=None, since=None, wait=N
     :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
     :type car_name: str
     :param all_available: If set, the method returns a complete history of statuses/commands.
-    :type all_available: str
+    :type all_available: bool
     :param since: A Unix timestamp; if specified, the method returns all messages inclusivelly newer than the specified timestamp \\ (i.e., messages with timestamp greater than or equal to the &#39;since&#39; timestamp)
     :type since: int
     :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
-    :type wait: str
+    :type wait: bool
 
     :rtype: Union[List[Message], Tuple[List[Message], int], Tuple[List[Message], int, Dict[str, str]]
     """
@@ -38,11 +38,11 @@ def list_statuses(company_name, car_name, all_available=None, since=None, wait=N
     :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
     :type car_name: str
     :param all_available: If set, the method returns a complete history of statuses/commands.
-    :type all_available: str
+    :type all_available: bool
     :param since: A Unix timestamp; if specified, the method returns all messages inclusivelly newer than the specified timestamp \\ (i.e., messages with timestamp greater than or equal to the &#39;since&#39; timestamp)
     :type since: int
     :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
-    :type wait: str
+    :type wait: bool
 
     :rtype: Union[List[Message], Tuple[List[Message], int], Tuple[List[Message], int, Dict[str, str]]
     """

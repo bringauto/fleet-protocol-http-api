@@ -298,7 +298,7 @@ class Test_Options_For_Listing_Multiple_Statuses(unittest.TestCase):
 
     def test_if_all_is_specified_all_statuses_are_returned(self):
         # any value passed as 'all' attribute makes the list_statuses to return all the statuses
-        statuses, _ = list_statuses("company", "car", all_available="")
+        statuses, _ = list_statuses("company", "car", all_available=True)
         self.assertEqual(len(statuses), 3)
         self.assertEqual(statuses[0].timestamp, 10)
         self.assertEqual(statuses[1].timestamp, 20)
@@ -349,7 +349,7 @@ class Test_Options_For_Listing_Multiple_Commands(unittest.TestCase):
         self.assertEqual(commands[1].timestamp, 45)
 
     def test_if_all_is_specified_all_commands_are_returned(self):
-        commands, code = list_commands("company", "car", all_available="")
+        commands, code = list_commands("company", "car",  all_available=True)
         self.assertEqual(len(commands), 3)
         self.assertEqual(commands[0].timestamp, 20)
         self.assertEqual(commands[1].timestamp, 30)
@@ -380,22 +380,22 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         mock_time_in_ms.return_value = 20
         send_commands("company", "car", [command_2])
 
-        self.assertEqual(len(list_statuses("company", "car", all_available="")[0]), 1)
-        self.assertEqual(len(list_commands("company", "car", all_available="")[0]), 2)
+        self.assertEqual(len(list_statuses("company", "car", all_available=True)[0]), 1)
+        self.assertEqual(len(list_commands("company", "car", all_available=True)[0]), 2)
 
         mock_time_in_ms.return_value = self.DATA_RETENTION_PERIOD+20
         remove_old_messages(mock_time_in_ms.return_value)
 
-        self.assertEqual(len(list_statuses("company", "car", all_available="")[0]), 0)
-        self.assertEqual(len(list_commands("company", "car", all_available="")[0]), 0)
+        self.assertEqual(len(list_statuses("company", "car", all_available=True)[0]), 0)
+        self.assertEqual(len(list_commands("company", "car", all_available=True)[0]), 0)
 
         mock_time_in_ms.return_value += 5
 
         # the following status is considered to be the FIRST status for given device and after sending it,
         # all commands previously sent to this device have to be removed
         send_statuses("company", "car", [status])
-        self.assertEqual(len(list_statuses("company", "car", all_available="")[0]), 1)
-        self.assertEqual(len(list_commands("company", "car", all_available="")[0]), 0)
+        self.assertEqual(len(list_statuses("company", "car", all_available=True)[0]), 1)
+        self.assertEqual(len(list_commands("company", "car", all_available=True)[0]), 0)
 
     @patch('database.time._time_in_ms')
     def test_cleaning_up_command_with_newer_timestamp_relative_to_the_first_status_raises_warning(self, mock_time_in_ms:Mock):
@@ -420,10 +420,10 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
 
         remove_old_messages(self.DATA_RETENTION_PERIOD + 10)
 
-        self.assertEqual(len(list_statuses("company", "car", all_available="")[0]), 0)
+        self.assertEqual(len(list_statuses("company", "car", all_available=True)[0]), 0)
         # The device is considered to be disconnected and all commands sent to it are then
         # considered to be removed.
-        self.assertEqual(len(list_commands("company", "car", all_available="")[0]), 0)
+        self.assertEqual(len(list_commands("company", "car", all_available=True)[0]), 0)
 
         self.assertEqual(
             available_devices("company", "car"),
@@ -433,8 +433,8 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
 
         mock_time_in_ms.return_value = self.DATA_RETENTION_PERIOD + 50
         warnings, code = send_statuses("company", "car", [new_first_status])
-        self.assertEqual(len(list_statuses("company", "car", all_available="")[0]), 1)
-        self.assertEqual(len(list_commands("company", "car", all_available="")[0]), 0)
+        self.assertEqual(len(list_statuses("company", "car", all_available=True)[0]), 1)
+        self.assertEqual(len(list_commands("company", "car", all_available=True)[0]), 0)
 
         assert(type(warnings) is str)
         for warning in future_command_warning(

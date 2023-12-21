@@ -55,7 +55,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
 
     def test_return_statuses_sent_after_the_request_when_wait_mechanism_is_applied(self):
         def list_test_statuses():
-            msg, code = list_statuses("test_company", "test_car", wait="")
+            msg, code = list_statuses("test_company", "test_car", wait=True)
             self.assertEqual(code, 200)
             self.assertEqual(len(msg), 1)
         def send_single_status():
@@ -76,7 +76,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
     def test_return_statuses_sent_after_the_request_with_wait_mechanism_with_timeout_exceeded(self):
         def list_test_statuses():
             set_status_wait_timeout_s(0.01)
-            msg, code = list_statuses("test_company", "test_car", wait="")
+            msg, code = list_statuses("test_company", "test_car", wait=True)
             self.assertEqual(code, 404)
         def send_single_status():
             time.sleep(0.02)
@@ -85,7 +85,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
 
     def test_sending_empty_statuses_list_does_not_stop_the_waiting(self):
         def list_test_statuses():
-            msg, code = list_statuses("test_company", "test_car", wait="")
+            msg, code = list_statuses("test_company", "test_car", wait=True)
             self.assertEqual(code, 200)
             self.assertEqual(len(msg), 1)
         def send_single_status():
@@ -99,11 +99,11 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
     def test_sending_second_request_does_not_affect_response_for_the_first_one(self):
         set_status_wait_timeout_s(0.02)
         def list_test_statuses_1():
-            _, code = list_statuses("test_company", "test_car", wait="")
+            _, code = list_statuses("test_company", "test_car", wait=True)
             self.assertEqual(code, 404)
         def list_test_statuses_2():
             time.sleep(0.06)
-            _, code = list_statuses("test_company", "test_car", wait="")
+            _, code = list_statuses("test_company", "test_car", wait=True)
             self.assertEqual(code, 200)
         def send_single_status():
             time.sleep(0.04)
@@ -118,11 +118,11 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         set_status_wait_timeout_s(TIMEOUT)
         def list_test_statuses_1():
             time.sleep(T_FIRST_REQUEST)
-            msg, code = list_statuses("test_company", "test_car", wait="")
+            msg, code = list_statuses("test_company", "test_car", wait=True)
             self.assertEqual(code, 404)
         def list_test_statuses_2():
             time.sleep(T_SECOND_REQUEST)
-            msg, code = list_statuses("test_company", "test_car", wait="")
+            msg, code = list_statuses("test_company", "test_car", wait=True)
             self.assertEqual(code, 200)
         def send_single_status():
             time.sleep(T_STATUSES_SENT)
@@ -132,7 +132,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
     def test_requesting_late_statuses_with_the_since_parameter_newer_than_the_statuses_timestamp_returns_empty_list(self):
         set_status_wait_timeout_s(0.1)
         def list_test_statuses():
-            msg, code = list_statuses("test_company", "test_car", wait="", since=self.st.timestamp+1)
+            msg, code = list_statuses("test_company", "test_car", wait=True, since=self.st.timestamp+1)
             self.assertEqual(code, 200)
             self.assertEqual(len(msg), 0)
         def send_single_status():
@@ -160,7 +160,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
 
     def test_return_commands_sent_to_available_device_after_the_request_when_wait_mechanism_is_applied(self):
         def list_test_commands():
-            msg, code = list_commands("test_company", "test_car", wait="")
+            msg, code = list_commands("test_company", "test_car", wait=True)
             self.assertEqual(code, 200)
             self.assertEqual(len(msg), 1)
         def send_single_status_and_command():
@@ -172,7 +172,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
     def test_return_commands_sent_after_the_request_without_applying_wait_mechanism(self):
         send_statuses("test_company", "test_car", messages=[self.status])
         def list_test_commands():
-            msg, code = list_commands("test_company", "test_car")
+            msg, code = list_commands("test_company", "test_car", wait=False)
             self.assertEqual(code, 200)
             self.assertEqual(len(msg), 0) # no commands are present in the moment of the request
         def send_single_command():
@@ -184,7 +184,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         send_statuses("test_company", "test_car", messages=[self.status])
         def list_test_commands():
             set_command_wait_timeout_s(0.01)
-            cmds, code = list_commands("test_company", "test_car", wait="")
+            cmds, code = list_commands("test_company", "test_car", wait=True)
             self.assertEqual(code, 200)
             self.assertEqual(len(cmds), 0)
         def send_single_command():
@@ -195,7 +195,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
     def test_sending_empty_command_list_does_not_stop_the_waiting_process(self):
         send_statuses("test_company", "test_car", messages=[self.status])
         def list_test_commands():
-            msg, code = list_commands("test_company", "test_car", wait="")
+            msg, code = list_commands("test_company", "test_car", wait=True)
             self.assertEqual(code, 200)
             self.assertEqual(len(msg), 1)
         def send_single_command():
@@ -210,12 +210,12 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         send_statuses("test_company", "test_car", messages=[self.status])
         set_command_wait_timeout_s(0.02)
         def list_test_commands_1():
-            cmds, code = list_commands("test_company", "test_car", wait="")
+            cmds, code = list_commands("test_company", "test_car", wait=True)
             self.assertEqual(code, 200)
             self.assertEqual(len(cmds), 0)
         def list_test_commands_2():
             time.sleep(0.06)
-            _, code = list_commands("test_company", "test_car", wait="")
+            _, code = list_commands("test_company", "test_car", wait=True)
             self.assertEqual(code, 200)
         def send_single_command():
             time.sleep(0.04)
@@ -231,12 +231,12 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         set_command_wait_timeout_s(TIMEOUT)
         def list_test_commands_1():
             time.sleep(T_FIRST_REQUEST)
-            cmds, code = list_commands("test_company", "test_car", wait="")
+            cmds, code = list_commands("test_company", "test_car", wait=True)
             self.assertEqual(code, 200)
             self.assertEqual(len(cmds), 0)
         def list_test_commands_2():
             time.sleep(T_SECOND_REQUEST)
-            cmds, code = list_commands("test_company", "test_car", wait="")
+            cmds, code = list_commands("test_company", "test_car", wait=True)
             self.assertEqual(code, 200)
             self.assertEqual(len(cmds), 1)
         def send_single_command():
@@ -247,7 +247,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
     def test_sending_commands_to_unavailable_device_does_not_affect_the_waiting(self):
         set_command_wait_timeout_s(0.05)
         def list_test_commands():
-            cmds, code = list_commands("test_company", "test_car", wait="")
+            cmds, code = list_commands("test_company", "test_car", wait=True)
             self.assertEqual(code, 404) # the device did not become available before timeout was exceeded
             self.assertEqual(len(cmds), 0)
         def send_single_command():
@@ -264,7 +264,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         set_command_wait_timeout_s(TIMEOUT)
         def list_test_commands():
             time.sleep(T_REQUEST)
-            cmds, code = list_commands("test_company", "test_car", wait="")
+            cmds, code = list_commands("test_company", "test_car", wait=True)
             self.assertEqual(code, 200)
             self.assertEqual(len(cmds), 1)
         def make_device_available():
@@ -282,7 +282,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         send_statuses("test_company", "test_car", messages=[self.status])
         set_command_wait_timeout_s(0.1)
         def list_test_commands():
-            cmds, code = list_commands("test_company", "test_car", wait="", since=self.command.timestamp-1)
+            cmds, code = list_commands("test_company", "test_car", wait=True, since=self.command.timestamp-1)
             self.assertEqual(code, 200)
             self.assertEqual(len(cmds), 0)
         def send_single_command():
