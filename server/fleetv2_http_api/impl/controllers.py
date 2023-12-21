@@ -14,6 +14,7 @@ from database.database_controller import (
 )
 from database.database_controller import list_messages as _list_messages
 from database.device_ids import store_device_id_if_new, device_ids, serialized_device_id
+from database.time import timestamp
 from fleetv2_http_api.impl.wait import WaitObjManager
 
 
@@ -86,15 +87,7 @@ def list_commands(
     there are no commands available. If 'wait' is None, the function will immediatelly
     return an empty list.
     """
-
-    db_commands = _list_messages(
-        company_name,
-        car_name,
-        MessageType.COMMAND_TYPE,
-        all_available,
-        since
-    )
-
+    db_commands = _list_messages(company_name,car_name,MessageType.COMMAND_TYPE,all_available,since)
     if db_commands or not wait:
         msg, code = _check_car_availability(company_name, car_name)
         if code == 200:
@@ -105,7 +98,7 @@ def list_commands(
     else:
         awaited_commands: List[Message] = _command_wait_manager.wait_and_get_reponse(company_name, car_name)
         if awaited_commands:
-            if since is not None and awaited_commands[-1].timestamp > since:
+            if since is not None and awaited_commands[-1].timestamp < since:
                 return [], 200
             return awaited_commands, 200
         else:
@@ -134,15 +127,7 @@ def list_statuses(
     there are no statuses available. If 'wait' is None, the function will immediatelly
     return an empty list.
     """
-
-    db_statuses = _list_messages(
-        company_name,
-        car_name,
-        MessageType.STATUS_TYPE,
-        all_available,
-        since
-    )
-
+    db_statuses = _list_messages(company_name, car_name, MessageType.STATUS_TYPE, all_available, since)
     if db_statuses:
         return [_message_from_db(m) for m in db_statuses], 200
     elif not wait:
@@ -173,15 +158,17 @@ def send_commands(
     """
     if messages is None:
         messages = []
+
     messages.extend([Message.from_dict(b) for b in body])
     if len(messages) == 0:
         return "", 200
     msg, code = _check_sent_commands(company_name, car_name, messages)
-    if msg.strip()!="":
-        return msg, code
-    assert messages is not None
 
-    _command_wait_manager.stop_waiting_for(company_name, car_name, reponse_content=messages)
+    if msg.strip() != "":
+        return msg, code
+
+    _update_messages_timestamp(messages)
+    _command_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
     commands_to_db = _message_db_list(messages, MessageType.COMMAND_TYPE)
     return send_messages_to_database(company_name, car_name, *commands_to_db)
 
@@ -196,7 +183,6 @@ def send_statuses(
     """Send a list of statuses to given device.
     The device specified in the statuses is then automatically considered available.
     """
-
     if messages is None:
         messages = []
     messages.extend([Message.from_dict(b) for b in body])
@@ -206,7 +192,8 @@ def send_statuses(
     if errors[0] != "":
         return errors
 
-    _status_wait_manager.stop_waiting_for(company_name, car_name, reponse_content=messages)
+    _update_messages_timestamp(messages)
+    _status_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
     response_msg = send_messages_to_database(company_name, car_name, *_message_db_list(messages, MessageType.STATUS_TYPE))
     cmd_warnings = _check_and_handle_first_status(company_name, car_name, messages)
     return response_msg[0] + cmd_warnings, response_msg[1]
@@ -336,3 +323,8 @@ def _message_db_list(messages: List[Message], message_type: str) -> List[Message
         )
         for message in messages
     ]
+
+def _update_messages_timestamp(messages: Tuple[Message_DB]) -> None:
+    timestamp_now = timestamp()
+    for message in messages:
+        message.timestamp = timestamp_now

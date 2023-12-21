@@ -9,6 +9,7 @@ import unittest
 
 from database.device_ids import clear_device_ids, serialized_device_id
 from database.database_controller import set_test_db_connection
+from database.time import timestamp
 from fleetv2_http_api.impl.controllers import (
     send_statuses,
     list_statuses,
@@ -132,7 +133,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
     def test_requesting_late_statuses_with_the_since_parameter_newer_than_the_statuses_timestamp_returns_empty_list(self):
         set_status_wait_timeout_s(0.1)
         def list_test_statuses():
-            msg, code = list_statuses("test_company", "test_car", wait=True, since=self.st.timestamp+1)
+            msg, code = list_statuses("test_company", "test_car", wait=True, since=timestamp()+1000)
             self.assertEqual(code, 200)
             self.assertEqual(len(msg), 0)
         def send_single_status():
@@ -165,7 +166,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             self.assertEqual(len(msg), 1)
         def send_single_status_and_command():
             time.sleep(0.01)
-            send_statuses("test_company", "test_car",messages=[self.status])
+            send_statuses("test_company", "test_car", messages=[self.status])
             send_commands("test_company", "test_car", messages=[self.command])
         run_in_threads(list_test_commands, send_single_status_and_command)
 
@@ -282,7 +283,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         send_statuses("test_company", "test_car", messages=[self.status])
         set_command_wait_timeout_s(0.1)
         def list_test_commands():
-            cmds, code = list_commands("test_company", "test_car", wait=True, since=self.command.timestamp-1)
+            cmds, code = list_commands("test_company", "test_car", wait=True, since=timestamp()+1000)
             self.assertEqual(code, 200)
             self.assertEqual(len(cmds), 0)
         def send_single_command():
