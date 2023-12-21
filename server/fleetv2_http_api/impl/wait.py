@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Dict, List, Any, Optional
 import time
+import threading
 
 
 class WaitObjManager:
@@ -43,12 +44,7 @@ class WaitObjManager:
         self._check_nonnegative_timeout(timeout_ms)
         self._timeout_ms = timeout_ms
 
-    def stop_waiting_for(
-        self,
-        company: str,
-        car: str,
-        reponse_content: Optional[List]=None
-        ) -> None:
+    def stop_waiting_for(self, company: str, car: str, reponse_content: Optional[List] = None) -> None:
         """Make the next wait object in the queue to respond with specified 'reponse_content' and remove it from the queue."""
 
         if reponse_content is None:
@@ -75,7 +71,7 @@ class WaitObjManager:
 class WaitQueueDict:
 
     def __init__(self) -> None:
-        self._wait_objs: Dict[str, Dict[str, Dict[str, List[Any]]]] = dict()
+        self._wait_objs: Dict[str, Dict[str, List[Any]]] = dict()
 
     def add(self, company_name: str, car_name: str, obj: Optional[Any]=None) -> None:
         queue = self._add_new_queue_if_new_car(company_name, car_name)
@@ -132,11 +128,11 @@ class WaitQueueDict:
 
 class WaitObj:
     def __init__(self, company: str, car: str, timeout_ms: int) -> None:
-        self._timestamp_ms = WaitObj.timestamp()
         self._company_name = company
         self._car_name = car
-        self._response_content: List[Any]|None = None
+        self._response_content: List[Any] = list()
         self._timeout_ms = timeout_ms
+        self._condition = threading.Condition()
 
     @property
     def company_name(self) -> str: return self._company_name
@@ -145,15 +141,13 @@ class WaitObj:
 
     def add_reponse_content(self, content: List[Any]) -> None:
         self._response_content = content.copy()
+        with self._condition:
+            self._condition.notify()
 
     def response(self) -> List[Any]:
         """Wait for the response object to be set and then return it."""
-        while True:
-            if self._response_content is not None:
-                break
-            elif self._timestamp_ms + self._timeout_ms < WaitObj.timestamp():
-                self._response_content = list()
-                break
+        with self._condition:
+            self._condition.wait(timeout=self._timeout_ms/1000)
         return self._response_content
 
     @staticmethod

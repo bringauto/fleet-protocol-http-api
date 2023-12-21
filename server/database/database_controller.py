@@ -145,7 +145,6 @@ def get_available_devices_from_database() -> None:
 
 def send_messages_to_database(company_name: str, car_name: str, *messages: Message_DB) -> Tuple[str, int]:
     """Send a list of messages to the database, returns number of succesfully sent messages (int)."""
-    _update_messages_timestamp(messages)
     try:
         with get_connection_source().begin() as conn:
             stmt = insert(MessageBase.__table__) # type: ignore
@@ -162,12 +161,6 @@ def _get_message_for_n_messages_succesfully_sent(number_of_sent_messages: int) -
         return "1 message has been sent."
     else:
         return f"{number_of_sent_messages} messages have been sent."
-
-def _update_messages_timestamp(messages: Tuple[Message_DB]) -> None:
-    timestamp_now = timestamp()
-    for message in messages:
-        message.timestamp = timestamp_now
-
 
 def list_messages(
     company_name: str,
