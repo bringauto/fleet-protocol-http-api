@@ -45,8 +45,7 @@ paths:
           pattern: "^[0-9a-z_]+$"
           type: string
         style: simple
-      - allowEmptyValue: false
-        description: "An Id of module, an unsigned integer."
+      - description: "An Id of module, an unsigned integer."
         example: 47
         explode: true
         in: query
@@ -123,18 +122,17 @@ paths:
           pattern: "^[0-9a-z_]+$"
           type: string
         style: simple
-      - allowEmptyValue: true
-        description: "If set, the method returns a complete history of statuses/commands."
+      - description: "If set, the method returns a complete history of statuses/commands."
+        example: false
         explode: true
         in: query
         name: all_available
         required: false
         schema:
           nullable: true
-          type: string
+          type: boolean
         style: form
-      - allowEmptyValue: false
-        description: "A Unix timestamp; if specified, the method returns all messages\
+      - description: "A Unix timestamp; if specified, the method returns all messages\
           \ inclusivelly newer than the specified timestamp \\ (i.e., messages with\
           \ timestamp greater than or equal to the 'since' timestamp)"
         example: 1699262836
@@ -146,17 +144,16 @@ paths:
           nullable: true
           type: integer
         style: form
-      - allowEmptyValue: true
-        description: "An empty parameter. If specified, the method waits for predefined\
+      - description: "An empty parameter. If specified, the method waits for predefined\
           \ period of time, until some data to be sent in response are available."
-        example: ""
+        example: true
         explode: true
         in: query
         name: wait
         required: false
         schema:
           nullable: true
-          type: string
+          type: boolean
         style: form
       responses:
         "200":
@@ -265,18 +262,17 @@ paths:
           pattern: "^[0-9a-z_]+$"
           type: string
         style: simple
-      - allowEmptyValue: true
-        description: "If set, the method returns a complete history of statuses/commands."
+      - description: "If set, the method returns a complete history of statuses/commands."
+        example: false
         explode: true
         in: query
         name: all_available
         required: false
         schema:
           nullable: true
-          type: string
+          type: boolean
         style: form
-      - allowEmptyValue: false
-        description: "A Unix timestamp; if specified, the method returns all messages\
+      - description: "A Unix timestamp; if specified, the method returns all messages\
           \ inclusivelly newer than the specified timestamp \\ (i.e., messages with\
           \ timestamp greater than or equal to the 'since' timestamp)"
         example: 1699262836
@@ -288,17 +284,16 @@ paths:
           nullable: true
           type: integer
         style: form
-      - allowEmptyValue: true
-        description: "An empty parameter. If specified, the method waits for predefined\
+      - description: "An empty parameter. If specified, the method waits for predefined\
           \ period of time, until some data to be sent in response are available."
-        example: ""
+        example: true
         explode: true
         in: query
         name: wait
         required: false
         schema:
           nullable: true
-          type: string
+          type: boolean
         style: form
       responses:
         "200":
@@ -406,18 +401,17 @@ paths:
 components:
   parameters:
     All:
-      allowEmptyValue: true
       description: "If set, the method returns a complete history of statuses/commands."
+      example: false
       explode: true
       in: query
       name: all_available
       required: false
       schema:
         nullable: true
-        type: string
+        type: boolean
       style: form
     Since:
-      allowEmptyValue: false
       description: "A Unix timestamp; if specified, the method returns all messages\
         \ inclusivelly newer than the specified timestamp \\ (i.e., messages with\
         \ timestamp greater than or equal to the 'since' timestamp)"
@@ -431,7 +425,6 @@ components:
         type: integer
       style: form
     ModuleId:
-      allowEmptyValue: false
       description: "An Id of module, an unsigned integer."
       example: 47
       explode: true
@@ -444,17 +437,16 @@ components:
         type: integer
       style: form
     Wait:
-      allowEmptyValue: true
       description: "An empty parameter. If specified, the method waits for predefined\
         \ period of time, until some data to be sent in response are available."
-      example: ""
+      example: true
       explode: true
       in: query
       name: wait
       required: false
       schema:
         nullable: true
-        type: string
+        type: boolean
       style: form
     CarName:
       description: "Name of the Car, following a pattern ^[0-9a-z_]+$."

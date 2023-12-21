@@ -173,7 +173,7 @@ def list_messages(
     company_name: str,
     car_name: str,
     message_type: str,
-    all_available: Optional[str] = None,
+    all_available: Optional[bool] = None,
     since: Optional[int] = None
     ) -> List[Message_DB]:  # noqa:
 
@@ -188,7 +188,7 @@ def list_messages(
     with Session(get_connection_source()) as session:
         table = MessageBase.__table__
         selection = select(MessageBase).where(table.c.message_type == message_type)
-        if all_available is not None:
+        if all_available is True:
             selection = selection.where(and_(
                 table.c.company_name == company_name,
                 table.c.car_name == car_name

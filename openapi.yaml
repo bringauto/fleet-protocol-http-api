@@ -248,18 +248,16 @@ components:
       name: all_available
       description: If set, the method returns a complete history of statuses/commands.
       in: query
-      allowEmptyValue: true
       schema:
-        type: string
+        type: boolean
         nullable: true
-      example:
+      example: False
 
     Since:
       name: since
       description: A Unix timestamp; if specified, the method returns all messages inclusivelly newer than the specified timestamp \
         (i.e., messages with timestamp greater than or equal to the 'since' timestamp)
       in: query
-      allowEmptyValue: false
       schema:
         type: integer
         nullable: true
@@ -269,7 +267,6 @@ components:
       name: module_id
       description: An Id of module, an unsigned integer.
       in: query
-      allowEmptyValue: false
       schema:
         type: integer
         minimum: 0
@@ -280,11 +277,10 @@ components:
       name: wait
       description: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
       in: query
-      allowEmptyValue: true
       schema:
-        type: string
+        type: boolean
         nullable: true
-      example: ""
+      example: True
 
     CarName:
       name: car_name
