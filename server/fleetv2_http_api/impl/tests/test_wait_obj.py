@@ -45,13 +45,11 @@ class Test_Wait_Manager(unittest.TestCase):
 
     def test_adding_a_wait_object(self) -> None:
         wait_obj = self.mg.new_wait_obj("test_company", "test_car")
-        self.mg.is_waiting_for("test_company", "test_car")
         self.assertEqual(self.mg.next_in_queue("test_company", "test_car"), wait_obj)
 
     def test_object_is_removed_after_stopping_waiting_for_it(self):
         self.mg.new_wait_obj("test_company", "test_car")
         self.mg.stop_waiting_for("test_company", "test_car")
-        self.assertFalse(self.mg.is_waiting_for("test_company", "test_car"))
         self.assertEqual(self.mg.next_in_queue("test_company", "test_car"), None)
 
     def test_stop_waiting_for_one_of_three_objects_at_a_time(self):
@@ -61,15 +59,12 @@ class Test_Wait_Manager(unittest.TestCase):
         self.assertEqual(self.mg.next_in_queue("test_company", "test_car"), obj_1)
 
         self.mg.stop_waiting_for("test_company", "test_car")
-        self.assertTrue(self.mg.is_waiting_for("test_company", "test_car"))
         self.assertEqual(self.mg.next_in_queue("test_company", "test_car"), obj_2)
 
         self.mg.stop_waiting_for("test_company", "test_car")
-        self.assertTrue(self.mg.is_waiting_for("test_company", "test_car"))
         self.assertEqual(self.mg.next_in_queue("test_company", "test_car"), obj_3)
 
         self.mg.stop_waiting_for("test_company", "test_car")
-        self.assertFalse(self.mg.is_waiting_for("test_company", "test_car"))
         self.assertEqual(self.mg.next_in_queue("test_company", "test_car"), None)
 
     def test_remove_given_wait_object(self):

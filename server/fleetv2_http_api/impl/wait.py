@@ -14,10 +14,6 @@ class WaitObjManager:
     @property
     def timeout_ms(self) -> int: return self._timeout_ms
 
-    def is_waiting_for(self, company_name: str, car_name: str) -> bool:
-        """Return True if there is any wait object for the given company and car."""
-        return self._wait_dict.next_in_queue(company_name, car_name) is not None
-
     def new_wait_obj(self, company_name: str, car_name: str) -> WaitObj:
         """Create a new wait object and adds it to the wait queue for given company and car."""
         wait_obj = WaitObj(company_name, car_name, self._timeout_ms)
@@ -88,7 +84,7 @@ class WaitQueueDict:
     def next_in_queue(self, company_name: str, car_name: str) -> Any:
         """Return the next object in queue for given company and car."""
         queue = self.get_queue(company_name, car_name)
-        if queue is None or not queue:
+        if queue is None or len(queue)==0:
             return None
         else:
             return queue[0]
@@ -103,7 +99,7 @@ class WaitQueueDict:
     def remove(self, company_name: str, car_name: str) -> Any:
         """Remove the next object in queue for given company and car and return it."""
         queue = self.get_queue(company_name, car_name)
-        if queue is None or not queue:
+        if queue is None or len(queue)==0:
             return None
         else:
             obj = self._wait_objs[company_name][car_name].pop(0)
