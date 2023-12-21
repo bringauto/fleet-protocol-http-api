@@ -147,20 +147,16 @@ def list_statuses(
 def send_commands(
     company_name: str,
     car_name: str,
-    messages: Optional[List[Message]] = None,
-    body: List[Dict] = []
+    body: List[Dict|Message]
     ) -> Tuple[str, int]:  # noqa: E501
 
     """Send a list of commands to given device. If the device specified is not available,
     return code 404.
 
-    The body of the request should contain a list of commands, each in the form of a dictionary.
+    The body of the request should contain a list of commands, each in the form of a dictionary or as a Message object.
     """
-    if messages is None:
-        messages = []
-
-    messages.extend([Message.from_dict(b) for b in body])
-    if len(messages) == 0:
+    messages = _message_list_from_request_body(body)
+    if messages == []:
         return "", 200
     msg, code = _check_sent_commands(company_name, car_name, messages)
 
@@ -176,16 +172,15 @@ def send_commands(
 def send_statuses(
     company_name: str,
     car_name: str,
-    messages: Optional[List[Message]] = None,
-    body: List[Dict] = []
+    body: List[Dict|Message]
     ) -> Tuple[str|List[str],int]:  # noqa: E501
 
     """Send a list of statuses to given device.
     The device specified in the statuses is then automatically considered available.
+
+    The body of the request should contain a list of statuses, each in the form of a dictionary or as a Message object.
     """
-    if messages is None:
-        messages = []
-    messages.extend([Message.from_dict(b) for b in body])
+    messages = _message_list_from_request_body(body)
     if messages == []:
         return "", 200
     errors = _check_messages(MessageType.STATUS_TYPE, *messages)
@@ -198,6 +193,14 @@ def send_statuses(
     cmd_warnings = _check_and_handle_first_status(company_name, car_name, messages)
     return response_msg[0] + cmd_warnings, response_msg[1]
 
+def _message_list_from_request_body(body: List[Dict|Message]) -> List[Message]:
+    messages: List[Message] = list()
+    for item in body:
+        if type(item) == dict:
+            messages.append(Message.from_dict(item))
+        else:
+            messages.append(item)
+    return messages
 
 def _available_module(company_name: str, car_name: str, module_id: int) -> Module:
     device_id_list = list((device_ids()[company_name][car_name][module_id]).values())
@@ -233,7 +236,6 @@ def _check_messages(
 
     errors: str = ""
     errors = _check_message_types(expected_message_type, *messages)
-
     if not errors.strip()=="":
         return errors, 500
     else:
