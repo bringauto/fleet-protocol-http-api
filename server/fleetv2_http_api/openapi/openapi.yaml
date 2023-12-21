@@ -211,8 +211,7 @@ paths:
         content:
           application/json:
             example:
-            - timestamp: 2017917595000
-              device_id:
+            - device_id:
                 module_id: 47
                 type: 2
                 role: test_device
@@ -372,8 +371,7 @@ paths:
         content:
           application/json:
             example:
-            - timestamp: 2017917594000
-              device_id:
+            - device_id:
                 module_id: 47
                 type: 2
                 role: test_device
@@ -494,6 +492,9 @@ components:
           $ref: '#/components/schemas/DeviceId'
         payload:
           $ref: '#/components/schemas/Payload'
+      required:
+      - device_id
+      - payload
       title: Message
       type: object
     AvailableDevices:

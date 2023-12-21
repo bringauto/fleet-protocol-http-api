@@ -157,7 +157,6 @@ paths:
             example:
               [
                 {
-                  timestamp: 2017917594000,
                   device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
                   payload: {message_type: STATUS, encoding: BASE64, data: QnJpbmdBdXRv}
                 },
@@ -219,7 +218,6 @@ paths:
             example:
               [
                 {
-                  timestamp: 2017917595000,
                   device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
                   payload: {message_type: COMMAND, encoding: BASE64, data: U2F5IGhlbGxv}
                 },
@@ -307,6 +305,9 @@ components:
     Message:
       description: Physical device or program located on the car.
       type: object
+      required:
+        - device_id
+        - payload
       properties:
         timestamp:
           description: Unix timestamp of the message in milliseconds.
