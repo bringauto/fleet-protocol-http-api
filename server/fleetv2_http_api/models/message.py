@@ -94,6 +94,8 @@ class Message(Model):
         :param device_id: The device_id of this Message.
         :type device_id: DeviceId
         """
+        if device_id is None:
+            raise ValueError("Invalid value for `device_id`, must not be `None`")  # noqa: E501
 
         self._device_id = device_id
 
@@ -115,5 +117,7 @@ class Message(Model):
         :param payload: The payload of this Message.
         :type payload: Payload
         """
+        if payload is None:
+            raise ValueError("Invalid value for `payload`, must not be `None`")  # noqa: E501
 
         self._payload = payload
