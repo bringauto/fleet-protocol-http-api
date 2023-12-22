@@ -14,12 +14,7 @@ services:
     networks:
       - api-network
     entrypoint:
-      - "python3"
-      - "-m"
-      - "server"
-      - "config.json"
-      - "--location"
-      - "postgresql-database"
+      ["python3", "-m", "server", "config.json", "--location", "postgresql-database"]
 
   postgresql-database:
     image: postgres:16
@@ -31,8 +26,6 @@ services:
       - api-network
     ports:
       - 5432:5432
-
-
 
 networks:
   api-network:
