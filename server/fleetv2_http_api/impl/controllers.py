@@ -188,8 +188,8 @@ def send_commands(
     :type company_name: str
     :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
     :type car_name: str
-    :param message: Commands to be executed by the device.
-    :type message: list | bytes
+    :param body: Commands to be executed by the device.
+    :type body: list | bytes
 
     :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
     """
@@ -220,8 +220,8 @@ def send_statuses(
     :type company_name: str
     :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
     :type car_name: str
-    :param message: Statuses to be send by the device.
-    :type message: list | bytes
+    :param body: Statuses to be send by the device.
+    :type body: list | bytes
 
     :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
     """
