@@ -177,8 +177,7 @@ def list_statuses(
 def send_commands(
     company_name: str,
     car_name: str,
-    messages: Optional[List[Message]] = None,
-    body: List[Dict] = []
+    body: List[Dict|Message]
     ) -> Tuple[str, int]:  # noqa: E501
 
     """send_commands
@@ -189,21 +188,17 @@ def send_commands(
     :type company_name: str
     :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
     :type car_name: str
-    :param message: Commands to be executed by the device.
-    :type message: list | bytes
+    :param body: Commands to be executed by the device.
+    :type body: list | bytes
 
     :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
     """
-    if messages is None:
-        messages = []
-
-    messages.extend([Message.from_dict(b) for b in body])
-    if len(messages) == 0:
+    messages = _message_list_from_request_body(body)
+    if messages == []:
         return "", 200
-    msg, code = _check_sent_commands(company_name, car_name, messages)
-
-    if msg.strip() != "":
-        return msg, code
+    errors = _check_sent_commands(company_name, car_name, messages)
+    if errors[0] != "":
+        return errors
 
     _update_messages_timestamp(messages)
     _command_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
@@ -214,8 +209,7 @@ def send_commands(
 def send_statuses(
     company_name: str,
     car_name: str,
-    messages: Optional[List[Message]] = None,
-    body: List[Dict] = []
+    body: List[Dict|Message]
     ) -> Tuple[str|List[str],int]:  # noqa: E501
 
     """send_statuses
@@ -226,14 +220,12 @@ def send_statuses(
     :type company_name: str
     :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
     :type car_name: str
-    :param message: Statuses to be send by the device.
-    :type message: list | bytes
+    :param body: Statuses to be send by the device.
+    :type body: list | bytes
 
     :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
     """
-    if messages is None:
-        messages = []
-    messages.extend([Message.from_dict(b) for b in body])
+    messages = _message_list_from_request_body(body)
     if messages == []:
         return "", 200
     errors = _check_messages(MessageType.STATUS_TYPE, *messages)
@@ -246,6 +238,14 @@ def send_statuses(
     cmd_warnings = _check_and_handle_first_status(company_name, car_name, messages)
     return response_msg[0] + cmd_warnings, response_msg[1]
 
+def _message_list_from_request_body(body: List[Dict|Message]) -> List[Message]:
+    messages: List[Message] = list()
+    for item in body:
+        if type(item) == dict:
+            messages.append(Message.from_dict(item))
+        else:
+            messages.append(item)
+    return messages
 
 def _available_module(company_name: str, car_name: str, module_id: int) -> Module:
     device_id_list = list((device_ids()[company_name][car_name][module_id]).values())
@@ -281,7 +281,6 @@ def _check_messages(
 
     errors: str = ""
     errors = _check_message_types(expected_message_type, *messages)
-
     if not errors.strip()=="":
         return errors, 500
     else:
