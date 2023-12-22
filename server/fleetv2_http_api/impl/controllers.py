@@ -34,7 +34,12 @@ def get_command_wait_timeout_s() -> float:
 
 
 def available_cars() -> List[Car]:
-    """Return a list of serialized car info for cars owning at least one available device."""
+    """available_cars
+
+    Return list of available cars for all companies registered in the database. # noqa: E501
+
+    :rtype: Union[List[Car], Tuple[List[Car], int], Tuple[List[Car], int, Dict[str, str]]
+    """
     cars: List[Car] = list()
     device_dict = device_ids()
     for company_name in device_dict:
@@ -49,9 +54,20 @@ def available_devices(
     module_id: Optional[int] = None
     ) -> Tuple[Module|List[Module], int]:  # noqa: E501
 
-    """Return a list of serialized device ids for devices available in a given car.
-    If a module_id is not specified, return all available devices in a given car.
+    """available_devices
+
+    Return device Ids for all devices available for contained in the specified car.&lt;br&gt; For a single car module, the device Ids are returned as an object containing module Id and the list of device Ids. &lt;br&gt; If a module Id is specified, only a single such object is returned. &lt;br&gt; Otherwise, a list of such objects is returned, one for each module contained in the car. &lt;br&gt; # noqa: E501
+
+    :param company_name: Name of the company, following a pattern ^[0-9a-z_]+$.
+    :type company_name: str
+    :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
+    :type car_name: str
+    :param module_id: An Id of module, an unsigned integer.
+    :type module_id: int
+
+    :rtype: Union[AvailableDevices, Tuple[AvailableDevices, int], Tuple[AvailableDevices, int, Dict[str, str]]
     """
+
     device_dict = device_ids()
     if company_name not in device_dict:
         return [], 404 # type: ignore
@@ -77,15 +93,22 @@ def list_commands(
     wait: Optional[bool] = None
     ) -> Tuple[List[Message], int]:  # noqa: E501
 
-    """Return list containing the NEWEST command currently stored for an AVAILABLE device.
-    If a device is not available, return empty list and code 404.
+    """list_commands
 
-    If 'all_available' is not None, return ALL commands stored for a given device.
-    If 'since' is specified (unix timestamp in milliseconds), return all stored commands
-    having the timestamp equal or greater than 'since'.
-    The 'wait' parameter makes the function to wait for available commands, if at the moment of request,
-    there are no commands available. If 'wait' is None, the function will immediatelly
-    return an empty list.
+    Returns list of the Device Commands. # noqa: E501
+
+    :param company_name: Name of the company, following a pattern ^[0-9a-z_]+$.
+    :type company_name: str
+    :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
+    :type car_name: str
+    :param all_available: If set, the method returns a complete history of statuses/commands.
+    :type all_available: bool
+    :param since: A Unix timestamp; if specified, the method returns all messages inclusivelly newer than the specified timestamp \\ (i.e., messages with timestamp greater than or equal to the &#39;since&#39; timestamp)
+    :type since: int
+    :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
+    :type wait: bool
+
+    :rtype: Union[List[Message], Tuple[List[Message], int], Tuple[List[Message], int, Dict[str, str]]
     """
     db_commands = _list_messages(company_name,car_name,MessageType.COMMAND_TYPE,all_available,since)
     if db_commands or not wait:
@@ -117,15 +140,22 @@ def list_statuses(
     wait: Optional[bool] = None
     ) -> Tuple[List[Message], int]:  # noqa: E501
 
-    """Return list containing the NEWEST status currently stored for an AVAILABLE device.
-    If a device is not available, return empty list and code 404.
+    """list_statuses
 
-    If 'all_available' is not None, return ALL statuses stored for a given device.
-    If 'since' is specified (unix timestamp in milliseconds), return all stored statuses
-    having the timestamp equal or lower than 'since'.
-    The 'wait' parameter makes the function to wait for available statuses, if at the moment of request,
-    there are no statuses available. If 'wait' is None, the function will immediatelly
-    return an empty list.
+    It returns list of the Device Statuses. # noqa: E501
+
+    :param company_name: Name of the company, following a pattern ^[0-9a-z_]+$.
+    :type company_name: str
+    :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
+    :type car_name: str
+    :param all_available: If set, the method returns a complete history of statuses/commands.
+    :type all_available: bool
+    :param since: A Unix timestamp; if specified, the method returns all messages inclusivelly newer than the specified timestamp \\ (i.e., messages with timestamp greater than or equal to the &#39;since&#39; timestamp)
+    :type since: int
+    :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
+    :type wait: bool
+
+    :rtype: Union[List[Message], Tuple[List[Message], int], Tuple[List[Message], int, Dict[str, str]]
     """
     db_statuses = _list_messages(company_name, car_name, MessageType.STATUS_TYPE, all_available, since)
     if db_statuses:
@@ -150,10 +180,18 @@ def send_commands(
     body: List[Dict|Message]
     ) -> Tuple[str, int]:  # noqa: E501
 
-    """Send a list of commands to given device. If the device specified is not available,
-    return code 404.
+    """send_commands
 
-    The body of the request should contain a list of commands, each in the form of a dictionary or as a Message object.
+    It adds new device Commands. # noqa: E501
+
+    :param company_name: Name of the company, following a pattern ^[0-9a-z_]+$.
+    :type company_name: str
+    :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
+    :type car_name: str
+    :param message: Commands to be executed by the device.
+    :type message: list | bytes
+
+    :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
     """
     messages = _message_list_from_request_body(body)
     if messages == []:
@@ -174,10 +212,18 @@ def send_statuses(
     body: List[Dict|Message]
     ) -> Tuple[str|List[str],int]:  # noqa: E501
 
-    """Send a list of statuses to given device.
-    The device specified in the statuses is then automatically considered available.
+    """send_statuses
 
-    The body of the request should contain a list of statuses, each in the form of a dictionary or as a Message object.
+    Add statuses received from the Device. # noqa: E501
+
+    :param company_name: Name of the company, following a pattern ^[0-9a-z_]+$.
+    :type company_name: str
+    :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
+    :type car_name: str
+    :param message: Statuses to be send by the device.
+    :type message: list | bytes
+
+    :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
     """
     messages = _message_list_from_request_body(body)
     if messages == []:
