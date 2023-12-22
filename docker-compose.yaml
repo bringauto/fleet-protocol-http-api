@@ -1,10 +1,10 @@
 version: '3.0'
 
-services: 
+services:
 
   server:
     restart: always
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     depends_on:
@@ -13,6 +13,13 @@ services:
       - 8080:8080
     networks:
       - api-network
+    entrypoint:
+      - "python3"
+      - "-m"
+      - "server"
+      - "config.json"
+      - "--location"
+      - "postgresql-database"
 
   postgresql-database:
     image: postgres:16
@@ -24,6 +31,7 @@ services:
       - api-network
     ports:
       - 5432:5432
+
 
 
 networks:
