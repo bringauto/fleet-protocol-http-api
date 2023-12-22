@@ -69,7 +69,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
 
     def test_device_is_considered_available_if_at_least_one_status_is_in_the_database(self):
         self.assertEqual(available_devices("test_company", "test_car"), ([], 404))
-        send_statuses("test_company", "test_car", messages=[self.status_example])
+        send_statuses("test_company", "test_car", body=[self.status_example])
         self.assertEqual(
             available_devices("test_company", "test_car")[0],
             [
@@ -83,7 +83,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
         response, code = send_statuses(
             company_name="test_company",
             car_name="test_car",
-            messages=[self.status_example]
+            body=[self.status_example]
         )
         self.assertEqual(code, 200)
         self.assertListEqual(available_cars(), [Car("test_company","test_car")])
@@ -95,7 +95,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
             device_id=device_id,
             payload=Payload(message_type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is running"})
         )
-        send_statuses("the_company", "available_car", messages=[status])
+        send_statuses("the_company", "available_car", body=[status])
         self.assertEqual(available_devices("the_company", "unavailable_car"), ([], 404))
         self.assertEqual(available_devices("no_company", "unavailable_car"), ([], 404))
 
@@ -112,8 +112,8 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
             device_id=device_2_id,
             payload=Payload(message_type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={"message":"Device is running"})
         )
-        send_statuses("the_company", "available_car", messages=[status_1])
-        send_statuses("the_company", "available_car", messages=[status_2])
+        send_statuses("the_company", "available_car", body=[status_1])
+        send_statuses("the_company", "available_car", body=[status_2])
         self.assertEqual(
             available_devices("the_company", "available_car", module_id=18)[0],
             Module(module_id=18, device_list=[device_1_id])
@@ -150,7 +150,7 @@ class Test_Sending_And_Listing_Multiple_Messages(unittest.TestCase):
         clear_device_ids()
 
     def test_listing_sent_statuses(self) -> None:
-        send_statuses("test_company", "test_car", messages=[self.status_example])
+        send_statuses("test_company", "test_car", body=[self.status_example])
         statuses, code = list_statuses("test_company", "test_car")
         self.assertEqual(len(statuses), 1)
         self.assertEqual(code, 200)
@@ -161,9 +161,9 @@ class Test_Sending_And_Listing_Multiple_Messages(unittest.TestCase):
         self.assertEqual(status.payload, self.status_example.payload)
 
     def test_sending_empty_list_of_statuses_does_not_affect_list_of_statuses_returned_from_database(self) -> None:
-        send_statuses("test_company", "test_car", messages=[self.status_example])
+        send_statuses("test_company", "test_car", body=[self.status_example])
         statuses_before = list_statuses("test_company", "test_car")
-        send_statuses("test_company", "test_car", messages=[])
+        send_statuses("test_company", "test_car", body=[])
         statuses_after = list_statuses("test_company", "test_car")
         self.assertEqual(statuses_before, statuses_after)
 
@@ -171,12 +171,12 @@ class Test_Sending_And_Listing_Multiple_Messages(unittest.TestCase):
         send_statuses(
             company_name="test_company",
             car_name="test_car",
-            messages=[self.status_example]
+            body=[self.status_example]
         )
         send_commands(
             company_name="test_company",
             car_name="test_car",
-            messages=[self.command_example]
+            body=[self.command_example]
         )
         commands, code = list_commands("test_company","test_car")
         self.assertEqual(code, 200)
@@ -191,7 +191,7 @@ class Test_Sending_And_Listing_Multiple_Messages(unittest.TestCase):
         send_statuses(
             company_name="test_company",
             car_name="test_car",
-            messages=[self.status_example]
+            body=[self.status_example]
         )
 
         id_of_device_in_nonexistent_module = DeviceId(
@@ -209,29 +209,29 @@ class Test_Sending_And_Listing_Multiple_Messages(unittest.TestCase):
         response, code = send_commands(
             company_name="test_company",
             car_name="test_car",
-            messages=[command_of_device_in_nonexistent_module]
+            body=[command_of_device_in_nonexistent_module]
         )
         self.assertEqual(code, 404)
 
         response, code = send_commands(
             company_name="test_company",
             car_name="nonexistent_car",
-            messages=[self.command_example]
+            body=[self.command_example]
         )
         self.assertEqual(code, 404)
 
         response, code = send_commands(
             company_name="nonexistent_company",
             car_name="test_car",
-            messages=[self.command_example]
+            body=[self.command_example]
         )
         self.assertEqual(code, 404)
 
     def test_sending_empty_list_of_commands_does_not_affect_list_of_commands_returned_from_database(self) -> None:
-        send_commands("test_company", "test_car", messages=[self.command_example])
+        send_commands("test_company", "test_car", body=[self.command_example])
         commands_before = list_commands("test_company", "test_car")
 
-        send_commands("test_company", "test_car", messages=[])
+        send_commands("test_company", "test_car", body=[])
         commands_after = list_commands("test_company", "test_car")
         self.assertEqual(commands_before, commands_after)
 
@@ -239,7 +239,7 @@ class Test_Sending_And_Listing_Multiple_Messages(unittest.TestCase):
         response = send_commands(
             company_name="test_company",
             car_name="test_car",
-            messages=[self.command_example]
+            body=[self.command_example]
         )
         self.assertEqual(response[1], 404)
 
@@ -253,7 +253,7 @@ class Test_Timestamp_Of_A_Sent_Message_Is_Set_To_Time_Of_Its_Sending(unittest.Te
         message_1 = Message(timestamp=10, device_id=device_id, payload = payload)
 
         mock_time_ms.return_value = 25
-        send_statuses("test_company", "test_car", messages=[message_1])
+        send_statuses("test_company", "test_car", body=[message_1])
         statuses, code = list_statuses("test_company", "test_car")
         self.assertEqual(statuses[0].timestamp, 25)
 
@@ -271,11 +271,11 @@ class Test_Options_For_Listing_Multiple_Statuses(unittest.TestCase):
         message_3 = Message(timestamp=37, device_id=device_id, payload = payload)
 
         mock_time_in_ms.return_value = 10
-        send_statuses("company", "car", messages=[message_1])
+        send_statuses("company", "car", body=[message_1])
         mock_time_in_ms.return_value = 20
-        send_statuses("company", "car", messages=[message_2])
+        send_statuses("company", "car", body=[message_2])
         mock_time_in_ms.return_value = 37
-        send_statuses("company", "car", messages=[message_3])
+        send_statuses("company", "car", body=[message_3])
 
     def test_by_default_only_the_newest_status_is_returned(self):
         statuses, _ = list_statuses("company", "car")
@@ -464,7 +464,7 @@ class Test_Listing_Commands_And_Statuses_Of_Nonexistent_Cars(unittest.TestCase):
         send_statuses(
             company_name="a_company",
             car_name="a_car",
-            messages=[status]
+            body=[status]
         )
 
     def test_listing_statuses_of_nonexistent_company_returns_code_404(self):
