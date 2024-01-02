@@ -102,7 +102,10 @@ def number_of_admin_keys(connection: Optional[Engine] = None) -> int:
     if connection is None:
         connection = get_connection_source()
     with Session(connection) as session:
-        return session.query(func.count(AdminBase.__table__.c.id)).scalar()
+        try:
+            return session.query(func.count(AdminBase.__table__.c.id)).scalar()
+        except:
+            return 0
 
 
 def _generate_key() -> str: # pragma: no cover

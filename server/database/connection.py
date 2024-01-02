@@ -150,6 +150,12 @@ def _new_connection_source(
 def _engine_url(dialect: str, dbapi: str, username: str, password: str, dblocation: str, db_name: str = "") -> str:
     if db_name!="":
         db_name = "/"+db_name
-    return ('').join([dialect,'+',dbapi,"://",username,":",password,"@",dblocation,db_name])
+
+    if username!="" or password!="":
+        user_info = username+":"+password+"@"
+    else:
+        user_info = ""
+
+    return ('').join([dialect,'+',dbapi,"://",user_info,dblocation,db_name])
 
 
