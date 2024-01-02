@@ -15,7 +15,7 @@ class AdminBase(Base):
     __check_period_in_seconds__: ClassVar[int] = 5
     __max_requests_per_period__: ClassVar[int] = 5
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String)
     key: Mapped[str] = mapped_column(String)
 
