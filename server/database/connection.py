@@ -42,12 +42,10 @@ def get_connection_source() -> Engine:
         assert isinstance(_connection_source, Engine)
         return _connection_source
 
-
 def unset_connection_source() -> None:
     global _connection_source, _connection_data
     _connection_source = None
     _connection_data = None
-
 
 def set_db_connection(
     dblocation: str,
@@ -75,7 +73,6 @@ def set_db_connection(
     for foo in after_connect:
         foo()
 
-
 def set_test_db_connection(dblocation: str = "", db_name: str = "") -> None:
     """Create test SQLAlchemy engine object used to connect to the database using SQLite.
     No username or password required.
@@ -91,7 +88,6 @@ def set_test_db_connection(dblocation: str = "", db_name: str = "") -> None:
     assert(_connection_source is not None)
     create_all_tables(source)
 
-
 def get_db_connection(dblocation: str, username: str = "", password: str = "", db_name: str = "") -> Engine|None:
     """Create SQLAlchemy engine object used to connect to the database.
     Do not modify module-level variable _connection_source."""
@@ -105,21 +101,20 @@ def get_db_connection(dblocation: str, username: str = "", password: str = "", d
     )
     return source
 
-
-def get_test_db_connection(dblocation: str) -> Engine|None:
+def get_test_db_connection(dblocation: str = "", db_name: str = "") -> Engine|None:
     """Create test SQLAlchemy engine object used to connect to the database using SQLite.
-    No username or password required."""
+    No username or password required.
+    Do not modify module-level variable _connection_source."""
     source = _new_connection_source(
         dialect="sqlite",
         dbapi="pysqlite",
         dblocation=dblocation,
+        db_name=db_name
     )
     return source
 
-
 def create_all_tables(source: Engine) -> None:
     Base.metadata.create_all(source)
-
 
 def _new_connection_source(
     dialect: str,
@@ -151,7 +146,6 @@ def _new_connection_source(
             "Check the location, port number, username and password."
         )
     return engine
-
 
 def _engine_url(dialect: str, dbapi: str, username: str, password: str, dblocation: str, db_name: str = "") -> str:
     if db_name!="":
