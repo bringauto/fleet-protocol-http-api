@@ -24,7 +24,7 @@ class Test_Adding_Admin(unittest.TestCase):
 
     def test_adding_admin(self) -> None:
         subprocess.call('cd ..', shell=True)
-        output = subprocess.run(
+        subprocess.run(
             [
                 'python',
                 'scripts/new_admin.py',

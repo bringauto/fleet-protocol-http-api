@@ -2,7 +2,6 @@ import sys, os
 sys.path[0] = os.path.abspath(os.path.join(sys.path[0], os.pardir))
 sys.path.append("server")
 
-
 from sqlalchemy.engine import Engine
 from server.database.security import add_admin_key
 from server.database.connection import get_db_connection, get_test_db_connection
@@ -26,12 +25,14 @@ if __name__=="__main__":
     config = vals.config
     if arguments["test"]:
         source = get_test_db_connection(
-            dblocation=arguments["location"]
+            dblocation=arguments["location"],
+            db_name=arguments["database_name"]
         )
     else:
         source = get_db_connection(
             dblocation=(arguments["location"]+":"+str(arguments["port"])),
             username=arguments["username"],
-            password=arguments["password"]
+            password=arguments["password"],
+            db_name=arguments["database_name"]
         )
     _try_to_add_key(source, arguments["<admin-name>"])
