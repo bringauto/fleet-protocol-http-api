@@ -10,7 +10,8 @@ from database.connection import (
     set_test_db_connection,
     unset_connection_source,
     ConnectionSourceNotSet,
-    get_connection_source
+    get_connection_source,
+    set_test_db_connection
 )
 from database.database_controller import (
     set_message_retention_period,
@@ -77,11 +78,19 @@ class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
         self.assertEqual(message_db.payload_data, {"content": "..."})
 
 
+class Test_Specifying_Database_Name(unittest.TestCase):
+
+    def test_setting_database_name(self):
+        set_test_db_connection(db_name="test_db")
+        source = get_connection_source()
+        self.assertEqual(source.url.database, "test_db")
+
+
 class Test_Sending_And_Clearing_Messages(unittest.TestCase):
 
     def setUp(self):
         # Set up the database connection before running the tests
-        set_test_db_connection(dblocation="/:memory:")
+        set_test_db_connection()
 
     def test_accessing_not_set_connection_source_raises_exception(self):
         unset_connection_source()
