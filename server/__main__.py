@@ -12,11 +12,9 @@ from fleetv2_http_api.__main__ import main as run_server
 from fleetv2_http_api.impl.controllers import set_status_wait_timeout_s, set_command_wait_timeout_s
 import database.script_args as script_args
 
-
 def _clean_up_messages() -> None:
     """Clean up messages from the database."""
     remove_old_messages(current_timestamp=timestamp())
-
 
 def _connect_to_database(vals:script_args.ScriptArgs) -> None:
     """Clear previously stored available devices and connect to the database."""
@@ -24,9 +22,9 @@ def _connect_to_database(vals:script_args.ScriptArgs) -> None:
     set_db_connection(
         dblocation = vals.argvals["location"] + ":" + str(vals.argvals["port"]),
         username = vals.argvals["username"],
-        password = vals.argvals["password"]
+        password = vals.argvals["password"],
+        db_name = vals.argvals["database_name"]
     )
-
 
 def _set_up_database_jobs(db_cleanup_config: Dict[str,int]) -> None:
     """Set message cleanup job and other customary jobs defined by the example method."""
@@ -38,7 +36,6 @@ def _set_up_database_jobs(db_cleanup_config: Dict[str,int]) -> None:
         seconds=db_cleanup_config["cleanup_period"],
     )
     scheduler.start()
-
 
 if __name__ == '__main__':
     vals = script_args.request_and_get_script_arguments("Run the Fleet Protocol v2 HTTP API server.")

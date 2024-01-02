@@ -1,38 +1,38 @@
-import sys, os
+import sys
+import os
 
+import subprocess
+import unittest
 
 root_path = os.path.dirname(os.path.dirname(sys.path[0]))
 sys.path[0] = root_path
 sys.path.append("server")
 
-
-import subprocess
-import unittest
-from server.database.connection import get_db_connection
+from server.database.connection import set_test_db_connection, get_connection_source
 from server.database.security import number_of_admin_keys
-import os
 
-
-DB_FILE_LOCATION = "/example.db"
+DB_FILE_LOCATION = "/scripts/tests/example.db"
 
 
 class Test_Adding_Admin(unittest.TestCase):
 
     def setUp(self) -> None: # pragma: no cover
-        if os.path.exists("./scripts/tests/example.db"):
-            os.remove("./scripts/tests/example.db")
-        self.connection = get_db_connection("sqlite","pysqlite",DB_FILE_LOCATION)
+        self.abs_db_path = os.path.abspath("."+DB_FILE_LOCATION)
+        set_test_db_connection(DB_FILE_LOCATION)
+        self.connection = get_connection_source()
 
-    def test_adding_admin(self):
-        subprocess.run(['cd', '..'])
+    def test_adding_admin(self) -> None:
+        subprocess.call('cd ..', shell=True)
         subprocess.run(
             [
-                'python3',
-                'new_admin.py',
-                'Alice',
-                "sqlite",
-                "pysqlite",
+                'python',
+                'scripts/new_admin.py',
+                "Alice",
+                "config.json",
+                "--location",
                 DB_FILE_LOCATION,
+                "--test",
+                "True"
             ],
             capture_output=True
         )
@@ -40,18 +40,21 @@ class Test_Adding_Admin(unittest.TestCase):
         self.assertEqual(number_of_admin_keys(self.connection), 1)
 
     def test_repeatedly_adding_admin_with_the_name_has_no_effect(self):
-        args = ['python3', 'new_admin.py', 'Alice', "sqlite", "pysqlite", DB_FILE_LOCATION]
-        assert(self.connection is not None)
+        args = ['python', 'scripts/new_admin.py', 'Alice', 'config.json', "--location", DB_FILE_LOCATION, "--test", "True"]
+        self.assertEqual(number_of_admin_keys(self.connection), 0)
         subprocess.run(args, capture_output=True)
         self.assertEqual(number_of_admin_keys(self.connection), 1)
         subprocess.run(args, capture_output=True)
         self.assertEqual(number_of_admin_keys(self.connection), 1)
 
     def test_printing_new_admin_key_to_console(self):
-        args = ['python3', 'new_admin.py', 'Bob', "sqlite", "pysqlite", DB_FILE_LOCATION]
-        result = subprocess.run(args, capture_output=True)
-        self.assertTrue("New key" in result.stdout.decode())
+        args = ['python', 'scripts/new_admin.py', 'Bob', 'config.json', "--location", DB_FILE_LOCATION, "--test", "True"]
+        output = subprocess.run(args, capture_output=True)
+        self.assertTrue("Bob" in output.stdout.decode())
 
+    def tearDown(self) -> None:
+        if os.path.exists(self.abs_db_path):
+            os.remove(self.abs_db_path)
 
 
 if __name__=="__main__":
