@@ -10,7 +10,7 @@ from server.database.script_args import (
     PositionalArgInfo,
 )
 
-def _try_to_add_key(connection_source: Engine, admin_name: str) -> None:
+def _add_key_if_admin_name_not_already_in_db(connection_source: Engine, admin_name: str) -> None:
     """Try to add a new admin key to the database. If successfull, print the new API key, otherwise print
     message about already existing admin."""
     msg = add_admin_key(name=admin_name, connection_source=connection_source)
@@ -35,4 +35,4 @@ if __name__=="__main__":
             password=arguments["password"],
             db_name=arguments["database_name"]
         )
-    _try_to_add_key(source, arguments["<admin-name>"])
+    _add_key_if_admin_name_not_already_in_db(source, arguments["<admin-name>"])
