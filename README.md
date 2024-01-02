@@ -48,10 +48,11 @@ The server automatically connects to the PostgreSQL database using data from the
 |`--password`|`-pwd`|Password for the PostgreSQL database|
 |`--location`|`-l`  |Location of the database (e.g., `localhost`)|
 |`--port`    |`-p`  |Port number (e.g., `5430`)|
+|`--database-name`|`-db`|Database name|
 
 Note that these data should comply with the requirements specified in SQLAlchemy [documentation](https://docs.sqlalchemy.org/en/20/core/engines.html#database-urls).
 
-To visualize the API, open your browser to here:
+To visualize the API, open your browser to here (the location and port may vary according to the script parameters or the values in `config.json`):
 
 ```
 http://localhost:8080/ui/
@@ -83,6 +84,7 @@ The script automatically connects to the PostgreSQL database using the config fi
 |`--password`|`-pwd`|Password for the PostgreSQL database|
 |`--location`|`-l`  |Location of the database (e.g., `localhost`)|
 |`--port`    |`-p`  |Port number (e.g., `5430`)|
+|`--database-name`|`-db`|Database name|
 
 Note that these data should comply with the requirements specified in SQLAlchemy [documentation](https://docs.sqlalchemy.org/en/20/core/engines.html#database-urls).
 
