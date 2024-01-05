@@ -10,7 +10,6 @@ info:
   title: Fleet v2 HTTP API
   version: 2.0.1
 servers:
-- url: http://localhost
 - url: https://api.bringautofleet.com/protocol/v2
 security:
 - AdminAuth: []
@@ -43,7 +42,7 @@ paths:
         name: car_name
         required: true
         schema:
-          pattern: "^[0-9a-z_]+$"
+          pattern: "^[a-z0-9_]+$"
           type: string
         style: simple
       - description: "An Id of module, an unsigned integer."
@@ -120,7 +119,7 @@ paths:
         name: car_name
         required: true
         schema:
-          pattern: "^[0-9a-z_]+$"
+          pattern: "^[a-z0-9_]+$"
           type: string
         style: simple
       - description: "If set, the method returns a complete history of statuses/commands."
@@ -205,7 +204,7 @@ paths:
         name: car_name
         required: true
         schema:
-          pattern: "^[0-9a-z_]+$"
+          pattern: "^[a-z0-9_]+$"
           type: string
         style: simple
       requestBody:
@@ -259,7 +258,7 @@ paths:
         name: car_name
         required: true
         schema:
-          pattern: "^[0-9a-z_]+$"
+          pattern: "^[a-z0-9_]+$"
           type: string
         style: simple
       - description: "If set, the method returns a complete history of statuses/commands."
@@ -365,7 +364,7 @@ paths:
         name: car_name
         required: true
         schema:
-          pattern: "^[0-9a-z_]+$"
+          pattern: "^[a-z0-9_]+$"
           type: string
         style: simple
       requestBody:
@@ -455,7 +454,7 @@ components:
       name: car_name
       required: true
       schema:
-        pattern: "^[0-9a-z_]+$"
+        pattern: "^[a-z0-9_]+$"
         type: string
       style: simple
     CompanyName:
