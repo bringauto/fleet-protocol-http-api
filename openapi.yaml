@@ -328,6 +328,9 @@ components:
     Module:
       description: A module containing at least one device (specified by device Id).
       type: object
+      required:
+        - module_id
+        - device_list
       properties:
         module_id:
           description: Id (unsigned integer) of the module.
@@ -348,6 +351,9 @@ components:
     Car:
       description: A car assigned to a particular company.
       type: object
+      required:
+        - company_name
+        - car_name
       properties:
         company_name:
           description: Name of the company, following a pattern ^[0-9a-z_]+$
@@ -395,6 +401,10 @@ components:
     Payload:
       type: object
       description: Payload of the message, containing message type (status or command), encoding and data.
+      required:
+        - message_type
+        - encoding
+        - data
       properties:
         message_type:
           description: 'Type of the payload'

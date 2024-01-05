@@ -519,17 +519,20 @@ components:
           description: List of Ids of devices contained in the module.
           example:
           - module_id: 47
-            device_type: 2
-            device_role: test_device
-            device_name: Test Device
+            type: 2
+            role: test_device
+            name: Test Device
           - module_id: 47
-            device_type: 2
-            device_role: test_device
-            device_name: Test Device
+            type: 2
+            role: test_device
+            name: Test Device
           items:
             $ref: '#/components/schemas/DeviceId'
           title: device_list
           type: array
+      required:
+      - device_list
+      - module_id
       title: Module
       type: object
     Car:
@@ -550,6 +553,9 @@ components:
           pattern: "^[0-9a-z_]+$"
           title: car_name
           type: string
+      required:
+      - car_name
+      - company_name
       title: Car
       type: object
     DeviceId:
@@ -578,6 +584,11 @@ components:
           description: UTF-8 encoded string.
           format: utf-8
           type: string
+      required:
+      - module_id
+      - name
+      - role
+      - type
       title: DeviceId
       type: object
     Payload:
@@ -598,6 +609,10 @@ components:
           type: string
         data:
           $ref: '#/components/schemas/Payload_data'
+      required:
+      - data
+      - encoding
+      - message_type
       title: Payload
       type: object
     Payload_data:
