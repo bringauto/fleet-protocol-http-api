@@ -25,13 +25,74 @@ from fleetv2_http_api.impl.controllers import (
     send_commands,
     list_statuses,
     list_commands,
-    _message_db_list,
-    _list_messages
+    _message_db_list
 )
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Payload, Message
 from fleetv2_http_api.models.module import Module
 from fleetv2_http_api.models.car import Car
+
+
+class Test_Car_And_Company_Name_Validity(unittest.TestCase):
+
+    def setUp(self) -> None:
+        set_test_db_connection("/:memory:")
+
+    def test_car_name_must_be_nonempty_lowercase_string_without_spaces(self):
+        with self.assertRaises(ValueError):
+            available_devices("company", "")
+        with self.assertRaises(ValueError):
+            available_devices("company", "car with spaces")
+        with self.assertRaises(ValueError):
+            available_devices("company", "Car")
+        with self.assertRaises(ValueError):
+            available_devices("", "car")
+        with self.assertRaises(ValueError):
+            available_devices("Company Name", "car_1")
+
+        with self.assertRaises(ValueError):
+            list_statuses("company", "")
+        with self.assertRaises(ValueError):
+            list_statuses("company", "car with spaces")
+        with self.assertRaises(ValueError):
+            list_statuses("company", "Car")
+        with self.assertRaises(ValueError):
+            list_statuses("", "car")
+        with self.assertRaises(ValueError):
+            list_statuses("Company Name", "car_1")
+
+        with self.assertRaises(ValueError):
+            list_commands("company", "")
+        with self.assertRaises(ValueError):
+            list_commands("company", "car with spaces")
+        with self.assertRaises(ValueError):
+            list_commands("company", "Car")
+        with self.assertRaises(ValueError):
+            list_commands("", "car")
+        with self.assertRaises(ValueError):
+            list_commands("Company Name", "car_1")
+
+        with self.assertRaises(ValueError):
+            send_statuses("company", "", body=[])
+        with self.assertRaises(ValueError):
+            send_statuses("company", "car with spaces", body=[])
+        with self.assertRaises(ValueError):
+            send_statuses("company", "Car", body=[])
+        with self.assertRaises(ValueError):
+            send_statuses("", "car", body=[])
+        with self.assertRaises(ValueError):
+            send_statuses("Company Name", "car_1", body=[])
+
+        with self.assertRaises(ValueError):
+            send_commands("company", "", body=[])
+        with self.assertRaises(ValueError):
+            send_commands("company", "car with spaces", body=[])
+        with self.assertRaises(ValueError):
+            send_commands("company", "Car", body=[])
+        with self.assertRaises(ValueError):
+            send_commands("", "car", body=[])
+        with self.assertRaises(ValueError):
+            send_commands("Company Name", "car_1", body=[])
 
 
 class Test_Device_Id_Validity(unittest.TestCase):
@@ -41,17 +102,22 @@ class Test_Device_Id_Validity(unittest.TestCase):
         # module id cannot be negative
         id.module_id = 43
         self.assertEqual(id.module_id, 43)
-        with self.assertRaises(ValueError): id.module_id = -15
+        with self.assertRaises(ValueError):
+            id.module_id = -15
         # type cannot be negative
         id.type = 3
         self.assertEqual(id.type, 3)
-        with self.assertRaises(ValueError): id.type = -7
+        with self.assertRaises(ValueError):
+            id.type = -7
         # role must be nonempty, lowercase and without spaces
         id.role = "new_role"
         self.assertEqual(id.role, "new_role")
-        with self.assertRaises(ValueError): id.role = ""
-        with self.assertRaises(ValueError): id.role = "role with spaces"
-        with self.assertRaises(ValueError): id.role = "Role"
+        with self.assertRaises(ValueError):
+            id.role = ""
+        with self.assertRaises(ValueError):
+            id.role = "role with spaces"
+        with self.assertRaises(ValueError):
+            id.role = "Role"
 
 
 class Test_Sending_Status(unittest.TestCase):

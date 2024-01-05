@@ -288,7 +288,7 @@ components:
       required: true
       schema:
         type: string
-        pattern: ^[0-9a-z_]+$
+        pattern: ^[a-z0-9_]+$
       example: "test_car"
 
     CompanyName:
