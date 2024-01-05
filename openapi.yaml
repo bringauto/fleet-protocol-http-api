@@ -300,7 +300,6 @@ components:
         pattern: ^[0-9a-z_]+$
       example: test_company
 
-
   schemas:
     Message:
       description: Physical device or program located on the car.
@@ -342,8 +341,8 @@ components:
             $ref: '#/components/schemas/DeviceId'
           example:
             [
-              {module_id: 47, device_type: 2, device_role: test_device, device_name: Test Device},
-              {module_id: 47, device_type: 2, device_role: test_device, device_name: Test Device},
+              {module_id: 47, type: 2, role: test_device, name: Test Device},
+              {module_id: 47, type: 2, role: test_device, name: Test Device},
             ]
 
     Car:
@@ -364,6 +363,11 @@ components:
     DeviceId:
       description: Id of the device described with an object.
       type: object
+      required:
+        - module_id
+        - type
+        - role
+        - name
       properties:
         module_id:
           description: Id (unsigned integer) of the module containing the device.

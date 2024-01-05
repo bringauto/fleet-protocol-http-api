@@ -1,10 +1,11 @@
 import os
 import sys
 sys.path.append("server")
-
+from typing import List
 from enums import MessageType, EncodingType
 import unittest
 from unittest.mock import patch, Mock
+
 from sqlalchemy import insert
 
 from database.device_ids import clear_device_ids, serialized_device_id
@@ -14,7 +15,8 @@ from database.database_controller import (
     MessageBase,
     remove_old_messages,
     future_command_warning,
-    get_available_devices_from_database
+    get_available_devices_from_database,
+    Message_DB
 )
 from fleetv2_http_api.impl.controllers import (
     available_devices,
@@ -23,6 +25,8 @@ from fleetv2_http_api.impl.controllers import (
     send_commands,
     list_statuses,
     list_commands,
+    _message_db_list,
+    _list_messages
 )
 from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Payload, Message
@@ -48,6 +52,36 @@ class Test_Device_Id_Validity(unittest.TestCase):
         with self.assertRaises(ValueError): id.role = ""
         with self.assertRaises(ValueError): id.role = "role with spaces"
         with self.assertRaises(ValueError): id.role = "Role"
+
+
+class Test_Sending_Status(unittest.TestCase):
+
+    def setUp(self) -> None:
+        set_test_db_connection("/:memory:")
+        payload_example = Payload(
+            message_type=MessageType.STATUS_TYPE,
+            encoding=EncodingType.JSON,
+            data={"message":"Device is running"}
+        )
+        self.device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
+        self.status_example = Message(
+            timestamp=123456789,
+            device_id=self.device_id,
+            payload=payload_example
+        )
+        clear_device_ids()
+
+    def test_convert_status_to_messagebase_preserves_device_name(self):
+        msg_db_list:List[Message_DB] = _message_db_list([self.status_example], message_type=MessageType.STATUS_TYPE)
+        msg_db = msg_db_list[0]
+        self.assertEqual(msg_db.device_name, self.status_example.device_id.name)
+        msg_base = MessageBase.from_message("test_company", "test_car", msg_db)
+        self.assertEqual(msg_base.device_name, self.status_example.device_id.name)
+
+    def test_status_sent_to_and_retrieved_from_database_has_unchanged_attributes(self):
+        send_statuses("test_company", "test_car", body=[self.status_example])
+        status:Message = list_statuses("test_company", "test_car")[0][0]
+        self.assertEqual(status.device_id.name, self.status_example.device_id.name)
 
 
 class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
@@ -114,6 +148,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
         )
         send_statuses("the_company", "available_car", body=[status_1])
         send_statuses("the_company", "available_car", body=[status_2])
+
         self.assertEqual(
             available_devices("the_company", "available_car", module_id=18)[0],
             Module(module_id=18, device_list=[device_1_id])

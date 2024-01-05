@@ -343,7 +343,8 @@ def _message_from_db(message_db: Message_DB) -> Message:
         device_id=DeviceId(
             message_db.module_id,
             message_db.device_type,
-            message_db.device_role
+            message_db.device_role,
+            message_db.device_name,
         ),
         payload=Payload(
             message_type=message_db.message_type,
