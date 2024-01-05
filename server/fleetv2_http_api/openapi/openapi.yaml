@@ -8,9 +8,10 @@ info:
     name: GPLv3
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
   title: Fleet v2 HTTP API
-  version: 2.0.0
+  version: 2.0.1
 servers:
 - url: http://localhost
+- url: https://api.bringautofleet.com/protocol/v2
 security:
 - AdminAuth: []
 tags:
@@ -616,7 +617,8 @@ components:
       title: Payload
       type: object
     Payload_data:
-      description: "Payload data in JSON or BASE64 format, depending on the encoding."
+      description: "Payload data in \"JSON\" or \"BASE64\" format, depending on the\
+        \ encoding."
       oneOf:
       - type: object
       - format: base64

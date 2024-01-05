@@ -15,7 +15,11 @@
             }
         }
     },
+    "http_server": {
+        "base_uri": "http://our-favourite-server"
+    },
     "request_for_messages": {
         "timeout_in_seconds": 5
+
     }
 }
