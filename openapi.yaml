@@ -108,18 +108,18 @@ paths:
                 [
                   {
                     "timestamp": 1700139157,
-                    device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                    payload: {message_type: STATUS, encoding: BASE64, data: V2FpdGluZw==}
+                    device_id: {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
+                    payload: {message_type: "STATUS", encoding: "BASE64", data: "V2FpdGluZw=="}
                   },
                   {
                     "timestamp": 1700145485,
-                    device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                    payload: {message_type: STATUS, encoding: BASE64, data: U3RpbGwgd29ya2luZw==}
+                    device_id: {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
+                    payload: {message_type: "STATUS", encoding: "BASE64", data: "U3RpbGwgd29ya2luZw=="}
                   },
                   {
                     "timestamp": 1700145490,
-                    device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                    payload: {message_type: STATUS, encoding: JSON, data: {"description": "Still working"}}
+                    device_id: {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
+                    payload: {message_type: "STATUS", encoding: "JSON", data: {"description": "Still working"}}
                   },
                 ]
         '404':
@@ -157,8 +157,8 @@ paths:
             example:
               [
                 {
-                  device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                  payload: {message_type: STATUS, encoding: BASE64, data: QnJpbmdBdXRv}
+                  device_id: {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
+                  payload: {message_type: "STATUS", encoding: "BASE64", data: "QnJpbmdBdXRv"}
                 },
               ]
 
@@ -183,8 +183,8 @@ paths:
                 [
                   {
                     "timestamp": 1700139157,
-                    device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                    payload: {message_type: COMMAND, encoding: BASE64, data: U2F5IGhlbGxv}
+                    device_id: {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
+                    payload: {message_type: "COMMAND", encoding: "BASE64", data: "U2F5IGhlbGxv"}
                   },
                 ]
         '404':
@@ -218,8 +218,8 @@ paths:
             example:
               [
                 {
-                  device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                  payload: {message_type: COMMAND, encoding: BASE64, data: U2F5IGhlbGxv}
+                  device_id: {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
+                  payload: {message_type: "COMMAND", encoding: "BASE64", data: "U2F5IGhlbGxv"}
                 },
               ]
 
@@ -288,7 +288,7 @@ components:
       schema:
         type: string
         pattern: ^[0-9a-z_]+$
-      example: test_car
+      example: "test_car"
 
     CompanyName:
       name: company_name
@@ -298,7 +298,7 @@ components:
       schema:
         type: string
         pattern: ^[0-9a-z_]+$
-      example: test_company
+      example: "test_company"
 
   schemas:
     Message:
@@ -344,8 +344,8 @@ components:
             $ref: '#/components/schemas/DeviceId'
           example:
             [
-              {module_id: 47, type: 2, role: test_device, name: Test Device},
-              {module_id: 47, type: 2, role: test_device, name: Test Device},
+              {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
+              {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
             ]
 
     Car:
@@ -359,12 +359,12 @@ components:
           description: Name of the company, following a pattern ^[0-9a-z_]+$
           type: string
           pattern: ^[0-9a-z_]+$
-          example: test_company
+          example: "test_company"
         car_name:
           description: Name of the Car, following a pattern ^[0-9a-z_]+$
           type: string
           pattern: ^[0-9a-z_]+$
-          example: test_car
+          example: "test_car"
 
     DeviceId:
       description: Id of the device described with an object.
@@ -395,8 +395,8 @@ components:
       example:
         module_id: 47
         type: 2
-        role: test_device
-        name: Test Device
+        role: "test_device"
+        name: "Test Device"
 
     Payload:
       type: object
@@ -415,15 +415,15 @@ components:
           type: string
           pattern: ^(JSON)|(BASE64)$
         data:
-          description: 'Payload data in JSON or BASE64 format, depending on the encoding.'
+          description: 'Payload data in "JSON" or "BASE64" format, depending on the encoding.'
           oneOf:
             - type: object
             - type: string
               format: base64
       example:
-        message_type: STATUS
-        encoding: BASE64
-        data: QnJpbmdBdXRv
+        message_type: "STATUS"
+        encoding: "BASE64"
+        data: "QnJpbmdBdXRv"
 
 
 # Cleaning up the statuses/commands:
