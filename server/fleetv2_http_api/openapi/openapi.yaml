@@ -8,9 +8,9 @@ info:
     name: GPLv3
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
   title: Fleet v2 HTTP API
-  version: 2.0.0
+  version: 2.0.1
 servers:
-- url: http://localhost
+- url: https://api.bringautofleet.com/protocol/v2
 security:
 - AdminAuth: []
 tags:
@@ -42,7 +42,7 @@ paths:
         name: car_name
         required: true
         schema:
-          pattern: "^[0-9a-z_]+$"
+          pattern: "^[a-z0-9_]+$"
           type: string
         style: simple
       - description: "An Id of module, an unsigned integer."
@@ -119,7 +119,7 @@ paths:
         name: car_name
         required: true
         schema:
-          pattern: "^[0-9a-z_]+$"
+          pattern: "^[a-z0-9_]+$"
           type: string
         style: simple
       - description: "If set, the method returns a complete history of statuses/commands."
@@ -204,7 +204,7 @@ paths:
         name: car_name
         required: true
         schema:
-          pattern: "^[0-9a-z_]+$"
+          pattern: "^[a-z0-9_]+$"
           type: string
         style: simple
       requestBody:
@@ -258,7 +258,7 @@ paths:
         name: car_name
         required: true
         schema:
-          pattern: "^[0-9a-z_]+$"
+          pattern: "^[a-z0-9_]+$"
           type: string
         style: simple
       - description: "If set, the method returns a complete history of statuses/commands."
@@ -364,7 +364,7 @@ paths:
         name: car_name
         required: true
         schema:
-          pattern: "^[0-9a-z_]+$"
+          pattern: "^[a-z0-9_]+$"
           type: string
         style: simple
       requestBody:
@@ -454,7 +454,7 @@ components:
       name: car_name
       required: true
       schema:
-        pattern: "^[0-9a-z_]+$"
+        pattern: "^[a-z0-9_]+$"
         type: string
       style: simple
     CompanyName:
@@ -519,17 +519,20 @@ components:
           description: List of Ids of devices contained in the module.
           example:
           - module_id: 47
-            device_type: 2
-            device_role: test_device
-            device_name: Test Device
+            type: 2
+            role: test_device
+            name: Test Device
           - module_id: 47
-            device_type: 2
-            device_role: test_device
-            device_name: Test Device
+            type: 2
+            role: test_device
+            name: Test Device
           items:
             $ref: '#/components/schemas/DeviceId'
           title: device_list
           type: array
+      required:
+      - device_list
+      - module_id
       title: Module
       type: object
     Car:
@@ -550,6 +553,9 @@ components:
           pattern: "^[0-9a-z_]+$"
           title: car_name
           type: string
+      required:
+      - car_name
+      - company_name
       title: Car
       type: object
     DeviceId:
@@ -578,6 +584,11 @@ components:
           description: UTF-8 encoded string.
           format: utf-8
           type: string
+      required:
+      - module_id
+      - name
+      - role
+      - type
       title: DeviceId
       type: object
     Payload:
@@ -598,10 +609,15 @@ components:
           type: string
         data:
           $ref: '#/components/schemas/Payload_data'
+      required:
+      - data
+      - encoding
+      - message_type
       title: Payload
       type: object
     Payload_data:
-      description: "Payload data in JSON or BASE64 format, depending on the encoding."
+      description: "Payload data in \"JSON\" or \"BASE64\" format, depending on the\
+        \ encoding."
       oneOf:
       - type: object
       - format: base64

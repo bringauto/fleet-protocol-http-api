@@ -76,6 +76,8 @@ class DeviceId(Model):
         :param module_id: The module_id of this DeviceId.
         :type module_id: int
         """
+        if module_id is None:
+            raise ValueError("Invalid value for `module_id`, must not be `None`")  # noqa: E501
         if module_id is not None and module_id < 0:  # noqa: E501
             raise ValueError("Invalid value for `module_id`, must be a value greater than or equal to `0`")  # noqa: E501
 
@@ -101,6 +103,8 @@ class DeviceId(Model):
         :param type: The type of this DeviceId.
         :type type: int
         """
+        if type is None:
+            raise ValueError("Invalid value for `type`, must not be `None`")  # noqa: E501
         if type is not None and type < 0:  # noqa: E501
             raise ValueError("Invalid value for `type`, must be a value greater than or equal to `0`")  # noqa: E501
 
@@ -126,6 +130,8 @@ class DeviceId(Model):
         :param role: The role of this DeviceId.
         :type role: str
         """
+        if role is None:
+            raise ValueError("Invalid value for `role`, must not be `None`")  # noqa: E501
         if role is not None and not re.search(r'^[a-z0-9_]+$', role):  # noqa: E501
             raise ValueError("Invalid value for `role`, must be a follow pattern or equal to `/^[a-z0-9_]+$/`")  # noqa: E501
 
@@ -151,5 +157,7 @@ class DeviceId(Model):
         :param name: The name of this DeviceId.
         :type name: str
         """
+        if name is None:
+            raise ValueError("Invalid value for `name`, must not be `None`")  # noqa: E501
 
         self._name = name
