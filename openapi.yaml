@@ -22,6 +22,7 @@ tags:
 
 security:
   - AdminAuth: []
+  - oAuth2AuthCode: []
 
 paths:
   /cars:
@@ -239,6 +240,15 @@ components:
       type: apiKey
       in: query
       name: api_key
+    oAuth2AuthCode:
+      type: oauth2
+      description: oAuth2 authorization
+      flows: 
+        authorizationCode:
+          authorizationUrl: http://localhost:8081/realms/master/protocol/openid-connect/auth
+          tokenUrl: http://localhost:8081/realms/master/protocol/openid-connect/token
+          refreshUrl: http://localhost:8081/realms/master/protocol/openid-connect/token
+          scopes: {}
 
 
   parameters:

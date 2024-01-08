@@ -13,6 +13,7 @@ servers:
 - url: http://localhost
 security:
 - AdminAuth: []
+- oAuth2AuthCode: []
 tags:
 - name: car
 - name: device
@@ -614,3 +615,14 @@ components:
       name: api_key
       type: apiKey
       x-apikeyInfoFunc: fleetv2_http_api.controllers.security_controller.info_from_AdminAuth
+    oAuth2AuthCode:
+      description: oAuth2 authorization
+      flows:
+        authorizationCode:
+          authorizationUrl: http://localhost:8081/realms/master/protocol/openid-connect/auth
+          refreshUrl: http://localhost:8081/realms/master/protocol/openid-connect/token
+          scopes: {}
+          tokenUrl: http://localhost:8081/realms/master/protocol/openid-connect/token
+      type: oauth2
+      x-tokenInfoFunc: fleetv2_http_api.controllers.security_controller.info_from_oAuth2AuthCode
+      x-scopeValidateFunc: fleetv2_http_api.controllers.security_controller.validate_scope_oAuth2AuthCode
