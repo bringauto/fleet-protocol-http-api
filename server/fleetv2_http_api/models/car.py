@@ -66,6 +66,8 @@ class Car(Model):
         :param company_name: The company_name of this Car.
         :type company_name: str
         """
+        if company_name is None:
+            raise ValueError("Invalid value for `company_name`, must not be `None`")  # noqa: E501
         if company_name is not None and not re.search(r'^[0-9a-z_]+$', company_name):  # noqa: E501
             raise ValueError("Invalid value for `company_name`, must be a follow pattern or equal to `/^[0-9a-z_]+$/`")  # noqa: E501
 
@@ -91,6 +93,8 @@ class Car(Model):
         :param car_name: The car_name of this Car.
         :type car_name: str
         """
+        if car_name is None:
+            raise ValueError("Invalid value for `car_name`, must not be `None`")  # noqa: E501
         if car_name is not None and not re.search(r'^[0-9a-z_]+$', car_name):  # noqa: E501
             raise ValueError("Invalid value for `car_name`, must be a follow pattern or equal to `/^[0-9a-z_]+$/`")  # noqa: E501
 

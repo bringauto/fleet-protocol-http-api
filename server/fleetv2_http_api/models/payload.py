@@ -73,6 +73,8 @@ class Payload(Model):
         :param message_type: The message_type of this Payload.
         :type message_type: str
         """
+        if message_type is None:
+            raise ValueError("Invalid value for `message_type`, must not be `None`")  # noqa: E501
         if message_type is not None and not re.search(r'^(STATUS)|(COMMAND)$', message_type):  # noqa: E501
             raise ValueError("Invalid value for `message_type`, must be a follow pattern or equal to `/^(STATUS)|(COMMAND)$/`")  # noqa: E501
 
@@ -98,6 +100,8 @@ class Payload(Model):
         :param encoding: The encoding of this Payload.
         :type encoding: str
         """
+        if encoding is None:
+            raise ValueError("Invalid value for `encoding`, must not be `None`")  # noqa: E501
         if encoding is not None and not re.search(r'^(JSON)|(BASE64)$', encoding):  # noqa: E501
             raise ValueError("Invalid value for `encoding`, must be a follow pattern or equal to `/^(JSON)|(BASE64)$/`")  # noqa: E501
 
@@ -121,5 +125,7 @@ class Payload(Model):
         :param data: The data of this Payload.
         :type data: PayloadData
         """
+        if data is None:
+            raise ValueError("Invalid value for `data`, must not be `None`")  # noqa: E501
 
         self._data = data

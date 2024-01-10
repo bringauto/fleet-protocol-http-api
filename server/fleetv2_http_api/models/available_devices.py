@@ -68,6 +68,8 @@ class AvailableDevices(Model):
         :param module_id: The module_id of this AvailableDevices.
         :type module_id: int
         """
+        if module_id is None:
+            raise ValueError("Invalid value for `module_id`, must not be `None`")  # noqa: E501
         if module_id is not None and module_id < 0:  # noqa: E501
             raise ValueError("Invalid value for `module_id`, must be a value greater than or equal to `0`")  # noqa: E501
 
@@ -93,5 +95,7 @@ class AvailableDevices(Model):
         :param device_list: The device_list of this AvailableDevices.
         :type device_list: List[DeviceId]
         """
+        if device_list is None:
+            raise ValueError("Invalid value for `device_list`, must not be `None`")  # noqa: E501
 
         self._device_list = device_list

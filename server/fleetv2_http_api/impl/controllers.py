@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import List, Optional, Tuple, Dict
 from enums import MessageType
+import re
 
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
 from fleetv2_http_api.models.device_id import DeviceId
@@ -18,6 +19,8 @@ from database.time import timestamp
 from fleetv2_http_api.impl.wait import WaitObjManager
 from fleetv2_http_api.impl.security import SecurityObj
 from flask import redirect, Response
+
+NAME_PATTERN = "^[0-9a-z_]+$"
 
 
 _status_wait_manager = WaitObjManager()
@@ -89,6 +92,9 @@ def available_devices(
     :rtype: Union[AvailableDevices, Tuple[AvailableDevices, int], Tuple[AvailableDevices, int, Dict[str, str]]
     """
 
+    _validate_name_string(company_name, "Company name")
+    _validate_name_string(car_name, "Car name")
+
     device_dict = device_ids()
     if company_name not in device_dict:
         return [], 404 # type: ignore
@@ -131,6 +137,8 @@ def list_commands(
 
     :rtype: Union[List[Message], Tuple[List[Message], int], Tuple[List[Message], int, Dict[str, str]]
     """
+    _validate_name_string(company_name, "Company name")
+    _validate_name_string(car_name, "Car name")
     db_commands = _list_messages(company_name,car_name,MessageType.COMMAND_TYPE,all_available,since)
     if db_commands or not wait:
         msg, code = _check_car_availability(company_name, car_name)
@@ -178,6 +186,8 @@ def list_statuses(
 
     :rtype: Union[List[Message], Tuple[List[Message], int], Tuple[List[Message], int, Dict[str, str]]
     """
+    _validate_name_string(company_name, "Company name")
+    _validate_name_string(car_name, "Car name")
     db_statuses = _list_messages(company_name, car_name, MessageType.STATUS_TYPE, all_available, since)
     if db_statuses:
         return [_message_from_db(m) for m in db_statuses], 200
@@ -214,6 +224,8 @@ def send_commands(
 
     :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
     """
+    _validate_name_string(company_name, "Company name")
+    _validate_name_string(car_name, "Car name")
     messages = _message_list_from_request_body(body)
     if messages == []:
         return "", 200
@@ -246,6 +258,8 @@ def send_statuses(
 
     :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
     """
+    _validate_name_string(company_name, "Company name")
+    _validate_name_string(car_name, "Car name")
     messages = _message_list_from_request_body(body)
     if messages == []:
         return "", 200
@@ -364,7 +378,8 @@ def _message_from_db(message_db: Message_DB) -> Message:
         device_id=DeviceId(
             message_db.module_id,
             message_db.device_type,
-            message_db.device_role
+            message_db.device_role,
+            message_db.device_name,
         ),
         payload=Payload(
             message_type=message_db.message_type,
@@ -396,3 +411,8 @@ def _update_messages_timestamp(messages: Tuple[Message_DB]) -> None:
     timestamp_now = timestamp()
     for message in messages:
         message.timestamp = timestamp_now
+
+def _validate_name_string(name: str, text_label: str) -> None:
+    if not re.match(NAME_PATTERN, name):
+        msg = f"{text_label} '{name}' does not match pattern '{NAME_PATTERN}'."
+        raise ValueError(msg)

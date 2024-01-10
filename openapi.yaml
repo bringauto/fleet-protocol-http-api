@@ -3,7 +3,7 @@ openapi: 3.0.2
 
 info:
   title: Fleet v2 HTTP API
-  version: 2.0.0
+  version: 2.0.1
   description: HTTP-based API for Fleet Protocol v2 serving for communication between the External Server and the end users.
   contact:
     email: jiri.strouhal@bringauto.com
@@ -13,7 +13,7 @@ info:
 
 
 servers:
-  - url: http://localhost
+  - url: https://api.bringautofleet.com/protocol/v2
 
 tags:
 - name: car
@@ -149,18 +149,18 @@ paths:
                 [
                   {
                     "timestamp": 1700139157,
-                    device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                    payload: {message_type: STATUS, encoding: BASE64, data: V2FpdGluZw==}
+                    device_id: {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
+                    payload: {message_type: "STATUS", encoding: "BASE64", data: "V2FpdGluZw=="}
                   },
                   {
                     "timestamp": 1700145485,
-                    device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                    payload: {message_type: STATUS, encoding: BASE64, data: U3RpbGwgd29ya2luZw==}
+                    device_id: {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
+                    payload: {message_type: "STATUS", encoding: "BASE64", data: "U3RpbGwgd29ya2luZw=="}
                   },
                   {
                     "timestamp": 1700145490,
-                    device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                    payload: {message_type: STATUS, encoding: JSON, data: {"description": "Still working"}}
+                    device_id: {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
+                    payload: {message_type: "STATUS", encoding: "JSON", data: {"description": "Still working"}}
                   },
                 ]
         '404':
@@ -198,8 +198,8 @@ paths:
             example:
               [
                 {
-                  device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                  payload: {message_type: STATUS, encoding: BASE64, data: QnJpbmdBdXRv}
+                  device_id: {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
+                  payload: {message_type: "STATUS", encoding: "BASE64", data: "QnJpbmdBdXRv"}
                 },
               ]
 
@@ -224,8 +224,8 @@ paths:
                 [
                   {
                     "timestamp": 1700139157,
-                    device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                    payload: {message_type: COMMAND, encoding: BASE64, data: U2F5IGhlbGxv}
+                    device_id: {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
+                    payload: {message_type: "COMMAND", encoding: "BASE64", data: "U2F5IGhlbGxv"}
                   },
                 ]
         '404':
@@ -259,8 +259,8 @@ paths:
             example:
               [
                 {
-                  device_id: {module_id: 47, type: 2, role: test_device, name: Test Device},
-                  payload: {message_type: COMMAND, encoding: BASE64, data: U2F5IGhlbGxv}
+                  device_id: {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
+                  payload: {message_type: "COMMAND", encoding: "BASE64", data: "U2F5IGhlbGxv"}
                 },
               ]
 
@@ -337,8 +337,8 @@ components:
       required: true
       schema:
         type: string
-        pattern: ^[0-9a-z_]+$
-      example: test_car
+        pattern: ^[a-z0-9_]+$
+      example: "test_car"
 
     CompanyName:
       name: company_name
@@ -348,6 +348,7 @@ components:
       schema:
         type: string
         pattern: ^[0-9a-z_]+$
+<<<<<<< HEAD
       example: test_company
 
     kcState:
@@ -386,6 +387,9 @@ components:
         type: string
       example: 5dea27d2-4b2d-48...
 
+=======
+      example: "test_company"
+>>>>>>> master
 
   schemas:
     Message:
@@ -415,6 +419,9 @@ components:
     Module:
       description: A module containing at least one device (specified by device Id).
       type: object
+      required:
+        - module_id
+        - device_list
       properties:
         module_id:
           description: Id (unsigned integer) of the module.
@@ -428,28 +435,36 @@ components:
             $ref: '#/components/schemas/DeviceId'
           example:
             [
-              {module_id: 47, device_type: 2, device_role: test_device, device_name: Test Device},
-              {module_id: 47, device_type: 2, device_role: test_device, device_name: Test Device},
+              {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
+              {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
             ]
 
     Car:
       description: A car assigned to a particular company.
       type: object
+      required:
+        - company_name
+        - car_name
       properties:
         company_name:
           description: Name of the company, following a pattern ^[0-9a-z_]+$
           type: string
           pattern: ^[0-9a-z_]+$
-          example: test_company
+          example: "test_company"
         car_name:
           description: Name of the Car, following a pattern ^[0-9a-z_]+$
           type: string
           pattern: ^[0-9a-z_]+$
-          example: test_car
+          example: "test_car"
 
     DeviceId:
       description: Id of the device described with an object.
       type: object
+      required:
+        - module_id
+        - type
+        - role
+        - name
       properties:
         module_id:
           description: Id (unsigned integer) of the module containing the device.
@@ -471,12 +486,16 @@ components:
       example:
         module_id: 47
         type: 2
-        role: test_device
-        name: Test Device
+        role: "test_device"
+        name: "Test Device"
 
     Payload:
       type: object
       description: Payload of the message, containing message type (status or command), encoding and data.
+      required:
+        - message_type
+        - encoding
+        - data
       properties:
         message_type:
           description: 'Type of the payload'
@@ -487,15 +506,15 @@ components:
           type: string
           pattern: ^(JSON)|(BASE64)$
         data:
-          description: 'Payload data in JSON or BASE64 format, depending on the encoding.'
+          description: 'Payload data in "JSON" or "BASE64" format, depending on the encoding.'
           oneOf:
             - type: object
             - type: string
               format: base64
       example:
-        message_type: STATUS
-        encoding: BASE64
-        data: QnJpbmdBdXRv
+        message_type: "STATUS"
+        encoding: "BASE64"
+        data: "QnJpbmdBdXRv"
 
 
 # Cleaning up the statuses/commands:

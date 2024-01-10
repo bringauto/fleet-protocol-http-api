@@ -15,8 +15,12 @@
             }
         }
     },
+    "http_server": {
+        "base_uri": "https://api.bringautofleet.com/protocol/v2"
+    },
     "request_for_messages": {
         "timeout_in_seconds": 5
+<<<<<<< HEAD
     },
     "security": {
         "keycloak_url": "http://localhost:8081/",
@@ -25,5 +29,8 @@
         "scope": "test_scope",
         "realm": "master",
         "callback_url": "http://localhost:8080/get_token"
+=======
+
+>>>>>>> master
     }
 }
