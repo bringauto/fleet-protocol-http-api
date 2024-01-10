@@ -9,7 +9,7 @@ from database.device_ids import clear_device_ids
 from database.connection import set_db_connection
 from database.time import timestamp
 from fleetv2_http_api.__main__ import main as run_server
-from fleetv2_http_api.impl.controllers import set_status_wait_timeout_s, set_command_wait_timeout_s
+from fleetv2_http_api.impl.controllers import set_status_wait_timeout_s, set_command_wait_timeout_s, init_security
 import database.script_args as script_args
 
 def _clean_up_messages() -> None:
@@ -44,4 +44,12 @@ if __name__ == '__main__':
     _set_up_database_jobs(config["database"]["cleanup"]["timing_in_seconds"])
     set_status_wait_timeout_s(config["request_for_messages"]["timeout_in_seconds"])
     set_command_wait_timeout_s(config["request_for_messages"]["timeout_in_seconds"])
+    init_security(
+        config["security"]["keycloak_url"],
+        config["security"]["client_id"],
+        config["security"]["client_secret_key"],
+        config["security"]["scope"],
+        config["security"]["realm"],
+        config["security"]["callback_url"]
+    )
     run_server()

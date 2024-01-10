@@ -237,13 +237,67 @@ paths:
       tags:
       - device
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
-  /login:
+  /get_token:
     get:
-      description: Login using keycloak and receive a token.
-      operationId: login
+      description: Callback endpoint for keycloak to receive jwt token.
+      operationId: get_token
+      parameters:
+      - description: State returned by keycloak authentication.
+        example: your_state_info
+        explode: true
+        in: query
+        name: state
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: Session state returned by keycloak authentication.
+        example: 167e141d-2f55-4d...
+        explode: true
+        in: query
+        name: session_state
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: Code issuer returned by keycloak authentication.
+        example: http%3A%2F%2Flocalhost%3A8081%2Frealms%2Fmaster
+        explode: true
+        in: query
+        name: iss
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: Code used for jwt token generation returned by keycloak authentication.
+        example: 5dea27d2-4b2d-48...
+        explode: true
+        in: query
+        name: code
+        required: true
+        schema:
+          type: string
+        style: form
       responses:
         "200":
+          content:
+            application/json:
+              example:
+                token: eY12354jngubi2ub922893fb29
           description: Login successful.
+        "500":
+          description: Login failed due to internal server error.
+      security: []
+      tags:
+      - login
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+  /login:
+    get:
+      description: Login using keycloak.
+      operationId: login
+      responses:
+        "302":
+          description: Redirect to keycloak authentication.
         "500":
           description: Login failed due to internal server error.
       security: []
@@ -482,6 +536,46 @@ components:
         pattern: "^[0-9a-z_]+$"
         type: string
       style: simple
+    kcState:
+      description: State returned by keycloak authentication.
+      example: your_state_info
+      explode: true
+      in: query
+      name: state
+      required: true
+      schema:
+        type: string
+      style: form
+    kcSessionState:
+      description: Session state returned by keycloak authentication.
+      example: 167e141d-2f55-4d...
+      explode: true
+      in: query
+      name: session_state
+      required: true
+      schema:
+        type: string
+      style: form
+    kcIss:
+      description: Code issuer returned by keycloak authentication.
+      example: http%3A%2F%2Flocalhost%3A8081%2Frealms%2Fmaster
+      explode: true
+      in: query
+      name: iss
+      required: true
+      schema:
+        type: string
+      style: form
+    kcCode:
+      description: Code used for jwt token generation returned by keycloak authentication.
+      example: 5dea27d2-4b2d-48...
+      explode: true
+      in: query
+      name: code
+      required: true
+      schema:
+        type: string
+      style: form
   schemas:
     Message:
       description: Physical device or program located on the car.

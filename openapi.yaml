@@ -31,14 +31,38 @@ paths:
       operationId: login
       security: []
       description:
-        "Login using keycloak and receive a token."
+        "Login using keycloak."
+      tags:
+        - login
+      responses:
+        '302':
+          description: Redirect to keycloak authentication.
+        '500':
+          description: Login failed due to internal server error.
+
+  /get_token:
+    get:
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      operationId: get_token
+      security: []
+      description:
+        "Callback endpoint for keycloak to receive jwt token."
       tags:
         - login
       responses:
         '200':
           description: Login successful.
+          content:
+            application/json:
+              example:
+                token: "eY12354jngubi2ub922893fb29"
         '500':
           description: Login failed due to internal server error.
+      parameters:
+        - $ref: '#/components/parameters/kcState'
+        - $ref: '#/components/parameters/kcSessionState'
+        - $ref: '#/components/parameters/kcIss'
+        - $ref: '#/components/parameters/kcCode'
       
 
   /cars:
@@ -325,6 +349,42 @@ components:
         type: string
         pattern: ^[0-9a-z_]+$
       example: test_company
+
+    kcState:
+      name: state
+      description: State returned by keycloak authentication.
+      in: query
+      required: true
+      schema:
+        type: string
+      example: your_state_info
+
+    kcSessionState:
+      name: session_state
+      description: Session state returned by keycloak authentication.
+      in: query
+      required: true
+      schema:
+        type: string
+      example: 167e141d-2f55-4d...
+
+    kcIss:
+      name: iss
+      description: Code issuer returned by keycloak authentication.
+      in: query
+      required: true
+      schema:
+        type: string
+      example: http%3A%2F%2Flocalhost%3A8081%2Frealms%2Fmaster
+
+    kcCode:
+      name: code
+      description: Code used for jwt token generation returned by keycloak authentication.
+      in: query
+      required: true
+      schema:
+        type: string
+      example: 5dea27d2-4b2d-48...
 
 
   schemas:

@@ -7,7 +7,6 @@ from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Message
 from fleetv2_http_api.models.module import Module
 from fleetv2_http_api.models.car import Car
-from fleetv2_http_api.models.user import User
 from database.database_controller import (
     send_messages_to_database,
     Message_DB,
@@ -17,7 +16,7 @@ from database.database_controller import list_messages as _list_messages
 from database.device_ids import store_device_id_if_new, device_ids, serialized_device_id
 from database.time import timestamp
 from fleetv2_http_api.impl.wait import WaitObjManager
-from keycloak import KeycloakOpenID
+from fleetv2_http_api.impl.security import SecurityObj
 from flask import redirect, Response
 
 
@@ -35,21 +34,25 @@ def set_command_wait_timeout_s(timeout_s: float) -> None:
 def get_command_wait_timeout_s() -> float:
     return _command_wait_manager.timeout_ms*0.001
 
+_security = SecurityObj()
+def init_security(keycloak_url: str, client_id: str, secret_key: str, scope: str, realm: str, callback: str) -> None:
+    _security.set_config(keycloak_url, client_id, secret_key, scope, realm, callback)
 
 def login() -> Response:
-    oid = KeycloakOpenID(server_url="http://localhost:8081/",
-                         client_id="test",
-                         realm_name="master",
-                         client_secret_key="2FZoot4dVLjTKjMjQLTKBZETcHIFvALL")
-    auth_url = oid.auth_url(
-        redirect_uri="https://google.com",
-        scope="email",
-        state="your_state_info"
-    )
-    return redirect(auth_url)
-    #token = oid.token(body['username'], body['password'])
-    #return { "token": token['access_token'] }
+    return redirect(_security.get_authentication_url())
 
+#/swap_token
+#?state=your_state_info
+#&session_state=167e141d-2f55-4d4e-88e5-2d6fb7f8e774
+#&iss=http%3A%2F%2Flocalhost%3A8081%2Frealms%2Fmaster
+#&code=5dea27d2-4b2d-482d-a145-89c7dc322217.167e141d-2f55-4d4e-88e5-2d6fb7f8e774.86b15968-a46c-41e0-a086-5cd2bf0f8138
+def get_token(
+    state: str,
+    session_state: str,
+    iss: str,
+    code: str
+) -> Dict:
+    return { "token": _security.get_token(state, session_state, iss, code)['access_token'] }
 
 def available_cars() -> List[Car]:
     """available_cars

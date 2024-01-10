@@ -17,5 +17,13 @@
     },
     "request_for_messages": {
         "timeout_in_seconds": 5
+    },
+    "security": {
+        "keycloak_url": "http://localhost:8081/",
+        "client_id": "test_client",
+        "client_secret_key": "EbJV0XwaGbDCW1WwaW2Rw8dMSQpRYflz",
+        "scope": "test_scope",
+        "realm": "master",
+        "callback_url": "http://localhost:8080/get_token"
     }
 }
