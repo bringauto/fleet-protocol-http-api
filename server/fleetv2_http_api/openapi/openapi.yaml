@@ -239,14 +239,10 @@ paths:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
   /login:
     get:
-      description: Login using username and password
+      description: Login using keycloak and receive a token.
       operationId: login
       responses:
         "200":
-          content:
-            application/json:
-              example:
-                token: eY123465asd65awd1a3ca54da6wd54ac231
           description: Login successful.
         "500":
           description: Login failed due to internal server error.
@@ -487,21 +483,6 @@ components:
         type: string
       style: simple
   schemas:
-    User:
-      description: User credentials.
-      properties:
-        username:
-          description: Username.
-          example: admin
-          type: string
-        password:
-          description: Password.
-          example: 1234abcd
-          type: string
-      required:
-      - password
-      - username
-      type: object
     Message:
       description: Physical device or program located on the car.
       example:

@@ -33,8 +33,7 @@ def info_from_oAuth2AuthCode(token) -> Dict:
     :return: Decoded token information or None if token is invalid
     :rtype: dict | None
     """
-    #secret_key = 'fxv4L2IUj8qjbLz1Sn0w8XKFiTENLW5H'
-    #TODO get secret key from some config
+    #TODO get public key from file
     public_key = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsiezxVjNY22+BLr5CHWxf5g28NXHcqrostDifYqolaYGyT+AE5IPPWUknh1d9Vdi3XW0gPdrPG/ajyQmzeNWCICfvb5l2En2V8W8Q1mv9DAHObZ9+daoYWWgWxEc43wKPV3+NJR709EV4XlUEOD9vXrp42v4mq51oeo2k8OoWENPE3ItJ2pjOdTLXE5dGeDJijlEzf3VgeqNZUmwieI2/v7g33wsjWXYHXFzglEO14BNnHunU2dpQQz4Eh/T1xZZHXwDl+SjO/vcg6jrzDOr5KrDdCVZby+BIeewWhe9lwM0WueCXzX5FvzZ4WznoS4VClIimjiVGWnfuMf9PcGiiwIDAQAB\n-----END PUBLIC KEY-----"
     decoded_token = jwt.decode(token, public_key, algorithms=['RS256'], audience='account')
     roles = decoded_token["realm_access"]["roles"]

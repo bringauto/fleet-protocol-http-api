@@ -31,16 +31,12 @@ paths:
       operationId: login
       security: []
       description:
-        "Login using username and password"
+        "Login using keycloak and receive a token."
       tags:
         - login
       responses:
         '200':
           description: Login successful.
-          content:
-            application/json:
-              example:
-                token: "eY123465asd65awd1a3ca54da6wd54ac231"
         '500':
           description: Login failed due to internal server error.
       
@@ -332,22 +328,6 @@ components:
 
 
   schemas:
-    User:
-      description: User credentials.
-      type: object
-      required:
-        - username
-        - password
-      properties:
-        username:
-          description: Username.
-          type: string
-          example: admin
-        password:
-          description: Password.
-          type: string
-          example: 1234abcd
-
     Message:
       description: Physical device or program located on the car.
       type: object

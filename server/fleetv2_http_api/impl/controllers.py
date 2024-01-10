@@ -36,10 +36,8 @@ def get_command_wait_timeout_s() -> float:
     return _command_wait_manager.timeout_ms*0.001
 
 
-def login(
-#    body: User|Dict
-) -> Response:
-    oid = KeycloakOpenID(server_url="http://keycloak:8080/",
+def login() -> Response:
+    oid = KeycloakOpenID(server_url="http://localhost:8081/",
                          client_id="test",
                          realm_name="master",
                          client_secret_key="2FZoot4dVLjTKjMjQLTKBZETcHIFvALL")
@@ -48,10 +46,9 @@ def login(
         scope="email",
         state="your_state_info"
     )
-    #raise Exception(auth_url)
-    #return redirect(auth_url)
-    token = oid.token(body['username'], body['password'])
-    return { "token": token['access_token'] }
+    return redirect(auth_url)
+    #token = oid.token(body['username'], body['password'])
+    #return { "token": token['access_token'] }
 
 
 def available_cars() -> List[Car]:

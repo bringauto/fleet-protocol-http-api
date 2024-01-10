@@ -3,14 +3,14 @@ version: '3.0'
 services:
 
   server:
-    restart: "no"
+    restart: always
     build:
       context: .
       dockerfile: Dockerfile
     depends_on:
       - postgresql-database
     ports:
-      - 8081:8080
+      - 8080:8080
     networks:
       - api-network
     entrypoint:
@@ -18,7 +18,7 @@ services:
 
   postgresql-database:
     image: postgres:16
-    restart: "no"
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "1234"
@@ -26,18 +26,6 @@ services:
       - api-network
     ports:
       - 5432:5432
-
-  keycloak:
-    image: quay.io/keycloak/keycloak:23.0.3
-    restart: "no"
-    environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-    ports:
-      - 8080:8080
-    networks:
-      - api-network
-    command: "start-dev"
 
 networks:
   api-network:
