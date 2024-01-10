@@ -10,7 +10,7 @@ services:
     depends_on:
       - postgresql-database
     ports:
-      - 8080:8080
+      - 8081:8080
     networks:
       - api-network
     entrypoint:
@@ -34,7 +34,7 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
     ports:
-      - 8081:8080
+      - 8080:8080
     networks:
       - api-network
     command: "start-dev"

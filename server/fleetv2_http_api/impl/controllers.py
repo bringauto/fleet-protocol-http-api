@@ -7,6 +7,7 @@ from fleetv2_http_api.models.device_id import DeviceId
 from fleetv2_http_api.models.message import Message
 from fleetv2_http_api.models.module import Module
 from fleetv2_http_api.models.car import Car
+from fleetv2_http_api.models.user import User
 from database.database_controller import (
     send_messages_to_database,
     Message_DB,
@@ -16,6 +17,8 @@ from database.database_controller import list_messages as _list_messages
 from database.device_ids import store_device_id_if_new, device_ids, serialized_device_id
 from database.time import timestamp
 from fleetv2_http_api.impl.wait import WaitObjManager
+from keycloak import KeycloakOpenID
+from flask import redirect, Response
 
 
 _status_wait_manager = WaitObjManager()
@@ -31,6 +34,24 @@ def set_command_wait_timeout_s(timeout_s: float) -> None:
 
 def get_command_wait_timeout_s() -> float:
     return _command_wait_manager.timeout_ms*0.001
+
+
+def login(
+#    body: User|Dict
+) -> Response:
+    oid = KeycloakOpenID(server_url="http://keycloak:8080/",
+                         client_id="test",
+                         realm_name="master",
+                         client_secret_key="2FZoot4dVLjTKjMjQLTKBZETcHIFvALL")
+    auth_url = oid.auth_url(
+        redirect_uri="https://google.com",
+        scope="email",
+        state="your_state_info"
+    )
+    #raise Exception(auth_url)
+    #return redirect(auth_url)
+    token = oid.token(body['username'], body['password'])
+    return { "token": token['access_token'] }
 
 
 def available_cars() -> List[Car]:

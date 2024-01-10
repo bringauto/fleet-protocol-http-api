@@ -25,6 +25,26 @@ security:
   - oAuth2AuthCode: []
 
 paths:
+  /login:
+    get:
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      operationId: login
+      security: []
+      description:
+        "Login using username and password"
+      tags:
+        - login
+      responses:
+        '200':
+          description: Login successful.
+          content:
+            application/json:
+              example:
+                token: "eY123465asd65awd1a3ca54da6wd54ac231"
+        '500':
+          description: Login failed due to internal server error.
+      
+
   /cars:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
@@ -312,6 +332,22 @@ components:
 
 
   schemas:
+    User:
+      description: User credentials.
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          description: Username.
+          type: string
+          example: admin
+        password:
+          description: Password.
+          type: string
+          example: 1234abcd
+
     Message:
       description: Physical device or program located on the car.
       type: object
