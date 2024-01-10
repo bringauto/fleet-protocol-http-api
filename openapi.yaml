@@ -13,7 +13,7 @@ info:
 
 
 servers:
-  - url: https://api.bringautofleet.com/protocol/v2
+  - url: http://localhost:8080
 
 tags:
 - name: car
@@ -348,8 +348,7 @@ components:
       schema:
         type: string
         pattern: ^[0-9a-z_]+$
-<<<<<<< HEAD
-      example: test_company
+      example: "test_company"
 
     kcState:
       name: state
@@ -387,9 +386,6 @@ components:
         type: string
       example: 5dea27d2-4b2d-48...
 
-=======
-      example: "test_company"
->>>>>>> master
 
   schemas:
     Message:

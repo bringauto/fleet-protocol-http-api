@@ -3,7 +3,7 @@ from keycloak import KeycloakOpenID
 class SecurityObj:
     def set_config(self, keycloak_url: str, client_id: str, secret_key: str, scope: str, realm: str, callback) -> None:
         self._scope = scope
-        self._callback = callback
+        self._callback = callback + "/get_token"
 
         self._oid = KeycloakOpenID(
             server_url=keycloak_url,

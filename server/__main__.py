@@ -50,6 +50,6 @@ if __name__ == '__main__':
         config["security"]["client_secret_key"],
         config["security"]["scope"],
         config["security"]["realm"],
-        config["security"]["callback_url"]
+        config["http_server"]["base_uri"]
     )
     run_server()
