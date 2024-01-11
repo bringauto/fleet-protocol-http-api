@@ -9,14 +9,14 @@
         },
         "cleanup": {
             "timing_in_seconds": {
-                "retention_period": 20,
-                "cleanup_period": 1
+                "retention_period": 30,
+                "cleanup_period": 5
 
             }
         }
     },
     "http_server": {
-        "base_uri": "https://api.bringautofleet.com/protocol/v2"
+        "base_uri": "https://api.bringautofleet.com/v2/protocol"
     },
     "request_for_messages": {
         "timeout_in_seconds": 5
