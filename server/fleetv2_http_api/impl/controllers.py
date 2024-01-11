@@ -43,20 +43,53 @@ def init_security(keycloak_url: str, client_id: str, secret_key: str, scope: str
 
 
 def login() -> Response:
+    """login
+
+    Redirect to keycloak login page. # noqa: E501
+
+    :rtype: Response
+    """
     return redirect(_security.get_authentication_url())
 
-#/swap_token
-#?state=your_state_info
-#&session_state=167e141d-2f55-4d4e-88e5-2d6fb7f8e774
-#&iss=http%3A%2F%2Flocalhost%3A8081%2Frealms%2Fmaster
-#&code=5dea27d2-4b2d-482d-a145-89c7dc322217.167e141d-2f55-4d4e-88e5-2d6fb7f8e774.86b15968-a46c-41e0-a086-5cd2bf0f8138
-def get_token(
+
+def token_get(
     state: str,
     session_state: str,
     iss: str,
     code: str
 ) -> Dict:
-    return { "token": _security.get_token(state, session_state, iss, code)['access_token'] }
+    """token_get
+
+    Get token. Should only be used by keycloak. # noqa: E501
+
+    :param state: State
+    :type state: str
+    :param session_state: Session state
+    :type session_state: str
+    :param iss: Code issuer
+    :type iss: str
+    :param code: Code used to get jwt token
+    :type code: str
+
+    :rtype: Dict
+    """
+    return _security.token_get(state, session_state, iss, code)
+
+
+def token_refresh(
+    refresh_token: str
+) -> Dict:
+    """token_refresh
+
+    Generate a new token using the refresh token. # noqa: E501
+
+    :param refresh_token: Refresh token
+    :type refresh_token: str
+
+    :rtype: Dict
+    """
+    return _security.token_refresh(refresh_token)
+
 
 def available_cars() -> List[Car]:
     """available_cars

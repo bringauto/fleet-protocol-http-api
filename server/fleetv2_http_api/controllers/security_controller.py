@@ -35,7 +35,12 @@ def info_from_oAuth2AuthCode(token) -> Dict:
     """
     #TODO get public key from file
     public_key = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA6ZxBHXqGgVj/avzsi+6g1exD/OAYuI9Q0FzB8tBASqSAD4+2GeCZC2StldypDabWiaGtzNGBMA73ThyrfvtK41xk1yhc9HvgULGskbEtpc9spg7hfqwGVeOMuYgVb+aJrg022KL/k5L6VGplRSf4S2o2D/cvXnucXth4T0GX4ezUU629E+sJAml2qWzGHVMKNMB1SIMEbbpcflsJKviJ6cYUMCQnvHxWlTe/uZ7H+0KD+4cnL+0kle6aWcCxYinNUlxiatCjqA4aGqRl740mYUNq9jnED4+R/DSt/i8IBr2K+TSAL73EK1ADXhBBImmWhZVK2ogm9LEy2NQIEKG1swIDAQAB\n-----END PUBLIC KEY-----"
-    decoded_token = jwt.decode(token, public_key, algorithms=['RS256'], audience='account')
+    
+    try:
+        decoded_token = jwt.decode(token, public_key, algorithms=['RS256'], audience='account')
+    except:
+        return None
+    
     roles = decoded_token["realm_access"]["roles"]
     
     for role in roles:

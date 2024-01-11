@@ -3,11 +3,23 @@ from typing import Dict
 from typing import Tuple
 from typing import Union
 
+from fleetv2_http_api.models.token import Token  # noqa: E501
 from fleetv2_http_api import util
 
 
-def get_token(state, session_state, iss, code):  # noqa: E501
-    """get_token
+def login():  # noqa: E501
+    """login
+
+    Login using keycloak. # noqa: E501
+
+
+    :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
+    """
+    return 'do some magic!'
+
+
+def token_get(state, session_state, iss, code):  # noqa: E501
+    """token_get
 
     Callback endpoint for keycloak to receive jwt token. # noqa: E501
 
@@ -20,17 +32,19 @@ def get_token(state, session_state, iss, code):  # noqa: E501
     :param code: Code used for jwt token generation returned by keycloak authentication.
     :type code: str
 
-    :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
+    :rtype: Union[Token, Tuple[Token, int], Tuple[Token, int, Dict[str, str]]
     """
     return 'do some magic!'
 
 
-def login():  # noqa: E501
-    """login
+def token_refresh(refresh_token):  # noqa: E501
+    """token_refresh
 
-    Login using keycloak. # noqa: E501
+    Endpoint to receive jwt token from refresh token. # noqa: E501
 
+    :param refresh_token: Refresh token used for jwt token generation.
+    :type refresh_token: str
 
-    :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
+    :rtype: Union[Token, Tuple[Token, int], Tuple[Token, int, Dict[str, str]]
     """
     return 'do some magic!'

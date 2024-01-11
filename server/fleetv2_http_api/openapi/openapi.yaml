@@ -237,60 +237,6 @@ paths:
       tags:
       - device
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
-  /get_token:
-    get:
-      description: Callback endpoint for keycloak to receive jwt token.
-      operationId: get_token
-      parameters:
-      - description: State returned by keycloak authentication.
-        example: your_state_info
-        explode: true
-        in: query
-        name: state
-        required: true
-        schema:
-          type: string
-        style: form
-      - description: Session state returned by keycloak authentication.
-        example: 167e141d-2f55-4d...
-        explode: true
-        in: query
-        name: session_state
-        required: true
-        schema:
-          type: string
-        style: form
-      - description: Code issuer returned by keycloak authentication.
-        example: http%3A%2F%2Flocalhost%3A8081%2Frealms%2Fmaster
-        explode: true
-        in: query
-        name: iss
-        required: true
-        schema:
-          type: string
-        style: form
-      - description: Code used for jwt token generation returned by keycloak authentication.
-        example: 5dea27d2-4b2d-48...
-        explode: true
-        in: query
-        name: code
-        required: true
-        schema:
-          type: string
-        style: form
-      responses:
-        "200":
-          content:
-            application/json:
-              example:
-                token: eY12354jngubi2ub922893fb29
-          description: Login successful.
-        "500":
-          description: Login failed due to internal server error.
-      security: []
-      tags:
-      - login
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
   /login:
     get:
       description: Login using keycloak.
@@ -464,6 +410,105 @@ paths:
       tags:
       - device
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
+  /token_get:
+    get:
+      description: Callback endpoint for keycloak to receive jwt token.
+      operationId: token_get
+      parameters:
+      - description: State returned by keycloak authentication.
+        example: your_state_info
+        explode: true
+        in: query
+        name: state
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: Session state returned by keycloak authentication.
+        example: 167e141d-2f55-4d...
+        explode: true
+        in: query
+        name: session_state
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: Code issuer returned by keycloak authentication.
+        example: http%3A%2F%2Flocalhost%3A8081%2Frealms%2Fmaster
+        explode: true
+        in: query
+        name: iss
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: Code used for jwt token generation returned by keycloak authentication.
+        example: 5dea27d2-4b2d-48...
+        explode: true
+        in: query
+        name: code
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                access_token: eyJhbGciOiJSUzI1NiIsI...
+                expires_in: 60
+                not-before-policy: 0
+                refresh_expires_in: 1800
+                refresh_token: eyJhbGciOiJIUzI1NiIsI...
+                scope: profile email test_scope
+                session_state: 3d9d4d25-92d2-44...
+                token_type: Bearer
+              schema:
+                $ref: '#/components/schemas/Token'
+          description: Login successful.
+        "500":
+          description: Login failed due to internal server error.
+      security: []
+      tags:
+      - login
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+  /token_refresh:
+    get:
+      description: Endpoint to receive jwt token from refresh token.
+      operationId: token_refresh
+      parameters:
+      - description: Refresh token used for jwt token generation.
+        example: 5dea27d2-4b2d-48...
+        explode: true
+        in: query
+        name: refresh_token
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                access_token: eyJhbGciOiJSUzI1NiIsI...
+                expires_in: 60
+                not-before-policy: 0
+                refresh_expires_in: 1800
+                refresh_token: eyJhbGciOiJIUzI1NiIsI...
+                scope: profile email test_scope
+                session_state: 3d9d4d25-92d2-44...
+                token_type: Bearer
+              schema:
+                $ref: '#/components/schemas/Token'
+          description: Token renewed.
+        "500":
+          description: Token refresh failed due to internal server error.
+      security: []
+      tags:
+      - login
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
 components:
   parameters:
     All:
@@ -576,7 +621,71 @@ components:
       schema:
         type: string
       style: form
+    RefreshToken:
+      description: Refresh token used for jwt token generation.
+      example: 5dea27d2-4b2d-48...
+      explode: true
+      in: query
+      name: refresh_token
+      required: true
+      schema:
+        type: string
+      style: form
   schemas:
+    Token:
+      description: Token used for authentication.
+      example:
+        access_token: eyJhbGciOiJSUzI1NiIsI...
+        refresh_token: eyJhbGciOiJIUzI1NiIsI...
+        refresh_expires_in: 1800
+        not-before-policy: 0
+        scope: test_scope
+        session_state: 3d9d4d25-92d2-44...
+        token_type: Bearer
+        expires_in: 300
+      properties:
+        access_token:
+          description: Jwt token used for authorization.
+          example: eyJhbGciOiJSUzI1NiIsI...
+          title: access_token
+          type: string
+        expires_in:
+          description: Time in seconds until the token expires.
+          example: 300
+          title: expires_in
+          type: integer
+        not-before-policy:
+          description: Time in seconds until the token can be used.
+          example: 0
+          title: not-before-policy
+          type: integer
+        refresh_expires_in:
+          description: Time in seconds until the refresh token expires.
+          example: 1800
+          title: refresh_expires_in
+          type: integer
+        refresh_token:
+          description: Refresh token used for jwt token generation.
+          example: eyJhbGciOiJIUzI1NiIsI...
+          title: refresh_token
+          type: string
+        scope:
+          description: Scope of the token.
+          example: test_scope
+          title: scope
+          type: string
+        session_state:
+          description: Session state.
+          example: 3d9d4d25-92d2-44...
+          title: session_state
+          type: string
+        token_type:
+          description: Type of the token.
+          example: Bearer
+          title: token_type
+          type: string
+      title: Token
+      type: object
     Message:
       description: Physical device or program located on the car.
       example:

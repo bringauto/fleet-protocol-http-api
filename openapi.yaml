@@ -40,10 +40,10 @@ paths:
         '500':
           description: Login failed due to internal server error.
 
-  /get_token:
+  /token_get:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
-      operationId: get_token
+      operationId: token_get
       security: []
       description:
         "Callback endpoint for keycloak to receive jwt token."
@@ -54,8 +54,17 @@ paths:
           description: Login successful.
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
               example:
-                token: "eY12354jngubi2ub922893fb29"
+                access_token: 'eyJhbGciOiJSUzI1NiIsI...'
+                expires_in: 60
+                not-before-policy: 0
+                refresh_expires_in: 1800
+                refresh_token: 'eyJhbGciOiJIUzI1NiIsI...'
+                scope: 'profile email test_scope'
+                session_state: '3d9d4d25-92d2-44...'
+                token_type: 'Bearer'
         '500':
           description: Login failed due to internal server error.
       parameters:
@@ -64,6 +73,35 @@ paths:
         - $ref: '#/components/parameters/kcIss'
         - $ref: '#/components/parameters/kcCode'
       
+  /token_refresh:
+    get:
+      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      operationId: token_refresh
+      security: []
+      description:
+        "Endpoint to receive jwt token from refresh token."
+      tags:
+        - login
+      responses:
+        '200':
+          description: Token renewed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+              example:
+                access_token: 'eyJhbGciOiJSUzI1NiIsI...'
+                expires_in: 60
+                not-before-policy: 0
+                refresh_expires_in: 1800
+                refresh_token: 'eyJhbGciOiJIUzI1NiIsI...'
+                scope: 'profile email test_scope'
+                session_state: '3d9d4d25-92d2-44...'
+                token_type: 'Bearer'
+        '500':
+          description: Token refresh failed due to internal server error.
+      parameters:
+        - $ref: '#/components/parameters/RefreshToken'
 
   /cars:
     get:
@@ -386,8 +424,54 @@ components:
         type: string
       example: 5dea27d2-4b2d-48...
 
+    RefreshToken:
+      name: refresh_token
+      description: Refresh token used for jwt token generation.
+      in: query
+      required: true
+      schema:
+        type: string
+      example: eyJhbGciOiJIUzI1NiIsI...
+
 
   schemas:
+    Token:
+      description: Token used for authentication.
+      type: object
+      properties:
+        access_token:
+          description: Jwt token used for authorization.
+          type: string
+          example: "eyJhbGciOiJSUzI1NiIsI..."
+        expires_in:
+          description: Time in seconds until the token expires.
+          type: integer
+          example: 300
+        not-before-policy:
+          description: Time in seconds until the token can be used.
+          type: integer
+          example: 0
+        refresh_expires_in:
+          description: Time in seconds until the refresh token expires.
+          type: integer
+          example: 1800
+        refresh_token:
+          description: Refresh token used for jwt token generation.
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsI..."
+        scope:
+          description: Scope of the token.
+          type: string
+          example: "test_scope"
+        session_state:
+          description: Session state.
+          type: string
+          example: "3d9d4d25-92d2-44..."
+        token_type:
+          description: Type of the token.
+          type: string
+          example: "Bearer"
+
     Message:
       description: Physical device or program located on the car.
       type: object
