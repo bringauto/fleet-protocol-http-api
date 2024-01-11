@@ -19,7 +19,7 @@ from database.device_ids import store_device_id_if_new, device_ids, serialized_d
 from database.time import timestamp
 from fleetv2_http_api.impl.wait import WaitObjManager
 
-NAME_PATTERN = "^[0-9a-z_]+$"
+_NAME_PATTERN = "^[0-9a-z_]+$"
 
 
 _status_wait_manager = WaitObjManager()
@@ -412,8 +412,8 @@ def _update_messages_timestamp(messages: Tuple[Message_DB]) -> None:
         message.timestamp = timestamp_now
 
 def _validate_name_string(name: str, text_label: str) -> None:
-    if not re.match(NAME_PATTERN, name):
-        msg = f"{text_label} '{name}' does not match pattern '{NAME_PATTERN}'."
+    if not re.match(_NAME_PATTERN, name):
+        msg = f"{text_label} '{name}' does not match pattern '{_NAME_PATTERN}'."
         raise ValueError(msg)
 
 def _log_and_respond(body: Any, code: int, log_msg: str = "") -> Tuple[Any, int]:
