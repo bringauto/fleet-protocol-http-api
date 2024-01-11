@@ -1,7 +1,8 @@
 from __future__ import annotations
-from typing import List, Optional, Tuple, Dict
+from typing import List, Optional, Tuple, Dict, Any
 from enums import MessageType
 import re
+import logging
 
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
 from fleetv2_http_api.models.device_id import DeviceId
@@ -118,25 +119,28 @@ def list_commands(
     """
     _validate_name_string(company_name, "Company name")
     _validate_name_string(car_name, "Car name")
+
+    company_and_car_name = f"Company='{company_name}', car='{car_name}'"
+
     db_commands = _list_messages(company_name,car_name,MessageType.COMMAND_TYPE,all_available,since)
     if db_commands or not wait:
         msg, code = _check_car_availability(company_name, car_name)
         if code == 200:
             # device is available and has commands, return them
-            return [_message_from_db(m) for m in db_commands], 200
+            cmds = [_message_from_db(m) for m in db_commands]
+            return _log_and_respond(cmds, 200, f"Returning commands for available car ({company_and_car_name}).")
         else:
-            return [], code # type: ignore
+            return _log_and_respond([], 404, f"No commands available at the moment ({company_and_car_name}).")
     else:
+        # no commands are available for given device, wait for them
         awaited_commands: List[Message] = _command_wait_manager.wait_and_get_reponse(company_name, car_name)
         if awaited_commands:
             if since is not None and awaited_commands[-1].timestamp < since:
-                return [], 200
-            return awaited_commands, 200
+                return _log_and_respond([], 200, f"Found commands, but all are older than 'since' parameter ({company_and_car_name}).")
+            return _log_and_respond(awaited_commands, 200, f"Returning awaited commands ({company_and_car_name}).")
         else:
-            if company_name not in device_ids():
-                return [], 404 # type: ignore
-            elif car_name not in device_ids()[company_name]:
-                return [], 404 # type: ignore
+            if company_name not in device_ids() or car_name not in device_ids()[company_name]:
+                return _log_and_respond([], 404, f"No commands available before timeout ({company_and_car_name}).")
             return [], 200
 
 
@@ -395,3 +399,9 @@ def _validate_name_string(name: str, text_label: str) -> None:
     if not re.match(NAME_PATTERN, name):
         msg = f"{text_label} '{name}' does not match pattern '{NAME_PATTERN}'."
         raise ValueError(msg)
+
+def _log_and_respond(body: Any, code: int, log_msg: str = "") -> Tuple[Any, int]:
+    if log_msg.strip() != "":
+        logger = logging.getLogger('werkzeug')
+        logger.info(log_msg)
+    return body, code  # type: ignore

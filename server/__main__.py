@@ -1,6 +1,7 @@
 import sys
 sys.path.append("server")
 from typing import Dict
+import logging
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -37,9 +38,17 @@ def _set_up_database_jobs(db_cleanup_config: Dict[str,int]) -> None:
     )
     scheduler.start()
 
+
+def _set_up_log_format() -> None:
+    """Set up the logging format."""
+    FORMAT = '%(asctime)s -- %(message)s'
+    logging.basicConfig(format=FORMAT)
+
+
 if __name__ == '__main__':
     vals = script_args.request_and_get_script_arguments("Run the Fleet Protocol v2 HTTP API server.")
     config = vals.config
+    _set_up_log_format()
     _connect_to_database(vals)
     _set_up_database_jobs(config["database"]["cleanup"]["timing_in_seconds"])
     set_status_wait_timeout_s(config["request_for_messages"]["timeout_in_seconds"])
