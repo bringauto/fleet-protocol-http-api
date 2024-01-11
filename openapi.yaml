@@ -36,16 +36,7 @@ paths:
         - login
       responses:
         '200':
-          description: Json used to authenticate a device.
-          content:
-            application/json:
-              example:
-                device_code: "m7SGw1xPqnpsJl2v0mtnlemraACSVbB_2hKJWXKhCuQ"
-                expires_in: 600
-                interval: 5
-                user_code: "EXHR-LFSY"
-                verification_uri: "http://localhost:8081/realms/master/device"
-                verification_uri_complete: "http://localhost:8081/realms/master/device?user_code=EXHR-LFSY"
+          description: Returns either a standard keycloak token or a json used to authenticate a device.
         '302':
           description: Redirect to keycloak authentication.
         '500':
@@ -64,20 +55,7 @@ paths:
         - login
       responses:
         '200':
-          description: Login successful.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Token'
-              example:
-                access_token: 'eyJhbGciOiJSUzI1NiIsI...'
-                expires_in: 60
-                not-before-policy: 0
-                refresh_expires_in: 1800
-                refresh_token: 'eyJhbGciOiJIUzI1NiIsI...'
-                scope: 'profile email test_scope'
-                session_state: '3d9d4d25-92d2-44...'
-                token_type: 'Bearer'
+          description: Returns a standard keycloak token.
         '500':
           description: Login failed due to internal server error.
       parameters:
@@ -97,20 +75,7 @@ paths:
         - login
       responses:
         '200':
-          description: Token renewed.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Token'
-              example:
-                access_token: 'eyJhbGciOiJSUzI1NiIsI...'
-                expires_in: 60
-                not-before-policy: 0
-                refresh_expires_in: 1800
-                refresh_token: 'eyJhbGciOiJIUzI1NiIsI...'
-                scope: 'profile email test_scope'
-                session_state: '3d9d4d25-92d2-44...'
-                token_type: 'Bearer'
+          description: Returns a new standard keycloak token.
         '500':
           description: Token refresh failed due to internal server error.
       parameters:
@@ -336,9 +301,9 @@ components:
       description: oAuth2 authorization
       flows: 
         authorizationCode:
-          authorizationUrl: http://localhost:8081/realms/master/protocol/openid-connect/auth
-          tokenUrl: http://localhost:8081/realms/master/protocol/openid-connect/token
-          refreshUrl: http://localhost:8081/realms/master/protocol/openid-connect/token
+          authorizationUrl: https://keycloak.bringauto.com/realms/bringauto/protocol/openid-connect/auth
+          tokenUrl: https://keycloak.bringauto.com/realms/bringauto/protocol/openid-connect/token
+          refreshUrl: https://keycloak.bringauto.com/realms/bringauto/protocol/openid-connect/token
           scopes: {}
 
 
@@ -457,43 +422,6 @@ components:
 
 
   schemas:
-    Token:
-      description: Token used for authentication.
-      type: object
-      properties:
-        access_token:
-          description: Jwt token used for authorization.
-          type: string
-          example: "eyJhbGciOiJSUzI1NiIsI..."
-        expires_in:
-          description: Time in seconds until the token expires.
-          type: integer
-          example: 300
-        not-before-policy:
-          description: Time in seconds until the token can be used.
-          type: integer
-          example: 0
-        refresh_expires_in:
-          description: Time in seconds until the refresh token expires.
-          type: integer
-          example: 1800
-        refresh_token:
-          description: Refresh token used for jwt token generation.
-          type: string
-          example: "eyJhbGciOiJIUzI1NiIsI..."
-        scope:
-          description: Scope of the token.
-          type: string
-          example: "test_scope"
-        session_state:
-          description: Session state.
-          type: string
-          example: "3d9d4d25-92d2-44..."
-        token_type:
-          description: Type of the token.
-          type: string
-          example: "Bearer"
-
     Message:
       description: Physical device or program located on the car.
       type: object

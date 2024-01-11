@@ -55,7 +55,7 @@ def login(
         return _security.device_get_authentication()
     elif device != None:
         try:
-            return _security.device_get_token(device)
+            return _security.device_token_get(device)
         except:
             return Response(status=400, response="Invalid device code or device still authenticating")
     return redirect(_security.get_authentication_url())

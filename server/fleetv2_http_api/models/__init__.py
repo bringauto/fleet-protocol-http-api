@@ -7,4 +7,3 @@ from fleetv2_http_api.models.message import Message
 from fleetv2_http_api.models.module import Module
 from fleetv2_http_api.models.payload import Payload
 from fleetv2_http_api.models.payload_data import PayloadData
-from fleetv2_http_api.models.token import Token

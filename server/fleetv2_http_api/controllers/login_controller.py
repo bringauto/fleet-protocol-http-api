@@ -3,7 +3,6 @@ from typing import Dict
 from typing import Tuple
 from typing import Union
 
-from fleetv2_http_api.models.token import Token  # noqa: E501
 from fleetv2_http_api import util
 
 
@@ -34,7 +33,7 @@ def token_get(state, session_state, iss, code):  # noqa: E501
     :param code: Code used for jwt token generation returned by keycloak authentication.
     :type code: str
 
-    :rtype: Union[Token, Tuple[Token, int], Tuple[Token, int, Dict[str, str]]
+    :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
     """
     return 'do some magic!'
 
@@ -47,6 +46,6 @@ def token_refresh(refresh_token):  # noqa: E501
     :param refresh_token: Refresh token used for jwt token generation.
     :type refresh_token: str
 
-    :rtype: Union[Token, Tuple[Token, int], Tuple[Token, int, Dict[str, str]]
+    :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
     """
     return 'do some magic!'
