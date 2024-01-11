@@ -387,7 +387,6 @@ def _message_from_db(message_db: Message_DB) -> Message:
         )
     )
 
-
 def _message_db_list(messages: List[Message], message_type: str) -> List[Message_DB]:
     assert(len(messages)>0)
     sdevice_id = serialized_device_id(messages[0].device_id)
