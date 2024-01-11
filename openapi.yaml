@@ -13,7 +13,7 @@ info:
 
 
 servers:
-  - url: https://api.bringautofleet.com/protocol/v2
+  - url: /v2/protocol
 
 tags:
 - name: car
