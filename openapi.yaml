@@ -31,14 +31,27 @@ paths:
       operationId: login
       security: []
       description:
-        "Login using keycloak."
+        "Login using keycloak. If empty device is specified, will generate a url and device code used to authenticate a device. Tries to get token if device code is specified."
       tags:
         - login
       responses:
+        '200':
+          description: Json used to authenticate a device.
+          content:
+            application/json:
+              example:
+                device_code: "m7SGw1xPqnpsJl2v0mtnlemraACSVbB_2hKJWXKhCuQ"
+                expires_in: 600
+                interval: 5
+                user_code: "EXHR-LFSY"
+                verification_uri: "http://localhost:8081/realms/master/device"
+                verification_uri_complete: "http://localhost:8081/realms/master/device?user_code=EXHR-LFSY"
         '302':
           description: Redirect to keycloak authentication.
         '500':
           description: Login failed due to internal server error.
+      parameters:
+        - $ref: '#/components/parameters/Device'
 
   /token_get:
     get:
@@ -387,6 +400,15 @@ components:
         type: string
         pattern: ^[0-9a-z_]+$
       example: "test_company"
+
+    Device:
+      name: device
+      description: Device code used for assisted authentication.
+      in: query
+      required: false
+      schema:
+        type: string
+      example: e-VZfSM_-_TyPElL3i94...
 
     kcState:
       name: state

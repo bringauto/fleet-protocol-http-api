@@ -7,7 +7,7 @@ class SecurityObj:
         self._scope = scope
         self._realm_name = realm
         self._callback = callback + "/token_get"
-        self._state = "your_state_info"
+        self._state = "state"
 
         self._oid = KeycloakOpenID(
             server_url=keycloak_url,
@@ -24,6 +24,10 @@ class SecurityObj:
         )
         return auth_url
     
+    def device_get_authentication(self) -> dict:
+        auth_url_device = self._oid.device()
+        return auth_url_device
+
     def token_get(self, state: str, session_state: str, iss: str, code: str) -> dict:
         if state != self._state:
             raise Exception("Invalid state")
@@ -35,6 +39,13 @@ class SecurityObj:
             grant_type="authorization_code",
             code=code,
             redirect_uri=self._callback
+        )
+        return token
+    
+    def device_get_token(self, device_code: str) -> dict:
+        token = self._oid.token(
+            grant_type="urn:ietf:params:oauth:grant-type:device_code",
+            device_code=device_code
         )
         return token
     

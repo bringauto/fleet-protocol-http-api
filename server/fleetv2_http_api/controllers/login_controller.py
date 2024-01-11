@@ -7,11 +7,13 @@ from fleetv2_http_api.models.token import Token  # noqa: E501
 from fleetv2_http_api import util
 
 
-def login():  # noqa: E501
+def login(device=None):  # noqa: E501
     """login
 
-    Login using keycloak. # noqa: E501
+    Login using keycloak. If empty device is specified, will generate a url and device code used to authenticate a device. Tries to get token if device code is specified. # noqa: E501
 
+    :param device: Device code used for assisted authentication.
+    :type device: str
 
     :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
     """

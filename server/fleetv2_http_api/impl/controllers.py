@@ -42,13 +42,22 @@ def init_security(keycloak_url: str, client_id: str, secret_key: str, scope: str
     _security.set_config(keycloak_url, client_id, secret_key, scope, realm, callback)
 
 
-def login() -> Response:
+def login(
+    device: Optional[str] = None
+) -> Response|Dict:
     """login
 
-    Redirect to keycloak login page. # noqa: E501
+    Redirect to keycloak login page. If empty device is specified, get authentication url and device code. Try authenticate if device code is provided# noqa: E501
 
-    :rtype: Response
+    :rtype: Response | Dict
     """
+    if device == "":
+        return _security.device_get_authentication()
+    elif device != None:
+        try:
+            return _security.device_get_token(device)
+        except:
+            return Response(status=400, response="Invalid device code or device still authenticating")
     return redirect(_security.get_authentication_url())
 
 

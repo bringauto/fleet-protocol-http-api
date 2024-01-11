@@ -239,9 +239,32 @@ paths:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
   /login:
     get:
-      description: Login using keycloak.
+      description: "Login using keycloak. If empty device is specified, will generate\
+        \ a url and device code used to authenticate a device. Tries to get token\
+        \ if device code is specified."
       operationId: login
+      parameters:
+      - description: Device code used for assisted authentication.
+        example: e-VZfSM_-_TyPElL3i94...
+        explode: true
+        in: query
+        name: device
+        required: false
+        schema:
+          type: string
+        style: form
       responses:
+        "200":
+          content:
+            application/json:
+              example:
+                device_code: m7SGw1xPqnpsJl2v0mtnlemraACSVbB_2hKJWXKhCuQ
+                expires_in: 600
+                interval: 5
+                user_code: EXHR-LFSY
+                verification_uri: http://localhost:8081/realms/master/device
+                verification_uri_complete: http://localhost:8081/realms/master/device?user_code=EXHR-LFSY
+          description: Json used to authenticate a device.
         "302":
           description: Redirect to keycloak authentication.
         "500":
@@ -479,7 +502,7 @@ paths:
       operationId: token_refresh
       parameters:
       - description: Refresh token used for jwt token generation.
-        example: 5dea27d2-4b2d-48...
+        example: eyJhbGciOiJIUzI1NiIsI...
         explode: true
         in: query
         name: refresh_token
@@ -581,6 +604,16 @@ components:
         pattern: "^[0-9a-z_]+$"
         type: string
       style: simple
+    Device:
+      description: Device code used for assisted authentication.
+      example: e-VZfSM_-_TyPElL3i94...
+      explode: true
+      in: query
+      name: device
+      required: false
+      schema:
+        type: string
+      style: form
     kcState:
       description: State returned by keycloak authentication.
       example: your_state_info
@@ -623,7 +656,7 @@ components:
       style: form
     RefreshToken:
       description: Refresh token used for jwt token generation.
-      example: 5dea27d2-4b2d-48...
+      example: eyJhbGciOiJIUzI1NiIsI...
       explode: true
       in: query
       name: refresh_token

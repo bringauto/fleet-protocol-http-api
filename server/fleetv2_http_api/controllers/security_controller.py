@@ -41,14 +41,15 @@ def info_from_oAuth2AuthCode(token) -> Dict:
     except:
         return None
     
-    roles = decoded_token["realm_access"]["roles"]
+    #TODO temporary until keycloak configuration is decided
+    #roles = decoded_token["realm_access"]["roles"]
     
-    for role in roles:
-        #TODO get role from some config
-        if role == "test_role":
-            return {'scopes': {}, 'uid': ''}
+    #for role in roles:
+    #    if role == "test_role":
+    #        return {'scopes': {}, 'uid': ''}
     
-    return None # type: ignore
+    return {'scopes': {}, 'uid': ''}
+    #return None # type: ignore
 
 
 def validate_scope_oAuth2AuthCode(required_scopes, token_scopes):
