@@ -49,7 +49,10 @@ def available_cars() -> List[Car]:
     for company_name in device_dict:
         for car_name in device_dict[company_name]:
             cars.append(Car(company_name, car_name))
-    return cars
+    if cars:
+        return _log_and_respond(cars, 200, "Listing available cars.")
+    else:
+        return _log_and_respond(cars, 200, "No cars were found. Returning empty list.")
 
 
 def available_devices(
@@ -75,21 +78,25 @@ def available_devices(
     _validate_name_string(company_name, "Company name")
     _validate_name_string(car_name, "Car name")
 
+    company_and_car_name = f"Company='{company_name}', car='{car_name}'"
+
     device_dict = device_ids()
     if company_name not in device_dict:
-        return [], 404 # type: ignore
+        return _log_and_respond([], 404, f"No company named '{company_name}' is registered.")
 
     elif car_name not in device_dict[company_name]:
-        return [], 404 # type: ignore
+        return _log_and_respond([], 404, f"No car named '{car_name}' is registered.")
 
     if module_id is None:
         car_modules = device_dict[company_name][car_name]
-        return [_available_module(company_name, car_name, id) for id in car_modules], 200
+        modules = [_available_module(company_name, car_name, id) for id in car_modules]
+        return _log_and_respond(modules, 200, f"Listing available modules ({company_and_car_name})")
     else:
         if module_id not in device_dict[company_name][car_name]:
-            return [], 404 # type: ignore
+            return _log_and_respond({}, 404, f"No module with id '{module_id}' is available ({company_and_car_name}).")
         else:
-            return _available_module(company_name, car_name, module_id), 200
+            module = _available_module(company_name, car_name, module_id)
+            return _log_and_respond(module, 200, f"Listing available devices in the module '{module_id}' ({company_and_car_name}).")
 
 
 def list_commands(
@@ -141,7 +148,7 @@ def list_commands(
         else:
             if company_name not in device_ids() or car_name not in device_ids()[company_name]:
                 return _log_and_respond([], 404, f"No commands available before timeout ({company_and_car_name}).")
-            return [], 200
+            return _log_and_respond([], 200, f"Car exists, no command occured before timeout ({company_and_car_name}).")
 
 
 def list_statuses(

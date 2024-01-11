@@ -179,14 +179,14 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
         self.assertEqual(available_devices("other_company", "some_car"), ([], 404))
 
     def test_car_is_considered_available_if_at_least_one_of_its_devices_are_available(self):
-        self.assertListEqual(available_cars(), [])
+        self.assertListEqual(available_cars()[0], [])
         response, code = send_statuses(
             company_name="test_company",
             car_name="test_car",
             body=[self.status_example]
         )
         self.assertEqual(code, 200)
-        self.assertListEqual(available_cars(), [Car("test_company","test_car")])
+        self.assertListEqual(available_cars()[0], [Car("test_company","test_car")])
 
     def test_listing_device_for_unavailable_car_returns_empty_list_and_code_404(self):
         device_id = DeviceId(module_id=18, type=3, role="available_device", name="Available device")
@@ -512,7 +512,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
             available_devices("company", "car")[0],
             [Module(module_id=42, device_list=[self.device_id])]
         )
-        self.assertEqual(available_cars(),[Car("company", "car")])
+        self.assertEqual(available_cars()[0],[Car("company", "car")])
 
         mock_time_in_ms.return_value = self.DATA_RETENTION_PERIOD+30
         send_commands("company", "car", [command_1])
@@ -530,7 +530,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
             available_devices("company", "car"),
             ([], 404)
         )
-        self.assertEqual(available_cars(), [])
+        self.assertEqual(available_cars()[0], [])
 
         mock_time_in_ms.return_value = self.DATA_RETENTION_PERIOD + 50
         warnings, code = send_statuses("company", "car", [new_first_status])
@@ -633,7 +633,7 @@ class Test_Store_Available_Device_Ids_After_Connecting_To_Database_Already_Conta
             conn.execute(stmt, data_list)
 
         get_available_devices_from_database()
-        self.assertListEqual(available_cars(), [Car("company_xy", "car_abc")])
+        self.assertListEqual(available_cars()[0], [Car("company_xy", "car_abc")])
 
 
 if __name__=="__main__":
