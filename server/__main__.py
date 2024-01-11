@@ -10,6 +10,7 @@ from database.connection import set_db_connection
 from database.time import timestamp
 from fleetv2_http_api.__main__ import main as run_server
 from fleetv2_http_api.impl.controllers import set_status_wait_timeout_s, set_command_wait_timeout_s, init_security
+from fleetv2_http_api.controllers.security_controller import set_public_key
 import database.script_args as script_args
 
 def _clean_up_messages() -> None:
@@ -52,4 +53,7 @@ if __name__ == '__main__':
         config["security"]["realm"],
         config["http_server"]["base_uri"]
     )
+    public_key_file = open(config["security"]["keycloak_public_key_file"], "r")
+    set_public_key(public_key_file.read())
+    public_key_file.close()
     run_server()

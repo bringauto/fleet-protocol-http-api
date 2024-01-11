@@ -26,6 +26,7 @@
         "client_id": "test_client",
         "client_secret_key": "EbJV0XwaGbDCW1WwaW2Rw8dMSQpRYflz",
         "scope": "test_scope",
-        "realm": "master"
+        "realm": "master",
+        "keycloak_public_key_file": "config/keycloak.pem"
     }
 }
