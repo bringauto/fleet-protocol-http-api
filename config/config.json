@@ -16,7 +16,7 @@
         }
     },
     "http_server": {
-        "base_uri": "http://localhost:8080"
+        "base_uri": "https://api.bringautofleet.com/protocol/v2"
     },
     "request_for_messages": {
         "timeout_in_seconds": 5

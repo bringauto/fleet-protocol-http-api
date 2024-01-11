@@ -13,7 +13,7 @@ info:
 
 
 servers:
-  - url: http://localhost:8080
+  - url: https://api.bringautofleet.com/protocol/v2
 
 tags:
 - name: car

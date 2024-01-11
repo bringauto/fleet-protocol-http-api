@@ -10,7 +10,7 @@ info:
   title: Fleet v2 HTTP API
   version: 2.0.1
 servers:
-- url: http://localhost:8080
+- url: https://api.bringautofleet.com/protocol/v2
 security:
 - AdminAuth: []
 - oAuth2AuthCode: []
