@@ -55,12 +55,12 @@ if __name__ == '__main__':
     set_status_wait_timeout_s(config["request_for_messages"]["timeout_in_seconds"])
     set_command_wait_timeout_s(config["request_for_messages"]["timeout_in_seconds"])
     init_security(
-        config["security"]["keycloak_url"],
-        config["security"]["client_id"],
-        config["security"]["client_secret_key"],
-        config["security"]["scope"],
-        config["security"]["realm"],
-        config["http_server"]["base_uri"]
+        keycloak_url=config["security"]["keycloak_url"],
+        client_id=config["security"]["client_id"],
+        secret_key=config["security"]["client_secret_key"],
+        scope=config["security"]["scope"],
+        realm=config["security"]["realm"],
+        callback=config["http_server"]["base_uri"]
     )
     public_key_file = open(config["security"]["keycloak_public_key_file"], "r")
     set_public_key(public_key_file.read())
