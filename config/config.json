@@ -20,6 +20,13 @@
     },
     "request_for_messages": {
         "timeout_in_seconds": 5
-
+    },
+    "security": {
+        "keycloak_url": "https://keycloak.bringauto.com",
+        "client_id": "",
+        "client_secret_key": "",
+        "scope": "",
+        "realm": "",
+        "keycloak_public_key_file": "config/keycloak.pem"
     }
 }

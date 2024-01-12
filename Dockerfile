@@ -12,5 +12,5 @@ COPY . /usr/src/app
 EXPOSE 8080
 
 ENTRYPOINT ["python3"]
-CMD ["-m", "server", "config.json"]
+CMD ["-m", "server", "config/config.json"]
 
