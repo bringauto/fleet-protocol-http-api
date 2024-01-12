@@ -435,7 +435,7 @@ paths:
         explode: true
         in: query
         name: state
-        required: true
+        required: false
         schema:
           type: string
         style: form
@@ -444,7 +444,7 @@ paths:
         explode: true
         in: query
         name: session_state
-        required: true
+        required: false
         schema:
           type: string
         style: form
@@ -453,7 +453,7 @@ paths:
         explode: true
         in: query
         name: iss
-        required: true
+        required: false
         schema:
           type: string
         style: form
@@ -462,7 +462,7 @@ paths:
         explode: true
         in: query
         name: code
-        required: true
+        required: false
         schema:
           type: string
         style: form
@@ -586,7 +586,7 @@ components:
       explode: true
       in: query
       name: state
-      required: true
+      required: false
       schema:
         type: string
       style: form
@@ -596,7 +596,7 @@ components:
       explode: true
       in: query
       name: session_state
-      required: true
+      required: false
       schema:
         type: string
       style: form
@@ -606,7 +606,7 @@ components:
       explode: true
       in: query
       name: iss
-      required: true
+      required: false
       schema:
         type: string
       style: form
@@ -616,7 +616,7 @@ components:
       explode: true
       in: query
       name: code
-      required: true
+      required: false
       schema:
         type: string
       style: form

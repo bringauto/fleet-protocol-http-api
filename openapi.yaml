@@ -379,7 +379,7 @@ components:
       name: state
       description: State returned by keycloak authentication.
       in: query
-      required: true
+      required: false
       schema:
         type: string
       example: your_state_info
@@ -388,7 +388,7 @@ components:
       name: session_state
       description: Session state returned by keycloak authentication.
       in: query
-      required: true
+      required: false
       schema:
         type: string
       example: 167e141d-2f55-4d...
@@ -397,7 +397,7 @@ components:
       name: iss
       description: Code issuer returned by keycloak authentication.
       in: query
-      required: true
+      required: false
       schema:
         type: string
       example: http%3A%2F%2Flocalhost%3A8081%2Frealms%2Fmaster
@@ -406,7 +406,7 @@ components:
       name: code
       description: Code used for jwt token generation returned by keycloak authentication.
       in: query
-      required: true
+      required: false
       schema:
         type: string
       example: 5dea27d2-4b2d-48...

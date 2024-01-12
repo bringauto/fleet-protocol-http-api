@@ -74,10 +74,10 @@ def login(
 
 
 def token_get(
-    state: str,
-    session_state: str,
-    iss: str,
-    code: str
+    state: Optional[str] = None,
+    session_state: Optional[str] = None,
+    iss: Optional[str] = None,
+    code: Optional[str] = None
 ) -> Tuple[Dict, int]:
     """token_get
 

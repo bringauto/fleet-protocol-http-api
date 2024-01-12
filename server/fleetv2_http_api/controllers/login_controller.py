@@ -19,7 +19,7 @@ def login(device=None):  # noqa: E501
     return 'do some magic!'
 
 
-def token_get(state, session_state, iss, code):  # noqa: E501
+def token_get(state=None, session_state=None, iss=None, code=None):  # noqa: E501
     """token_get
 
     Callback endpoint for keycloak to receive jwt token. # noqa: E501
