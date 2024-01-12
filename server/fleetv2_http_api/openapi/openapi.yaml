@@ -8,7 +8,7 @@ info:
     name: GPLv3
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
   title: Fleet v2 HTTP API
-  version: 2.0.5
+  version: 2.0.6
 servers:
 - url: /v2/protocol
 security:

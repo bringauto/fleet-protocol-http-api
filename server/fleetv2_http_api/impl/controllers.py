@@ -45,7 +45,7 @@ def init_security(keycloak_url: str, client_id: str, secret_key: str, scope: str
 
 def login(
     device: Optional[str] = None
-) -> Response|Dict:
+) -> Response|Tuple[Dict|str, int]:
     """login
 
     Redirect to keycloak login page. If empty device is specified, get authentication url and device code. Try authenticate if device code is provided# noqa: E501
@@ -53,12 +53,15 @@ def login(
     :rtype: Response | Dict
     """
     if device == "":
-        return _security.device_get_authentication()
+        auth_json = _security.device_get_authentication()
+        return _log_and_respond(auth_json, 200, "Device authentication initialized.")
     elif device != None:
         try:
-            return _security.device_token_get(device)
+            token = _security.device_token_get(device)
+            return _log_and_respond(token, 200, "Device authenticated, jwt token generated.")
         except:
-            return Response(status=400, response="Invalid device code or device still authenticating")
+            msg = "Invalid device code or device still authenticating."
+            return _log_and_respond(msg, 400, msg)
     return redirect(_security.get_authentication_url())
 
 
@@ -67,7 +70,7 @@ def token_get(
     session_state: str,
     iss: str,
     code: str
-) -> Dict:
+) -> Tuple[Dict, int]:
     """token_get
 
     Get token. Should only be used by keycloak. # noqa: E501
@@ -83,12 +86,13 @@ def token_get(
 
     :rtype: Dict
     """
-    return _security.token_get(state, session_state, iss, code)
+    token = _security.token_get(state, session_state, iss, code) 
+    return _log_and_respond(token, 200, "Jwt token generated.")
 
 
 def token_refresh(
     refresh_token: str
-) -> Dict:
+) -> Tuple[Dict, int]:
     """token_refresh
 
     Generate a new token using the refresh token. # noqa: E501
@@ -98,7 +102,8 @@ def token_refresh(
 
     :rtype: Dict
     """
-    return _security.token_refresh(refresh_token)
+    token = _security.token_refresh(refresh_token) 
+    return _log_and_respond(token, 200, "Jwt token refreshed.")
 
 
 def available_cars() -> List[Car]:
