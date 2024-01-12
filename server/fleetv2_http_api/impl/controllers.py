@@ -48,7 +48,7 @@ def login(
 ) -> Response|Tuple[Dict|str, int]:
     """login
 
-    Redirect to keycloak login page. If empty device is specified, get authentication url and device code. Try authenticate if device code is provided# noqa: E501
+    Redirect to keycloak login page. If empty device is specified, get authentication url and device code. Try authenticate if device code is provided. # noqa: E501
 
     :rtype: Response | Dict
     """
