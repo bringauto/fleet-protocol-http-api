@@ -53,7 +53,11 @@ def login(
     :rtype: Response | Dict
     """
     if device == "":
-        auth_json = _security.device_get_authentication()
+        try:
+            auth_json = _security.device_get_authentication()
+        except:
+            msg = "Problem reaching oAuth service."
+            return _log_and_respond(msg, 500, msg)
         return _log_and_respond(auth_json, 200, "Device authentication initialized.")
     elif device != None:
         try:
@@ -62,7 +66,11 @@ def login(
         except:
             msg = "Invalid device code or device still authenticating."
             return _log_and_respond(msg, 400, msg)
-    return redirect(_security.get_authentication_url())
+    try:
+        return redirect(_security.get_authentication_url())
+    except:
+            msg = "Problem reaching oAuth service."
+            return _log_and_respond(msg, 500, msg)
 
 
 def token_get(
@@ -86,7 +94,11 @@ def token_get(
 
     :rtype: Dict
     """
-    token = _security.token_get(state, session_state, iss, code) 
+    try:
+        token = _security.token_get(state, session_state, iss, code)
+    except:
+        msg = "Problem getting token from oAuth service."
+        return _log_and_respond(msg, 500, msg)
     return _log_and_respond(token, 200, "Jwt token generated.")
 
 
@@ -102,7 +114,11 @@ def token_refresh(
 
     :rtype: Dict
     """
-    token = _security.token_refresh(refresh_token) 
+    try:
+        token = _security.token_refresh(refresh_token)
+    except:
+        msg = "Problem getting token from oAuth service."
+        return _log_and_respond(msg, 500, msg)
     return _log_and_respond(token, 200, "Jwt token refreshed.")
 
 
