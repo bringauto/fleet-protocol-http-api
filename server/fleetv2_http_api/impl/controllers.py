@@ -187,9 +187,8 @@ def available_devices(
 def list_commands(
     company_name: str,
     car_name: str,
-    all_available: Optional[bool] = None,
-    since: Optional[int] = None,
-    wait: Optional[bool] = None
+    since: int = 0,
+    wait: bool = False
     ) -> Tuple[List[Message], int]:  # noqa: E501
 
     """list_commands
@@ -200,8 +199,6 @@ def list_commands(
     :type company_name: str
     :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
     :type car_name: str
-    :param all_available: If set, the method returns a complete history of statuses/commands.
-    :type all_available: bool
     :param since: A Unix timestamp; if specified, the method returns all messages inclusivelly newer than the specified timestamp \\ (i.e., messages with timestamp greater than or equal to the &#39;since&#39; timestamp)
     :type since: int
     :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
@@ -214,7 +211,7 @@ def list_commands(
 
     company_and_car_name = f"Company='{company_name}', car='{car_name}'"
 
-    db_commands = _list_messages(company_name,car_name,MessageType.COMMAND_TYPE,all_available,since)
+    db_commands = _list_messages(company_name, car_name, MessageType.COMMAND_TYPE, since)
     if db_commands or not wait:
         msg, code = _check_car_availability(company_name, car_name)
         if code == 200:
@@ -239,9 +236,8 @@ def list_commands(
 def list_statuses(
     company_name: str,
     car_name: str,
-    all_available: Optional[bool] = None,
-    since: Optional[int] = None,
-    wait: Optional[bool] = None
+    since: int = 0,
+    wait: bool = False
     ) -> Tuple[List[Message], int]:  # noqa: E501
 
     """list_statuses
@@ -252,8 +248,6 @@ def list_statuses(
     :type company_name: str
     :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
     :type car_name: str
-    :param all_available: If set, the method returns a complete history of statuses/commands.
-    :type all_available: bool
     :param since: A Unix timestamp; if specified, the method returns all messages inclusivelly newer than the specified timestamp \\ (i.e., messages with timestamp greater than or equal to the &#39;since&#39; timestamp)
     :type since: int
     :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
@@ -266,7 +260,7 @@ def list_statuses(
 
     company_and_car_name = f"Company='{company_name}', car='{car_name}'"
 
-    db_statuses = _list_messages(company_name, car_name, MessageType.STATUS_TYPE, all_available, since)
+    db_statuses = _list_messages(company_name, car_name, MessageType.STATUS_TYPE, since)
     if db_statuses:
         statuses = [_message_from_db(m) for m in db_statuses]
         return _log_and_respond(statuses, 200, f"Returning statuses for available car ({company_and_car_name}).")

@@ -55,13 +55,13 @@ Note that these data should comply with the requirements specified in SQLAlchemy
 To visualize the API, open your browser to here (the location and port may vary according to the script parameters or the values in `config/config.json`):
 
 ```
-http://localhost:8080/ui/
+http://localhost:8080/v2/protocol/ui
 ```
 
 Your OpenAPI definition lives here:
 
 ```
-http://localhost:8080/openapi.json
+http://localhost:8080/v2/protocol/openapi.json
 ```
 ### Running with Docker
 To run the server on a Docker container, run:
