@@ -7,7 +7,7 @@ from fleetv2_http_api.models.message import Message  # noqa: E501
 from fleetv2_http_api import util
 
 
-def list_commands(company_name, car_name, all_available=None, since=None, wait=None):  # noqa: E501
+def list_commands(company_name, car_name, since=None, wait=None):  # noqa: E501
     """list_commands
 
     Returns list of the Device Commands. # noqa: E501
@@ -16,8 +16,6 @@ def list_commands(company_name, car_name, all_available=None, since=None, wait=N
     :type company_name: str
     :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
     :type car_name: str
-    :param all_available: If set, the method returns a complete history of statuses/commands.
-    :type all_available: bool
     :param since: A Unix timestamp; if specified, the method returns all messages inclusivelly newer than the specified timestamp \\ (i.e., messages with timestamp greater than or equal to the &#39;since&#39; timestamp)
     :type since: int
     :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
@@ -28,7 +26,7 @@ def list_commands(company_name, car_name, all_available=None, since=None, wait=N
     return 'do some magic!'
 
 
-def list_statuses(company_name, car_name, all_available=None, since=None, wait=None):  # noqa: E501
+def list_statuses(company_name, car_name, since=None, wait=None):  # noqa: E501
     """list_statuses
 
     It returns list of the Device Statuses. # noqa: E501
@@ -37,8 +35,6 @@ def list_statuses(company_name, car_name, all_available=None, since=None, wait=N
     :type company_name: str
     :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
     :type car_name: str
-    :param all_available: If set, the method returns a complete history of statuses/commands.
-    :type all_available: bool
     :param since: A Unix timestamp; if specified, the method returns all messages inclusivelly newer than the specified timestamp \\ (i.e., messages with timestamp greater than or equal to the &#39;since&#39; timestamp)
     :type since: int
     :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.

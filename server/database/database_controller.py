@@ -166,8 +166,7 @@ def list_messages(
     company_name: str,
     car_name: str,
     message_type: str,
-    all_available: Optional[bool] = None,
-    since: Optional[int] = None
+    since: int = 0
     ) -> List[Message_DB]:  # noqa:
 
     """Return a list of messages of the given type, optionally filtered by the given parameters.
@@ -181,28 +180,11 @@ def list_messages(
     with Session(get_connection_source()) as session:
         table = MessageBase.__table__
         selection = select(MessageBase).where(table.c.message_type == message_type)
-        if all_available is True:
-            selection = selection.where(and_(
-                table.c.company_name == company_name,
-                table.c.car_name == car_name
-            ))
-        elif since is not None:
-            selection = selection.where(and_(
-                table.c.company_name == company_name,
-                table.c.car_name == car_name,
-                table.c.timestamp >= since
-            ))
-        else:
-            # return newest message
-            extreme_func = func.max
-            extreme_value = session.query(extreme_func(table.c.timestamp)).\
-                where(
-                    table.c.company_name == company_name,
-                    table.c.car_name == car_name,
-                    table.c.message_type == message_type
-                ).scalar()
-            selection = selection.where(table.c.timestamp == extreme_value)
-
+        selection = selection.where(and_(
+            table.c.company_name == company_name,
+            table.c.car_name == car_name,
+            table.c.timestamp >= since
+        ))
         result = session.execute(selection)
         for row in result:
             base: MessageBase = row[0]

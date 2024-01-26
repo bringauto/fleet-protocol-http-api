@@ -8,7 +8,7 @@ info:
     name: GPLv3
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
   title: Fleet v2 HTTP API
-  version: 2.0.6
+  version: 2.1.0
 servers:
 - url: /v2/protocol
 security:
@@ -123,16 +123,6 @@ paths:
           pattern: "^[a-z0-9_]+$"
           type: string
         style: simple
-      - description: "If set, the method returns a complete history of statuses/commands."
-        example: false
-        explode: true
-        in: query
-        name: all_available
-        required: false
-        schema:
-          nullable: true
-          type: boolean
-        style: form
       - description: "A Unix timestamp; if specified, the method returns all messages\
           \ inclusivelly newer than the specified timestamp \\ (i.e., messages with\
           \ timestamp greater than or equal to the 'since' timestamp)"
@@ -142,6 +132,7 @@ paths:
         name: since
         required: false
         schema:
+          default: 0
           nullable: true
           type: integer
         style: form
@@ -153,6 +144,7 @@ paths:
         name: wait
         required: false
         schema:
+          default: false
           nullable: true
           type: boolean
         style: form
@@ -290,16 +282,6 @@ paths:
           pattern: "^[a-z0-9_]+$"
           type: string
         style: simple
-      - description: "If set, the method returns a complete history of statuses/commands."
-        example: false
-        explode: true
-        in: query
-        name: all_available
-        required: false
-        schema:
-          nullable: true
-          type: boolean
-        style: form
       - description: "A Unix timestamp; if specified, the method returns all messages\
           \ inclusivelly newer than the specified timestamp \\ (i.e., messages with\
           \ timestamp greater than or equal to the 'since' timestamp)"
@@ -309,6 +291,7 @@ paths:
         name: since
         required: false
         schema:
+          default: 0
           nullable: true
           type: integer
         style: form
@@ -320,6 +303,7 @@ paths:
         name: wait
         required: false
         schema:
+          default: false
           nullable: true
           type: boolean
         style: form
@@ -500,17 +484,6 @@ paths:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
 components:
   parameters:
-    All:
-      description: "If set, the method returns a complete history of statuses/commands."
-      example: false
-      explode: true
-      in: query
-      name: all_available
-      required: false
-      schema:
-        nullable: true
-        type: boolean
-      style: form
     Since:
       description: "A Unix timestamp; if specified, the method returns all messages\
         \ inclusivelly newer than the specified timestamp \\ (i.e., messages with\
@@ -521,6 +494,7 @@ components:
       name: since
       required: false
       schema:
+        default: 0
         nullable: true
         type: integer
       style: form
@@ -545,6 +519,7 @@ components:
       name: wait
       required: false
       schema:
+        default: false
         nullable: true
         type: boolean
       style: form

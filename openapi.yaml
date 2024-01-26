@@ -3,7 +3,7 @@ openapi: 3.0.2
 
 info:
   title: Fleet v2 HTTP API
-  version: 2.0.6
+  version: 2.1.0
   description: HTTP-based API for Fleet Protocol v2 serving for communication between the External Server and the end users.
   contact:
     email: jiri.strouhal@bringauto.com
@@ -63,7 +63,7 @@ paths:
         - $ref: '#/components/parameters/kcSessionState'
         - $ref: '#/components/parameters/kcIss'
         - $ref: '#/components/parameters/kcCode'
-      
+
   /token_refresh:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
@@ -185,7 +185,6 @@ paths:
           description: The statuses cannot be displayed due to internal server error.
 
       parameters:
-        - $ref: '#/components/parameters/All'
         - $ref: '#/components/parameters/Since'
         - $ref: '#/components/parameters/Wait'
 
@@ -250,7 +249,6 @@ paths:
           description: The commands cannot be displayed due to internal server error.
 
       parameters:
-        - $ref: '#/components/parameters/All'
         - $ref: '#/components/parameters/Since'
         - $ref: '#/components/parameters/Wait'
 
@@ -299,7 +297,7 @@ components:
     oAuth2AuthCode:
       type: oauth2
       description: oAuth2 authorization
-      flows: 
+      flows:
         authorizationCode:
           authorizationUrl: https://keycloak.bringauto.com/realms/bringauto/protocol/openid-connect/auth
           tokenUrl: https://keycloak.bringauto.com/realms/bringauto/protocol/openid-connect/token
@@ -308,15 +306,6 @@ components:
 
 
   parameters:
-    All:
-      name: all_available
-      description: If set, the method returns a complete history of statuses/commands.
-      in: query
-      schema:
-        type: boolean
-        nullable: true
-      example: False
-
     Since:
       name: since
       description: A Unix timestamp; if specified, the method returns all messages inclusivelly newer than the specified timestamp \
@@ -325,6 +314,7 @@ components:
       schema:
         type: integer
         nullable: true
+        default: 0
       example: 1699262836
 
     ModuleId:
@@ -344,6 +334,7 @@ components:
       schema:
         type: boolean
         nullable: true
+        default: false
       example: True
 
     CarName:
