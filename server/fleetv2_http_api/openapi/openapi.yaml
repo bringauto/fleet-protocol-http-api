@@ -645,6 +645,17 @@ components:
       title: AvailableDevices
     Module:
       description: A module containing at least one device (specified by device Id).
+      example:
+        device_list:
+        - module_id: 47
+          type: 2
+          role: test_device
+          name: Test Device
+        - module_id: 47
+          type: 2
+          role: test_device
+          name: Test Device
+        module_id: 47
       properties:
         module_id:
           description: Id (unsigned integer) of the module.

@@ -1,19 +1,22 @@
+import os
 import sys
+
 sys.path.append("server")
+
 from unittest.mock import patch, Mock
 import unittest
-from enums import EncodingType, MessageType
+from enums import EncodingType, MessageType # type: ignore
 
-from fleetv2_http_api.models.device_id import DeviceId
-from database.device_ids import serialized_device_id
-from database.connection import (
+from fleetv2_http_api.models.device_id import DeviceId # type: ignore
+from database.device_ids import serialized_device_id # type: ignore
+from database.connection import (  # type: ignore
     set_test_db_connection,
     unset_connection_source,
     ConnectionSourceNotSet,
     get_connection_source,
     set_test_db_connection
 )
-from database.database_controller import (
+from database.database_controller import (  # type: ignore
     set_message_retention_period,
     send_messages_to_database,
     list_messages,
@@ -22,7 +25,7 @@ from database.database_controller import (
     Message_DB,
     MessageBase
 )
-from fleetv2_http_api.impl.controllers import DeviceId
+from fleetv2_http_api.impl.controllers import DeviceId # type: ignore
 
 class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
 
@@ -81,9 +84,11 @@ class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
 class Test_Specifying_Database_Name(unittest.TestCase):
 
     def test_setting_database_name(self):
-        set_test_db_connection(db_name="test_db")
+        set_test_db_connection(db_name="test_db.db")
         source = get_connection_source()
-        self.assertEqual(source.url.database, "test_db")
+        self.assertEqual(source.url.database, "test_db.db")
+        if os.path.isfile("test_db.db"):
+            os.remove("test_db.db")
 
 
 class Test_Sending_And_Clearing_Messages(unittest.TestCase):
