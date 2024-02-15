@@ -1,0 +1,8 @@
+[project]
+name = "server"
+version = "2.1.0"
+
+
+[tool.setuptools.packages.find]
+include = ["server"]
+exclude = ["integration_tests", "coverage_reports", "scripts"]
