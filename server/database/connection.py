@@ -16,8 +16,8 @@
 
 
 from typing import Optional, Callable, Tuple
-from sqlalchemy import create_engine, Engine
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import create_engine, Engine, Integer, String
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 _connection_source: Optional[Engine] = None
 
@@ -29,6 +29,16 @@ class InvalidConnectionArguments(Exception): pass
 
 class Base(DeclarativeBase):
     pass
+
+
+class AdminBase(Base):
+    __tablename__: str = "api_keys"
+    __check_period_in_seconds__: int = 5
+    __max_requests_per_period__: int = 5
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String)
+    key: Mapped[str] = mapped_column(String)
 
 
 def get_connection_source() -> Engine:

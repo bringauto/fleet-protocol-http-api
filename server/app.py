@@ -3,17 +3,17 @@ from typing import Any
 
 from flask.testing import FlaskClient as _FlaskClient  # type: ignore
 import connexion as _connexion  # type: ignore
-from sqlalchemy import Engine as _Engine
 from sqlalchemy.orm import Session as _Session
 
 from server.fleetv2_http_api.encoder import JSONEncoder
-from server.database.security import AdminBase as _AdminBase
+from server.database.security import _AdminBase as _AdminBase
+from server.database.connection import get_connection_source as _get_connection_source
 
 
 def get_app() -> _connexion.FlaskApp:
-    app = _connexion.App(__name__, specification_dir="./openapi/")
-    app.app.json_encoder = JSONEncoder
-    app.add_api("openapi.yaml", pythonic_params=True)
+    app = _connexion.App(__name__, specification_dir="fleetv2_http_api/openapi/")
+    app.app.json = JSONEncoder
+    app.add_api("openapi.yaml")
     return app
 
 
@@ -71,7 +71,7 @@ class _TestApp:
                 return uri + f"?api_key={self._key}"
 
 
-def get_test_app(connection_source: _Engine, predef_api_key: str = "") -> _TestApp:
+def get_test_app(predef_api_key: str = "") -> _TestApp:
     """Creates a test app that can be used for testing purposes.
 
     It enables to surpass the API key verification by providing a predefined API key.
@@ -79,7 +79,9 @@ def get_test_app(connection_source: _Engine, predef_api_key: str = "") -> _TestA
     If the api_key is left empty, no authentication is required.
     The api_key can be set to any value, that can be used as a value for 'api_key' query parameter in the API calls.
     """
-    with _Session(connection_source) as session:
+
+    source = _get_connection_source()
+    with _Session(source) as session:
         admin = _AdminBase(name="test_key", key=predef_api_key)
         session.add(admin)
         session.commit()

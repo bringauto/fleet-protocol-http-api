@@ -1,23 +1,14 @@
 from __future__ import annotations
-from typing import ClassVar, List, Optional
+from typing import List, Optional
 import dataclasses
 import random
 import string
 
-from sqlalchemy import String, Integer, Engine, Select, func, select
-from sqlalchemy.orm import Mapped, mapped_column, Session
+from sqlalchemy import Engine, Select, func, select
+from sqlalchemy.orm import Session
 
-from database.connection import Base, get_connection_source
-
-
-class AdminBase(Base):
-    __tablename__: ClassVar[str] = "api_keys"
-    __check_period_in_seconds__: ClassVar[int] = 5
-    __max_requests_per_period__: ClassVar[int] = 5
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String)
-    key: Mapped[str] = mapped_column(String)
+from database.connection import get_connection_source
+from database.connection import AdminBase as _AdminBase
 
 
 _loaded_admins: List[AdminDB] = []
@@ -45,12 +36,12 @@ def add_admin_key(name: str, connection_source: Optional[Engine] = None) -> str:
     """Add an admin to the database and return the key."""
     _create_admin_table_if_it_does_not_exist(connection_source)
     with Session(connection_source) as session:
-        existing_admin = session.query(AdminBase).filter(AdminBase.name==name).first()
+        existing_admin = session.query(_AdminBase).filter(_AdminBase.name==name).first()
         if existing_admin is not None:
             return _admin_already_exists_msg(existing_admin.name)
         else:
             key = _generate_key()
-            admin = AdminBase(name=name, key=key)
+            admin = _AdminBase(name=name, key=key)
             session.add(admin)
             session.commit()
             return _admin_added_msg(name, key)
@@ -66,8 +57,8 @@ def _admin_already_exists_msg(name: str) -> str:
 
 def _create_admin_table_if_it_does_not_exist(connection_source: Engine) -> None:
     with connection_source.connect() as connection:
-        if not connection_source.dialect.has_table(connection, AdminBase.__tablename__):
-            AdminBase.metadata.create_all(connection_source)
+        if not connection_source.dialect.has_table(connection, _AdminBase.__tablename__):
+            _AdminBase.create(connection_source)
 
 
 def get_admin(key: str) -> AdminDB|None:
@@ -83,11 +74,11 @@ def get_admin(key: str) -> AdminDB|None:
     _create_admin_table_if_it_does_not_exist(source)
 
     with Session(get_connection_source()) as session:
-        result = session.execute(select(AdminBase).where(AdminBase.key==key)).first()
+        result = session.execute(select(_AdminBase).where(_AdminBase.key==key)).first()
         if result is None:
             return None
         else:
-            admin_base:AdminBase = result[0]
+            admin_base:_AdminBase = result[0]
             admin = AdminDB(id=admin_base.id, name=admin_base.name, key=admin_base.key)
             _loaded_admins.append(admin)
             return admin
@@ -95,7 +86,7 @@ def get_admin(key: str) -> AdminDB|None:
 
 
 def admin_selection(key: str) -> Select:
-    return select(AdminBase).where(AdminBase.key==key)
+    return select(_AdminBase).where(_AdminBase.key==key)
 
 
 def number_of_admin_keys(connection: Optional[Engine] = None) -> int:
@@ -103,7 +94,7 @@ def number_of_admin_keys(connection: Optional[Engine] = None) -> int:
         connection = get_connection_source()
     with Session(connection) as session:
         try:
-            return session.query(func.count(AdminBase.__table__.c.id)).scalar()
+            return session.query(func.count(_AdminBase.__table__.c.id)).scalar()
         except:
             return 0
 

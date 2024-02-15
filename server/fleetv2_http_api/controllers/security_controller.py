@@ -42,14 +42,14 @@ def info_from_oAuth2AuthCode(token) -> Dict:
         decoded_token = jwt.decode(token, _public_key, algorithms=['RS256'], audience='account')
     except:
         return None
-    
+
     #TODO temporary until keycloak configuration is decided
     #roles = decoded_token["realm_access"]["roles"]
-    
+
     #for role in roles:
     #    if role == "test_role":
     #        return {'scopes': {}, 'uid': ''}
-    
+
     return {'scopes': {}, 'uid': ''}
     #return None # type: ignore
 
