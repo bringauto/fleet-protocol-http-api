@@ -1,12 +1,13 @@
 import unittest
 from unittest.mock import patch, Mock
 import sys
+import json
 
 sys.path.append("server")
 
 import server.app as _app
 from server.fleetv2_http_api.models.message import Message, Payload, DeviceId
-from server.enums import MessageType
+from server.enums import MessageType, EncodingType
 
 
 class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):
@@ -218,6 +219,234 @@ class Test_Sending_And_Viewing_Statuses_To_Multiple_Cars(unittest.TestCase):
                 ],
             )
             self.assertEqual(response.status_code, 200)
+
+    def tearDown(self) -> None:
+        self.app.clear_all()
+
+
+class Test_Sending_And_Viewing_Statuses_Sent_To_Multiple_Devices_On_Single_Car(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.app = _app.get_test_app(db_location="test_db.db")
+        device_A_id = DeviceId(module_id=7, type=8, role="test_device_l", name="Test Device A")
+        device_B_id = DeviceId(module_id=7, type=9, role="test_device_r", name="Test Device B")
+        device_C_id = DeviceId(module_id=14, type=8, role="test_device", name="Test Device C")
+        status_payload_A = Payload(
+            message_type=MessageType.STATUS_TYPE,
+            encoding=EncodingType.JSON,
+            data={"phone_number": "1234567890"},
+        )
+        status_payload_B = Payload(
+            message_type=MessageType.STATUS_TYPE,
+            encoding=EncodingType.JSON,
+            data={"phone_number": "1234567890"},
+        )
+        status_payload_C = Payload(
+            message_type=MessageType.STATUS_TYPE,
+            encoding=EncodingType.BASE64,
+            data={}
+        )
+        self.status_1 = Message(device_id=device_A_id, payload=status_payload_A)
+        self.status_2 = Message(device_id=device_B_id, payload=status_payload_B)
+        self.status_3 = Message(device_id=device_C_id, payload=status_payload_C)
+
+    @patch("fleetv2_http_api.impl.controllers.timestamp")
+    def test_sending_two_statuses_to_different_devices_is_possible(self, mock_timestamp: Mock) -> None:
+        with self.app.app.test_client() as client:
+            mock_timestamp.return_value = 111
+            client.post("/v2/protocol/status/test_company/test_car", json=[self.status_1])
+            mock_timestamp.return_value = 222
+            client.post("/v2/protocol/status/test_company/test_car", json=[self.status_2])
+            response = client.get("/v2/protocol/status/test_company/test_car")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                response.json,
+                [
+                    {
+                        "timestamp": 111,
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_device_l",
+                            "name": "Test Device A",
+                        },
+                        "payload": {
+                            "message_type": "STATUS",
+                            "encoding": "JSON",
+                            "data": {"phone_number": "1234567890"},
+                        },
+                    },
+                    {
+                        "timestamp": 222,
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 9,
+                            "role": "test_device_r",
+                            "name": "Test Device B",
+                        },
+                        "payload": {
+                            "message_type": "STATUS",
+                            "encoding": "JSON",
+                            "data": {"phone_number": "1234567890"},
+                        },
+                    },
+                ],
+            )
+
+    @patch("fleetv2_http_api.impl.controllers.timestamp")
+    def test_sending_statuses_to_different_modules_is_possible(self, mock_timestamp: Mock) -> None:
+        with self.app.app.test_client() as client:
+            mock_timestamp.return_value = 111
+            client.post("/v2/protocol/status/test_company/test_car", json=[self.status_1])
+            mock_timestamp.return_value = 222
+            client.post("/v2/protocol/status/test_company/test_car", json=[self.status_3])
+
+            response = client.get("/v2/protocol/status/test_company/test_car")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                response.json,
+                [
+                    {
+                        "timestamp": 111,
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_device_l",
+                            "name": "Test Device A",
+                        },
+                        "payload": {
+                            "message_type": "STATUS",
+                            "encoding": "JSON",
+                            "data": {"phone_number": "1234567890"},
+                        },
+                    },
+                    {
+                        "timestamp": 222,
+                        "device_id": {
+                            "module_id": 14,
+                            "type": 8,
+                            "role": "test_device",
+                            "name": "Test Device C",
+                        },
+                        "payload": {
+                            "message_type": "STATUS",
+                            "encoding": "BASE64",
+                            "data": {},
+                        },
+                    },
+                ],
+            )
+
+    def tearDown(self) -> None:
+        self.app.clear_all()
+
+
+class Test_Sending_Multiple_Statuses_To_The_Same_Car_At_Once(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.app = _app.get_test_app(db_location="test_db.db")
+        device_A_id = DeviceId(module_id=7, type=8, role="test_device_x", name="Test Device_X")
+        device_B_id = DeviceId(module_id=9, type=9, role="test_device_y", name="Test Device Y")
+        status_payload_A = Payload(
+            message_type=MessageType.STATUS_TYPE,
+            encoding=EncodingType.JSON,
+            data={"phone_number": "1234567890"},
+        )
+        status_payload_B = Payload(
+            message_type=MessageType.STATUS_TYPE,
+            encoding=EncodingType.JSON,
+            data={"phone_number": "1234567890"},
+        )
+        self.status_1 = Message(device_id=device_A_id, payload=status_payload_A)
+        self.status_2 = Message(device_id=device_B_id, payload=status_payload_B)
+
+    @patch("fleetv2_http_api.impl.controllers.timestamp")
+    def test_sending_two_statuses_at_once_is_possible_for_two_distinct_devices(self, mock_timestamp: Mock) -> None:
+        with self.app.app.test_client() as client:
+            mock_timestamp.return_value = 11111
+            response = client.post(
+                "/v2/protocol/status/test_company/test_car", json=[self.status_1, self.status_2]
+            )
+            self.assertEqual(response.status_code, 200)
+            response = client.get("/v2/protocol/status/test_company/test_car")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                response.json,
+                [
+                    {
+                        "timestamp": 11111,
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_device_x",
+                            "name": "Test Device_X",
+                        },
+                        "payload": {
+                            "message_type": "STATUS",
+                            "encoding": "JSON",
+                            "data": {"phone_number": "1234567890"},
+                        },
+                    },
+                    {
+                        "timestamp": 11111,
+                        "device_id": {
+                            "module_id": 9,
+                            "type": 9,
+                            "role": "test_device_y",
+                            "name": "Test Device Y",
+                        },
+                        "payload": {
+                            "message_type": "STATUS",
+                            "encoding": "JSON",
+                            "data": {"phone_number": "1234567890"},
+                        },
+                    },
+                ],
+            )
+
+    @patch("fleetv2_http_api.impl.controllers.timestamp")
+    def test_sending_one_status_twice_in_one_request_is_allowed(self, mock_timestamp: Mock) -> None:
+        with self.app.app.test_client() as client:
+            mock_timestamp.return_value = 11111
+            response = client.post(
+                "/v2/protocol/status/test_company/test_car", json=[self.status_1, self.status_1]
+            )
+            self.assertEqual(response.status_code, 200)
+            response = client.get("/v2/protocol/status/test_company/test_car")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                response.json,
+                [
+                    {
+                        "timestamp": 11111,
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_device_x",
+                            "name": "Test Device_X",
+                        },
+                        "payload": {
+                            "message_type": "STATUS",
+                            "encoding": "JSON",
+                            "data": {"phone_number": "1234567890"},
+                        },
+                    },
+                    {
+                        "timestamp": 11111,
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_device_x",
+                            "name": "Test Device_X",
+                        },
+                        "payload": {
+                            "message_type": "STATUS",
+                            "encoding": "JSON",
+                            "data": {"phone_number": "1234567890"},
+                        },
+                    },
+                ],
+            )
 
     def tearDown(self) -> None:
         self.app.clear_all()
