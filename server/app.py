@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Any
+import os
 
 from flask.testing import FlaskClient as _FlaskClient  # type: ignore
 import connexion as _connexion  # type: ignore
@@ -13,6 +14,7 @@ from fleetv2_http_api.encoder import JSONEncoder # type: ignore
 from database.security import _AdminBase as _AdminBase # type: ignore
 # Keep the following import to make all the tables be created by the get_test_app function
 import database.database_controller as _database_controller # type: ignore
+from database.device_ids  import clear_device_ids as _clear_device_ids
 
 
 def get_app() -> _connexion.FlaskApp:
@@ -23,13 +25,19 @@ def get_app() -> _connexion.FlaskApp:
 
 
 class _TestApp:
-    def __init__(self, api_key: str = "") -> None:
+    def __init__(self, api_key: str = "",  db_location: str = "") -> None:
         self._app = get_app()
         self._flask_app = self._TestFlaskApp(api_key, self._app.app)
+        self._db_location = db_location
 
     @property
     def app(self) -> _TestFlaskApp:
         return self._flask_app
+
+    def clear_all(self) -> None:
+        if self._db_location!= "" and os.path.isfile(self._db_location):
+            os.remove("test_db.db")
+        _clear_device_ids()
 
     class _TestFlaskApp:
         def __init__(self, api_key, flask_app, *args, **kwargs) -> None:
@@ -92,4 +100,4 @@ def get_test_app(predef_api_key: str = "", db_location: str = "", db_name: str =
         admin = _AdminBase(name="test_key", key=predef_api_key)
         session.add(admin)
         session.commit()
-    return _TestApp(predef_api_key)
+    return _TestApp(predef_api_key, db_location)
