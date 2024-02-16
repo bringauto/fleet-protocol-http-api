@@ -456,6 +456,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
 
     @patch("fleetv2_http_api.impl.controllers.timestamp")
     def setUp(self, mock_timestamp: Mock) -> None:
+        self.maxDiff = 1000
         self.app = _app.get_test_app(db_location="test_db.db")
         self.device_1_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device 1")
         self.device_2_id = DeviceId(module_id=9, type=5, role="test_device", name="Test Device 2")
@@ -493,6 +494,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             response = client.get("/v2/protocol/command/test_company/test_car")
             self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(response.json), 2)
             self.assertEqual(
                 response.json,
                 [
@@ -502,7 +504,50 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
                             "module_id": 7,
                             "type": 8,
                             "role": "test_device",
-                            "name": "Test Device",
+                            "name": "Test Device 1",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "start"},
+                        },
+                    },
+                    {
+                        "timestamp": 11112,
+                        "device_id": {
+                            "module_id": 9,
+                            "type": 5,
+                            "role": "test_device",
+                            "name": "Test Device 2",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "do something else"},
+                        },
+                    },
+                ],
+            )
+
+    @patch("fleetv2_http_api.impl.controllers.timestamp")
+    def test_sending_one_command_twice_in_one_request_is_allowed(self, mock_timestamp: Mock) -> None:
+        mock_timestamp.return_value = 11112
+        with self.app.app.test_client() as client:
+            response = client.post("/v2/protocol/command/test_company/test_car", json=[self.command_A, self.command_A])
+            self.assertEqual(response.status_code, 200)
+            response = client.get("/v2/protocol/command/test_company/test_car")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(response.json), 2)
+            self.assertEqual(
+                response.json,
+                [
+                    {
+                        "timestamp": 11112,
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_device",
+                            "name": "Test Device 1",
                         },
                         "payload": {
                             "message_type": "COMMAND",
@@ -516,7 +561,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
                             "module_id": 7,
                             "type": 8,
                             "role": "test_device",
-                            "name": "Test Device",
+                            "name": "Test Device 1",
                         },
                         "payload": {
                             "message_type": "COMMAND",
