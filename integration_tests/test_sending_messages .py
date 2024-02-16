@@ -452,5 +452,84 @@ class Test_Sending_Multiple_Statuses_To_The_Same_Car_At_Once(unittest.TestCase):
         self.app.clear_all()
 
 
+class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
+
+    @patch("fleetv2_http_api.impl.controllers.timestamp")
+    def setUp(self, mock_timestamp: Mock) -> None:
+        self.app = _app.get_test_app(db_location="test_db.db")
+        self.device_1_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device 1")
+        self.device_2_id = DeviceId(module_id=9, type=5, role="test_device", name="Test Device 2")
+        status_payload = Payload(
+            message_type=MessageType.STATUS_TYPE,
+            encoding="JSON",
+            data={"phone_number": "1234567890"},
+        )
+        command_payload_A = Payload(
+            message_type=MessageType.COMMAND_TYPE,
+            encoding="JSON",
+            data={"command": "start"},
+        )
+        command_payload_B = Payload(
+            message_type=MessageType.COMMAND_TYPE,
+            encoding="JSON",
+            data={"command": "do something else"},
+        )
+        status_1 = Message(device_id=self.device_1_id, payload=status_payload)
+        status_2 = Message(device_id=self.device_2_id, payload=status_payload)
+        self.command_A = Message(device_id=self.device_1_id, payload=command_payload_A)
+        self.command_B = Message(device_id=self.device_2_id, payload=command_payload_B)
+
+        mock_timestamp.return_value = 11111
+        with self.app.app.test_client() as client:
+            client.post("/v2/protocol/status/test_company/test_car", json=[status_1, status_2])
+            response = client.get("/v2/protocol/available-devices/test_company/test_car")
+            print(response.json)
+
+    @patch("fleetv2_http_api.impl.controllers.timestamp")
+    def test_sending_two_distinct_commands_to_the_same_device_is_allowed(self,  mock_timestamp: Mock):
+        mock_timestamp.return_value = 11112
+        with self.app.app.test_client() as client:
+            response = client.post("/v2/protocol/command/test_company/test_car", json=[self.command_A, self.command_B])
+            self.assertEqual(response.status_code, 200)
+            response = client.get("/v2/protocol/command/test_company/test_car")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                response.json,
+                [
+                    {
+                        "timestamp": 11112,
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_device",
+                            "name": "Test Device",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "start"},
+                        },
+                    },
+                    {
+                        "timestamp": 11112,
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_device",
+                            "name": "Test Device",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "start"},
+                        },
+                    },
+                ],
+            )
+
+    def tearDown(self) -> None:
+        self.app.clear_all()
+
+
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
