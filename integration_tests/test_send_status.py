@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import patch, Mock
 import sys
-import os
 
 sys.path.append("server")
 
@@ -12,7 +11,7 @@ from server.enums import MessageType
 
 class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):
     def setUp(self) -> None:
-        self.app = _app.get_test_app(db_location="/test_db.db")
+        self.app = _app.get_test_app(db_location="test_db.db")
         self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         self.payload = Payload(
             message_type=MessageType.STATUS_TYPE,
@@ -60,6 +59,12 @@ class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):
                     }
                 ],
             )
+
+    def test_retrieving_status_for_none_existing_car_returns_404_and_empty_list(self) -> None:
+        with self.app.app.test_client() as client:
+            response = client.get("/v2/protocol/status/test_company/test_car")
+            self.assertEqual(response.status_code, 404)
+            self.assertEqual(response.json, [])
 
     def tearDown(self) -> None:
         self.app.clear_all()

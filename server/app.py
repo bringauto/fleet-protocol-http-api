@@ -36,7 +36,7 @@ class _TestApp:
 
     def clear_all(self) -> None:
         if self._db_location!= "" and os.path.isfile(self._db_location):
-            os.remove("test_db.db")
+            os.remove(self._db_location)
         _clear_device_ids()
 
     class _TestFlaskApp:
@@ -93,7 +93,7 @@ def get_test_app(predef_api_key: str = "", db_location: str = "", db_name: str =
     The api_key can be set to any value, that can be used as a value for 'api_key' query parameter in the API calls.
     """
 
-    _set_test_db_connection(db_location, db_name)
+    _set_test_db_connection("/"+db_location, db_name)
     source = _get_connection_source()
     _create_all_tables(source)
     with _Session(source) as session:
