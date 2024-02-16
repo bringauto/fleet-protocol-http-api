@@ -12,9 +12,10 @@ OMITTED_FILES = [
     "__init__.py",
     "server/fleetv2_http_api/controllers/*",
     "server/fleetv2_http_api/models/*",
-    "server/util.py",
-    "server/typing_utils.py",
-    "server/encoder.py",
+    "server/fleetv2_http_api/util.py",
+    "server/fleetv2_http_api/typing_utils.py",
+    "server/fleetv2_http_api/encoder.py",
+    "server/enums.py",
     "integration_tests/__main__.py",
 ]
 HTML_REPORT_FLAG = "-h"
