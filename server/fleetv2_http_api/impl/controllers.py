@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Optional, Tuple, Dict, Any
+from typing import List, Optional, Tuple, Dict, Any, Iterable
 from enums import MessageType
 import re
 import logging
@@ -365,16 +365,17 @@ def _available_module(company_name: str, car_name: str, module_id: int) -> Modul
     return Module(module_id, device_id_list)
 
 def _check_and_handle_first_status(company: str, car: str, messages: List[Message]) -> str:
-    first_status_was_sent = store_device_id_if_new(company,car,messages[-1].device_id)
     command_removal_warnings = ""
-    sdevice_id = serialized_device_id(messages[-1].device_id)
-    if first_status_was_sent:
-        command_removal_warnings = "\n".join(_handle_first_status_and_return_warnings(
-            messages[-1].timestamp,
-            company,
-            car,
-            sdevice_id
-        ))
+    for msg in messages:
+        first_status_was_sent = store_device_id_if_new(company,car, msg.device_id)
+        sdevice_id = serialized_device_id(msg.device_id)
+        if first_status_was_sent:
+            command_removal_warnings = "\n".join(_handle_first_status_and_return_warnings(
+                msg.timestamp,
+                company,
+                car,
+                sdevice_id
+            ))
     if command_removal_warnings.strip() != "":
         command_removal_warnings =  "\n\n" + command_removal_warnings
     return command_removal_warnings
@@ -383,9 +384,13 @@ def _check_sent_commands(company_name: str, car_name: str, messages: List[Messag
     errors, code = _check_messages(MessageType.COMMAND_TYPE, *messages)
     if errors != "" or code != 200:
         return errors, code
-    module_id = messages[0].device_id.module_id
-    sdevice_id = serialized_device_id(messages[0].device_id)
-    return _check_device_availability(company_name, car_name, module_id, sdevice_id)
+    for cmd in messages:
+        module_id = cmd.device_id.module_id
+        sdevice_id = serialized_device_id(cmd.device_id)
+        msg, code = _check_device_availability(company_name, car_name, module_id, sdevice_id)
+        if code != 200:
+            return msg, code
+    return "", 200
 
 def _check_messages(
     expected_message_type: str,
@@ -467,12 +472,10 @@ def _message_from_db(message_db: Message_DB) -> Message:
     )
 
 def _message_db_list(messages: List[Message], message_type: str) -> List[Message_DB]:
-    assert(len(messages)>0)
-    sdevice_id = serialized_device_id(messages[0].device_id)
     return [
         Message_DB(
             timestamp=message.timestamp,
-            serialized_device_id=sdevice_id,
+            serialized_device_id=serialized_device_id(message.device_id),
             module_id=message.device_id.module_id,
             device_type=message.device_id.type,
             device_role=message.device_id.role,
@@ -484,7 +487,7 @@ def _message_db_list(messages: List[Message], message_type: str) -> List[Message
         for message in messages
     ]
 
-def _update_messages_timestamp(messages: Tuple[Message_DB]) -> None:
+def _update_messages_timestamp(messages: Iterable[Message_DB]) -> None:
     timestamp_now = timestamp()
     for message in messages:
         message.timestamp = timestamp_now
