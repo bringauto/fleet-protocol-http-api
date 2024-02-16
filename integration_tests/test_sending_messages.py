@@ -484,7 +484,6 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
         with self.app.app.test_client() as client:
             client.post("/v2/protocol/status/test_company/test_car", json=[status_1, status_2])
             response = client.get("/v2/protocol/available-devices/test_company/test_car")
-            print(response.json)
 
     @patch("fleetv2_http_api.impl.controllers.timestamp")
     def test_sending_two_distinct_commands_to_the_same_device_is_allowed(self,  mock_timestamp: Mock):
@@ -570,6 +569,66 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
                         },
                     },
                 ],
+            )
+
+    def tearDown(self) -> None:
+        self.app.clear_all()
+
+
+class Test_Filtering_Available_Devices_By_Module(unittest.TestCase):
+
+    @patch("fleetv2_http_api.impl.controllers.timestamp")
+    def setUp(self, mock_timestamp: Mock) -> None:
+        self.maxDiff = 1000
+        self.app = _app.get_test_app(db_location="test_db.db")
+        self.device_1_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device 1")
+        self.device_2_id = DeviceId(module_id=9, type=5, role="test_device", name="Test Device 2")
+        status_payload = Payload(
+            message_type=MessageType.STATUS_TYPE,
+            encoding="JSON",
+            data={"phone_number": "1234567890"},
+        )
+        status_1 = Message(device_id=self.device_1_id, payload=status_payload)
+        status_2 = Message(device_id=self.device_2_id, payload=status_payload)
+
+        mock_timestamp.return_value = 11111
+        with self.app.app.test_client() as client:
+            client.post("/v2/protocol/status/test_company/test_car", json=[status_1, status_2])
+            client.get("/v2/protocol/available-devices/test_company/test_car")
+
+    def test_filtering_devices_by_module(self) -> None:
+        with self.app.app.test_client() as client:
+            response = client.get("/v2/protocol/available-devices/test_company/test_car?module_id=7")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                response.json,
+                {
+                    "device_list": [
+                        {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_device",
+                            "name": "Test Device 1",
+                        }
+                    ],
+                    "module_id": 7,
+                }
+            )
+            response = client.get("/v2/protocol/available-devices/test_company/test_car?module_id=9")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                response.json,
+                {
+                    "device_list": [
+                        {
+                            "module_id": 9,
+                            "type": 5,
+                            "role": "test_device",
+                            "name": "Test Device 2",
+                        }
+                    ],
+                    "module_id": 9,
+                }
             )
 
     def tearDown(self) -> None:

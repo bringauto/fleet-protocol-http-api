@@ -93,6 +93,8 @@ def get_test_app(predef_api_key: str = "", db_location: str = "", db_name: str =
     The api_key can be set to any value, that can be used as a value for 'api_key' query parameter in the API calls.
     """
 
+    if os.path.isfile(db_location):
+        raise ValueError(f"The file {db_location} already exists. Please provide a different location.")
     _set_test_db_connection("/"+db_location, db_name)
     source = _get_connection_source()
     _create_all_tables(source)
