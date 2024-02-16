@@ -5,14 +5,19 @@ from flask.testing import FlaskClient as _FlaskClient  # type: ignore
 import connexion as _connexion  # type: ignore
 from sqlalchemy.orm import Session as _Session
 
-from server.fleetv2_http_api.encoder import JSONEncoder
-from server.database.security import _AdminBase as _AdminBase
-from server.database.connection import get_connection_source as _get_connection_source
+from database.connection import get_connection_source as _get_connection_source # type: ignore
+from database.connection import set_test_db_connection as _set_test_db_connection
+from database.connection import create_all_tables as _create_all_tables
+
+from fleetv2_http_api.encoder import JSONEncoder # type: ignore
+from database.security import _AdminBase as _AdminBase # type: ignore
+# Keep the following import to make all the tables be created by the get_test_app function
+import database.database_controller as _database_controller # type: ignore
 
 
 def get_app() -> _connexion.FlaskApp:
     app = _connexion.App(__name__, specification_dir="fleetv2_http_api/openapi/")
-    app.app.json = JSONEncoder
+    app.app.json_encoder = JSONEncoder
     app.add_api("openapi.yaml")
     return app
 
@@ -71,7 +76,7 @@ class _TestApp:
                 return uri + f"?api_key={self._key}"
 
 
-def get_test_app(predef_api_key: str = "") -> _TestApp:
+def get_test_app(predef_api_key: str = "", db_location: str = "", db_name: str = "") -> _TestApp:
     """Creates a test app that can be used for testing purposes.
 
     It enables to surpass the API key verification by providing a predefined API key.
@@ -80,7 +85,9 @@ def get_test_app(predef_api_key: str = "") -> _TestApp:
     The api_key can be set to any value, that can be used as a value for 'api_key' query parameter in the API calls.
     """
 
+    _set_test_db_connection(db_location, db_name)
     source = _get_connection_source()
+    _create_all_tables(source)
     with _Session(source) as session:
         admin = _AdminBase(name="test_key", key=predef_api_key)
         session.add(admin)
