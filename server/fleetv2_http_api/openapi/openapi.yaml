@@ -8,7 +8,7 @@ info:
     name: GPLv3
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
   title: Fleet v2 HTTP API
-  version: 2.1.0
+  version: 2.1.1
 servers:
 - url: /v2/protocol
 security:
@@ -645,6 +645,17 @@ components:
       title: AvailableDevices
     Module:
       description: A module containing at least one device (specified by device Id).
+      example:
+        device_list:
+        - module_id: 47
+          type: 2
+          role: test_device
+          name: Test Device
+        - module_id: 47
+          type: 2
+          role: test_device
+          name: Test Device
+        module_id: 47
       properties:
         module_id:
           description: Id (unsigned integer) of the module.
