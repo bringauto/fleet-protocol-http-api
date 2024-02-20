@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import patch, Mock
 import sys
-import json
 
 sys.path.append("server")
 
@@ -484,7 +483,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             response = client.get("/v2/protocol/command/test_company/test_car")
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.json), 2)
+            self.assertEqual(len(response.json), 2) # type: ignore
             self.assertEqual(
                 response.json,
                 [
@@ -531,7 +530,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             response = client.get("/v2/protocol/command/test_company/test_car")
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.json), 2)
+            self.assertEqual(len(response.json), 2) # type: ignore
             self.assertEqual(
                 response.json,
                 [

@@ -14,7 +14,7 @@ from fleetv2_http_api.encoder import JSONEncoder # type: ignore
 from database.security import _AdminBase as _AdminBase # type: ignore
 # Keep the following import to make all the tables be created by the get_test_app function
 import database.database_controller as _database_controller # type: ignore
-from database.device_ids  import clear_device_ids as _clear_device_ids
+from database.device_ids  import clear_device_ids as _clear_device_ids  # type: ignore
 
 
 def get_app() -> _connexion.FlaskApp:
