@@ -225,7 +225,6 @@ class Test_Sending_And_Viewing_Statuses_To_Multiple_Cars(unittest.TestCase):
 
 
 class Test_Sending_And_Viewing_Statuses_Sent_To_Multiple_Devices_On_Single_Car(unittest.TestCase):
-
     def setUp(self) -> None:
         self.app = _app.get_test_app(db_location="test_db.db")
         device_A_id = DeviceId(module_id=7, type=8, role="test_device_l", name="Test Device A")
@@ -242,16 +241,16 @@ class Test_Sending_And_Viewing_Statuses_Sent_To_Multiple_Devices_On_Single_Car(u
             data={"phone_number": "1234567890"},
         )
         status_payload_C = Payload(
-            message_type=MessageType.STATUS_TYPE,
-            encoding=EncodingType.BASE64,
-            data={}
+            message_type=MessageType.STATUS_TYPE, encoding=EncodingType.BASE64, data={}
         )
         self.status_1 = Message(device_id=device_A_id, payload=status_payload_A)
         self.status_2 = Message(device_id=device_B_id, payload=status_payload_B)
         self.status_3 = Message(device_id=device_C_id, payload=status_payload_C)
 
     @patch("fleetv2_http_api.impl.controllers.timestamp")
-    def test_sending_two_statuses_to_different_devices_is_possible(self, mock_timestamp: Mock) -> None:
+    def test_sending_two_statuses_to_different_devices_is_possible(
+        self, mock_timestamp: Mock
+    ) -> None:
         with self.app.app.test_client() as client:
             mock_timestamp.return_value = 111
             client.post("/v2/protocol/status/test_company/test_car", json=[self.status_1])
@@ -342,7 +341,6 @@ class Test_Sending_And_Viewing_Statuses_Sent_To_Multiple_Devices_On_Single_Car(u
 
 
 class Test_Sending_Multiple_Statuses_To_The_Same_Car_At_Once(unittest.TestCase):
-
     def setUp(self) -> None:
         self.app = _app.get_test_app(db_location="test_db.db")
         device_A_id = DeviceId(module_id=7, type=8, role="test_device_x", name="Test Device_X")
@@ -361,7 +359,9 @@ class Test_Sending_Multiple_Statuses_To_The_Same_Car_At_Once(unittest.TestCase):
         self.status_2 = Message(device_id=device_B_id, payload=status_payload_B)
 
     @patch("fleetv2_http_api.impl.controllers.timestamp")
-    def test_sending_two_statuses_at_once_is_possible_for_two_distinct_devices(self, mock_timestamp: Mock) -> None:
+    def test_sending_two_statuses_at_once_is_possible_for_two_distinct_devices(
+        self, mock_timestamp: Mock
+    ) -> None:
         with self.app.app.test_client() as client:
             mock_timestamp.return_value = 11111
             response = client.post(
@@ -453,28 +453,15 @@ class Test_Sending_Multiple_Statuses_To_The_Same_Car_At_Once(unittest.TestCase):
 
 
 class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
-
     @patch("fleetv2_http_api.impl.controllers.timestamp")
     def setUp(self, mock_timestamp: Mock) -> None:
         self.maxDiff = 1000
         self.app = _app.get_test_app(db_location="test_db.db")
         self.device_1_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device 1")
         self.device_2_id = DeviceId(module_id=9, type=5, role="test_device", name="Test Device 2")
-        status_payload = Payload(
-            message_type=MessageType.STATUS_TYPE,
-            encoding="JSON",
-            data={"phone_number": "1234567890"},
-        )
-        command_payload_A = Payload(
-            message_type=MessageType.COMMAND_TYPE,
-            encoding="JSON",
-            data={"command": "start"},
-        )
-        command_payload_B = Payload(
-            message_type=MessageType.COMMAND_TYPE,
-            encoding="JSON",
-            data={"command": "do something else"},
-        )
+        status_payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
+        command_payload_A = Payload(MessageType.COMMAND_TYPE, "JSON", {"command": "start"})
+        command_payload_B = Payload(MessageType.COMMAND_TYPE, "JSON", {"command": "continue"})
         status_1 = Message(device_id=self.device_1_id, payload=status_payload)
         status_2 = Message(device_id=self.device_2_id, payload=status_payload)
         self.command_A = Message(device_id=self.device_1_id, payload=command_payload_A)
@@ -483,13 +470,17 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
         mock_timestamp.return_value = 11111
         with self.app.app.test_client() as client:
             client.post("/v2/protocol/status/test_company/test_car", json=[status_1, status_2])
-            response = client.get("/v2/protocol/available-devices/test_company/test_car")
+            client.get("/v2/protocol/available-devices/test_company/test_car")
 
     @patch("fleetv2_http_api.impl.controllers.timestamp")
-    def test_sending_two_distinct_commands_to_the_same_device_is_allowed(self,  mock_timestamp: Mock):
+    def test_sending_two_distinct_commands_to_the_same_device_is_allowed(
+        self, mock_timestamp: Mock
+    ):
         mock_timestamp.return_value = 11112
         with self.app.app.test_client() as client:
-            response = client.post("/v2/protocol/command/test_company/test_car", json=[self.command_A, self.command_B])
+            response = client.post(
+                "/v2/protocol/command/test_company/test_car", json=[self.command_A, self.command_B]
+            )
             self.assertEqual(response.status_code, 200)
             response = client.get("/v2/protocol/command/test_company/test_car")
             self.assertEqual(response.status_code, 200)
@@ -522,17 +513,21 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
                         "payload": {
                             "message_type": "COMMAND",
                             "encoding": "JSON",
-                            "data": {"command": "do something else"},
+                            "data": {"command": "continue"},
                         },
                     },
                 ],
             )
 
     @patch("fleetv2_http_api.impl.controllers.timestamp")
-    def test_sending_one_command_twice_in_one_request_is_allowed(self, mock_timestamp: Mock) -> None:
+    def test_sending_one_command_twice_in_one_request_is_allowed(
+        self, mock_timestamp: Mock
+    ) -> None:
         mock_timestamp.return_value = 11112
         with self.app.app.test_client() as client:
-            response = client.post("/v2/protocol/command/test_company/test_car", json=[self.command_A, self.command_A])
+            response = client.post(
+                "/v2/protocol/command/test_company/test_car", json=[self.command_A, self.command_A]
+            )
             self.assertEqual(response.status_code, 200)
             response = client.get("/v2/protocol/command/test_company/test_car")
             self.assertEqual(response.status_code, 200)
@@ -576,7 +571,6 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
 
 
 class Test_Filtering_Available_Devices_By_Module(unittest.TestCase):
-
     @patch("fleetv2_http_api.impl.controllers.timestamp")
     def setUp(self, mock_timestamp: Mock) -> None:
         self.maxDiff = 1000
@@ -598,7 +592,9 @@ class Test_Filtering_Available_Devices_By_Module(unittest.TestCase):
 
     def test_filtering_devices_by_module(self) -> None:
         with self.app.app.test_client() as client:
-            response = client.get("/v2/protocol/available-devices/test_company/test_car?module_id=7")
+            response = client.get(
+                "/v2/protocol/available-devices/test_company/test_car?module_id=7"
+            )
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
                 response.json,
@@ -612,9 +608,11 @@ class Test_Filtering_Available_Devices_By_Module(unittest.TestCase):
                         }
                     ],
                     "module_id": 7,
-                }
+                },
             )
-            response = client.get("/v2/protocol/available-devices/test_company/test_car?module_id=9")
+            response = client.get(
+                "/v2/protocol/available-devices/test_company/test_car?module_id=9"
+            )
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
                 response.json,
@@ -628,7 +626,7 @@ class Test_Filtering_Available_Devices_By_Module(unittest.TestCase):
                         }
                     ],
                     "module_id": 9,
-                }
+                },
             )
 
     def tearDown(self) -> None:
