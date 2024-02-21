@@ -13,22 +13,20 @@ from server.enums import MessageType
 
 class Test_Waiting_For_Statuses_To_Become_Avaiable(unittest.TestCase):
     def setUp(self) -> None:
-        self.app = _app.get_test_app(db_location="test_db.db", request_timeout_s=0.2, base_url="/v2/protocol/")
+        self.app = _app.get_test_app(
+            db_location="test_db.db", request_timeout_s=0.2, base_url="/v2/protocol/"
+        )
         self.deviceA_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         self.deviceB_id = DeviceId(module_id=9, type=10, role="test_device", name="Test Device")
         self.payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
         self.statusA = Message(device_id=self.deviceA_id, payload=self.payload)
         self.statusB = Message(device_id=self.deviceB_id, payload=self.payload)
 
-    def test_statuses_awaited_in_one_thread_are_returned_if_some_status_is_sent_in_other_thread(
-        self,
-    ):
+    def test_awaited_statuses_are_returned_if_some_status_is_sent_in_other_thread(self):
         with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
             future = executor.submit(c.get, "/status/test_company/test_car?wait=True")
             time.sleep(0.1)
-            executor.submit(
-                c.post, "/status/test_company/test_car", json=[self.statusA]
-            )
+            executor.submit(c.post, "/status/test_company/test_car", json=[self.statusA])
             response = future.result()
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.json), 1)
@@ -63,7 +61,9 @@ class Test_Waiting_For_Statuses_To_Become_Avaiable(unittest.TestCase):
 
 class Test_Waiting_Request_Ignores_Statuses_Send_To_Other_Cars(unittest.TestCase):
     def setUp(self) -> None:
-        self.app = _app.get_test_app(db_location="test_db.db", request_timeout_s=0.2, base_url="/v2/protocol/")
+        self.app = _app.get_test_app(
+            db_location="test_db.db", request_timeout_s=0.2, base_url="/v2/protocol/"
+        )
         self.deviceA_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         self.deviceB_id = DeviceId(module_id=9, type=10, role="test_device", name="Test Device")
         self.payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
@@ -74,9 +74,7 @@ class Test_Waiting_Request_Ignores_Statuses_Send_To_Other_Cars(unittest.TestCase
         with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
             future = executor.submit(c.get, "/status/company/car_x?wait=True")
             time.sleep(0.1)
-            executor.submit(
-                c.post, "/status/company/car_y", json=[self.statusA, self.statusB]
-            )
+            executor.submit(c.post, "/status/company/car_y", json=[self.statusA, self.statusB])
             response = future.result()
             self.assertEqual(response.status_code, 404)
             self.assertEqual(len(response.json), 0)
@@ -85,9 +83,7 @@ class Test_Waiting_Request_Ignores_Statuses_Send_To_Other_Cars(unittest.TestCase
         with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
             future = executor.submit(c.get, "/status/company_x/car?wait=True")
             time.sleep(0.1)
-            executor.submit(
-                c.post, "/status/company_y/car", json=[self.statusA, self.statusB]
-            )
+            executor.submit(c.post, "/status/company_y/car", json=[self.statusA, self.statusB])
             response = future.result()
             self.assertEqual(response.status_code, 404)
             self.assertEqual(len(response.json), 0)
@@ -97,9 +93,7 @@ class Test_Waiting_Request_Ignores_Statuses_Send_To_Other_Cars(unittest.TestCase
             future = executor.submit(c.get, "/status/company/car?wait=True")
             time.sleep(0.05)
             # This status does not trigger response from the waiting thread
-            executor.submit(
-                c.post, "/status/company/some_other_car", json=[self.statusA]
-            )
+            executor.submit(c.post, "/status/company/some_other_car", json=[self.statusA])
             time.sleep(0.05)
             # This status triggers response from the waiting thread
             executor.submit(c.post, "/status/company/car", json=[self.statusB])

@@ -141,9 +141,7 @@ class Test_Sending_And_Viewing_Commands_For_Unavailable_Car(unittest.TestCase):
 
     def test_sending_command_to_nonexistent_car_returns_404(self) -> None:
         with self.app.app.test_client() as client:
-            response = client.post(
-                "/command/test_company/test_car", json=[self.command]
-            )
+            response = client.post("/command/test_company/test_car", json=[self.command])
             self.assertEqual(response.status_code, 404)
 
     def tearDown(self) -> None:  # pragma: no cover
@@ -472,9 +470,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
             client.get("/v2/protocol/available-devices/test_company/test_car")
 
     @patch("fleetv2_http_api.impl.controllers.timestamp")
-    def test_sending_two_distinct_commands_to_the_same_device_is_allowed(
-        self, mock_timestamp: Mock
-    ):
+    def test_sending_two_commands_to_the_same_device_is_allowed(self, mock_timestamp: Mock):
         mock_timestamp.return_value = 11112
         with self.app.app.test_client() as client:
             response = client.post(
@@ -483,7 +479,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             response = client.get("/command/test_company/test_car")
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.json), 2) # type: ignore
+            self.assertEqual(len(response.json), 2)  # type: ignore
             self.assertEqual(
                 response.json,
                 [
@@ -519,9 +515,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
             )
 
     @patch("fleetv2_http_api.impl.controllers.timestamp")
-    def test_sending_one_command_twice_in_one_request_is_allowed(
-        self, mock_timestamp: Mock
-    ) -> None:
+    def test_sending_command_twice_in_one_request_is_allowed(self, mock_timestamp: Mock):
         mock_timestamp.return_value = 11112
         with self.app.app.test_client() as client:
             response = client.post(
@@ -530,7 +524,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             response = client.get("/command/test_company/test_car")
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.json), 2) # type: ignore
+            self.assertEqual(len(response.json), 2)  # type: ignore
             self.assertEqual(
                 response.json,
                 [
@@ -591,9 +585,7 @@ class Test_Listing_Available_Devices_Without_Filtering_By_Module(unittest.TestCa
 
     def test_filtering_devices_by_module(self) -> None:
         with self.app.app.test_client() as client:
-            response = client.get(
-                "/available-devices/test_company/test_car"
-            )
+            response = client.get("/available-devices/test_company/test_car")
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
                 response.json,
@@ -619,8 +611,8 @@ class Test_Listing_Available_Devices_Without_Filtering_By_Module(unittest.TestCa
                             }
                         ],
                         "module_id": 9,
-                    }
-                ]
+                    },
+                ],
             )
 
 
@@ -646,9 +638,7 @@ class Test_Filtering_Available_Devices_By_Module(unittest.TestCase):
 
     def test_filtering_devices_by_module(self) -> None:
         with self.app.app.test_client() as client:
-            response = client.get(
-                "/available-devices/test_company/test_car?module_id=7"
-            )
+            response = client.get("/available-devices/test_company/test_car?module_id=7")
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
                 response.json,
@@ -664,9 +654,7 @@ class Test_Filtering_Available_Devices_By_Module(unittest.TestCase):
                     "module_id": 7,
                 },
             )
-            response = client.get(
-                "/available-devices/test_company/test_car?module_id=9"
-            )
+            response = client.get("/available-devices/test_company/test_car?module_id=9")
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
                 response.json,
