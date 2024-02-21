@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Optional, Tuple, Dict, Any, Iterable
+from typing import List, Optional, Tuple, Dict, Any, Iterable, Collection
 from enums import MessageType
 import re
 import logging
@@ -164,13 +164,14 @@ def available_devices(
     _validate_name_string(car_name, "Car name")
 
     company_and_car_name = f"Company='{company_name}', car='{car_name}'"
+    empty_response_body: Collection = [] if module_id is None else {}
 
     device_dict = device_ids()
     if company_name not in device_dict:
-        return _log_and_respond([], 404, f"No company named '{company_name}' is registered.")
+        return _log_and_respond(empty_response_body, 404, f"No company named '{company_name}' is registered.")
 
     elif car_name not in device_dict[company_name]:
-        return _log_and_respond([], 404, f"No car named '{car_name}' is registered.")
+        return _log_and_respond(empty_response_body, 404, f"No car named '{car_name}' is registered.")
 
     if module_id is None:
         car_modules = device_dict[company_name][car_name]
@@ -178,7 +179,7 @@ def available_devices(
         return _log_and_respond(modules, 200, f"Listing available modules ({company_and_car_name})")
     else:
         if module_id not in device_dict[company_name][car_name]:
-            return _log_and_respond({}, 404, f"No module with id '{module_id}' is available ({company_and_car_name}).")
+            return _log_and_respond(empty_response_body, 404, f"No module with id '{module_id}' is available ({company_and_car_name}).")
         else:
             module = _available_module(company_name, car_name, module_id)
             return _log_and_respond(module, 200, f"Listing available devices in the module '{module_id}' ({company_and_car_name}).")
