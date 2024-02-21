@@ -212,7 +212,7 @@ class Test_Setting_Wait_To_True_When_All_Commands_Are_Filtered_Out_By_Since_Para
             c.post("/command/test_company/test_car", json=[self.command_3])
 
     @patch("fleetv2_http_api.impl.controllers.timestamp")
-    def test_thread_waits_for_status_with_newer_timestamp_than_since_parameter(
+    def test_thread_waits_for_command_with_newer_timestamp_than_since_parameter(
         self, mock_timestamp: Mock
     ):
         with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
@@ -225,7 +225,7 @@ class Test_Setting_Wait_To_True_When_All_Commands_Are_Filtered_Out_By_Since_Para
             self.assertEqual(response.json[0]["timestamp"], 55)  # type: ignore
 
     @patch("fleetv2_http_api.impl.controllers.timestamp")
-    def test_sending_status_with_timestamp_older_than_since_parameter_will_not_resume_waiting_thread(
+    def test_sending_command_with_timestamp_older_than_since_parameter_will_not_resume_waiting_thread(
         self, mock_timestamp: Mock
     ):
         with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
