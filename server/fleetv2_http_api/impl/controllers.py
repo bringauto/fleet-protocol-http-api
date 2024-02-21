@@ -266,6 +266,8 @@ def list_statuses(
         statuses = [_message_from_db(m) for m in db_statuses]
         return _log_and_respond(statuses, 200, f"Returning statuses for available car ({company_and_car_name}).")
     elif not wait:
+        if _check_car_availability(company_name, car_name)[1] == 200:
+            return _log_and_respond([], 200, f"No statuses are available at the moment ({company_and_car_name}).")
         return _log_and_respond([], 404, f"No devices (nor their statuses) are available at the moment ({company_and_car_name}).")
     else:
         awaited_statuses: List[Message] = _status_wait_manager.wait_and_get_reponse(company_name, car_name)
