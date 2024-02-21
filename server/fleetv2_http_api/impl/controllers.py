@@ -165,10 +165,11 @@ def available_devices(
 
     :rtype: Union[AvailableDevices, tuple[AvailableDevices, int], tuple[AvailableDevices, int, dict[str, str]]
     """
-
-    _validate_name_string(company_name, "Company name")
-    _validate_name_string(car_name, "Car name")
-
+    try:
+        _validate_name_string(company_name, "Company name")
+        _validate_name_string(car_name, "Car name")
+    except ValueError as e:
+        return _log_and_respond(str(e), 400, str(e))
     company_and_car_name = f"Company='{company_name}', car='{car_name}'"
     empty_response_body: Collection = [] if module_id is None else {}
 
@@ -222,8 +223,11 @@ def list_commands(
 
     :rtype: Union[list[Message], tuple[list[Message], int], tuple[list[Message], int, dict[str, str]]
     """
-    _validate_name_string(company_name, "Company name")
-    _validate_name_string(car_name, "Car name")
+    try:
+        _validate_name_string(company_name, "Company name")
+        _validate_name_string(car_name, "Car name")
+    except ValueError as e:
+        return _log_and_respond(str(e), 400, str(e))
 
     company_and_car_name = f"Company='{company_name}', car='{car_name}'"
 
@@ -284,8 +288,11 @@ def list_statuses(
 
     :rtype: Union[list[Message], tuple[list[Message], int], tuple[list[Message], int, dict[str, str]]
     """
-    _validate_name_string(company_name, "Company name")
-    _validate_name_string(car_name, "Car name")
+    try:
+        _validate_name_string(company_name, "Company name")
+        _validate_name_string(car_name, "Car name")
+    except ValueError as e:
+        return _log_and_respond(str(e), 400, str(e))
 
     company_and_car_name = f"Company='{company_name}', car='{car_name}'"
 
@@ -345,8 +352,11 @@ def send_commands(
 
     :rtype: Union[None, tuple[None, int], tuple[None, int, dict[str, str]]
     """
-    _validate_name_string(company_name, "Company name")
-    _validate_name_string(car_name, "Car name")
+    try:
+        _validate_name_string(company_name, "Company name")
+        _validate_name_string(car_name, "Car name")
+    except ValueError as e:
+        return _log_and_respond(str(e), 400, str(e))
     messages = _message_list_from_request_body(body)
     if messages == []:
         response = _check_car_availability(company_name, car_name)
@@ -383,8 +393,11 @@ def send_statuses(
 
     :rtype: Union[None, tuple[None, int], tuple[None, int, dict[str, str]]
     """
-    _validate_name_string(company_name, "Company name")
-    _validate_name_string(car_name, "Car name")
+    try:
+        _validate_name_string(company_name, "Company name")
+        _validate_name_string(car_name, "Car name")
+    except ValueError as e:
+        return _log_and_respond(str(e), 400, str(e))
     messages = _message_list_from_request_body(body)
     if messages == []:
         msg = f"Empty list of statuses was sent to the API; no statuses were sent to the device."
