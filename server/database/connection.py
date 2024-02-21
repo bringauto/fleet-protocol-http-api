@@ -15,16 +15,23 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from typing import Optional, Callable, Tuple
+from typing import Optional, Callable
 from sqlalchemy import create_engine, Engine, Integer, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 _connection_source: Optional[Engine] = None
 
 
-class CannotConnectToDatabase(Exception): pass
-class ConnectionSourceNotSet(Exception): pass
-class InvalidConnectionArguments(Exception): pass
+class CannotConnectToDatabase(Exception):
+    pass
+
+
+class ConnectionSourceNotSet(Exception):
+    pass
+
+
+class InvalidConnectionArguments(Exception):
+    pass
 
 
 class Base(DeclarativeBase):
@@ -52,18 +59,20 @@ def get_connection_source() -> Engine:
         assert isinstance(_connection_source, Engine)
         return _connection_source
 
+
 def unset_connection_source() -> None:
     global _connection_source, _connection_data
     _connection_source = None
     _connection_data = None
+
 
 def set_db_connection(
     dblocation: str,
     username: str = "",
     password: str = "",
     db_name: str = "",
-    after_connect: Tuple[Callable[[], None],...] = ()
-    ) -> None:
+    after_connect: tuple[Callable[[], None], ...] = (),
+) -> None:
 
     """Create SQLAlchemy engine object used to connect to the database.
     Set module-level variable _connection_source to the new engine object."""
@@ -75,13 +84,14 @@ def set_db_connection(
         dblocation=dblocation,
         username=username,
         password=password,
-        db_name=db_name
+        db_name=db_name,
     )
     _connection_source = source
-    assert(_connection_source is not None)
+    assert _connection_source is not None
     create_all_tables(source)
     for foo in after_connect:
         foo()
+
 
 def set_test_db_connection(dblocation: str = "", db_name: str = "") -> None:
     """Create test SQLAlchemy engine object used to connect to the database using SQLite.
@@ -89,16 +99,16 @@ def set_test_db_connection(dblocation: str = "", db_name: str = "") -> None:
     Set module-level variable _connection_source to the new engine object."""
     global _connection_source
     source = _new_connection_source(
-        dialect="sqlite",
-        dbapi="pysqlite",
-        dblocation=dblocation,
-        db_name=db_name
+        dialect="sqlite", dbapi="pysqlite", dblocation=dblocation, db_name=db_name
     )
     _connection_source = source
-    assert(_connection_source is not None)
+    assert _connection_source is not None
     create_all_tables(source)
 
-def get_db_connection(dblocation: str, username: str = "", password: str = "", db_name: str = "") -> Engine|None:
+
+def get_db_connection(
+    dblocation: str, username: str = "", password: str = "", db_name: str = ""
+) -> Engine | None:
     """Create SQLAlchemy engine object used to connect to the database.
     Do not modify module-level variable _connection_source."""
     source = _new_connection_source(
@@ -107,24 +117,24 @@ def get_db_connection(dblocation: str, username: str = "", password: str = "", d
         dblocation=dblocation,
         username=username,
         password=password,
-        db_name=db_name
+        db_name=db_name,
     )
     return source
 
-def get_test_db_connection(dblocation: str = "", db_name: str = "") -> Engine|None:
+
+def get_test_db_connection(dblocation: str = "", db_name: str = "") -> Engine | None:
     """Create test SQLAlchemy engine object used to connect to the database using SQLite.
     No username or password required.
     Do not modify module-level variable _connection_source."""
     source = _new_connection_source(
-        dialect="sqlite",
-        dbapi="pysqlite",
-        dblocation=dblocation,
-        db_name=db_name
+        dialect="sqlite", dbapi="pysqlite", dblocation=dblocation, db_name=db_name
     )
     return source
 
+
 def create_all_tables(source: Engine) -> None:
     Base.metadata.create_all(source)
+
 
 def _new_connection_source(
     dialect: str,
@@ -134,21 +144,25 @@ def _new_connection_source(
     password: str = "",
     db_name: str = "",
     *args,
-    **kwargs
-    ) -> Engine:
+    **kwargs,
+) -> Engine:
 
     try:
         url = _engine_url(dialect, dbapi, username, password, dblocation, db_name)
         engine = create_engine(url, *args, **kwargs)
         if engine is None:
-            raise InvalidConnectionArguments("Could not create new connection source ("
-                    f"{dialect},'+',{dbapi},://...{dblocation})")
+            raise InvalidConnectionArguments(
+                "Could not create new connection source ("
+                f"{dialect},'+',{dbapi},://...{dblocation})"
+            )
     except:
-        raise InvalidConnectionArguments("Could not create new connection source ("
-            f"{dialect},'+',{dbapi},://...{dblocation})")
+        raise InvalidConnectionArguments(
+            "Could not create new connection source (" f"{dialect},'+',{dbapi},://...{dblocation})"
+        )
 
     try:
-        with engine.connect(): pass
+        with engine.connect():
+            pass
     except:
         raise CannotConnectToDatabase(
             "Could not connect to the database with the given connection parameters: \n"
@@ -157,15 +171,16 @@ def _new_connection_source(
         )
     return engine
 
-def _engine_url(dialect: str, dbapi: str, username: str, password: str, dblocation: str, db_name: str = "") -> str:
-    if db_name!="":
-        db_name = "/"+db_name
 
-    if username!="" or password!="":
-        user_info = username+":"+password+"@"
+def _engine_url(
+    dialect: str, dbapi: str, username: str, password: str, dblocation: str, db_name: str = ""
+) -> str:
+    if db_name != "":
+        db_name = "/" + db_name
+
+    if username != "" or password != "":
+        user_info = username + ":" + password + "@"
     else:
         user_info = ""
 
-    return ('').join([dialect,'+',dbapi,"://",user_info,dblocation,db_name])
-
-
+    return ("").join([dialect, "+", dbapi, "://", user_info, dblocation, db_name])

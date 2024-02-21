@@ -1,4 +1,5 @@
-import  sys
+import sys
+
 sys.path.append("server")
 
 
@@ -11,27 +12,24 @@ from database.security import (
     clear_loaded_admins,
     AdminDB,
     get_loaded_admins,
-    number_of_admin_keys
+    number_of_admin_keys,
 )
 
 
 class Test_Getting_Admin(unittest.TestCase):
-
     def setUp(self) -> None:
-        set_test_db_connection(
-            dblocation="/:memory:"
-        )
+        set_test_db_connection(dblocation="/:memory:")
         clear_loaded_admins()
 
     @patch("database.security._generate_key")
-    def test_getting_admin_from_database(self, mock_generate_key:Mock):
+    def test_getting_admin_from_database(self, mock_generate_key: Mock):
         self.assertTrue(get_admin("1234567890") is None)
         mock_generate_key.return_value = "1234567890"
         add_admin_key("Alice")
         self.assertTrue(get_admin("1234567890") is not None)
 
     @patch("database.security._generate_key")
-    def test_getting_admin_not_yet_loaded(self, mock_generate_key:Mock) -> None:
+    def test_getting_admin_not_yet_loaded(self, mock_generate_key: Mock) -> None:
         mock_generate_key.return_value = "abcdef"
 
         add_admin_key("Alice")
@@ -57,5 +55,5 @@ class Test_Getting_Admin(unittest.TestCase):
         self.assertEqual(number_of_admin_keys(), 2)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     unittest.main()

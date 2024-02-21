@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Optional
+from typing import Optional
 import dataclasses
 import random
 import string
@@ -11,7 +11,7 @@ from database.connection import get_connection_source
 from database.connection import AdminBase as _AdminBase
 
 
-_loaded_admins: List[AdminDB] = []
+_loaded_admins: list[AdminDB] = []
 
 
 def clear_loaded_admins() -> None:
@@ -19,7 +19,7 @@ def clear_loaded_admins() -> None:
     _loaded_admins.clear()
 
 
-def get_loaded_admins() -> List[AdminDB]:
+def get_loaded_admins() -> list[AdminDB]:
     return _loaded_admins.copy()
 
 
@@ -36,7 +36,7 @@ def add_admin_key(name: str, connection_source: Optional[Engine] = None) -> str:
     """Add an admin to the database and return the key."""
     _create_admin_table_if_it_does_not_exist(connection_source)
     with Session(connection_source) as session:
-        existing_admin = session.query(_AdminBase).filter(_AdminBase.name==name).first()
+        existing_admin = session.query(_AdminBase).filter(_AdminBase.name == name).first()
         if existing_admin is not None:
             return _admin_already_exists_msg(existing_admin.name)
         else:
@@ -61,8 +61,8 @@ def _create_admin_table_if_it_does_not_exist(connection_source: Engine) -> None:
             _AdminBase.create(connection_source)
 
 
-def get_admin(key: str) -> AdminDB|None:
-    loaded_admins  = get_loaded_admins()
+def get_admin(key: str) -> AdminDB | None:
+    loaded_admins = get_loaded_admins()
     for admin in loaded_admins:
         if admin.key == key:
             return admin
@@ -74,19 +74,18 @@ def get_admin(key: str) -> AdminDB|None:
     _create_admin_table_if_it_does_not_exist(source)
 
     with Session(get_connection_source()) as session:
-        result = session.execute(select(_AdminBase).where(_AdminBase.key==key)).first()
+        result = session.execute(select(_AdminBase).where(_AdminBase.key == key)).first()
         if result is None:
             return None
         else:
-            admin_base:_AdminBase = result[0]
+            admin_base: _AdminBase = result[0]
             admin = AdminDB(id=admin_base.id, name=admin_base.name, key=admin_base.key)
             _loaded_admins.append(admin)
             return admin
 
 
-
 def admin_selection(key: str) -> Select:
-    return select(_AdminBase).where(_AdminBase.key==key)
+    return select(_AdminBase).where(_AdminBase.key == key)
 
 
 def number_of_admin_keys(connection: Optional[Engine] = None) -> int:
@@ -99,6 +98,5 @@ def number_of_admin_keys(connection: Optional[Engine] = None) -> int:
             return 0
 
 
-def _generate_key() -> str: # pragma: no cover
-    return ''.join(random.choice(string.ascii_letters) for _ in range(30))
-
+def _generate_key() -> str:  # pragma: no cover
+    return "".join(random.choice(string.ascii_letters) for _ in range(30))
