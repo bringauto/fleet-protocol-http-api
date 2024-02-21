@@ -22,26 +22,36 @@ class Test_Waiting_For_Commands_For_Already_Available_Car(unittest.TestCase):
         with self.app.app.test_client() as c:
             c.post("v2/protocol/status/test_company/test_car", json=[status])
 
-    def test_if_status_and_relevant_command_is_sent_before_timeout_code_200_and_empty_list_are_returned(self):
+    def test_if_status_and_relevant_command_is_sent_before_timeout_code_200_and_empty_list_are_returned(
+        self,
+    ):
         with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
             time.sleep(0.05)
             future = executor.submit(c.get, "/v2/protocol/command/test_company/test_car?wait=True")
             time.sleep(0.05)
-            executor.submit(c.post, "/v2/protocol/command/test_company/test_car", json=[self.command])
+            executor.submit(
+                c.post, "/v2/protocol/command/test_company/test_car", json=[self.command]
+            )
             response = future.result()
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.json[0]["payload"]["data"]["instruction"], "start")
 
-    def test_if_status_but_no_command_is_sent_before_timeout_code_200_and_empty_list_are_returned(self):
+    def test_if_status_but_no_command_is_sent_before_timeout_code_200_and_empty_list_are_returned(
+        self,
+    ):
         with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
             future = executor.submit(c.get, "/v2/protocol/command/test_company/test_car?wait=True")
             response = future.result()
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.json, [])
 
-    def test_if_no_relevant_status_is_sent_before_timeout_code_404_and_empty_list_are_returned(self):
+    def test_if_no_relevant_status_is_sent_before_timeout_code_404_and_empty_list_are_returned(
+        self,
+    ):
         with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
-            future = executor.submit(c.get, "/v2/protocol/command/other_company/other_car?wait=True")
+            future = executor.submit(
+                c.get, "/v2/protocol/command/other_company/other_car?wait=True"
+            )
             response = future.result()
             self.assertEqual(response.status_code, 404)
             self.assertEqual(response.json, [])
@@ -75,10 +85,14 @@ class Test_Waiting_For_Commands_Of_Initially_Unavailable_Car(unittest.TestCase):
             future = executor.submit(c.get, "/v2/protocol/command/test_company/test_car?wait=True")
             time.sleep(0.05)
             # this command will be ignored by the waiting thread
-            executor.submit(c.post, "/v2/protocol/command/test_company/test_car", json=[self.command_1])
+            executor.submit(
+                c.post, "/v2/protocol/command/test_company/test_car", json=[self.command_1]
+            )
             executor.submit(c.post, "/v2/protocol/status/test_company/test_car", json=[self.status])
             time.sleep(0.05)
-            executor.submit(c.post, "/v2/protocol/command/test_company/test_car", json=[self.command_2])
+            executor.submit(
+                c.post, "/v2/protocol/command/test_company/test_car", json=[self.command_2]
+            )
             response = future.result()
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.json), 1)

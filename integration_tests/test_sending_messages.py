@@ -654,7 +654,7 @@ class Test_Filtering_Available_Devices_By_Module(unittest.TestCase):
                 response.json,
                 {
                     "device_list": [
-                        {
+                        {black
                             "module_id": 7,
                             "type": 8,
                             "role": "test_device",
