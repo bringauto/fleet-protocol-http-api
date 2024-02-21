@@ -54,7 +54,6 @@ class MessageBase(Base):
     payload_data: Mapped[dict] = mapped_column(JSON)
 
     @classmethod
-    @property
     def data_retention_period_ms(cls) -> int:
         """Return the data retention period in milliseconds"""
         return cls.__data_retention_period_in_seconds * 1000
@@ -265,7 +264,7 @@ def remove_old_messages(current_timestamp: int) -> None:
     minus the data retention period.
     """
     with get_connection_source().begin() as conn:
-        oldest_timestamp_to_be_kept = current_timestamp - MessageBase.data_retention_period_ms
+        oldest_timestamp_to_be_kept = current_timestamp - MessageBase.data_retention_period_ms()
         stmt = delete(MessageBase.__table__).where(  # type: ignore
             MessageBase.__table__.c.timestamp < oldest_timestamp_to_be_kept
         )
