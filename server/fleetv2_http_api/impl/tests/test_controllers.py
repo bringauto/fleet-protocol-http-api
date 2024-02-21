@@ -38,60 +38,35 @@ class Test_Car_And_Company_Name_Validity(unittest.TestCase):
         set_test_db_connection("/:memory:")
 
     def test_car_name_must_be_nonempty_lowercase_string_without_spaces(self):
-        with self.assertRaises(ValueError):
-            available_devices("company", "")
-        with self.assertRaises(ValueError):
-            available_devices("company", "car with spaces")
-        with self.assertRaises(ValueError):
-            available_devices("company", "Car")
-        with self.assertRaises(ValueError):
-            available_devices("", "car")
-        with self.assertRaises(ValueError):
-            available_devices("Company Name", "car_1")
+        self.assertEqual(available_devices("company", "")[1], 400)
+        self.assertEqual(available_devices("company", "car with spaces")[1], 400)
+        self.assertEqual(available_devices("company", "Car")[1], 400)
+        self.assertEqual(available_devices("", "car")[1], 400)
+        self.assertEqual(available_devices("Company Name", "car_1")[1], 400)
 
-        with self.assertRaises(ValueError):
-            list_statuses("company", "")
-        with self.assertRaises(ValueError):
-            list_statuses("company", "car with spaces")
-        with self.assertRaises(ValueError):
-            list_statuses("company", "Car")
-        with self.assertRaises(ValueError):
-            list_statuses("", "car")
-        with self.assertRaises(ValueError):
-            list_statuses("Company Name", "car_1")
+        self.assertEqual(list_statuses("company", "")[1], 400)
+        self.assertEqual(list_statuses("company", "car with spaces")[1], 400)
+        self.assertEqual(list_statuses("company", "Car")[1], 400)
+        self.assertEqual(list_statuses("", "car")[1], 400)
+        self.assertEqual(list_statuses("Company Name", "car_1")[1], 400)
 
-        with self.assertRaises(ValueError):
-            list_commands("company", "")
-        with self.assertRaises(ValueError):
-            list_commands("company", "car with spaces")
-        with self.assertRaises(ValueError):
-            list_commands("company", "Car")
-        with self.assertRaises(ValueError):
-            list_commands("", "car")
-        with self.assertRaises(ValueError):
-            list_commands("Company Name", "car_1")
+        self.assertEqual(list_commands("company", "")[1], 400)
+        self.assertEqual(list_commands("company", "car with spaces")[1], 400)
+        self.assertEqual(list_commands("company", "Car")[1], 400)
+        self.assertEqual(list_commands("", "car")[1], 400)
+        self.assertEqual(list_commands("Company Name", "car_1")[1], 400)
 
-        with self.assertRaises(ValueError):
-            send_statuses("company", "", body=[])
-        with self.assertRaises(ValueError):
-            send_statuses("company", "car with spaces", body=[])
-        with self.assertRaises(ValueError):
-            send_statuses("company", "Car", body=[])
-        with self.assertRaises(ValueError):
-            send_statuses("", "car", body=[])
-        with self.assertRaises(ValueError):
-            send_statuses("Company Name", "car_1", body=[])
+        self.assertEqual(send_statuses("company", "", body=[])[1], 400)
+        self.assertEqual(send_statuses("company", "car with spaces", body=[])[1], 400)
+        self.assertEqual(send_statuses("company", "Car", body=[])[1], 400)
+        self.assertEqual(send_statuses("", "car", body=[])[1], 400)
+        self.assertEqual(send_statuses("Company Name", "car_1", body=[])[1], 400)
 
-        with self.assertRaises(ValueError):
-            send_commands("company", "", body=[])
-        with self.assertRaises(ValueError):
-            send_commands("company", "car with spaces", body=[])
-        with self.assertRaises(ValueError):
-            send_commands("company", "Car", body=[])
-        with self.assertRaises(ValueError):
-            send_commands("", "car", body=[])
-        with self.assertRaises(ValueError):
-            send_commands("Company Name", "car_1", body=[])
+        self.assertEqual(send_commands("company", "", body=[])[1], 400)
+        self.assertEqual(send_commands("company", "car with spaces", body=[])[1], 400)
+        self.assertEqual(send_commands("company", "Car", body=[])[1], 400)
+        self.assertEqual(send_commands("", "car", body=[])[1], 400)
+        self.assertEqual(send_commands("Company Name", "car_1", body=[])[1], 400)
 
 
 class Test_Device_Id_Validity(unittest.TestCase):
