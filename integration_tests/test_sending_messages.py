@@ -569,7 +569,7 @@ class Test_Listing_Available_Devices_Without_Filtering_By_Module(unittest.TestCa
         self.app = _app.get_test_app(base_url="/v2/protocol/")
         self.device_1_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device 1")
         self.device_2_id = DeviceId(module_id=9, type=5, role="test_device", name="Test Device 2")
-        status_payload = Payload(MessageType.STATUS_TYPE,"JSON",{"phone": "1234567890"})
+        status_payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
         self.status_1 = Message(device_id=self.device_1_id, payload=status_payload)
         self.status_2 = Message(device_id=self.device_2_id, payload=status_payload)
 
@@ -627,13 +627,12 @@ class Test_Listing_Available_Devices_Without_Filtering_By_Module(unittest.TestCa
 
 
 class Test_Filtering_Available_Devices_By_Module(unittest.TestCase):
-
     def setUp(self) -> None:
         self.maxDiff = 1000
         self.app = _app.get_test_app(base_url="/v2/protocol/")
         self.device_1_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device 1")
         self.device_2_id = DeviceId(module_id=9, type=5, role="test_device", name="Test Device 2")
-        status_payload = Payload(MessageType.STATUS_TYPE,"JSON",{"phone": "1234567890"})
+        status_payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
         self.status_1 = Message(device_id=self.device_1_id, payload=status_payload)
         self.status_2 = Message(device_id=self.device_2_id, payload=status_payload)
 
@@ -685,6 +684,53 @@ class Test_Filtering_Available_Devices_By_Module(unittest.TestCase):
                     "module_id": 9,
                 },
             )
+
+    def tearDown(self) -> None:
+        self.app.clear_all()
+
+
+class Test_Mismatch_Between_Endpoint_And_Message_Type(unittest.TestCase):
+    def setUp(self) -> None:
+        self.app = _app.get_test_app(base_url="/v2/protocol/")
+        self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
+        self.status_payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
+        self.command_payload = Payload(MessageType.COMMAND_TYPE, "JSON", {"command": "start"})
+        self.status_1 = Message(device_id=self.device_id, payload=self.status_payload)
+        self.status_2 = Message(device_id=self.device_id, payload=self.status_payload)
+        self.command = Message(device_id=self.device_id, payload=self.command_payload)
+
+    def test_sending_status_to_command_endpoint_returns_400(self) -> None:
+        with self.app.app.test_client() as client:
+            response = client.post("/command/company/test_car", json=[self.status_1])
+            self.assertEqual(response.status_code, 400)
+
+    def test_sending_command_to_status_endpoint_returns_400(self) -> None:
+        with self.app.app.test_client() as client:
+            response = client.post("/status/company/test_car", json=[self.command])
+            self.assertEqual(response.status_code, 400)
+
+    def test_sending_command_together_with_status_to_status_endpoint_returns_400(self) -> None:
+        with self.app.app.test_client() as client:
+            response = client.post("/status/company/test_car", json=[self.status_1, self.command])
+            self.assertEqual(response.status_code, 400)
+
+    def test_sending_status_together_with_command_to_command_endpoint_returns_400(self) -> None:
+        with self.app.app.test_client() as client:
+            response = client.post("/command/company/test_car", json=[self.status_1, self.command])
+            self.assertEqual(response.status_code, 400)
+
+    def test_status_is_not_send_if_it_is_send_together_with_command(self):
+        with self.app.app.test_client() as client:
+            response = client.post("/status/company/test_car", json=[self.status_1, self.command])
+            self.assertEqual(response.status_code, 400)
+            response = client.get("/status/company/test_car")
+            self.assertEqual(response.status_code, 404)
+
+    def test_command_is_not_send_if_it_is_send_together_with_status(self):
+        with self.app.app.test_client() as client:
+            client.post("/status/company/test_car", json=[self.status_1])  # make car available
+            response = client.post("/command/company/test_car", json=[self.status_2, self.command])
+            self.assertEqual(response.status_code, 400)
 
     def tearDown(self) -> None:
         self.app.clear_all()
