@@ -736,5 +736,28 @@ class Test_Mismatch_Between_Endpoint_And_Message_Type(unittest.TestCase):
         self.app.clear_all()
 
 
+class Test_Sending_Empty_List_Of_Messages(unittest.TestCase):
+    def setUp(self) -> None:
+        self.app = _app.get_test_app(base_url="/v2/protocol/")
+        self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
+        self.status_payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
+        self.command_payload = Payload(MessageType.COMMAND_TYPE, "JSON", {"command": "start"})
+        self.status_1 = Message(device_id=self.device_id, payload=self.status_payload)
+        self.command = Message(device_id=self.device_id, payload=self.command_payload)
+
+    def test_sending_empty_list_of_messages_to_status_endpoint_returns_400(self) -> None:
+        with self.app.app.test_client() as client:
+            response = client.post("/status/company/test_car", json=[])
+            self.assertEqual(response.status_code, 400)
+
+    def test_sending_empty_list_of_messages_to_command_endpoint_returns_400(self) -> None:
+        with self.app.app.test_client() as client:
+            response = client.post("/command/company/test_car", json=[])
+            self.assertEqual(response.status_code, 400)
+
+    def tearDown(self) -> None:
+        self.app.clear_all(
+
+
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
