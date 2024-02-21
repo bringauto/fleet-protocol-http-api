@@ -401,7 +401,7 @@ def _check_messages(
     errors: str = ""
     errors = _check_message_types(expected_message_type, *messages)
     if not errors.strip()=="":
-        return errors, 500
+        return errors, 400
     else:
         return "", 200
 
