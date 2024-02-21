@@ -358,10 +358,7 @@ def send_statuses(
 def _message_list_from_request_body(body: List[Dict|Message]) -> List[Message]:
     messages: List[Message] = list()
     for item in body:
-        if type(item) == dict:
-            messages.append(Message.from_dict(item))
-        else:
-            messages.append(item)
+        messages.append(Message.from_dict(item) if type(item) == dict else item)
     return messages
 
 def _available_module(company_name: str, car_name: str, module_id: int) -> Module:

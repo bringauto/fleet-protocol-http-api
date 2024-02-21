@@ -603,7 +603,7 @@ class Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_
         device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
         command = Message(timestamp=10, device_id=device_id, payload=payload)
         _, code = send_statuses("test_company", "test_car", [command])
-        self.assertEqual(code, 500)
+        self.assertEqual(code, 400)
 
     def test_send_commands_accepts_only_commands(self):
         payload = Payload(
@@ -614,7 +614,7 @@ class Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_
         device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
         status = Message(timestamp=10, device_id=device_id, payload=payload)
         _, code = send_commands("test_company", "test_car", [status])
-        self.assertEqual(code, 500)
+        self.assertEqual(code, 400)
 
     def tearDown(self) -> None:
         if os.path.exists("./example.db"):
