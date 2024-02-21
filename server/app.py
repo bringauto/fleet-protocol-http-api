@@ -6,15 +6,22 @@ from flask.testing import FlaskClient as _FlaskClient  # type: ignore
 import connexion as _connexion  # type: ignore
 from sqlalchemy.orm import Session as _Session
 
-from database.connection import get_connection_source as _get_connection_source # type: ignore
-from database.connection import set_test_db_connection as _set_test_db_connection
-from database.connection import create_all_tables as _create_all_tables
+from database.connection import ( # type: ignore
+    get_connection_source as _get_connection_source,
+    set_test_db_connection as _set_test_db_connection,
+    create_all_tables as _create_all_tables
+)
+from fleetv2_http_api.impl.controllers import ( # type: ignore
+    set_command_wait_timeout_s,
+    set_status_wait_timeout_s
+)
 
-from fleetv2_http_api.encoder import JSONEncoder # type: ignore
-from database.security import _AdminBase as _AdminBase # type: ignore
+from fleetv2_http_api.encoder import JSONEncoder  # type: ignore
+from database.security import _AdminBase as _AdminBase  # type: ignore
+
 # Keep the following import to make all the tables be created by the get_test_app function
-import database.database_controller as _database_controller # type: ignore
-from database.device_ids  import clear_device_ids as _clear_device_ids  # type: ignore
+import database.database_controller as _database_controller  # type: ignore
+from database.device_ids import clear_device_ids as _clear_device_ids  # type: ignore
 
 
 def get_app() -> _connexion.FlaskApp:
@@ -24,8 +31,8 @@ def get_app() -> _connexion.FlaskApp:
     return app
 
 
-class _TestApp:
-    def __init__(self, api_key: str = "",  db_location: str = "") -> None:
+class TestApp:
+    def __init__(self, api_key: str = "", db_location: str = "") -> None:
         self._app = get_app()
         self._flask_app = self._TestFlaskApp(api_key, self._app.app)
         self._db_location = db_location
@@ -35,7 +42,7 @@ class _TestApp:
         return self._flask_app
 
     def clear_all(self) -> None:
-        if self._db_location!= "" and os.path.isfile(self._db_location):
+        if self._db_location != "" and os.path.isfile(self._db_location):
             os.remove(self._db_location)
         _clear_device_ids()
 
@@ -46,7 +53,7 @@ class _TestApp:
 
         def test_client(self) -> _FlaskClient:
             if self._api_key == "":
-                return _TestApp._TestClient(self._app, self._api_key)
+                return TestApp._TestClient(self._app, self._api_key)
             else:
                 client: _FlaskClient = self._app.test_client()
                 return client
@@ -84,22 +91,36 @@ class _TestApp:
                 return uri + f"?api_key={self._key}"
 
 
-def get_test_app(predef_api_key: str = "", db_location: str = "", db_name: str = "") -> _TestApp:
+def get_test_app(
+    predef_api_key: str = "",
+    db_location: str = "",
+    db_name: str = "",
+    request_timeout_s: float = 1,
+    remove_existing_db_file: bool = True,
+) -> TestApp:
     """Creates a test app that can be used for testing purposes.
 
     It enables to surpass the API key verification by providing a predefined API key.
 
-    If the api_key is left empty, no authentication is required.
-    The api_key can be set to any value, that can be used as a value for 'api_key' query parameter in the API calls.
+    If the `predef_api_key` is left empty, no authentication is required.
+    The API key can be set to any value, that can be used as a value for 'api_key'
+    query parameter in the API calls.
     """
 
     if os.path.isfile(db_location):
-        raise ValueError(f"The file {db_location} already exists. Please provide a different location.")
-    _set_test_db_connection("/"+db_location, db_name)
+        if remove_existing_db_file:
+            os.remove(db_location)
+        else:
+            raise ValueError(
+                f"The file {db_location} already exists. Please provide a different location."
+            )
+    _set_test_db_connection("/" + db_location, db_name)
+    set_command_wait_timeout_s(request_timeout_s)
+    set_status_wait_timeout_s(request_timeout_s)
     source = _get_connection_source()
     _create_all_tables(source)
     with _Session(source) as session:
         admin = _AdminBase(name="test_key", key=predef_api_key)
         session.add(admin)
         session.commit()
-    return _TestApp(predef_api_key, db_location)
+    return TestApp(predef_api_key, db_location)
