@@ -301,6 +301,9 @@ def send_commands(
     _validate_name_string(car_name, "Car name")
     messages = _message_list_from_request_body(body)
     if messages == []:
+        response = _check_car_availability(company_name, car_name)
+        if response[1] != 200:
+            return response
         msg = f"Empty list of commands was sent to the API; no commands were sent to the device."
         return _log_and_respond(msg , 200, msg)
     errors = _check_sent_commands(company_name, car_name, messages)

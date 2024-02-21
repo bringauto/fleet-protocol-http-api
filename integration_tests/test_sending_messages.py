@@ -742,21 +742,27 @@ class Test_Sending_Empty_List_Of_Messages(unittest.TestCase):
         self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         self.status_payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
         self.command_payload = Payload(MessageType.COMMAND_TYPE, "JSON", {"command": "start"})
-        self.status_1 = Message(device_id=self.device_id, payload=self.status_payload)
+        self.status = Message(device_id=self.device_id, payload=self.status_payload)
         self.command = Message(device_id=self.device_id, payload=self.command_payload)
 
-    def test_sending_empty_list_of_messages_to_status_endpoint_returns_400(self) -> None:
+    def test_sending_empty_list_of_statuses_yields_200(self) -> None:
         with self.app.app.test_client() as client:
             response = client.post("/status/company/test_car", json=[])
-            self.assertEqual(response.status_code, 400)
+            self.assertEqual(response.status_code, 200)
 
-    def test_sending_empty_list_of_messages_to_command_endpoint_returns_400(self) -> None:
+    def test_sending_empty_list_of_commands_to_available_device_yields_200(self) -> None:
+        with self.app.app.test_client() as client:
+            client.post("/status/company/test_car", json=[self.status])
+            response = client.post("/command/company/test_car", json=[])
+            self.assertEqual(response.status_code, 200)
+
+    def test_sending_empty_list_of_commands_to_unavailable_device_yields_404(self) -> None:
         with self.app.app.test_client() as client:
             response = client.post("/command/company/test_car", json=[])
-            self.assertEqual(response.status_code, 400)
+            self.assertEqual(response.status_code, 404)
 
     def tearDown(self) -> None:
-        self.app.clear_all(
+        self.app.clear_all()
 
 
 if __name__ == "__main__":  # pragma: no cover
