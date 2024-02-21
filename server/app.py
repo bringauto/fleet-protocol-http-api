@@ -20,7 +20,6 @@ from fleetv2_http_api.encoder import JSONEncoder  # type: ignore
 from database.security import _AdminBase as _AdminBase  # type: ignore
 
 # Keep the following import to make all the tables be created by the get_test_app function
-import database.database_controller as _database_controller  # type: ignore
 from database.device_ids import clear_device_ids as _clear_device_ids  # type: ignore
 
 
@@ -32,9 +31,9 @@ def get_app() -> _connexion.FlaskApp:
 
 
 class TestApp:
-    def __init__(self, api_key: str = "", db_location: str = "") -> None:
+    def __init__(self, base_url: str, api_key: str = "", db_location: str = "") -> None:
         self._app = get_app()
-        self._flask_app = self._TestFlaskApp(api_key, self._app.app)
+        self._flask_app = self._TestFlaskApp(api_key, self._app.app, base_url)
         self._db_location = db_location
 
     @property
@@ -47,41 +46,51 @@ class TestApp:
         _clear_device_ids()
 
     class _TestFlaskApp:
-        def __init__(self, api_key, flask_app, *args, **kwargs) -> None:
+        def __init__(self, api_key, flask_app, base_url: str, *args, **kwargs) -> None:
             self._app = flask_app
             self._api_key = api_key
+            self._base_url = base_url
 
         def test_client(self) -> _FlaskClient:
-            if self._api_key == "":
-                return TestApp._TestClient(self._app, self._api_key)
-            else:
-                client: _FlaskClient = self._app.test_client()
-                return client
+            return TestApp._TestClient(self._app, self._api_key, base_url=self._base_url)
+
 
     class _TestClient(_FlaskClient):
-        def __init__(self, application, api_key: str, *args, **kwargs) -> None:
+        def __init__(self, application, api_key: str, base_url: str, *args, **kwargs) -> None:
             super().__init__(application, *args, **kwargs)
             self._key = api_key
+            self._base_url = base_url
 
         def get(self, url: str, *args, **kwargs) -> Any:
-            url = self._insert_key(url)
+            url = self._construct_url(url)
             return super().get(url, *args, **kwargs)
 
         def head(self, url: str, *args, **kwargs) -> Any:
-            url = self._insert_key(url)
+            url = self._construct_url(url)
             return super().head(url, *args, **kwargs)
 
         def post(self, url: str, *args, **kwargs) -> Any:
-            url = self._insert_key(url)
+            url = self._construct_url(url)
             return super().post(url, *args, **kwargs)
 
         def put(self, url: str, *args, **kwargs) -> Any:
-            url = self._insert_key(url)
+            url = self._construct_url(url)
             return super().put(url, *args, **kwargs)
 
         def delete(self, url: str, *args, **kwargs) -> Any:
-            url = self._insert_key(url)
+            url = self._construct_url(url)
             return super().delete(url, *args, **kwargs)
+
+
+        def _construct_url(self, uri: str) -> str:
+            uri = self._prepend_base_url(uri)
+            return self._insert_key(uri)
+
+        def _prepend_base_url(self, url: str) -> str:
+            if not url.startswith("/"):
+                url = "/" + url
+            url = (self._base_url + url).replace("//", "/")
+            return url
 
         def _insert_key(self, uri: str) -> str:
             if "?" in uri:
@@ -97,6 +106,7 @@ def get_test_app(
     db_name: str = "",
     request_timeout_s: float = 1,
     remove_existing_db_file: bool = True,
+    base_url: str = ""
 ) -> TestApp:
     """Creates a test app that can be used for testing purposes.
 
@@ -123,4 +133,4 @@ def get_test_app(
         admin = _AdminBase(name="test_key", key=predef_api_key)
         session.add(admin)
         session.commit()
-    return TestApp(predef_api_key, db_location)
+    return TestApp(base_url, predef_api_key, db_location)

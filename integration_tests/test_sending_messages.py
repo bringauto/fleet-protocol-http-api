@@ -11,7 +11,7 @@ from server.enums import MessageType, EncodingType
 
 class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):
     def setUp(self) -> None:
-        self.app = _app.get_test_app(db_location="test_db.db")
+        self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         self.payload = Payload(
             message_type=MessageType.STATUS_TYPE,
@@ -23,22 +23,22 @@ class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):
 
     def test_test_car_is_initially_not_among_available_cars(self) -> None:
         with self.app.app.test_client() as client:
-            response = client.get("/v2/protocol/cars")
+            response = client.get("/cars")
             self.assertEqual(response.json, [])
 
     def test_sending_status_makes_car_available(self) -> None:
         with self.app.app.test_client() as client:
-            response = client.post("/v2/protocol/status/test_company/test_car", json=[self.status])
+            response = client.post("/status/test_company/test_car", json=[self.status])
             self.assertEqual(response.status_code, 200)
-            response = client.get("/v2/protocol/cars")
+            response = client.get("/cars")
             self.assertEqual(response.json, [self.test_car])
 
     @patch("fleetv2_http_api.impl.controllers.timestamp")
     def test_retrieving_sent_status(self, mock_timestamp: Mock) -> None:
         mock_timestamp.return_value = 11111
         with self.app.app.test_client() as client:
-            client.post("/v2/protocol/status/test_company/test_car", json=[self.status])
-            response = client.get("/v2/protocol/status/test_company/test_car")
+            client.post("/status/test_company/test_car", json=[self.status])
+            response = client.get("/status/test_company/test_car")
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
                 response.json,
@@ -62,7 +62,7 @@ class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):
 
     def test_retrieving_status_for_none_existing_car_returns_404_and_empty_list(self) -> None:
         with self.app.app.test_client() as client:
-            response = client.get("/v2/protocol/status/test_company/test_car")
+            response = client.get("/status/test_company/test_car")
             self.assertEqual(response.status_code, 404)
             self.assertEqual(response.json, [])
 
@@ -72,7 +72,7 @@ class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):
 
 class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
     def setUp(self) -> None:
-        self.app = _app.get_test_app(db_location="test_db.db")
+        self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         status_payload = Payload(
             message_type=MessageType.STATUS_TYPE,
@@ -93,10 +93,10 @@ class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
     ) -> None:
         with self.app.app.test_client() as client:
             mock_timestamp.return_value = 11111
-            client.post("/v2/protocol/status/test_company/test_car", json=[self.status])
+            client.post("/status/test_company/test_car", json=[self.status])
             mock_timestamp.return_value = 11112
-            client.post("/v2/protocol/command/test_company/test_car", json=[self.command])
-            response = client.get("/v2/protocol/command/test_company/test_car")
+            client.post("/command/test_company/test_car", json=[self.command])
+            response = client.get("/command/test_company/test_car")
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
                 response.json,
@@ -124,7 +124,7 @@ class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
 
 class Test_Sending_And_Viewing_Commands_For_Unavailable_Car(unittest.TestCase):
     def setUp(self) -> None:
-        self.app = _app.get_test_app(db_location="test_db.db")
+        self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         command_payload = Payload(
             message_type=MessageType.COMMAND_TYPE,
@@ -135,14 +135,14 @@ class Test_Sending_And_Viewing_Commands_For_Unavailable_Car(unittest.TestCase):
 
     def test_retrieving_command_for_nonexisting_car_returns_404_and_empty_list(self) -> None:
         with self.app.app.test_client() as client:
-            response = client.get("/v2/protocol/command/test_company/test_car")
+            response = client.get("/command/test_company/test_car")
             self.assertEqual(response.status_code, 404)
             self.assertEqual(response.json, [])
 
     def test_sending_command_to_nonexistent_car_returns_404(self) -> None:
         with self.app.app.test_client() as client:
             response = client.post(
-                "/v2/protocol/command/test_company/test_car", json=[self.command]
+                "/command/test_company/test_car", json=[self.command]
             )
             self.assertEqual(response.status_code, 404)
 
@@ -152,7 +152,7 @@ class Test_Sending_And_Viewing_Commands_For_Unavailable_Car(unittest.TestCase):
 
 class Test_Sending_And_Viewing_Statuses_To_Multiple_Cars(unittest.TestCase):
     def setUp(self) -> None:
-        self.app = _app.get_test_app(db_location="test_db.db")
+        self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         status_payload = Payload(
             message_type=MessageType.STATUS_TYPE,
@@ -166,10 +166,10 @@ class Test_Sending_And_Viewing_Statuses_To_Multiple_Cars(unittest.TestCase):
     def test_sending_statuses_to_mutliple_cars(self, mock_timestamp: Mock) -> None:
         with self.app.app.test_client() as client:
             mock_timestamp.return_value = 111
-            client.post("/v2/protocol/status/test_company/test_car", json=[self.status_1])
+            client.post("/status/test_company/test_car", json=[self.status_1])
             mock_timestamp.return_value = 222
-            client.post("/v2/protocol/status/test_company/test_car_2", json=[self.status_2])
-            response = client.get("/v2/protocol/cars")
+            client.post("/status/test_company/test_car_2", json=[self.status_2])
+            response = client.get("/cars")
             self.assertEqual(
                 response.json,
                 [
@@ -177,7 +177,7 @@ class Test_Sending_And_Viewing_Statuses_To_Multiple_Cars(unittest.TestCase):
                     {"company_name": "test_company", "car_name": "test_car_2"},
                 ],
             )
-            response = client.get("/v2/protocol/status/test_company/test_car")
+            response = client.get("/status/test_company/test_car")
             self.assertEqual(
                 response.json,
                 [
@@ -197,7 +197,7 @@ class Test_Sending_And_Viewing_Statuses_To_Multiple_Cars(unittest.TestCase):
                     }
                 ],
             )
-            response = client.get("/v2/protocol/status/test_company/test_car_2")
+            response = client.get("/status/test_company/test_car_2")
             self.assertEqual(
                 response.json,
                 [
@@ -225,7 +225,7 @@ class Test_Sending_And_Viewing_Statuses_To_Multiple_Cars(unittest.TestCase):
 
 class Test_Sending_And_Viewing_Statuses_Sent_To_Multiple_Devices_On_Single_Car(unittest.TestCase):
     def setUp(self) -> None:
-        self.app = _app.get_test_app(db_location="test_db.db")
+        self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         device_A_id = DeviceId(module_id=7, type=8, role="test_device_l", name="Test Device A")
         device_B_id = DeviceId(module_id=7, type=9, role="test_device_r", name="Test Device B")
         device_C_id = DeviceId(module_id=14, type=8, role="test_device", name="Test Device C")
@@ -252,10 +252,10 @@ class Test_Sending_And_Viewing_Statuses_Sent_To_Multiple_Devices_On_Single_Car(u
     ) -> None:
         with self.app.app.test_client() as client:
             mock_timestamp.return_value = 111
-            client.post("/v2/protocol/status/test_company/test_car", json=[self.status_1])
+            client.post("/status/test_company/test_car", json=[self.status_1])
             mock_timestamp.return_value = 222
-            client.post("/v2/protocol/status/test_company/test_car", json=[self.status_2])
-            response = client.get("/v2/protocol/status/test_company/test_car")
+            client.post("/status/test_company/test_car", json=[self.status_2])
+            response = client.get("/status/test_company/test_car")
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
                 response.json,
@@ -295,11 +295,11 @@ class Test_Sending_And_Viewing_Statuses_Sent_To_Multiple_Devices_On_Single_Car(u
     def test_sending_statuses_to_different_modules_is_possible(self, mock_timestamp: Mock) -> None:
         with self.app.app.test_client() as client:
             mock_timestamp.return_value = 111
-            client.post("/v2/protocol/status/test_company/test_car", json=[self.status_1])
+            client.post("/status/test_company/test_car", json=[self.status_1])
             mock_timestamp.return_value = 222
-            client.post("/v2/protocol/status/test_company/test_car", json=[self.status_3])
+            client.post("/status/test_company/test_car", json=[self.status_3])
 
-            response = client.get("/v2/protocol/status/test_company/test_car")
+            response = client.get("/status/test_company/test_car")
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
                 response.json,
@@ -341,7 +341,7 @@ class Test_Sending_And_Viewing_Statuses_Sent_To_Multiple_Devices_On_Single_Car(u
 
 class Test_Sending_Multiple_Statuses_To_The_Same_Car_At_Once(unittest.TestCase):
     def setUp(self) -> None:
-        self.app = _app.get_test_app(db_location="test_db.db")
+        self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         device_A_id = DeviceId(module_id=7, type=8, role="test_device_x", name="Test Device_X")
         device_B_id = DeviceId(module_id=9, type=9, role="test_device_y", name="Test Device Y")
         status_payload_A = Payload(
@@ -364,10 +364,10 @@ class Test_Sending_Multiple_Statuses_To_The_Same_Car_At_Once(unittest.TestCase):
         with self.app.app.test_client() as client:
             mock_timestamp.return_value = 11111
             response = client.post(
-                "/v2/protocol/status/test_company/test_car", json=[self.status_1, self.status_2]
+                "/status/test_company/test_car", json=[self.status_1, self.status_2]
             )
             self.assertEqual(response.status_code, 200)
-            response = client.get("/v2/protocol/status/test_company/test_car")
+            response = client.get("/status/test_company/test_car")
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
                 response.json,
@@ -408,10 +408,10 @@ class Test_Sending_Multiple_Statuses_To_The_Same_Car_At_Once(unittest.TestCase):
         with self.app.app.test_client() as client:
             mock_timestamp.return_value = 11111
             response = client.post(
-                "/v2/protocol/status/test_company/test_car", json=[self.status_1, self.status_1]
+                "/status/test_company/test_car", json=[self.status_1, self.status_1]
             )
             self.assertEqual(response.status_code, 200)
-            response = client.get("/v2/protocol/status/test_company/test_car")
+            response = client.get("/status/test_company/test_car")
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
                 response.json,
@@ -455,7 +455,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
     @patch("fleetv2_http_api.impl.controllers.timestamp")
     def setUp(self, mock_timestamp: Mock) -> None:
         self.maxDiff = 1000
-        self.app = _app.get_test_app(db_location="test_db.db")
+        self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_1_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device 1")
         self.device_2_id = DeviceId(module_id=9, type=5, role="test_device", name="Test Device 2")
         status_payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
@@ -468,7 +468,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
 
         mock_timestamp.return_value = 11111
         with self.app.app.test_client() as client:
-            client.post("/v2/protocol/status/test_company/test_car", json=[status_1, status_2])
+            client.post("/status/test_company/test_car", json=[status_1, status_2])
             client.get("/v2/protocol/available-devices/test_company/test_car")
 
     @patch("fleetv2_http_api.impl.controllers.timestamp")
@@ -478,10 +478,10 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
         mock_timestamp.return_value = 11112
         with self.app.app.test_client() as client:
             response = client.post(
-                "/v2/protocol/command/test_company/test_car", json=[self.command_A, self.command_B]
+                "/command/test_company/test_car", json=[self.command_A, self.command_B]
             )
             self.assertEqual(response.status_code, 200)
-            response = client.get("/v2/protocol/command/test_company/test_car")
+            response = client.get("/command/test_company/test_car")
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.json), 2) # type: ignore
             self.assertEqual(
@@ -525,10 +525,10 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
         mock_timestamp.return_value = 11112
         with self.app.app.test_client() as client:
             response = client.post(
-                "/v2/protocol/command/test_company/test_car", json=[self.command_A, self.command_A]
+                "/command/test_company/test_car", json=[self.command_A, self.command_A]
             )
             self.assertEqual(response.status_code, 200)
-            response = client.get("/v2/protocol/command/test_company/test_car")
+            response = client.get("/command/test_company/test_car")
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.json), 2) # type: ignore
             self.assertEqual(
@@ -573,7 +573,7 @@ class Test_Listing_Available_Devices_Without_Filtering_By_Module(unittest.TestCa
     @patch("fleetv2_http_api.impl.controllers.timestamp")
     def setUp(self, mock_timestamp: Mock) -> None:
         self.maxDiff = 1000
-        self.app = _app.get_test_app(db_location="test_db.db")
+        self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_1_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device 1")
         self.device_2_id = DeviceId(module_id=9, type=5, role="test_device", name="Test Device 2")
         status_payload = Payload(
@@ -586,13 +586,13 @@ class Test_Listing_Available_Devices_Without_Filtering_By_Module(unittest.TestCa
 
         mock_timestamp.return_value = 11111
         with self.app.app.test_client() as client:
-            client.post("/v2/protocol/status/test_company/test_car", json=[status_1, status_2])
-            client.get("/v2/protocol/available-devices/test_company/test_car")
+            client.post("/status/test_company/test_car", json=[status_1, status_2])
+            client.get("/available-devices/test_company/test_car")
 
     def test_filtering_devices_by_module(self) -> None:
         with self.app.app.test_client() as client:
             response = client.get(
-                "/v2/protocol/available-devices/test_company/test_car"
+                "/available-devices/test_company/test_car"
             )
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
@@ -628,7 +628,7 @@ class Test_Filtering_Available_Devices_By_Module(unittest.TestCase):
     @patch("fleetv2_http_api.impl.controllers.timestamp")
     def setUp(self, mock_timestamp: Mock) -> None:
         self.maxDiff = 1000
-        self.app = _app.get_test_app(db_location="test_db.db")
+        self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_1_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device 1")
         self.device_2_id = DeviceId(module_id=9, type=5, role="test_device", name="Test Device 2")
         status_payload = Payload(
@@ -641,20 +641,20 @@ class Test_Filtering_Available_Devices_By_Module(unittest.TestCase):
 
         mock_timestamp.return_value = 11111
         with self.app.app.test_client() as client:
-            client.post("/v2/protocol/status/test_company/test_car", json=[status_1, status_2])
-            client.get("/v2/protocol/available-devices/test_company/test_car")
+            client.post("/status/test_company/test_car", json=[status_1, status_2])
+            client.get("/available-devices/test_company/test_car")
 
     def test_filtering_devices_by_module(self) -> None:
         with self.app.app.test_client() as client:
             response = client.get(
-                "/v2/protocol/available-devices/test_company/test_car?module_id=7"
+                "/available-devices/test_company/test_car?module_id=7"
             )
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
                 response.json,
                 {
                     "device_list": [
-                        {black
+                        {
                             "module_id": 7,
                             "type": 8,
                             "role": "test_device",
@@ -665,7 +665,7 @@ class Test_Filtering_Available_Devices_By_Module(unittest.TestCase):
                 },
             )
             response = client.get(
-                "/v2/protocol/available-devices/test_company/test_car?module_id=9"
+                "/available-devices/test_company/test_car?module_id=9"
             )
             self.assertEqual(response.status_code, 200)
             self.assertEqual(

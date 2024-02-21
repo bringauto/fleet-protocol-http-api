@@ -13,7 +13,7 @@ from server.enums import MessageType
 
 class Test_Waiting_For_Statuses_To_Become_Avaiable(unittest.TestCase):
     def setUp(self) -> None:
-        self.app = _app.get_test_app(db_location="test_db.db", request_timeout_s=0.2)
+        self.app = _app.get_test_app(db_location="test_db.db", request_timeout_s=0.2, base_url="/v2/protocol/")
         self.deviceA_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         self.deviceB_id = DeviceId(module_id=9, type=10, role="test_device", name="Test Device")
         self.payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
@@ -24,10 +24,10 @@ class Test_Waiting_For_Statuses_To_Become_Avaiable(unittest.TestCase):
         self,
     ):
         with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
-            future = executor.submit(c.get, "/v2/protocol/status/test_company/test_car?wait=True")
+            future = executor.submit(c.get, "/status/test_company/test_car?wait=True")
             time.sleep(0.1)
             executor.submit(
-                c.post, "/v2/protocol/status/test_company/test_car", json=[self.statusA]
+                c.post, "/status/test_company/test_car", json=[self.statusA]
             )
             response = future.result()
             self.assertEqual(response.status_code, 200)
@@ -36,11 +36,11 @@ class Test_Waiting_For_Statuses_To_Become_Avaiable(unittest.TestCase):
 
     def test_all_relevant_statuses_sent_in_one_thread_are_returned_in_second_waiting_thread(self):
         with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
-            future = executor.submit(c.get, "/v2/protocol/status/test_company/test_car?wait=True")
+            future = executor.submit(c.get, "/status/test_company/test_car?wait=True")
             time.sleep(0.1)
             executor.submit(
                 c.post,
-                "/v2/protocol/status/test_company/test_car",
+                "/status/test_company/test_car",
                 json=[self.statusA, self.statusB],
             )
             response = future.result()
@@ -51,7 +51,7 @@ class Test_Waiting_For_Statuses_To_Become_Avaiable(unittest.TestCase):
 
     def test_404_code_and_empty_list_of_statuses_is_returned_after_timeout_is_exceeded(self):
         with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
-            future = executor.submit(c.get, "/v2/protocol/status/test_company/test_car?wait=True")
+            future = executor.submit(c.get, "/status/test_company/test_car?wait=True")
             response = future.result()
             self.assertEqual(response.status_code, 404)
             self.assertEqual(response.json, [])
@@ -63,7 +63,7 @@ class Test_Waiting_For_Statuses_To_Become_Avaiable(unittest.TestCase):
 
 class Test_Waiting_Request_Ignores_Statuses_Send_To_Other_Cars(unittest.TestCase):
     def setUp(self) -> None:
-        self.app = _app.get_test_app(db_location="test_db.db", request_timeout_s=0.2)
+        self.app = _app.get_test_app(db_location="test_db.db", request_timeout_s=0.2, base_url="/v2/protocol/")
         self.deviceA_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         self.deviceB_id = DeviceId(module_id=9, type=10, role="test_device", name="Test Device")
         self.payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
@@ -72,10 +72,10 @@ class Test_Waiting_Request_Ignores_Statuses_Send_To_Other_Cars(unittest.TestCase
 
     def test_status_for_other_car_than_awaited_is_not_send_to_waiting_thread(self):
         with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
-            future = executor.submit(c.get, "/v2/protocol/status/company/car_x?wait=True")
+            future = executor.submit(c.get, "/status/company/car_x?wait=True")
             time.sleep(0.1)
             executor.submit(
-                c.post, "/v2/protocol/status/company/car_y", json=[self.statusA, self.statusB]
+                c.post, "/status/company/car_y", json=[self.statusA, self.statusB]
             )
             response = future.result()
             self.assertEqual(response.status_code, 404)
@@ -83,10 +83,10 @@ class Test_Waiting_Request_Ignores_Statuses_Send_To_Other_Cars(unittest.TestCase
 
     def test_status_for_other_company_than_awaited_is_not_send_to_waiting_thread(self):
         with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
-            future = executor.submit(c.get, "/v2/protocol/status/company_x/car?wait=True")
+            future = executor.submit(c.get, "/status/company_x/car?wait=True")
             time.sleep(0.1)
             executor.submit(
-                c.post, "/v2/protocol/status/company_y/car", json=[self.statusA, self.statusB]
+                c.post, "/status/company_y/car", json=[self.statusA, self.statusB]
             )
             response = future.result()
             self.assertEqual(response.status_code, 404)
@@ -94,15 +94,15 @@ class Test_Waiting_Request_Ignores_Statuses_Send_To_Other_Cars(unittest.TestCase
 
     def test_waiting_thread_responds_after_relevant_status_is_sent(self):
         with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
-            future = executor.submit(c.get, "/v2/protocol/status/company/car?wait=True")
+            future = executor.submit(c.get, "/status/company/car?wait=True")
             time.sleep(0.05)
             # This status does not trigger response from the waiting thread
             executor.submit(
-                c.post, "/v2/protocol/status/company/some_other_car", json=[self.statusA]
+                c.post, "/status/company/some_other_car", json=[self.statusA]
             )
             time.sleep(0.05)
             # This status triggers response from the waiting thread
-            executor.submit(c.post, "/v2/protocol/status/company/car", json=[self.statusB])
+            executor.submit(c.post, "/status/company/car", json=[self.statusB])
             response = future.result()
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.json), 1)
