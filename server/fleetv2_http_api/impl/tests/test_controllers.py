@@ -33,42 +33,6 @@ from fleetv2_http_api.models.module import Module
 from fleetv2_http_api.models.car import Car
 
 
-class Test_Car_And_Company_Name_Validity(unittest.TestCase):
-    def setUp(self) -> None:
-        set_test_db_connection("/:memory:")
-
-    def test_car_name_must_be_nonempty_lowercase_string_without_spaces(self):
-        self.assertEqual(available_devices("company", "")[1], 400)
-        self.assertEqual(available_devices("company", "car with spaces")[1], 400)
-        self.assertEqual(available_devices("company", "Car")[1], 400)
-        self.assertEqual(available_devices("", "car")[1], 400)
-        self.assertEqual(available_devices("Company Name", "car_1")[1], 400)
-
-        self.assertEqual(list_statuses("company", "")[1], 400)
-        self.assertEqual(list_statuses("company", "car with spaces")[1], 400)
-        self.assertEqual(list_statuses("company", "Car")[1], 400)
-        self.assertEqual(list_statuses("", "car")[1], 400)
-        self.assertEqual(list_statuses("Company Name", "car_1")[1], 400)
-
-        self.assertEqual(list_commands("company", "")[1], 400)
-        self.assertEqual(list_commands("company", "car with spaces")[1], 400)
-        self.assertEqual(list_commands("company", "Car")[1], 400)
-        self.assertEqual(list_commands("", "car")[1], 400)
-        self.assertEqual(list_commands("Company Name", "car_1")[1], 400)
-
-        self.assertEqual(send_statuses("company", "", body=[])[1], 400)
-        self.assertEqual(send_statuses("company", "car with spaces", body=[])[1], 400)
-        self.assertEqual(send_statuses("company", "Car", body=[])[1], 400)
-        self.assertEqual(send_statuses("", "car", body=[])[1], 400)
-        self.assertEqual(send_statuses("Company Name", "car_1", body=[])[1], 400)
-
-        self.assertEqual(send_commands("company", "", body=[])[1], 400)
-        self.assertEqual(send_commands("company", "car with spaces", body=[])[1], 400)
-        self.assertEqual(send_commands("company", "Car", body=[])[1], 400)
-        self.assertEqual(send_commands("", "car", body=[])[1], 400)
-        self.assertEqual(send_commands("Company Name", "car_1", body=[])[1], 400)
-
-
 class Test_Device_Id_Validity(unittest.TestCase):
     def test_devide_id_validity(self):
         id = DeviceId(module_id=42, type=2, role="light", name="Left light")
