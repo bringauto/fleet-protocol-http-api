@@ -26,7 +26,9 @@ class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):
             response = client.get("/cars")
             self.assertEqual(response.json, [])
 
-    def test_viewing_status_of_nonexisting_car_under_existing_company_returns_404_and_empty_list(self) -> None:
+    def test_viewing_status_of_nonexisting_car_under_existing_company_returns_404_and_empty_list(
+        self,
+    ) -> None:
         with self.app.app.test_client() as client:
             client.post("/status/test_company/test_car", json=[self.status])
             response = client.get("/status/test_company/test_car_2")

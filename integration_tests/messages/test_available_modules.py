@@ -34,7 +34,7 @@ class Test_Listing_Available_Devices_Without_Filtering_By_Module(unittest.TestCa
             response = client.get("/available-devices/test_company/test_car")
             self.assertEqual(response.status_code, 200)
 
-    def  test_listing_available_devices_without_filtering_by_module_yields_list_of_modules(self) -> None:
+    def test_listing_available_devices_without_filtering_by_module(self) -> None:
         with self.app.app.test_client() as client:
             client.post("/status/test_company/test_car", json=[self.status_1, self.status_2])
             response = client.get("/available-devices/test_company/test_car")
