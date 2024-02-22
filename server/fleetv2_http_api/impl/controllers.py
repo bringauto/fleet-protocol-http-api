@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import Optional, Any, Iterable, Collection
 from enums import MessageType
-import re
 import logging
 
 from fleetv2_http_api.models.payload import Payload  # noqa: E501
@@ -20,8 +19,6 @@ from database.time import timestamp
 from fleetv2_http_api.impl.wait import WaitObjManager
 from fleetv2_http_api.impl.security import SecurityObj
 from flask import redirect, Response
-
-_NAME_PATTERN = "^[0-9a-z_]+$"
 
 
 _status_wait_manager = WaitObjManager()
