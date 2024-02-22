@@ -26,12 +26,33 @@ class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):
             response = client.get("/cars")
             self.assertEqual(response.json, [])
 
+    def test_viewing_status_of_nonexisting_car_under_existing_company_returns_404_and_empty_list(self) -> None:
+        with self.app.app.test_client() as client:
+            client.post("/status/test_company/test_car", json=[self.status])
+            response = client.get("/status/test_company/test_car_2")
+            self.assertEqual(response.status_code, 404)
+            self.assertEqual(response.json, [])
+
     def test_sending_status_makes_car_available(self) -> None:
         with self.app.app.test_client() as client:
             response = client.post("/status/test_company/test_car", json=[self.status])
             self.assertEqual(response.status_code, 200)
             response = client.get("/cars")
             self.assertEqual(response.json, [self.test_car])
+
+    def test_sending_first_status_for_another_car_of_the_same_company_is_allowed(self):
+        with self.app.app.test_client() as client:
+            client.post("/status/test_company/test_car", json=[self.status])
+            response = client.post("/status/test_company/test_car_2", json=[self.status])
+            self.assertEqual(response.status_code, 200)
+            response = client.get("/cars")
+            self.assertEqual(
+                response.json,
+                [
+                    {"company_name": "test_company", "car_name": "test_car"},
+                    {"company_name": "test_company", "car_name": "test_car_2"},
+                ],
+            )
 
     @patch("fleetv2_http_api.impl.controllers.timestamp")
     def test_retrieving_sent_status(self, mock_timestamp: Mock) -> None:

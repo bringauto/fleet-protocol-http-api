@@ -452,11 +452,9 @@ def _check_device_availability(
     company_name: str, car_name: str, module_id: int, sdevice_id: str
 ) -> tuple[str, int]:
     device_dict = device_ids()
-    if company_name not in device_dict:
-        return f"No car is available under a company '{company_name}'.", 404  # type: ignore
-    elif car_name not in device_dict[company_name]:
-        return f"Car named '{car_name}' is not available under a company '{company_name}'.", 404
-
+    msg, code = _check_car_availability(company_name, car_name)
+    if code != 200:
+        return msg, code
     elif module_id not in device_dict[company_name][car_name]:
         return (
             f"No module with id '{module_id}' is available in car "
