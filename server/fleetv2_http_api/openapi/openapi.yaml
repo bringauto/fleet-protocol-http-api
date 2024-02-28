@@ -138,7 +138,7 @@ paths:
         style: form
       - description: "An empty parameter. If specified, the method waits for predefined\
           \ period of time, until some data to be sent in response are available."
-        example: true
+        example: false
         explode: true
         in: query
         name: wait
@@ -297,7 +297,7 @@ paths:
         style: form
       - description: "An empty parameter. If specified, the method waits for predefined\
           \ period of time, until some data to be sent in response are available."
-        example: true
+        example: false
         explode: true
         in: query
         name: wait
@@ -513,7 +513,7 @@ components:
     Wait:
       description: "An empty parameter. If specified, the method waits for predefined\
         \ period of time, until some data to be sent in response are available."
-      example: true
+      example: false
       explode: true
       in: query
       name: wait
@@ -768,7 +768,10 @@ components:
         \ encoding."
       oneOf:
       - type: object
-      - format: base64
+      - items:
+          type: object
+        type: array
+      - format: base
         type: string
       title: Payload_data
   securitySchemes:

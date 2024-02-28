@@ -3,7 +3,7 @@ openapi: 3.0.2
 
 info:
   title: Fleet v2 HTTP API
-  version: 2.1.1
+  version: 2.1.2
   description: HTTP-based API for Fleet Protocol v2 serving for communication between the External Server and the end users.
   contact:
     email: jiri.strouhal@bringauto.com
@@ -529,9 +529,12 @@ components:
         data:
           description: 'Payload data in "JSON" or "BASE64" format, depending on the encoding.'
           oneOf:
-            - type: object
-            - type: string
-              format: base64
+          - type: object
+          - type: array
+            items:
+              type: object
+          - type: string
+            format: base
       example:
         message_type: "STATUS"
         encoding: "BASE64"

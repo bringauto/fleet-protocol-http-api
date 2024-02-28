@@ -144,5 +144,34 @@ class Test_Invalid_Message_Payload_Yields_Code_400(unittest.TestCase):
                     self.assertIn("data", response.json["detail"])  # type: ignore
 
 
+class Test_Payload_Is_Accepted(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.app = _app.get_test_app(base_url="/v2/protocol/")
+        self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
+
+    def test_if_its_data_is_an_dictionary(self) -> None:
+        with self.app.app.test_client() as client:
+            payload_json = {
+                "message_type": "STATUS",
+                "encoding": "JSON",
+                "data": {"phone_number": "1234567890"},
+            }
+            status_json = {"device_id": self.device_id.to_dict(), "payload": payload_json}
+            response = client.post("/status/test_company/test_car", json=[status_json])
+            self.assertEqual(response.status_code, 200)
+
+    def test_if_its_data_is_a_list(self) -> None:
+        with self.app.app.test_client() as client:
+            payload_json = {
+                "message_type": "STATUS",
+                "encoding": "JSON",
+                "data": [{"phone_number": "1234567890"}],
+            }
+            status_json = {"device_id": self.device_id.to_dict(), "payload": payload_json}
+            response = client.post("/status/test_company/test_car", json=[status_json])
+            self.assertEqual(response.status_code, 200)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2, buffer=True)
