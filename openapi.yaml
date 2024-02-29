@@ -531,8 +531,7 @@ components:
           oneOf:
           - type: object
           - type: array
-            items:
-              type: object
+            items: {}
           - type: string
             format: base
       example:
