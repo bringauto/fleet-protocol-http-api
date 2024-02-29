@@ -10,6 +10,7 @@ example.db
 !regen.sh
 
 /uml
+test_db
 
 
 fleet_protocol_api.egg-info
