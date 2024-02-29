@@ -768,8 +768,7 @@ components:
         \ encoding."
       oneOf:
       - type: object
-      - items:
-          type: object
+      - items: {}
         type: array
       - format: base
         type: string
