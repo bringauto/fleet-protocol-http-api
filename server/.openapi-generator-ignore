@@ -27,3 +27,12 @@
 .openapi-generator-ignore
 fleetv2_http_api/controllers/security_controller.py
 requirements.txt
+setup.py
+README.md
+travis.yml
+git_push.sh
+Dockerfile
+.dockerignore
+.gitlab-ci.yml
+tox.ini
+test-requirements.txt
