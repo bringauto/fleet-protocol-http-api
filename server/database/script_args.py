@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Type, Dict, Any
+from typing import Any
 import argparse
 import json
 
@@ -9,14 +9,14 @@ EMPTY_VALUE = None
 @dataclasses.dataclass
 class PositionalArgInfo:
     name: str
-    type:Type
+    type: type
     help: str
 
 
 @dataclasses.dataclass(frozen=True)
 class ScriptArgs:
-    argvals: Dict[str,str]
-    config: Dict[str,Any] = dataclasses.field(default_factory=dict)
+    argvals: dict[str,str]
+    config: dict[str,Any] = dataclasses.field(default_factory=dict)
 
 
 def request_and_get_script_arguments(
@@ -24,7 +24,7 @@ def request_and_get_script_arguments(
     *positional_args:PositionalArgInfo,
     use_config:bool=True,
     include_db_args:bool=True
-    ) -> Dict[str,str]:
+    ) -> ScriptArgs:
 
     parser = _new_arg_parser(script_description)
     _add_positional_args_to_parser(parser, *positional_args)
@@ -64,14 +64,14 @@ def _add_positional_args_to_parser(parser:argparse.ArgumentParser, *args:Positio
 def _new_arg_parser(script_description: str) -> argparse.ArgumentParser:
     return argparse.ArgumentParser(description=script_description)
 
-def _load_config_file(path: str) -> Dict[str,Any]:
+def _load_config_file(path: str) -> dict[str,Any]:
     try:
         config = json.load(open(path))
     except:
         raise ConfigFileNotFound(f"Could not load config file from path '{path}'.")
     return config
 
-def _parse_arguments(parser:argparse.ArgumentParser, use_config:bool) -> Dict[str,str]:
+def _parse_arguments(parser:argparse.ArgumentParser, use_config:bool) -> ScriptArgs:
     args = parser.parse_args().__dict__
     config = _load_config_file(args.pop("<config-file-path>"))
     db_config = config["database"]["server"]

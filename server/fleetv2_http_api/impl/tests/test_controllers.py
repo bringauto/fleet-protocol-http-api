@@ -1,17 +1,16 @@
 import os
 import sys
-
-sys.path.append("server")
-from typing import List
-from enums import MessageType, EncodingType
 import unittest
 from unittest.mock import patch, Mock
 
+sys.path.append("server")
+
 from sqlalchemy import insert
 
-from database.device_ids import clear_device_ids, serialized_device_id
-from database.connection import get_connection_source
-from database.database_controller import (
+from enums import MessageType, EncodingType  # type: ignore
+from database.device_ids import clear_device_ids, serialized_device_id  # type: ignore
+from database.connection import get_connection_source  # type: ignore
+from database.database_controller import (   # type: ignore
     set_test_db_connection,
     MessageBase,
     remove_old_messages,
@@ -19,7 +18,7 @@ from database.database_controller import (
     get_available_devices_from_database,
     Message_DB,
 )
-from fleetv2_http_api.impl.controllers import (
+from fleetv2_http_api.impl.controllers import (  # type: ignore
     available_devices,
     available_cars,
     send_statuses,
@@ -28,10 +27,7 @@ from fleetv2_http_api.impl.controllers import (
     list_commands,
     _message_db_list,
 )
-from fleetv2_http_api.models.device_id import DeviceId
-from fleetv2_http_api.models.message import Payload, Message
-from fleetv2_http_api.models.module import Module
-from fleetv2_http_api.models.car import Car
+from fleetv2_http_api.models import DeviceId, Payload, Message, Module, Car  # type: ignore
 
 
 class Test_Car_And_Company_Name_Validity(unittest.TestCase):
@@ -62,15 +58,15 @@ class Test_Car_And_Company_Name_Validity(unittest.TestCase):
             list_statuses("Company Name", "car_1")
 
         with self.assertRaises(ValueError):
-            list_commands("company", "")
+            list_statuses("company", "")
         with self.assertRaises(ValueError):
-            list_commands("company", "car with spaces")
+            list_statuses("company", "car with spaces")
         with self.assertRaises(ValueError):
-            list_commands("company", "Car")
+            list_statuses("company", "Car")
         with self.assertRaises(ValueError):
-            list_commands("", "car")
+            list_statuses("", "car")
         with self.assertRaises(ValueError):
-            list_commands("Company Name", "car_1")
+            list_statuses("Company Name", "car_1")
 
         with self.assertRaises(ValueError):
             send_statuses("company", "", body=[])
@@ -134,7 +130,7 @@ class Test_Sending_Status(unittest.TestCase):
         clear_device_ids()
 
     def test_convert_status_to_messagebase_preserves_device_name(self):
-        msg_db_list: List[Message_DB] = _message_db_list(
+        msg_db_list: list[Message_DB] = _message_db_list(
             [self.status_example], message_type=MessageType.STATUS_TYPE
         )
         msg_db = msg_db_list[0]
@@ -148,7 +144,7 @@ class Test_Sending_Status(unittest.TestCase):
         self.assertEqual(status.device_id.name, self.status_example.device_id.name)
 
 
-class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
+class Test_listing_Available_Devices_And_Cars(unittest.TestCase):
     def setUp(self) -> None:
         set_test_db_connection("/:memory:")
         payload_example = Payload(
@@ -234,7 +230,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
         )
 
 
-class Test_Sending_And_Listing_Multiple_Messages(unittest.TestCase):
+class Test_Sending_And_listing_Multiple_Messages(unittest.TestCase):
     def setUp(self) -> None:
         set_test_db_connection("/:memory:")
         self.device_id = DeviceId(module_id=42, type=7, role="test_device", name="Test Device X")
@@ -355,7 +351,7 @@ class Test_Timestamp_Of_A_Sent_Message_Is_Set_To_Time_Of_Its_Sending(unittest.Te
         self.assertEqual(statuses[0].timestamp, 25)
 
 
-class Test_Options_For_Listing_Multiple_Statuses(unittest.TestCase):
+class Test_Options_For_listing_Multiple_Statuses(unittest.TestCase):
     @patch("database.time._time_in_ms")
     def setUp(self, mock_time_in_ms: Mock) -> None:
         set_test_db_connection("/:memory:")
@@ -397,7 +393,7 @@ class Test_Options_For_Listing_Multiple_Statuses(unittest.TestCase):
         self.assertEqual(statuses[1].timestamp, 37)
 
 
-class Test_Options_For_Listing_Multiple_Commands(unittest.TestCase):
+class Test_Options_For_listing_Multiple_Commands(unittest.TestCase):
     @patch("database.time._time_in_ms")
     def setUp(self, mock_time_in_ms: Mock) -> None:
         set_test_db_connection("/:memory:")
@@ -450,7 +446,7 @@ class Test_Options_For_Listing_Multiple_Commands(unittest.TestCase):
 
 class Test_Cleaning_Up_Commands(unittest.TestCase):
 
-    DATA_RETENTION_PERIOD = MessageBase.data_retention_period_ms
+    DATA_RETENTION_PERIOD = MessageBase.data_retention_period_ms()
 
     def setUp(self) -> None:
         set_test_db_connection("/:memory:")
@@ -537,7 +533,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         self.assertEqual(len(list_statuses("company", "car", since=0)[0]), 0)
         # The device is considered to be disconnected and all commands sent to it are then
         # considered to be removed.
-        self.assertEqual(len(list_commands("company", "car", since=0)[0]), 0)
+        self.assertEqual(len(list_statuses("company", "car", since=0)[0]), 0)
 
         self.assertEqual(available_devices("company", "car"), ([], 404))
         self.assertEqual(available_cars()[0], [])
@@ -558,7 +554,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
             self.assertIn(warning, warnings)
 
 
-class Test_Listing_Commands_And_Statuses_Of_Nonexistent_Cars(unittest.TestCase):
+class Test_listing_Commands_And_Statuses_Of_Nonexistent_Cars(unittest.TestCase):
     def setUp(self) -> None:
         set_test_db_connection("/:memory:")
         device_id = DeviceId(module_id=15, type=3, role="available_device", name="Available device")

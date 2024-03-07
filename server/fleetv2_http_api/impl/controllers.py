@@ -1,56 +1,77 @@
 from __future__ import annotations
-from typing import List, Optional, Tuple, Dict, Any, Iterable
-from enums import MessageType
+from typing import Optional, Any, Iterable
 import re
 import logging
 
-from fleetv2_http_api.models.payload import Payload  # noqa: E501
-from fleetv2_http_api.models.device_id import DeviceId
-from fleetv2_http_api.models.message import Message
-from fleetv2_http_api.models.module import Module
-from fleetv2_http_api.models.car import Car
-from database.database_controller import (
+from flask import redirect, Response  # type: ignore
+from werkzeug import Response as WerkzeugResponse  # type: ignore
+
+from enums import MessageType  # type: ignore
+from fleetv2_http_api.models import (  # type: ignore
+    Payload,
+    DeviceId,
+    Message,
+    Module,
+    Car
+)
+from database.database_controller import (  # type: ignore
     send_messages_to_database,
     Message_DB,
     cleanup_device_commands_and_warn_before_future_commands
 )
-from database.database_controller import list_messages as _list_messages
-from database.device_ids import store_device_id_if_new, device_ids, serialized_device_id
-from database.time import timestamp
-from fleetv2_http_api.impl.wait import WaitObjManager
-from fleetv2_http_api.impl.security import SecurityObj
-from flask import redirect, Response
+from database.database_controller import list_messages as _list_messages  # type: ignore
+from database.device_ids import store_device_id_if_new, device_ids, serialized_device_id  # type: ignore
+from database.time import timestamp  # type: ignore
+from fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
+from fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
+from fleetv2_http_api.impl.security import SecurityObj  # type: ignore
+
 
 _NAME_PATTERN = "^[0-9a-z_]+$"
 
 
-_status_wait_manager = WaitObjManager()
+_status_wait_manager = MessageWaitObjManager()
+_command_wait_manager = MessageWaitObjManager()
+_car_wait_manager = CarWaitObjManager()
+_security = SecurityObj()
+
+
 def set_status_wait_timeout_s(timeout_s: float) -> None:
     _status_wait_manager.set_timeout(int(1000*timeout_s))
+
 
 def get_status_wait_timeout_s() -> float:
     return _status_wait_manager.timeout_ms*0.001
 
-_command_wait_manager = WaitObjManager()
+
 def set_command_wait_timeout_s(timeout_s: float) -> None:
     _command_wait_manager.set_timeout(int(1000*timeout_s))
+
 
 def get_command_wait_timeout_s() -> float:
     return _command_wait_manager.timeout_ms*0.001
 
-_security = SecurityObj()
+
 def init_security(keycloak_url: str, client_id: str, secret_key: str, scope: str, realm: str, callback: str) -> None:
     _security.set_config(keycloak_url, client_id, secret_key, scope, realm, callback)
 
 
+def set_car_wait_timeout_s(timeout_s: float) -> None:
+    _car_wait_manager.set_timeout(int(1000*timeout_s))
+
+
+def get_car_wait_timeout_s() -> float:
+    return _car_wait_manager.timeout_ms*0.001
+
+
 def login(
     device: Optional[str] = None
-) -> Response|Tuple[Dict|str, int]:
+) -> WerkzeugResponse|Response|tuple[dict|str, int]:
     """login
 
     Redirect to keycloak login page. If empty device is specified, get authentication url and device code. Try authenticate if device code is provided. # noqa: E501
 
-    :rtype: Response | Dict
+    :rtype: Response | dict
     """
     if device == "":
         try:
@@ -69,8 +90,8 @@ def login(
     try:
         return redirect(_security.get_authentication_url())
     except:
-            msg = "Problem reaching oAuth service."
-            return _log_and_respond(msg, 500, msg)
+        msg = "Problem reaching oAuth service."
+        return _log_and_respond(msg, 500, msg)
 
 
 def token_get(
@@ -78,7 +99,7 @@ def token_get(
     session_state: Optional[str] = None,
     iss: Optional[str] = None,
     code: Optional[str] = None
-) -> Tuple[Dict, int]:
+) -> tuple[dict, int]:
     """token_get
 
     Get token. Should only be used by keycloak. # noqa: E501
@@ -92,7 +113,7 @@ def token_get(
     :param code: Code used to get jwt token
     :type code: str
 
-    :rtype: Dict
+    :rtype: dict
     """
     try:
         token = _security.token_get(state, session_state, iss, code)
@@ -104,7 +125,7 @@ def token_get(
 
 def token_refresh(
     refresh_token: str
-) -> Tuple[Dict, int]:
+) -> tuple[dict, int]:
     """token_refresh
 
     Generate a new token using the refresh token. # noqa: E501
@@ -112,7 +133,7 @@ def token_refresh(
     :param refresh_token: Refresh token
     :type refresh_token: str
 
-    :rtype: Dict
+    :rtype: dict
     """
     try:
         token = _security.token_refresh(refresh_token)
@@ -122,29 +143,34 @@ def token_refresh(
     return _log_and_respond(token, 200, "Jwt token refreshed.")
 
 
-def available_cars() -> List[Car]:
+def available_cars(wait: bool = False) -> tuple[list[Car], int]:
     """available_cars
 
     Return list of available cars for all companies registered in the database. # noqa: E501
 
-    :rtype: Union[List[Car], Tuple[List[Car], int], Tuple[List[Car], int, Dict[str, str]]
+    :rtype: Union[list[Car], tuple[list[Car], int], tuple[list[Car], int, dict[str, str]]
     """
-    cars: List[Car] = list()
+    cars: list[Car] = list()
     device_dict = device_ids()
     for company_name in device_dict:
         for car_name in device_dict[company_name]:
             cars.append(Car(company_name, car_name))
-    if cars:
-        return _log_and_respond(cars, 200, "Listing available cars.")
+
+    if cars or not wait:
+        return _log_and_respond(cars, 200, "listing available cars.")
     else:
-        return _log_and_respond(cars, 200, "No cars were found. Returning empty list.")
+        awaited_cars: list[Car] = _car_wait_manager.wait_and_get_reponse()
+        if awaited_cars:
+            return _log_and_respond(awaited_cars, 200, "listing available cars.")
+        else:
+            return _log_and_respond([], 200, "No cars were found. Returning empty list.")
 
 
 def available_devices(
     company_name: str,
     car_name: str,
     module_id: Optional[int] = None
-    ) -> Tuple[Module|List[Module], int]:  # noqa: E501
+    ) -> tuple[Module|list[Module], int]:  # noqa: E501
 
     """available_devices
 
@@ -157,7 +183,7 @@ def available_devices(
     :param module_id: An Id of module, an unsigned integer.
     :type module_id: int
 
-    :rtype: Union[AvailableDevices, Tuple[AvailableDevices, int], Tuple[AvailableDevices, int, Dict[str, str]]
+    :rtype: Union[AvailableDevices, tuple[AvailableDevices, int], tuple[AvailableDevices, int, dict[str, str]]
     """
 
     _validate_name_string(company_name, "Company name")
@@ -168,20 +194,19 @@ def available_devices(
     device_dict = device_ids()
     if company_name not in device_dict:
         return _log_and_respond([], 404, f"No company named '{company_name}' is registered.")
-
     elif car_name not in device_dict[company_name]:
         return _log_and_respond([], 404, f"No car named '{car_name}' is registered.")
 
     if module_id is None:
         car_modules = device_dict[company_name][car_name]
         modules = [_available_module(company_name, car_name, id) for id in car_modules]
-        return _log_and_respond(modules, 200, f"Listing available modules ({company_and_car_name})")
+        return _log_and_respond(modules, 200, f"listing available modules ({company_and_car_name})")
     else:
         if module_id not in device_dict[company_name][car_name]:
             return _log_and_respond({}, 404, f"No module with id '{module_id}' is available ({company_and_car_name}).")
         else:
             module = _available_module(company_name, car_name, module_id)
-            return _log_and_respond(module, 200, f"Listing available devices in the module '{module_id}' ({company_and_car_name}).")
+            return _log_and_respond(module, 200, f"listing available devices in the module '{module_id}' ({company_and_car_name}).")
 
 
 def list_commands(
@@ -189,7 +214,7 @@ def list_commands(
     car_name: str,
     since: int = 0,
     wait: bool = False
-    ) -> Tuple[List[Message], int]:  # noqa: E501
+    ) -> tuple[list[Message], int]:  # noqa: E501
 
     """list_commands
 
@@ -204,7 +229,7 @@ def list_commands(
     :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
     :type wait: bool
 
-    :rtype: Union[List[Message], Tuple[List[Message], int], Tuple[List[Message], int, Dict[str, str]]
+    :rtype: Union[list[Message], tuple[list[Message], int], tuple[list[Message], int, dict[str, str]]
     """
     _validate_name_string(company_name, "Company name")
     _validate_name_string(car_name, "Car name")
@@ -222,7 +247,7 @@ def list_commands(
             return _log_and_respond([], 404, f"No commands available at the moment ({company_and_car_name}).")
     else:
         # no commands are available for given device, wait for them
-        awaited_commands: List[Message] = _command_wait_manager.wait_and_get_reponse(company_name, car_name)
+        awaited_commands: list[Message] = _command_wait_manager.wait_and_get_reponse(company_name, car_name)
         if awaited_commands:
             if since is not None and awaited_commands[-1].timestamp < since:
                 return _log_and_respond([], 200, f"Found commands, but all are older than 'since' parameter ({company_and_car_name}).")
@@ -238,7 +263,7 @@ def list_statuses(
     car_name: str,
     since: int = 0,
     wait: bool = False
-    ) -> Tuple[List[Message], int]:  # noqa: E501
+    ) -> tuple[list[Message], int]:  # noqa: E501
 
     """list_statuses
 
@@ -253,7 +278,7 @@ def list_statuses(
     :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
     :type wait: bool
 
-    :rtype: Union[List[Message], Tuple[List[Message], int], Tuple[List[Message], int, Dict[str, str]]
+    :rtype: Union[list[Message], tuple[list[Message], int], tuple[list[Message], int, dict[str, str]]
     """
     _validate_name_string(company_name, "Company name")
     _validate_name_string(car_name, "Car name")
@@ -267,7 +292,7 @@ def list_statuses(
     elif not wait:
         return _log_and_respond([], 404, f"No devices (nor their statuses) are available at the moment ({company_and_car_name}).")
     else:
-        awaited_statuses: List[Message] = _status_wait_manager.wait_and_get_reponse(company_name, car_name)
+        awaited_statuses: list[Message] = _status_wait_manager.wait_and_get_reponse(company_name, car_name)
         if awaited_statuses:
             if since is not None and awaited_statuses[-1].timestamp < since:
                 return _log_and_respond([], 200, f"Found statuses, but all are older than 'since' parameter ({company_and_car_name}).")
@@ -280,8 +305,8 @@ def list_statuses(
 def send_commands(
     company_name: str,
     car_name: str,
-    body: List[Dict|Message]
-    ) -> Tuple[str, int]:  # noqa: E501
+    body: list[dict|Message]
+    ) -> tuple[str, int]:  # noqa: E501
 
     """send_commands
 
@@ -294,7 +319,7 @@ def send_commands(
     :param body: Commands to be executed by the device.
     :type body: list | bytes
 
-    :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
+    :rtype: Union[None, tuple[None, int], tuple[None, int, dict[str, str]]
     """
     _validate_name_string(company_name, "Company name")
     _validate_name_string(car_name, "Car name")
@@ -317,8 +342,8 @@ def send_commands(
 def send_statuses(
     company_name: str,
     car_name: str,
-    body: List[Dict|Message]
-    ) -> Tuple[str|List[str],int]:  # noqa: E501
+    body: list[dict|Message]
+    ) -> tuple[str|list[str],int]:  # noqa: E501
 
     """send_statuses
 
@@ -331,7 +356,7 @@ def send_statuses(
     :param body: Statuses to be send by the device.
     :type body: list | bytes
 
-    :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
+    :rtype: Union[None, tuple[None, int], tuple[None, int, dict[str, str]]
     """
     _validate_name_string(company_name, "Company name")
     _validate_name_string(car_name, "Car name")
@@ -346,13 +371,14 @@ def send_statuses(
 
     _update_messages_timestamp(messages)
     _status_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
+    _car_wait_manager.add_response_content_and_stop_waiting([Car(company_name, car_name)])
     response_msg = send_messages_to_database(company_name, car_name, *_message_db_list(messages, MessageType.STATUS_TYPE))
     cmd_warnings = _check_and_handle_first_status(company_name, car_name, messages)
     msg, code = response_msg[0] + cmd_warnings, response_msg[1]
     return  _log_and_respond(msg, code, msg)
 
-def _message_list_from_request_body(body: List[Dict|Message]) -> List[Message]:
-    messages: List[Message] = list()
+def _message_list_from_request_body(body: list[dict|Message]) -> list[Message]:
+    messages: list[Message] = list()
     for item in body:
         if type(item) == dict:
             messages.append(Message.from_dict(item))
@@ -364,7 +390,7 @@ def _available_module(company_name: str, car_name: str, module_id: int) -> Modul
     device_id_list = list((device_ids()[company_name][car_name][module_id]).values())
     return Module(module_id, device_id_list)
 
-def _check_and_handle_first_status(company: str, car: str, messages: List[Message]) -> str:
+def _check_and_handle_first_status(company: str, car: str, messages: list[Message]) -> str:
     command_removal_warnings = ""
     for msg in messages:
         first_status_was_sent = store_device_id_if_new(company,car, msg.device_id)
@@ -380,7 +406,7 @@ def _check_and_handle_first_status(company: str, car: str, messages: List[Messag
         command_removal_warnings =  "\n\n" + command_removal_warnings
     return command_removal_warnings
 
-def _check_sent_commands(company_name: str, car_name: str, messages: List[Message]) -> Tuple[str, int]:
+def _check_sent_commands(company_name: str, car_name: str, messages: list[Message]) -> tuple[str, int]:
     errors, code = _check_messages(MessageType.COMMAND_TYPE, *messages)
     if errors != "" or code != 200:
         return errors, code
@@ -395,7 +421,7 @@ def _check_sent_commands(company_name: str, car_name: str, messages: List[Messag
 def _check_messages(
     expected_message_type: str,
     *messages: Message
-    ) -> Tuple[str, int]:
+    ) -> tuple[str, int]:
 
     errors: str = ""
     errors = _check_message_types(expected_message_type, *messages)
@@ -414,7 +440,7 @@ def _check_message_types(expected_message_type: str, *messages: Message) -> str:
                 return f"Cannot send a command as a status: {message}"
     return ""
 
-def _check_device_availability(company_name: str, car_name: str, module_id: int, sdevice_id: str) -> Tuple[str, int]:
+def _check_device_availability(company_name: str, car_name: str, module_id: int, sdevice_id: str) -> tuple[str, int]:
     device_dict = device_ids()
     if company_name not in device_dict:
         return f"No car is available under a company '{company_name}'.", 404 # type: ignore
@@ -432,7 +458,7 @@ def _check_device_availability(company_name: str, car_name: str, module_id: int,
     else:
         return "", 200
 
-def _check_car_availability(company_name: str, car_name: str) -> Tuple[str, int]:
+def _check_car_availability(company_name: str, car_name: str) -> tuple[str, int]:
     device_dict = device_ids()
     if company_name not in device_dict:
         return f"No car is available under a company '{company_name}'.", 404 # type: ignore
@@ -446,7 +472,7 @@ def _handle_first_status_and_return_warnings(
     company_name: str,
     car_name: str,
     serialized_device_id: str,
-    ) -> List[str]:
+    ) -> list[str]:
 
     return cleanup_device_commands_and_warn_before_future_commands(
         current_timestamp = timestamp,
@@ -471,7 +497,7 @@ def _message_from_db(message_db: Message_DB) -> Message:
         )
     )
 
-def _message_db_list(messages: List[Message], message_type: str) -> List[Message_DB]:
+def _message_db_list(messages: list[Message], message_type: str) -> list[Message_DB]:
     return [
         Message_DB(
             timestamp=message.timestamp,
@@ -497,7 +523,7 @@ def _validate_name_string(name: str, text_label: str) -> None:
         msg = f"{text_label} '{name}' does not match pattern '{_NAME_PATTERN}'."
         raise ValueError(msg)
 
-def _log_and_respond(body: Any, code: int, log_msg: str = "") -> Tuple[Any, int]:
+def _log_and_respond(body: Any, code: int, log_msg: str = "") -> tuple[Any, int]:
     if log_msg.strip() != "":
         logger = logging.getLogger('werkzeug')
         logger.info(log_msg)

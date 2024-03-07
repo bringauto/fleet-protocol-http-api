@@ -8,7 +8,7 @@ info:
     name: GPLv3
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
   title: Fleet v2 HTTP API
-  version: 2.1.1
+  version: 2.2.0
 servers:
 - url: /v2/protocol
 security:
@@ -77,6 +77,19 @@ paths:
       description: Return list of available cars for all companies registered in the
         database.
       operationId: available_cars
+      parameters:
+      - description: "An empty parameter. If specified, the method waits for predefined\
+          \ period of time, until some data to be sent in response are available."
+        example: true
+        explode: true
+        in: query
+        name: wait
+        required: false
+        schema:
+          default: false
+          nullable: true
+          type: boolean
+        style: form
       responses:
         "200":
           content:

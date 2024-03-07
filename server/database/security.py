@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import ClassVar, List, Optional
+from typing import ClassVar, Optional
 import dataclasses
 import random
 import string
@@ -7,7 +7,7 @@ import string
 from sqlalchemy import String, Integer, Engine, Select, func, select
 from sqlalchemy.orm import Mapped, mapped_column, Session
 
-from database.connection import Base, get_connection_source
+from database.connection import Base, get_connection_source  # type: ignore
 
 
 class AdminBase(Base):
@@ -20,7 +20,7 @@ class AdminBase(Base):
     key: Mapped[str] = mapped_column(String)
 
 
-_loaded_admins: List[AdminDB] = []
+_loaded_admins: list[AdminDB] = []
 
 
 def clear_loaded_admins() -> None:
@@ -28,7 +28,7 @@ def clear_loaded_admins() -> None:
     _loaded_admins.clear()
 
 
-def get_loaded_admins() -> List[AdminDB]:
+def get_loaded_admins() -> list[AdminDB]:
     return _loaded_admins.copy()
 
 
