@@ -1,13 +1,12 @@
 import sys
 sys.path.append("source")
 
-
-from typing import Dict
 from copy import deepcopy
+
 from fleetv2_http_api.models.device_id import DeviceId
 
 
-Device_Ids = Dict[str,Dict[str, Dict[int,Dict[str, DeviceId]]]]
+Device_Ids = dict[str,dict[str, dict[int,dict[str, DeviceId]]]]
 
 
 _device_ids:Device_Ids = {}

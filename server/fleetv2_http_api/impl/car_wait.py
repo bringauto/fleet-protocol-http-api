@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Any
+from typing import Any
 import time
 import threading
 
@@ -15,9 +15,10 @@ class CarWaitObjManager:
         self._wait_list: list[WaitObj] = list()
 
     @property
-    def timeout_ms(self) -> int: return self._timeout_ms
+    def timeout_ms(self) -> int:
+        return self._timeout_ms
 
-    def add_response_content_and_stop_waiting(self, reponse_content: List[Any]) -> None:
+    def add_response_content_and_stop_waiting(self, reponse_content: list[Any]) -> None:
         for obj in self._wait_list:
             obj.add_reponse_content_and_stop_waiting(reponse_content)
 
@@ -31,7 +32,7 @@ class CarWaitObjManager:
         self._check_nonnegative_timeout(timeout_ms)
         self._timeout_ms = timeout_ms
 
-    def wait_and_get_reponse(self) -> List[Any]:
+    def wait_and_get_reponse(self) -> list[Any]:
         wait_obj = self.new_wait_obj()
         reponse = wait_obj.wait_and_get_response()
         self._wait_list.remove(wait_obj)
@@ -45,24 +46,25 @@ class CarWaitObjManager:
 
 class WaitObj:
     """A wait object that waits for a response to be set and then returns it."""
+
     def __init__(self, timeout_ms: int) -> None:
-        self._response_content: List[Any] = list()
+        self._response_content: list[Any] = list()
         self._timeout_ms = timeout_ms
         self._condition = threading.Condition()
 
-    def add_reponse_content_and_stop_waiting(self, content: List[Any]) -> None:
+    def add_reponse_content_and_stop_waiting(self, content: list[Any]) -> None:
         """Set the response content of this wait object and stop waiting."""
         self._response_content = content.copy()
         with self._condition:
             self._condition.notify()
 
-    def wait_and_get_response(self) -> List[Any]:
+    def wait_and_get_response(self) -> list[Any]:
         """Wait for the response object to be set and then return it."""
         with self._condition:
-            self._condition.wait(timeout=self._timeout_ms/1000)
+            self._condition.wait(timeout=self._timeout_ms / 1000)
         return self._response_content
 
     @staticmethod
     def timestamp() -> int:
         """Unix timestamp in milliseconds."""
-        return int(time.time()*1000)
+        return int(time.time() * 1000)

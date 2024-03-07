@@ -1,6 +1,5 @@
 import sys
 sys.path.append("server")
-from typing import Dict
 import logging
 
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
@@ -33,7 +32,7 @@ def _connect_to_database(vals:script_args.ScriptArgs) -> None:
         db_name = vals.argvals["database_name"]
     )
 
-def _set_up_database_jobs(db_cleanup_config: Dict[str,int]) -> None:
+def _set_up_database_jobs(db_cleanup_config: dict[str,int]) -> None:
     """Set message cleanup job and other customary jobs defined by the example method."""
     set_message_retention_period(db_cleanup_config["retention_period"])
     scheduler = BackgroundScheduler()

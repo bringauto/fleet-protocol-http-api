@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Dict, List, Any
+from typing import Any
 import time
 import threading
 
@@ -11,12 +11,12 @@ class MessageWaitObjManager:
     def __init__(self, timeout_ms: int = _default_timeout_ms) -> None:
         MessageWaitObjManager._check_nonnegative_timeout(timeout_ms)
         self._timeout_ms = timeout_ms
-        self._wait_dict: Dict[str, Dict[str, WaitObj]] = dict()
+        self._wait_dict: dict[str, dict[str, WaitObj]] = dict()
 
     @property
     def timeout_ms(self) -> int: return self._timeout_ms
 
-    def add_response_content_and_stop_waiting(self, company: str, car: str, reponse_content: List[Any]) -> None:
+    def add_response_content_and_stop_waiting(self, company: str, car: str, reponse_content: list[Any]) -> None:
         """Make the next wait object in the queue to respond with specified 'reponse_content' and remove it from the queue."""
         if company in self._wait_dict:
             if car in self._wait_dict[company]:
@@ -46,7 +46,7 @@ class MessageWaitObjManager:
         self._check_nonnegative_timeout(timeout_ms)
         self._timeout_ms = timeout_ms
 
-    def wait_and_get_reponse(self, company_name: str, car_name: str) -> List[Any]:
+    def wait_and_get_reponse(self, company_name: str, car_name: str) -> list[Any]:
         """Wait for the next wait object in queue to respond and returns the response content.
         The queue is identified by given company and car."""
         wait_obj = self.new_wait_obj(company_name, car_name)
@@ -64,7 +64,7 @@ class WaitObj:
     def __init__(self, company: str, car: str, timeout_ms: int) -> None:
         self._company_name = company
         self._car_name = car
-        self._response_content: List[Any] = list()
+        self._response_content: list[Any] = list()
         self._timeout_ms = timeout_ms
         self._condition = threading.Condition()
 
@@ -73,12 +73,12 @@ class WaitObj:
     @property
     def car_name(self) -> str: return self._car_name
 
-    def add_reponse_content_and_stop_waiting(self, content: List[Any]) -> None:
+    def add_reponse_content_and_stop_waiting(self, content: list[Any]) -> None:
         self._response_content = content.copy()
         with self._condition:
             self._condition.notify()
 
-    def wait_and_get_response(self) -> List[Any]:
+    def wait_and_get_response(self) -> list[Any]:
         """Wait for the response object to be set and then return it."""
         with self._condition:
             self._condition.wait(timeout=self._timeout_ms/1000)

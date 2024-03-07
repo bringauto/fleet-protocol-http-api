@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from typing import Optional, Callable, Tuple
+from typing import Optional, Callable
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -52,7 +52,7 @@ def set_db_connection(
     username: str = "",
     password: str = "",
     db_name: str = "",
-    after_connect: Tuple[Callable[[], None],...] = ()
+    after_connect: tuple[Callable[[], None],...] = ()
     ) -> None:
 
     """Create SQLAlchemy engine object used to connect to the database.

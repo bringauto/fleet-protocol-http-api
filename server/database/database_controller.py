@@ -15,18 +15,17 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import annotations
-from typing import Optional, List, ClassVar, Dict, Any, Tuple
+from typing import ClassVar, Any
 import dataclasses
 import copy
 from enums import MessageType
 
 from sqlalchemy.orm import Mapped, mapped_column, Session
-from sqlalchemy import Integer, String, JSON, select, insert, delete, BigInteger, func, and_
+from sqlalchemy import Integer, String, JSON, select, insert, delete, BigInteger, and_
 
 from database.device_ids import remove_device_id, clear_device_ids, store_device_id_if_new
 import database.connection
 from database.connection import get_connection_source, Base
-from database.time import timestamp
 from database.device_ids import device_ids, clean_up_disconnected_cars_and_modules
 from fleetv2_http_api.models.device_id import DeviceId
 
@@ -84,8 +83,8 @@ class MessageBase(Base):
         )
 
     @staticmethod
-    def from_messages(company_name: str, car_name: str, *messages: Message_DB) -> List[MessageBase]:
-        bases: List[MessageBase] = list()
+    def from_messages(company_name: str, car_name: str, *messages: Message_DB) -> list[MessageBase]:
+        bases: list[MessageBase] = list()
         for k in range(len(messages)):
             bases.append(MessageBase.from_message(company_name, car_name, message = messages[k], order=k))
         return bases
@@ -115,7 +114,7 @@ class Message_DB:
     device_name: str
     message_type: str
     payload_encoding: str
-    payload_data: Dict[str,str]
+    payload_data: dict[str,str]
 
 
 def set_message_retention_period(seconds: int) -> None:
@@ -143,7 +142,7 @@ def get_available_devices_from_database() -> None:
     clear_device_ids()
     load_available_devices_from_database()
 
-def send_messages_to_database(company_name: str, car_name: str, *messages: Message_DB) -> Tuple[str, int]:
+def send_messages_to_database(company_name: str, car_name: str, *messages: Message_DB) -> tuple[str, int]:
     """Send a list of messages to the database, returns number of succesfully sent messages (int)."""
     try:
         with get_connection_source().begin() as conn:
@@ -167,7 +166,7 @@ def list_messages(
     car_name: str,
     message_type: str,
     since: int = 0
-    ) -> List[Message_DB]:  # noqa:
+    ) -> list[Message_DB]:  # noqa:
 
     """Return a list of messages of the given type, optionally filtered by the given parameters.
     If all is not None, then all messages of the given type are returned.
@@ -176,7 +175,7 @@ def list_messages(
     less or equal to since are returned. Otherwise, the newest message is returned.
     """
 
-    statuses: List[Message_DB] = list()
+    statuses: list[Message_DB] = list()
     with Session(get_connection_source()) as session:
         table = MessageBase.__table__
         selection = select(MessageBase).where(table.c.message_type == message_type)
@@ -197,7 +196,7 @@ def cleanup_device_commands_and_warn_before_future_commands(
     company_name: str,
     car_name: str,
     serialized_device_id: str
-    ) -> List[str]:
+    ) -> list[str]:
 
     """Remove all device commands assigned to a device before the first status was sent.
 
@@ -223,7 +222,7 @@ def cleanup_device_commands_and_warn_before_future_commands(
             table.c.payload_data
         )
         result = conn.execute(stmt)
-        future_command_warnings: List[str] = []
+        future_command_warnings: list[str] = []
         for row in result:
             if row[0]>current_timestamp:
                 future_command_warnings.append(future_command_warning(
@@ -294,7 +293,7 @@ def _clean_up_disconnected_devices(company: str, car: str, module_id: int) -> No
             if selection.first() is None:
                 remove_device_id(company, car, sdevice_id)
 
-def deserialize_device_id(serialized_id: str) -> Tuple[int,int,str]:
+def deserialize_device_id(serialized_id: str) -> tuple[int,int,str]:
     """Split the serialized device id into its component parts.
     """
     module_id, device_type, device_role = serialized_id.split("_",2)

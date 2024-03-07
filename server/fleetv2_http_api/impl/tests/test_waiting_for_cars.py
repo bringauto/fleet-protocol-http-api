@@ -1,6 +1,7 @@
 import unittest
 import sys
 import os
+import time
 
 sys.path.append("server")
 
@@ -11,7 +12,6 @@ from fleetv2_http_api.impl.controllers import (  # type: ignore
     available_cars, send_statuses, set_car_wait_timeout_s
 )
 from _misc import run_in_threads  # type: ignore
-import time
 
 
 class Test_Waiting_For_Available_Cars(unittest.TestCase):
