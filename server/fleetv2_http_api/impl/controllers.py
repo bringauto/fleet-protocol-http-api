@@ -1,9 +1,12 @@
 from __future__ import annotations
 from typing import List, Optional, Tuple, Dict, Any, Iterable
-from enums import MessageType  # type: ignore
 import re
 import logging
 
+from flask import redirect, Response  # type: ignore
+from werkzeug import Response as WerkzeugResponse  # type: ignore
+
+from enums import MessageType  # type: ignore
 from fleetv2_http_api.models import (  # type: ignore
     Payload,
     DeviceId,
@@ -22,32 +25,40 @@ from database.time import timestamp  # type: ignore
 from fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
 from fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
 from fleetv2_http_api.impl.security import SecurityObj  # type: ignore
-from flask import redirect, Response  # type: ignore
+
 
 _NAME_PATTERN = "^[0-9a-z_]+$"
 
 
 _status_wait_manager = MessageWaitObjManager()
+_command_wait_manager = MessageWaitObjManager()
+_car_wait_manager = CarWaitObjManager()
+_security = SecurityObj()
+
+
 def set_status_wait_timeout_s(timeout_s: float) -> None:
     _status_wait_manager.set_timeout(int(1000*timeout_s))
+
 
 def get_status_wait_timeout_s() -> float:
     return _status_wait_manager.timeout_ms*0.001
 
-_command_wait_manager = MessageWaitObjManager()
+
 def set_command_wait_timeout_s(timeout_s: float) -> None:
     _command_wait_manager.set_timeout(int(1000*timeout_s))
+
 
 def get_command_wait_timeout_s() -> float:
     return _command_wait_manager.timeout_ms*0.001
 
-_security = SecurityObj()
+
 def init_security(keycloak_url: str, client_id: str, secret_key: str, scope: str, realm: str, callback: str) -> None:
     _security.set_config(keycloak_url, client_id, secret_key, scope, realm, callback)
 
-_car_wait_manager = CarWaitObjManager()
+
 def set_car_wait_timeout_s(timeout_s: float) -> None:
     _car_wait_manager.set_timeout(int(1000*timeout_s))
+
 
 def get_car_wait_timeout_s() -> float:
     return _car_wait_manager.timeout_ms*0.001
@@ -55,7 +66,7 @@ def get_car_wait_timeout_s() -> float:
 
 def login(
     device: Optional[str] = None
-) -> Response|Tuple[Dict|str, int]:
+) -> WerkzeugResponse|Response|Tuple[Dict|str, int]:
     """login
 
     Redirect to keycloak login page. If empty device is specified, get authentication url and device code. Try authenticate if device code is provided. # noqa: E501
@@ -79,8 +90,8 @@ def login(
     try:
         return redirect(_security.get_authentication_url())
     except:
-            msg = "Problem reaching oAuth service."
-            return _log_and_respond(msg, 500, msg)
+        msg = "Problem reaching oAuth service."
+        return _log_and_respond(msg, 500, msg)
 
 
 def token_get(
