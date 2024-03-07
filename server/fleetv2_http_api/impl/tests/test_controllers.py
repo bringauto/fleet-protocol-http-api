@@ -1,16 +1,16 @@
 import os
 import sys
-
-sys.path.append("server")
-from enums import MessageType, EncodingType
 import unittest
 from unittest.mock import patch, Mock
 
+sys.path.append("server")
+
 from sqlalchemy import insert
 
-from database.device_ids import clear_device_ids, serialized_device_id
-from database.connection import get_connection_source
-from database.database_controller import (
+from enums import MessageType, EncodingType  # type: ignore
+from database.device_ids import clear_device_ids, serialized_device_id  # type: ignore
+from database.connection import get_connection_source  # type: ignore
+from database.database_controller import (   # type: ignore
     set_test_db_connection,
     MessageBase,
     remove_old_messages,
@@ -18,7 +18,7 @@ from database.database_controller import (
     get_available_devices_from_database,
     Message_DB,
 )
-from fleetv2_http_api.impl.controllers import (
+from fleetv2_http_api.impl.controllers import (  # type: ignore
     available_devices,
     available_cars,
     send_statuses,
@@ -27,10 +27,7 @@ from fleetv2_http_api.impl.controllers import (
     list_commands,
     _message_db_list,
 )
-from fleetv2_http_api.models.device_id import DeviceId
-from fleetv2_http_api.models.message import Payload, Message
-from fleetv2_http_api.models.module import Module
-from fleetv2_http_api.models.car import Car
+from fleetv2_http_api.models import DeviceId, Payload, Message, Module, Car  # type: ignore
 
 
 class Test_Car_And_Company_Name_Validity(unittest.TestCase):
