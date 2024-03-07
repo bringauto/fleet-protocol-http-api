@@ -5,6 +5,7 @@ import threading
 
 
 class CarWaitObjManager:
+    """Manages the wait objects for available cars. Each wait object waits for a response containg newly available car."""
 
     _default_timeout_ms: int = 5000
 
@@ -43,12 +44,14 @@ class CarWaitObjManager:
 
 
 class WaitObj:
+    """A wait object that waits for a response to be set and then returns it."""
     def __init__(self, timeout_ms: int) -> None:
         self._response_content: List[Any] = list()
         self._timeout_ms = timeout_ms
         self._condition = threading.Condition()
 
     def add_reponse_content_and_stop_waiting(self, content: List[Any]) -> None:
+        """Set the response content of this wait object and stop waiting."""
         self._response_content = content.copy()
         with self._condition:
             self._condition.notify()
