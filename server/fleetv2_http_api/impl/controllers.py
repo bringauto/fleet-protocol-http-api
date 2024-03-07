@@ -132,7 +132,7 @@ def token_refresh(
     return _log_and_respond(token, 200, "Jwt token refreshed.")
 
 
-def available_cars(wait: bool = False) -> List[Car]:
+def available_cars(wait: bool = False) -> Tuple[List[Car], int]:
     """available_cars
 
     Return list of available cars for all companies registered in the database. # noqa: E501
@@ -183,7 +183,6 @@ def available_devices(
     device_dict = device_ids()
     if company_name not in device_dict:
         return _log_and_respond([], 404, f"No company named '{company_name}' is registered.")
-
     elif car_name not in device_dict[company_name]:
         return _log_and_respond([], 404, f"No car named '{car_name}' is registered.")
 
