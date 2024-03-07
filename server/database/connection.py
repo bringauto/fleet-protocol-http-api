@@ -42,10 +42,11 @@ def get_connection_source() -> Engine:
         assert isinstance(_connection_source, Engine)
         return _connection_source
 
+
 def unset_connection_source() -> None:
-    global _connection_source, _connection_data
+    global _connection_source
     _connection_source = None
-    _connection_data = None
+
 
 def set_db_connection(
     dblocation: str,
