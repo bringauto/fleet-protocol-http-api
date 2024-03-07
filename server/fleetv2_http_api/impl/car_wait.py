@@ -12,7 +12,7 @@ class CarWaitObjManager:
     def __init__(self, timeout_ms: int = _default_timeout_ms) -> None:
         CarWaitObjManager._check_nonnegative_timeout(timeout_ms)
         self._timeout_ms = timeout_ms
-        self._wait_list: list[WaitObj] = list()
+        self._wait_list: list[CarWaitObj] = list()
 
     @property
     def timeout_ms(self) -> int:
@@ -22,8 +22,8 @@ class CarWaitObjManager:
         for obj in self._wait_list:
             obj.add_reponse_content_and_stop_waiting(reponse_content)
 
-    def new_wait_obj(self) -> WaitObj:
-        wait_obj = WaitObj(self._timeout_ms)
+    def new_wait_obj(self) -> CarWaitObj:
+        wait_obj = CarWaitObj(self._timeout_ms)
         self._wait_list.append(wait_obj)
         return wait_obj
 
@@ -44,7 +44,7 @@ class CarWaitObjManager:
             raise ValueError(f"Timeout must be non-negative, got {timeout_ms}.")
 
 
-class WaitObj:
+class CarWaitObj:
     """A wait object that waits for a response to be set and then returns it."""
 
     def __init__(self, timeout_ms: int) -> None:

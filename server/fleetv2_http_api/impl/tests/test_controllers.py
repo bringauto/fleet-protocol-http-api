@@ -58,15 +58,15 @@ class Test_Car_And_Company_Name_Validity(unittest.TestCase):
             list_statuses("Company Name", "car_1")
 
         with self.assertRaises(ValueError):
-            list_commands("company", "")
+            list_statuses("company", "")
         with self.assertRaises(ValueError):
-            list_commands("company", "car with spaces")
+            list_statuses("company", "car with spaces")
         with self.assertRaises(ValueError):
-            list_commands("company", "Car")
+            list_statuses("company", "Car")
         with self.assertRaises(ValueError):
-            list_commands("", "car")
+            list_statuses("", "car")
         with self.assertRaises(ValueError):
-            list_commands("Company Name", "car_1")
+            list_statuses("Company Name", "car_1")
 
         with self.assertRaises(ValueError):
             send_statuses("company", "", body=[])
@@ -533,7 +533,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         self.assertEqual(len(list_statuses("company", "car", since=0)[0]), 0)
         # The device is considered to be disconnected and all commands sent to it are then
         # considered to be removed.
-        self.assertEqual(len(list_commands("company", "car", since=0)[0]), 0)
+        self.assertEqual(len(list_statuses("company", "car", since=0)[0]), 0)
 
         self.assertEqual(available_devices("company", "car"), ([], 404))
         self.assertEqual(available_cars()[0], [])

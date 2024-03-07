@@ -33,6 +33,7 @@ class Test_Waiting_For_Available_Cars(unittest.TestCase):
         self.assertListEqual(cars[0], [Car(company_name="company", car_name="car")])
 
     def test_waiting_for_single_car_to_become_available(self):
+        set_car_wait_timeout_s(10)
         def send_single_status():
             time.sleep(0.1)
             send_statuses("test_company", "test_car", [self.status_1])
@@ -46,6 +47,20 @@ class Test_Waiting_For_Available_Cars(unittest.TestCase):
         cars, code = available_cars(wait=True)
         self.assertEqual(cars, [])
         self.assertEqual(code, 200)
+
+    def test_multiple_requests_for_cars(self):
+        set_car_wait_timeout_s(5)
+        def list_cars_1():
+            cmds, code = available_cars(wait=True)
+            self.assertEqual(len(cmds), 1, "First response contains the command.")
+        def list_cars_2():
+            cmds, code = available_cars(wait=True)
+            self.assertEqual(len(cmds), 1, "Second response contains the command.")
+        def send_test_status():
+            time.sleep(0.5)
+            send_statuses("test_company", "test_car", [self.status_1])
+        run_in_threads(list_cars_1, list_cars_2, send_test_status)
+
 
     def tearDown(self) -> None:
         if os.path.exists("./example.db"):
