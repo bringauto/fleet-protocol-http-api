@@ -1,37 +1,40 @@
 from __future__ import annotations
 from typing import List, Optional, Tuple, Dict, Any, Iterable
-from enums import MessageType
+from enums import MessageType  # type: ignore
 import re
 import logging
 
-from fleetv2_http_api.models.payload import Payload  # noqa: E501
-from fleetv2_http_api.models.device_id import DeviceId
-from fleetv2_http_api.models.message import Message
-from fleetv2_http_api.models.module import Module
-from fleetv2_http_api.models.car import Car
-from database.database_controller import (
+from fleetv2_http_api.models import (  # type: ignore
+    Payload,
+    DeviceId,
+    Message,
+    Module,
+    Car
+)
+from database.database_controller import (  # type: ignore
     send_messages_to_database,
     Message_DB,
     cleanup_device_commands_and_warn_before_future_commands
 )
-from database.database_controller import list_messages as _list_messages
-from database.device_ids import store_device_id_if_new, device_ids, serialized_device_id
-from database.time import timestamp
-from fleetv2_http_api.impl.wait import WaitObjManager
-from fleetv2_http_api.impl.security import SecurityObj
-from flask import redirect, Response
+from database.database_controller import list_messages as _list_messages  # type: ignore
+from database.device_ids import store_device_id_if_new, device_ids, serialized_device_id  # type: ignore
+from database.time import timestamp  # type: ignore
+from fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
+from fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
+from fleetv2_http_api.impl.security import SecurityObj  # type: ignore
+from flask import redirect, Response  # type: ignore
 
 _NAME_PATTERN = "^[0-9a-z_]+$"
 
 
-_status_wait_manager = WaitObjManager()
+_status_wait_manager = MessageWaitObjManager()
 def set_status_wait_timeout_s(timeout_s: float) -> None:
     _status_wait_manager.set_timeout(int(1000*timeout_s))
 
 def get_status_wait_timeout_s() -> float:
     return _status_wait_manager.timeout_ms*0.001
 
-_command_wait_manager = WaitObjManager()
+_command_wait_manager = MessageWaitObjManager()
 def set_command_wait_timeout_s(timeout_s: float) -> None:
     _command_wait_manager.set_timeout(int(1000*timeout_s))
 
@@ -41,6 +44,13 @@ def get_command_wait_timeout_s() -> float:
 _security = SecurityObj()
 def init_security(keycloak_url: str, client_id: str, secret_key: str, scope: str, realm: str, callback: str) -> None:
     _security.set_config(keycloak_url, client_id, secret_key, scope, realm, callback)
+
+_car_wait_manager = CarWaitObjManager()
+def set_car_wait_timeout_s(timeout_s: float) -> None:
+    _car_wait_manager.set_timeout(int(1000*timeout_s))
+
+def get_car_wait_timeout_s() -> float:
+    return _car_wait_manager.timeout_ms*0.001
 
 
 def login(
@@ -122,7 +132,7 @@ def token_refresh(
     return _log_and_respond(token, 200, "Jwt token refreshed.")
 
 
-def available_cars() -> List[Car]:
+def available_cars(wait: bool = False) -> List[Car]:
     """available_cars
 
     Return list of available cars for all companies registered in the database. # noqa: E501
@@ -134,10 +144,15 @@ def available_cars() -> List[Car]:
     for company_name in device_dict:
         for car_name in device_dict[company_name]:
             cars.append(Car(company_name, car_name))
-    if cars:
+
+    if cars or not wait:
         return _log_and_respond(cars, 200, "Listing available cars.")
     else:
-        return _log_and_respond(cars, 200, "No cars were found. Returning empty list.")
+        awaited_cars: List[Car] = _car_wait_manager.wait_and_get_reponse()
+        if awaited_cars:
+            return _log_and_respond(awaited_cars, 200, "Listing available cars.")
+        else:
+            return _log_and_respond([], 200, "No cars were found. Returning empty list.")
 
 
 def available_devices(
@@ -346,6 +361,7 @@ def send_statuses(
 
     _update_messages_timestamp(messages)
     _status_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
+    _car_wait_manager.add_response_content_and_stop_waiting([Car(company_name, car_name)])
     response_msg = send_messages_to_database(company_name, car_name, *_message_db_list(messages, MessageType.STATUS_TYPE))
     cmd_warnings = _check_and_handle_first_status(company_name, car_name, messages)
     msg, code = response_msg[0] + cmd_warnings, response_msg[1]

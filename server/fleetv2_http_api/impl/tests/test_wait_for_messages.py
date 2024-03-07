@@ -1,10 +1,8 @@
 import sys
 sys.path.append("server")
 
-import threading
 import os
 import time
-from typing import Callable
 import unittest
 
 from database.device_ids import clear_device_ids, serialized_device_id
@@ -23,13 +21,7 @@ from fleetv2_http_api.impl.controllers import (
     get_status_wait_timeout_s,
     set_command_wait_timeout_s
 )
-
-def run_in_threads(*functions:Callable[[],None]) -> None:
-    threads = [threading.Thread(target=f) for f in functions]
-    for t in threads:
-        t.start()
-    for t in threads:
-        t.join()
+from _misc import run_in_threads
 
 
 class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.TestCase):

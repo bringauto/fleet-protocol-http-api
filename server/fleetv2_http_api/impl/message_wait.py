@@ -1,15 +1,15 @@
 from __future__ import annotations
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 import time
 import threading
 
 
-class WaitObjManager:
+class MessageWaitObjManager:
 
     _default_timeout_ms: int = 5000
 
     def __init__(self, timeout_ms: int = _default_timeout_ms) -> None:
-        WaitObjManager._check_nonnegative_timeout(timeout_ms)
+        MessageWaitObjManager._check_nonnegative_timeout(timeout_ms)
         self._timeout_ms = timeout_ms
         self._wait_dict: Dict[str, Dict[str, WaitObj]] = dict()
 
