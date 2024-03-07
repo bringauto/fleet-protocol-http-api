@@ -449,7 +449,7 @@ class Test_Options_For_listing_Multiple_Commands(unittest.TestCase):
 
 class Test_Cleaning_Up_Commands(unittest.TestCase):
 
-    DATA_RETENTION_PERIOD = MessageBase.data_retention_period_ms
+    DATA_RETENTION_PERIOD = MessageBase.data_retention_period_ms()
 
     def setUp(self) -> None:
         set_test_db_connection("/:memory:")

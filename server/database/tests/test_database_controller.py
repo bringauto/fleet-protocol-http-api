@@ -2,18 +2,18 @@ import sys
 sys.path.append("server")
 from unittest.mock import patch, Mock
 import unittest
-from enums import EncodingType, MessageType
 
-from fleetv2_http_api.models.device_id import DeviceId
-from database.device_ids import serialized_device_id
-from database.connection import (
+from enums import EncodingType, MessageType  # type: ignore
+from fleetv2_http_api.models.device_id import DeviceId  # type: ignore
+from database.device_ids import serialized_device_id  # type: ignore
+from database.connection import (  # type: ignore
     set_test_db_connection,
     unset_connection_source,
     ConnectionSourceNotSet,
     get_connection_source,
     set_test_db_connection
 )
-from database.database_controller import (
+from database.database_controller import (  # type: ignore
     set_message_retention_period,
     send_messages_to_database,
     list_messages,
@@ -22,7 +22,7 @@ from database.database_controller import (
     Message_DB,
     MessageBase
 )
-from fleetv2_http_api.impl.controllers import DeviceId
+
 
 class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
 
@@ -160,9 +160,9 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
                 payload_data={"key1": "value1"},
             )
         )
-        mock_time_in_ms.return_value = MessageBase.data_retention_period_ms + 100
+        mock_time_in_ms.return_value = MessageBase.data_retention_period_ms() + 100
         send_messages_to_database("test_company", "test_car", Message_DB(
-                timestamp=MessageBase.data_retention_period_ms + 100,
+                timestamp=MessageBase.data_retention_period_ms() + 100,
                 serialized_device_id=sdevice_id,
                 module_id=device_id.module_id,
                 device_type=device_id.type,
@@ -173,9 +173,9 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
                 payload_data={"key1": "value1"},
             )
         )
-        mock_time_in_ms.return_value = MessageBase.data_retention_period_ms + 150
+        mock_time_in_ms.return_value = MessageBase.data_retention_period_ms() + 150
         send_messages_to_database("test_company", "test_car", Message_DB(
-                timestamp=MessageBase.data_retention_period_ms + 150,
+                timestamp=MessageBase.data_retention_period_ms() + 150,
                 serialized_device_id=sdevice_id,
                 module_id=device_id.module_id,
                 device_type=device_id.type,
@@ -186,10 +186,10 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
                 payload_data={"key1": "value1"},
             )
         )
-        remove_old_messages(current_timestamp=MessageBase.data_retention_period_ms + 50)
+        remove_old_messages(current_timestamp=MessageBase.data_retention_period_ms() + 50)
         self.assertEqual(len(list_messages("test_company", "test_car", MessageType.STATUS_TYPE)), 0)
         warnings = cleanup_device_commands_and_warn_before_future_commands(
-            current_timestamp=MessageBase.data_retention_period_ms + 55,
+            current_timestamp=MessageBase.data_retention_period_ms() + 55,
             company_name="test_company",
             car_name="test_car",
             serialized_device_id=sdevice_id
@@ -236,7 +236,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         mock_time_in_ms.return_value = 50
         send_messages_to_database("company1", "car1", message2)
 
-        mock_time_in_ms.return_value = MessageBase.data_retention_period_ms + 1
+        mock_time_in_ms.return_value = MessageBase.data_retention_period_ms() + 1
         # Remove old messages from the database
         remove_old_messages(mock_time_in_ms.return_value)
 
@@ -257,19 +257,19 @@ class Test_Database_Cleanup(unittest.TestCase):
 
     def test_setting_and_accessing_data_retention_period(self):
         MessageBase.set_data_retention_period(seconds=3)
-        self.assertEqual(MessageBase.data_retention_period_ms, 3000)
+        self.assertEqual(MessageBase.data_retention_period_ms(), 3000)
         set_message_retention_period(seconds=5)
-        self.assertEqual(MessageBase.data_retention_period_ms, 5000)
+        self.assertEqual(MessageBase.data_retention_period_ms(), 5000)
 
     def test_setting_other_than_positive_integer_retention_period_is_ignored(self):
         set_message_retention_period(1)
-        self.assertEqual(MessageBase.data_retention_period_ms, 1000)
+        self.assertEqual(MessageBase.data_retention_period_ms(), 1000)
         set_message_retention_period(0)
-        self.assertEqual(MessageBase.data_retention_period_ms, 1000)
+        self.assertEqual(MessageBase.data_retention_period_ms(), 1000)
         set_message_retention_period(-9)
-        self.assertEqual(MessageBase.data_retention_period_ms, 1000)
+        self.assertEqual(MessageBase.data_retention_period_ms(), 1000)
         set_message_retention_period("abc") # type: ignore
-        self.assertEqual(MessageBase.data_retention_period_ms, 1000)
+        self.assertEqual(MessageBase.data_retention_period_ms(), 1000)
 
 
 class Test_Send_And_Read_Message(unittest.TestCase):
