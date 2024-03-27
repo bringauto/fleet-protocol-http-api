@@ -11,3 +11,10 @@ example.db
 
 /uml
 test_db
+
+
+fleet_protocol_api.egg-info
+/server/fleetv2_http_api/test
+/server/build
+/server/.openapi-generator
+/server/fleetv2_http_api.egg-info

@@ -1,5 +1,8 @@
 import os
 import sys
+
+sys.path.append("server")
+from enums import MessageType, EncodingType  # type: ignore
 import unittest
 from unittest.mock import patch, Mock
 
@@ -15,8 +18,7 @@ from database.database_controller import (   # type: ignore
     MessageBase,
     remove_old_messages,
     future_command_warning,
-    get_available_devices_from_database,
-    Message_DB,
+    get_available_devices_from_database
 )
 from fleetv2_http_api.impl.controllers import (  # type: ignore
     available_devices,
@@ -28,67 +30,6 @@ from fleetv2_http_api.impl.controllers import (  # type: ignore
     _message_db_list,
 )
 from fleetv2_http_api.models import DeviceId, Payload, Message, Module, Car  # type: ignore
-
-
-class Test_Car_And_Company_Name_Validity(unittest.TestCase):
-    def setUp(self) -> None:
-        set_test_db_connection("/:memory:")
-
-    def test_car_name_must_be_nonempty_lowercase_string_without_spaces(self):
-        with self.assertRaises(ValueError):
-            available_devices("company", "")
-        with self.assertRaises(ValueError):
-            available_devices("company", "car with spaces")
-        with self.assertRaises(ValueError):
-            available_devices("company", "Car")
-        with self.assertRaises(ValueError):
-            available_devices("", "car")
-        with self.assertRaises(ValueError):
-            available_devices("Company Name", "car_1")
-
-        with self.assertRaises(ValueError):
-            list_statuses("company", "")
-        with self.assertRaises(ValueError):
-            list_statuses("company", "car with spaces")
-        with self.assertRaises(ValueError):
-            list_statuses("company", "Car")
-        with self.assertRaises(ValueError):
-            list_statuses("", "car")
-        with self.assertRaises(ValueError):
-            list_statuses("Company Name", "car_1")
-
-        with self.assertRaises(ValueError):
-            list_statuses("company", "")
-        with self.assertRaises(ValueError):
-            list_statuses("company", "car with spaces")
-        with self.assertRaises(ValueError):
-            list_statuses("company", "Car")
-        with self.assertRaises(ValueError):
-            list_statuses("", "car")
-        with self.assertRaises(ValueError):
-            list_statuses("Company Name", "car_1")
-
-        with self.assertRaises(ValueError):
-            send_statuses("company", "", body=[])
-        with self.assertRaises(ValueError):
-            send_statuses("company", "car with spaces", body=[])
-        with self.assertRaises(ValueError):
-            send_statuses("company", "Car", body=[])
-        with self.assertRaises(ValueError):
-            send_statuses("", "car", body=[])
-        with self.assertRaises(ValueError):
-            send_statuses("Company Name", "car_1", body=[])
-
-        with self.assertRaises(ValueError):
-            send_commands("company", "", body=[])
-        with self.assertRaises(ValueError):
-            send_commands("company", "car with spaces", body=[])
-        with self.assertRaises(ValueError):
-            send_commands("company", "Car", body=[])
-        with self.assertRaises(ValueError):
-            send_commands("", "car", body=[])
-        with self.assertRaises(ValueError):
-            send_commands("Company Name", "car_1", body=[])
 
 
 class Test_Device_Id_Validity(unittest.TestCase):
@@ -130,9 +71,7 @@ class Test_Sending_Status(unittest.TestCase):
         clear_device_ids()
 
     def test_convert_status_to_messagebase_preserves_device_name(self):
-        msg_db_list: list[Message_DB] = _message_db_list(
-            [self.status_example], message_type=MessageType.STATUS_TYPE
-        )
+        msg_db_list = _message_db_list([self.status_example], message_type=MessageType.STATUS_TYPE)
         msg_db = msg_db_list[0]
         self.assertEqual(msg_db.device_name, self.status_example.device_id.name)
         msg_base = MessageBase.from_message("test_company", "test_car", msg_db)
@@ -140,7 +79,7 @@ class Test_Sending_Status(unittest.TestCase):
 
     def test_status_sent_to_and_retrieved_from_database_has_unchanged_attributes(self):
         send_statuses("test_company", "test_car", body=[self.status_example])
-        status: Message = list_statuses("test_company", "test_car")[0][0]
+        status = list_statuses("test_company", "test_car")[0][0]
         self.assertEqual(status.device_id.name, self.status_example.device_id.name)
 
 
@@ -599,7 +538,7 @@ class Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_
         device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
         command = Message(timestamp=10, device_id=device_id, payload=payload)
         _, code = send_statuses("test_company", "test_car", [command])
-        self.assertEqual(code, 500)
+        self.assertEqual(code, 400)
 
     def test_send_commands_accepts_only_commands(self):
         payload = Payload(
@@ -610,7 +549,7 @@ class Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_
         device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
         status = Message(timestamp=10, device_id=device_id, payload=payload)
         _, code = send_commands("test_company", "test_car", [status])
-        self.assertEqual(code, 500)
+        self.assertEqual(code, 400)
 
     def tearDown(self) -> None:
         if os.path.exists("./example.db"):

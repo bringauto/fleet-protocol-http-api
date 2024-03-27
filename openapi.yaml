@@ -338,7 +338,7 @@ components:
         type: boolean
         nullable: true
         default: false
-      example: True
+      example: false
 
     CarName:
       name: car_name

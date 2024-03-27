@@ -29,8 +29,23 @@ If you have trouble with running the generator, visit [docs](https://openapi-gen
 
 ## Tests
 
+### Unit tests
+
 You can run unit tests for the server by running `./test_server.sh` in the root directory. Do not forget to install the requirements as shown in the [usage](#usage) section.
 
+### Integration tests
+
+In the root folder, there is a package `integration_tests`. To run then, use
+
+```bash
+python -m integration_tests [-h] [PATH1] [PATH2] ...
+```
+
+Each PATH is specified relative to the `tests` folder. If no PATH is specified, all the tests will run. Otherwise,
+- when PATH is a directory, the script will run all tests in this directory (and subdirectories),
+- when PATH is a Python file, the script will run all tests in the file.
+
+The `-h` flag makes the script display tests' coverage in HTML format, for example in your web browser.
 
 ## Usage
 

@@ -1,6 +1,7 @@
 from keycloak import KeycloakOpenID
 from urllib.parse import urlparse
 
+
 class SecurityObj:
     def set_config(self, keycloak_url: str, client_id: str, secret_key: str, scope: str, realm: str, base_uri: str) -> None:
         """Set configuration for keycloak authentication and initialize KeycloakOpenID."""
@@ -25,7 +26,7 @@ class SecurityObj:
             state=self._state
         )
         return auth_url
-    
+
     def device_get_authentication(self) -> dict:
         """Get a json for authenticating a device on keycloak."""
         auth_url_device = self._oid.device()
@@ -35,7 +36,7 @@ class SecurityObj:
         """Get token from keycloak using a code returned by keycloak."""
         if state != self._state:
             raise Exception("Invalid state")
-        
+
         if urlparse(iss).geturl() != self._keycloak_url + "/realms/" + self._realm_name:
             raise Exception("Invalid issuer")
 
@@ -45,7 +46,7 @@ class SecurityObj:
             redirect_uri=self._callback
         )
         return token
-    
+
     def device_token_get(self, device_code: str) -> dict:
         """Get token from keycloak using a device code returned by keycloak."""
         token = self._oid.token(
@@ -53,7 +54,7 @@ class SecurityObj:
             device_code=device_code
         )
         return token
-    
+
     def token_refresh(self, refresh_token: str) -> dict:
         """Get a new token from keycloak using the refresh token."""
         token = self._oid.refresh_token(

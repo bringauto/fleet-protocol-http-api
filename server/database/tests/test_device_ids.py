@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append("server")
 import unittest
 
@@ -9,12 +10,11 @@ from database.device_ids import (
     clear_device_ids,
     store_device_id_if_new,
     remove_device_id,
-    serialized_device_id
+    serialized_device_id,
 )
 
 
 class TestDeviceIds(unittest.TestCase):
-
     def setUp(self):
         self.device_1_id = DeviceId(module_id=45, type=2, role="role1", name="device1")
         self.device_x_id = DeviceId(module_id=48, type=7, role="role_x", name="device X")
@@ -30,12 +30,7 @@ class TestDeviceIds(unittest.TestCase):
         remove_device_id("company1", "car1", self.device_1_id)
         clean_up_disconnected_cars_and_modules()
         self.assertDictEqual(
-            device_ids(),
-            {"company1":{"car2":{
-                48:{
-                    "48_7_role_x":self.device_x_id
-                }
-            }}}
+            device_ids(), {"company1": {"car2": {48: {"48_7_role_x": self.device_x_id}}}}
         )
 
     def test_cleaning_up_modules_without_any_device_ids(self):
@@ -47,12 +42,13 @@ class TestDeviceIds(unittest.TestCase):
         clean_up_disconnected_cars_and_modules()
         self.assertDictEqual(
             device_ids(),
-            {"company1":{"car1":{
-                45:{
-                    "45_2_role1":self.device_1_id
-                },
+            {
+                "company1": {
+                    "car1": {
+                        45: {"45_2_role1": self.device_1_id},
+                    }
                 }
-            }}
+            },
         )
 
     def test_cleaning_up_companies_without_any_cars(self):
@@ -78,5 +74,5 @@ class TestDeviceIds(unittest.TestCase):
         self.assertDictEqual(device_ids(), {})
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
