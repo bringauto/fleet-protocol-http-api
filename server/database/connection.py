@@ -61,9 +61,9 @@ def get_connection_source() -> Engine:
 
 
 def unset_connection_source() -> None:
-    global _connection_source, _connection_data
+    global _connection_source
     _connection_source = None
-    _connection_data = None
+
 
 
 def set_db_connection(

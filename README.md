@@ -131,8 +131,8 @@ To get Keycloak authentication working, all parameters in the security section o
 ```
 
 - keycloak_url : base URL of a working Keycloak instance
-- client_id : id of client in keycloak (Clients -> click on client representing http api -> Settings -> Client ID)
-- client_secret_key : secret key of client (Clients -> click on client representing http api -> Credentials -> Client Secret)
+- client_id : id of client in Keycloak (Clients -> click on client representing HTTP API -> Settings -> Client ID)
+- client_secret_key : secret key of client (Clients -> click on client representing HTTP API -> Credentials -> Client Secret)
 - scope : checking of scopes is not yet implemented (must be `email` for now!)
 - realm : realm in which the client belongs (seen on top of the left side panel in Keycloak GUI)
 - keycloak_public_key_file : path to the public key used to decode JWT tokens (Realm settings -> Keys -> RS256 -> Public key)

@@ -6,6 +6,7 @@ def _time_in_ms() -> int:
     return int(time() * 1000)  # pragma: no cover
 
 
+
 def timestamp() -> int:
     """Timestamp in milliseconds."""
     return _time_in_ms()

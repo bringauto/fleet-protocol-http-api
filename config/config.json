@@ -9,8 +9,8 @@
         },
         "cleanup": {
             "timing_in_seconds": {
-                "retention_period": 30,
-                "cleanup_period": 5
+                "retention_period": 1200,
+                "cleanup_period": 60
 
             }
         }
@@ -19,7 +19,7 @@
         "base_uri": "https://api.bringautofleet.com/v2/protocol"
     },
     "request_for_messages": {
-        "timeout_in_seconds": 5
+        "timeout_in_seconds": 100
     },
     "security": {
         "keycloak_url": "https://keycloak.bringauto.com",

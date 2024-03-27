@@ -18,16 +18,21 @@ from __future__ import annotations
 from typing import ClassVar, Any
 import dataclasses
 import copy
-from enums import MessageType
 
 from sqlalchemy.orm import Mapped, mapped_column, Session
 from sqlalchemy import Integer, String, JSON, select, insert, delete, BigInteger, and_
 
-from database.device_ids import remove_device_id, clear_device_ids, store_device_id_if_new
-import database.connection
+from enums import MessageType  # type: ignore
+import database.connection  # type: ignore
 from database.connection import get_connection_source, Base
-from database.device_ids import device_ids, clean_up_disconnected_cars_and_modules
-from fleetv2_http_api.models.device_id import DeviceId
+from database.device_ids import (  # type: ignore
+    device_ids,
+    clean_up_disconnected_cars_and_modules,
+    remove_device_id,
+    store_device_id_if_new,
+    clear_device_ids
+)
+from fleetv2_http_api.models.device_id import DeviceId  # type: ignore
 
 
 @dataclasses.dataclass

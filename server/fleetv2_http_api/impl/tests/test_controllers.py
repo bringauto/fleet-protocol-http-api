@@ -1,16 +1,22 @@
 import os
 import sys
+<<<<<<< HEAD
 
 sys.path.append("server")
 from enums import MessageType, EncodingType
+=======
+>>>>>>> master
 import unittest
 from unittest.mock import patch, Mock
 
+sys.path.append("server")
+
 from sqlalchemy import insert
 
-from database.device_ids import clear_device_ids, serialized_device_id
-from database.connection import get_connection_source
-from database.database_controller import (
+from enums import MessageType, EncodingType  # type: ignore
+from database.device_ids import clear_device_ids, serialized_device_id  # type: ignore
+from database.connection import get_connection_source  # type: ignore
+from database.database_controller import (   # type: ignore
     set_test_db_connection,
     MessageBase,
     remove_old_messages,
@@ -18,7 +24,7 @@ from database.database_controller import (
     get_available_devices_from_database,
     Message_DB,
 )
-from fleetv2_http_api.impl.controllers import (
+from fleetv2_http_api.impl.controllers import (  # type: ignore
     available_devices,
     available_cars,
     send_statuses,
@@ -27,12 +33,73 @@ from fleetv2_http_api.impl.controllers import (
     list_commands,
     _message_db_list,
 )
-from fleetv2_http_api.models.device_id import DeviceId
-from fleetv2_http_api.models.message import Payload, Message
-from fleetv2_http_api.models.module import Module
-from fleetv2_http_api.models.car import Car
+from fleetv2_http_api.models import DeviceId, Payload, Message, Module, Car  # type: ignore
 
 
+<<<<<<< HEAD
+=======
+class Test_Car_And_Company_Name_Validity(unittest.TestCase):
+    def setUp(self) -> None:
+        set_test_db_connection("/:memory:")
+
+    def test_car_name_must_be_nonempty_lowercase_string_without_spaces(self):
+        with self.assertRaises(ValueError):
+            available_devices("company", "")
+        with self.assertRaises(ValueError):
+            available_devices("company", "car with spaces")
+        with self.assertRaises(ValueError):
+            available_devices("company", "Car")
+        with self.assertRaises(ValueError):
+            available_devices("", "car")
+        with self.assertRaises(ValueError):
+            available_devices("Company Name", "car_1")
+
+        with self.assertRaises(ValueError):
+            list_statuses("company", "")
+        with self.assertRaises(ValueError):
+            list_statuses("company", "car with spaces")
+        with self.assertRaises(ValueError):
+            list_statuses("company", "Car")
+        with self.assertRaises(ValueError):
+            list_statuses("", "car")
+        with self.assertRaises(ValueError):
+            list_statuses("Company Name", "car_1")
+
+        with self.assertRaises(ValueError):
+            list_statuses("company", "")
+        with self.assertRaises(ValueError):
+            list_statuses("company", "car with spaces")
+        with self.assertRaises(ValueError):
+            list_statuses("company", "Car")
+        with self.assertRaises(ValueError):
+            list_statuses("", "car")
+        with self.assertRaises(ValueError):
+            list_statuses("Company Name", "car_1")
+
+        with self.assertRaises(ValueError):
+            send_statuses("company", "", body=[])
+        with self.assertRaises(ValueError):
+            send_statuses("company", "car with spaces", body=[])
+        with self.assertRaises(ValueError):
+            send_statuses("company", "Car", body=[])
+        with self.assertRaises(ValueError):
+            send_statuses("", "car", body=[])
+        with self.assertRaises(ValueError):
+            send_statuses("Company Name", "car_1", body=[])
+
+        with self.assertRaises(ValueError):
+            send_commands("company", "", body=[])
+        with self.assertRaises(ValueError):
+            send_commands("company", "car with spaces", body=[])
+        with self.assertRaises(ValueError):
+            send_commands("company", "Car", body=[])
+        with self.assertRaises(ValueError):
+            send_commands("", "car", body=[])
+        with self.assertRaises(ValueError):
+            send_commands("Company Name", "car_1", body=[])
+
+
+>>>>>>> master
 class Test_Device_Id_Validity(unittest.TestCase):
     def test_devide_id_validity(self):
         id = DeviceId(module_id=42, type=2, role="light", name="Left light")
@@ -475,7 +542,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         self.assertEqual(len(list_statuses("company", "car", since=0)[0]), 0)
         # The device is considered to be disconnected and all commands sent to it are then
         # considered to be removed.
-        self.assertEqual(len(list_commands("company", "car", since=0)[0]), 0)
+        self.assertEqual(len(list_statuses("company", "car", since=0)[0]), 0)
 
         self.assertEqual(available_devices("company", "car"), ([], 404))
         self.assertEqual(available_cars()[0], [])

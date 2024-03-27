@@ -24,7 +24,7 @@ def request_and_get_script_arguments(
     *positional_args: PositionalArgInfo,
     use_config: bool = True,
     include_db_args: bool = True,
-) -> dict[str, str]:
+) -> ScriptArgs:
 
     parser = _new_arg_parser(script_description)
     _add_positional_args_to_parser(parser, *positional_args)

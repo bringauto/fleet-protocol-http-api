@@ -1,58 +1,74 @@
 from __future__ import annotations
 from typing import Optional, Any, Iterable, Collection
-from enums import MessageType
+from enums import MessageType  # type: ignore
 import logging
 
-from fleetv2_http_api.models.payload import Payload  # noqa: E501
-from fleetv2_http_api.models.device_id import DeviceId
-from fleetv2_http_api.models.message import Message
-from fleetv2_http_api.models.module import Module
-from fleetv2_http_api.models.car import Car
-from database.database_controller import (
+from flask import redirect, Response  # type: ignore
+from werkzeug import Response as WerkzeugResponse  # type: ignore
+
+from enums import MessageType  # type: ignore
+from fleetv2_http_api.models import (  # type: ignore
+    Payload,
+    DeviceId,
+    Message,
+    Module,
+    Car
+)
+from database.database_controller import (  # type: ignore
     send_messages_to_database,
     Message_DB,
     cleanup_device_commands_and_warn_before_future_commands,
 )
-from database.database_controller import list_messages as _list_messages
-from database.device_ids import store_device_id_if_new, device_ids, serialized_device_id
-from database.time import timestamp
-from fleetv2_http_api.impl.wait import WaitObjManager
-from fleetv2_http_api.impl.security import SecurityObj
-from flask import redirect, Response
+from database.database_controller import list_messages as _list_messages  # type: ignore
+from database.device_ids import store_device_id_if_new, device_ids, serialized_device_id  # type: ignore
+from database.time import timestamp  # type: ignore
+from fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
+from fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
+from fleetv2_http_api.impl.security import SecurityObj  # type: ignore
 
 
-_status_wait_manager = WaitObjManager()
+
+_status_wait_manager = MessageWaitObjManager()
+_command_wait_manager = MessageWaitObjManager()
+_car_wait_manager = CarWaitObjManager()
+_security = SecurityObj()
 
 
 def set_status_wait_timeout_s(timeout_s: float) -> None:
     _status_wait_manager.set_timeout(int(1000 * timeout_s))
 
 
+
 def get_status_wait_timeout_s() -> float:
     return _status_wait_manager.timeout_ms * 0.001
 
-
-_command_wait_manager = WaitObjManager()
 
 
 def set_command_wait_timeout_s(timeout_s: float) -> None:
     _command_wait_manager.set_timeout(int(1000 * timeout_s))
 
 
+
 def get_command_wait_timeout_s() -> float:
     return _command_wait_manager.timeout_ms * 0.001
 
 
-_security = SecurityObj()
 
-
-def init_security(
-    keycloak_url: str, client_id: str, secret_key: str, scope: str, realm: str, callback: str
-) -> None:
+def init_security(keycloak_url: str, client_id: str, secret_key: str, scope: str, realm: str, callback: str) -> None:
     _security.set_config(keycloak_url, client_id, secret_key, scope, realm, callback)
 
 
-def login(device: Optional[str] = None) -> Response | tuple[dict | str, int]:
+def set_car_wait_timeout_s(timeout_s: float) -> None:
+    _car_wait_manager.set_timeout(int(1000*timeout_s))
+
+
+def get_car_wait_timeout_s() -> float:
+    return _car_wait_manager.timeout_ms*0.001
+
+
+def login(
+    device: Optional[str] = None
+) -> WerkzeugResponse|Response|tuple[dict|str, int]:
     """login
 
     Redirect to keycloak login page. If empty device is specified, get authentication url and device code. Try authenticate if device code is provided. # noqa: E501
@@ -84,7 +100,7 @@ def token_get(
     state: Optional[str] = None,
     session_state: Optional[str] = None,
     iss: Optional[str] = None,
-    code: Optional[str] = None,
+    code: Optional[str] = None
 ) -> tuple[dict, int]:
     """token_get
 
@@ -109,7 +125,9 @@ def token_get(
     return _log_and_respond(token, 200, "Jwt token generated.")
 
 
-def token_refresh(refresh_token: str) -> tuple[dict, int]:
+def token_refresh(
+    refresh_token: str
+) -> tuple[dict, int]:
     """token_refresh
 
     Generate a new token using the refresh token. # noqa: E501
@@ -127,7 +145,7 @@ def token_refresh(refresh_token: str) -> tuple[dict, int]:
     return _log_and_respond(token, 200, "Jwt token refreshed.")
 
 
-def available_cars() -> list[Car]:
+def available_cars(wait: bool = False) -> tuple[list[Car], int]:
     """available_cars
 
     Return list of available cars for all companies registered in the database. # noqa: E501
@@ -142,7 +160,11 @@ def available_cars() -> list[Car]:
     if cars:
         return _log_and_respond(cars, 200, "listing available cars.")
     else:
-        return _log_and_respond(cars, 200, "No cars were found. Returning empty list.")
+        awaited_cars: list[Car] = _car_wait_manager.wait_and_get_reponse()
+        if awaited_cars:
+            return _log_and_respond(awaited_cars, 200, "listing available cars.")
+        else:
+            return _log_and_respond([], 200, "No cars were found. Returning empty list.")
 
 
 def available_devices(
@@ -189,16 +211,15 @@ def available_devices(
             )
         else:
             module = _available_module(company_name, car_name, module_id)
-            return _log_and_respond(
-                module,
-                200,
-                f"listing available devices in the module '{module_id}' ({company_and_car_name}).",
-            )
+            return _log_and_respond(module, 200, f"listing available devices in the module '{module_id}' ({company_and_car_name}).")
 
 
 def list_commands(
-    company_name: str, car_name: str, since: int = 0, wait: bool = False
-) -> tuple[list[Message], int]:  # noqa: E501
+    company_name: str,
+    car_name: str,
+    since: int = 0,
+    wait: bool = False
+    ) -> tuple[list[Message], int]:  # noqa: E501
 
     """list_commands
 
@@ -231,9 +252,7 @@ def list_commands(
             )
     else:
         # no commands are available for given device, wait for them
-        awaited_commands: list[Message] = _command_wait_manager.wait_and_get_reponse(
-            company_name, car_name
-        )
+        awaited_commands: list[Message] = _command_wait_manager.wait_and_get_reponse(company_name, car_name)
         if awaited_commands:
             if since is not None and awaited_commands[-1].timestamp < since:
                 return _log_and_respond(
@@ -255,8 +274,11 @@ def list_commands(
 
 
 def list_statuses(
-    company_name: str, car_name: str, since: int = 0, wait: bool = False
-) -> tuple[list[Message], int]:  # noqa: E501
+    company_name: str,
+    car_name: str,
+    since: int = 0,
+    wait: bool = False
+    ) -> tuple[list[Message], int]:  # noqa: E501
 
     """list_statuses
 
@@ -396,7 +418,6 @@ def _message_list_from_request_body(body: list[dict | Message]) -> list[Message]
 def _available_module(company_name: str, car_name: str, module_id: int) -> Module:
     device_id_list = list((device_ids()[company_name][car_name][module_id]).values())
     return Module(module_id, device_id_list)
-
 
 def _check_and_handle_first_status(company: str, car: str, messages: list[Message]) -> str:
     command_removal_warnings = ""

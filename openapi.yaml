@@ -3,7 +3,7 @@ openapi: 3.0.2
 
 info:
   title: Fleet v2 HTTP API
-  version: 2.1.2
+  version: 2.2.0
   description: HTTP-based API for Fleet Protocol v2 serving for communication between the External Server and the end users.
   contact:
     email: jiri.strouhal@bringauto.com
@@ -109,6 +109,9 @@ paths:
                   car_name: 'even_better_car'
         '500':
           description: Cannot display available cars due to internal server error.
+
+      parameters:
+        - $ref: '#/components/parameters/Wait'
 
   /available-devices/{company_name}/{car_name}:
     get:

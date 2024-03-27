@@ -2,9 +2,9 @@ import sys
 
 sys.path.append("source")
 
-
 from copy import deepcopy
-from fleetv2_http_api.models.device_id import DeviceId
+
+from fleetv2_http_api.models.device_id import DeviceId  # type: ignore
 
 
 Device_Ids = dict[str, dict[str, dict[int, dict[str, DeviceId]]]]
