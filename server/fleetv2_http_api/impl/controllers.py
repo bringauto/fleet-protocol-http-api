@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Optional, Any, Iterable, Collection
 from enums import MessageType  # type: ignore
 import logging
+import re
 
 from flask import redirect, Response  # type: ignore
 from werkzeug import Response as WerkzeugResponse  # type: ignore
@@ -26,6 +27,8 @@ from fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ig
 from fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
 from fleetv2_http_api.impl.security import SecurityObj  # type: ignore
 
+
+_NAME_PATTERN = "^[0-9a-z_]+$"
 
 
 _status_wait_manager = MessageWaitObjManager()
@@ -373,8 +376,10 @@ def send_commands(
 
 
 def send_statuses(
-    company_name: str, car_name: str, body: list[dict | Message]
-) -> tuple[str | list[str], int]:  # noqa: E501
+    company_name: str,
+    car_name: str,
+    body: list[dict|Message]
+    ) -> tuple[str|list[str],int]:  # noqa: E501
 
     """send_statuses
 
@@ -389,10 +394,12 @@ def send_statuses(
 
     :rtype: Union[None, tuple[None, int], tuple[None, int, dict[str, str]]
     """
+    _validate_name_string(company_name, "Company name")
+    _validate_name_string(car_name, "Car name")
     messages = _message_list_from_request_body(body)
     if messages == []:
         msg = f"Empty list of statuses was sent to the API; no statuses were sent to the device."
-        return _log_and_respond(msg, 200, msg)
+        return _log_and_respond(msg , 200, msg)
     errors = _check_messages(MessageType.STATUS_TYPE, *messages)
     if errors[0] != "":
         msg = "; ".join(errors[0].split("\n"))
@@ -400,12 +407,11 @@ def send_statuses(
 
     _update_messages_timestamp(messages)
     _status_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
-    response_msg = send_messages_to_database(
-        company_name, car_name, *_message_db_list(messages, MessageType.STATUS_TYPE)
-    )
+    _car_wait_manager.add_response_content_and_stop_waiting([Car(company_name, car_name)])
+    response_msg = send_messages_to_database(company_name, car_name, *_message_db_list(messages, MessageType.STATUS_TYPE))
     cmd_warnings = _check_and_handle_first_status(company_name, car_name, messages)
     msg, code = response_msg[0] + cmd_warnings, response_msg[1]
-    return _log_and_respond(msg, code, msg)
+    return  _log_and_respond(msg, code, msg)
 
 
 def _message_list_from_request_body(body: list[dict | Message]) -> list[Message]:
@@ -562,3 +568,10 @@ def _log_and_respond(body: Any, code: int, log_msg: str = "") -> tuple[Any, int]
         logger = logging.getLogger("werkzeug")
         logger.info(log_msg)
     return body, code  # type: ignore
+
+
+def _validate_name_string(name: str, text_label: str) -> None:
+    if not re.match(_NAME_PATTERN, name):
+        msg = f"{text_label} '{name}' does not match pattern '{_NAME_PATTERN}'."
+        raise ValueError(msg)
+

@@ -33,7 +33,7 @@ class Test_Waiting_For_Available_Cars(unittest.TestCase):
         self.assertListEqual(cars[0], [Car(company_name="company", car_name="car")])
 
     def test_waiting_for_single_car_to_become_available(self):
-        set_car_wait_timeout_s(10)
+        set_car_wait_timeout_s(1)
         def send_single_status():
             time.sleep(0.1)
             send_statuses("test_company", "test_car", [self.status_1])
@@ -49,7 +49,7 @@ class Test_Waiting_For_Available_Cars(unittest.TestCase):
         self.assertEqual(code, 200)
 
     def test_multiple_requests_for_cars(self):
-        set_car_wait_timeout_s(5)
+        set_car_wait_timeout_s(1)
         def list_cars_1():
             cmds, code = available_cars(wait=True)
             self.assertEqual(len(cmds), 1, "First response contains the command.")
