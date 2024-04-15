@@ -40,7 +40,8 @@ class MessageBase(Base):
     """Object defining message table inside the database."""
 
     __tablename__: ClassVar[str] = "message"
-    __data_retention_period_in_seconds: ClassVar[int] = 10000
+    _data_retention_period_in_seconds: ClassVar[int] = 10000
+    __table_args__ = {"extend_existing": True}
 
     timestamp: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     sent_order: Mapped[int] = mapped_column(Integer, primary_key=True, default=0)
@@ -61,12 +62,12 @@ class MessageBase(Base):
     @classmethod
     def data_retention_period_ms(cls) -> int:
         """Return the data retention period in milliseconds"""
-        return cls.__data_retention_period_in_seconds * 1000
+        return cls._data_retention_period_in_seconds * 1000
 
     @classmethod
     def set_data_retention_period(cls, seconds: int) -> None:
         if isinstance(seconds, int) and seconds > 0:
-            cls.__data_retention_period_in_seconds = seconds
+            cls._data_retention_period_in_seconds = seconds
 
     @staticmethod
     def from_message(
@@ -194,7 +195,7 @@ def list_messages(
                 table.c.car_name == car_name,
                 table.c.timestamp >= since,
             )
-        )
+        ).order_by(table.c.timestamp.asc())
         result = session.execute(selection)
         for row in result:
             base: MessageBase = row[0]

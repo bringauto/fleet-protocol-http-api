@@ -8,11 +8,13 @@ import server.app as _app
 from server.fleetv2_http_api.models.message import Message, Payload, DeviceId
 from server.enums import MessageType, EncodingType
 
+from server.database.database_controller import remove_old_messages
+
 
 class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):
     def setUp(self) -> None:
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
-        self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
+        self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
         self.payload = Payload(
             message_type=MessageType.STATUS_TYPE,
             encoding="JSON",
@@ -68,12 +70,7 @@ class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):
                 [
                     {
                         "timestamp": 11111,
-                        "device_id": {
-                            "module_id": 7,
-                            "type": 8,
-                            "role": "test_device",
-                            "name": "Test Device",
-                        },
+                        "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
                         "payload": {
                             "message_type": "STATUS",
                             "encoding": "JSON",
@@ -96,7 +93,7 @@ class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):
 class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
     def setUp(self) -> None:
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
-        self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
+        self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
         status_payload = Payload(
             message_type=MessageType.STATUS_TYPE,
             encoding="JSON",
@@ -112,9 +109,21 @@ class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
             encoding="JSON",
             data={"command": "continue"},
         )
+        command_payload_3 = Payload(
+            message_type=MessageType.COMMAND_TYPE,
+            encoding="JSON",
+            data={"command": "stop"},
+        )
+        command_payload_4 = Payload(
+            message_type=MessageType.COMMAND_TYPE,
+            encoding="JSON",
+            data={"command": "stay"},
+        )
         self.status = Message(device_id=self.device_id, payload=status_payload)
         self.command_1 = Message(device_id=self.device_id, payload=command_payload_1)
         self.command_2 = Message(device_id=self.device_id, payload=command_payload_2)
+        self.command_3 = Message(device_id=self.device_id, payload=command_payload_3)
+        self.command_4 = Message(device_id=self.device_id, payload=command_payload_4)
 
     @patch("fleetv2_http_api.impl.controllers.timestamp")
     def test_retrieving_commands_succesfully_sent_to_available_car(
@@ -128,6 +137,8 @@ class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
             client.post("/command/test_company/test_car", json=[self.command_1])
             mock_timestamp.return_value = 1235
             client.post("/command/test_company/test_car", json=[self.command_2])
+            mock_timestamp.return_value = 1236
+            client.post("/command/test_company/test_car", json=[self.command_3, self.command_4])
 
             response = client.get("/command/test_company/test_car")
             self.assertEqual(response.status_code, 200)
@@ -136,34 +147,69 @@ class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
                 [
                     {
                         "timestamp": 1234,
-                        "device_id": {
-                            "module_id": 7,
-                            "type": 8,
-                            "role": "test_device",
-                            "name": "Test Device",
-                        },
-                        "payload": {
-                            "message_type": "COMMAND",
-                            "encoding": "JSON",
-                            "data": {"command": "start"},
-                        },
+                        "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
+                        "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "start"}},
                     },
                     {
                         "timestamp": 1235,
-                        "device_id": {
-                            "module_id": 7,
-                            "type": 8,
-                            "role": "test_device",
-                            "name": "Test Device",
-                        },
-                        "payload": {
-                            "message_type": "COMMAND",
-                            "encoding": "JSON",
-                            "data": {"command": "continue"},
-                        },
+                        "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
+                        "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "continue"}},
+                    },
+                    {
+                        "timestamp": 1236,
+                        "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
+                        "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "stop"}},
+                    },
+                    {
+                        "timestamp": 1236,
+                        "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
+                        "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "stay"}},
                     }
                 ],
             )
+
+            response = client.get("/command/test_company/test_car?since=1235")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json, [
+                {
+                    "timestamp": 1235,
+                    "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
+                    "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "continue"}},
+                },
+                {
+                    "timestamp": 1236,
+                    "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
+                    "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "stop"}},
+                },
+                {
+                    "timestamp": 1236,
+                    "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
+                    "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "stay"}},
+                }
+            ])
+
+    @patch("server.fleetv2_http_api.impl.controllers.timestamp")
+    def test_sending_commands_and_automatically_cleaning_them_up(self, mock_timestamp: Mock):
+       with self.app.app.test_client() as client:
+            mock_timestamp.return_value = 0
+            client.post("/status/test_company/test_car", json=[self.status])
+            mock_timestamp.return_value = 1
+            client.post("/command/test_company/test_car", json=[self.command_1])
+            mock_timestamp.return_value = 2
+            client.post("/command/test_company/test_car", json=[self.command_2])
+
+            remove_old_messages(current_timestamp=1000000000000000)
+
+            client.post("/status/test_company/test_car", json=[self.status])
+            client.post("/command/test_company/test_car", json=[self.command_3])
+            client.post("/command/test_company/test_car", json=[self.command_4])
+            response = client.get("/command/test_company/test_car")
+            self.assertEqual(response.status_code, 200)
+            assert response.json is not None
+            self.assertEqual(len(response.json), 2)
+            self.assertEqual(response.json[0]["payload"]["data"]["command"], "stop")
+            self.assertEqual(response.json[1]["payload"]["data"]["command"], "stay")
+
 
     def tearDown(self) -> None:  # pragma: no cover
         self.app.clear_all()
@@ -172,7 +218,7 @@ class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
 class Test_Sending_And_Viewing_Commands_For_Unavailable_Car(unittest.TestCase):
     def setUp(self) -> None:
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
-        self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
+        self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
         command_payload = Payload(
             message_type=MessageType.COMMAND_TYPE,
             encoding="JSON",
@@ -198,7 +244,7 @@ class Test_Sending_And_Viewing_Commands_For_Unavailable_Car(unittest.TestCase):
 class Test_Sending_And_Viewing_Statuses_To_Multiple_Cars(unittest.TestCase):
     def setUp(self) -> None:
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
-        self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
+        self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
         status_payload = Payload(
             message_type=MessageType.STATUS_TYPE,
             encoding="JSON",
@@ -231,8 +277,8 @@ class Test_Sending_And_Viewing_Statuses_To_Multiple_Cars(unittest.TestCase):
                         "device_id": {
                             "module_id": 7,
                             "type": 8,
-                            "role": "test_device",
-                            "name": "Test Device",
+                            "role": "test_dev",
+                            "name": "Test",
                         },
                         "payload": {
                             "message_type": "STATUS",
@@ -251,8 +297,8 @@ class Test_Sending_And_Viewing_Statuses_To_Multiple_Cars(unittest.TestCase):
                         "device_id": {
                             "module_id": 7,
                             "type": 8,
-                            "role": "test_device",
-                            "name": "Test Device",
+                            "role": "test_dev",
+                            "name": "Test",
                         },
                         "payload": {
                             "message_type": "STATUS",
@@ -273,7 +319,7 @@ class Test_Sending_And_Viewing_Statuses_Sent_To_Multiple_Devices_On_Single_Car(u
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         device_A_id = DeviceId(module_id=7, type=8, role="test_device_l", name="Test Device A")
         device_B_id = DeviceId(module_id=7, type=9, role="test_device_r", name="Test Device B")
-        device_C_id = DeviceId(module_id=14, type=8, role="test_device", name="Test Device C")
+        device_C_id = DeviceId(module_id=14, type=8, role="test_dev", name="Test Device C")
         status_payload_A = Payload(
             message_type=MessageType.STATUS_TYPE,
             encoding=EncodingType.JSON,
@@ -368,7 +414,7 @@ class Test_Sending_And_Viewing_Statuses_Sent_To_Multiple_Devices_On_Single_Car(u
                         "device_id": {
                             "module_id": 14,
                             "type": 8,
-                            "role": "test_device",
+                            "role": "test_dev",
                             "name": "Test Device C",
                         },
                         "payload": {
@@ -501,8 +547,8 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
     def setUp(self, mock_timestamp: Mock) -> None:
         self.maxDiff = 1000
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
-        self.device_1_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device 1")
-        self.device_2_id = DeviceId(module_id=9, type=5, role="test_device", name="Test Device 2")
+        self.device_1_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test Device 1")
+        self.device_2_id = DeviceId(module_id=9, type=5, role="test_dev", name="Test Device 2")
         status_payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
         command_payload_A = Payload(MessageType.COMMAND_TYPE, "JSON", {"command": "start"})
         command_payload_B = Payload(MessageType.COMMAND_TYPE, "JSON", {"command": "continue"})
@@ -535,7 +581,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
                         "device_id": {
                             "module_id": 7,
                             "type": 8,
-                            "role": "test_device",
+                            "role": "test_dev",
                             "name": "Test Device 1",
                         },
                         "payload": {
@@ -549,7 +595,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
                         "device_id": {
                             "module_id": 9,
                             "type": 5,
-                            "role": "test_device",
+                            "role": "test_dev",
                             "name": "Test Device 2",
                         },
                         "payload": {
@@ -580,7 +626,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
                         "device_id": {
                             "module_id": 7,
                             "type": 8,
-                            "role": "test_device",
+                            "role": "test_dev",
                             "name": "Test Device 1",
                         },
                         "payload": {
@@ -594,7 +640,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
                         "device_id": {
                             "module_id": 7,
                             "type": 8,
-                            "role": "test_device",
+                            "role": "test_dev",
                             "name": "Test Device 1",
                         },
                         "payload": {
@@ -613,7 +659,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
 class Test_Mismatch_Between_Endpoint_And_Message_Type(unittest.TestCase):
     def setUp(self) -> None:
         self.app = _app.get_test_app(base_url="/v2/protocol/")
-        self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
+        self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
         self.status_payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
         self.command_payload = Payload(MessageType.COMMAND_TYPE, "JSON", {"command": "start"})
         self.status_1 = Message(device_id=self.device_id, payload=self.status_payload)
@@ -660,7 +706,7 @@ class Test_Mismatch_Between_Endpoint_And_Message_Type(unittest.TestCase):
 class Test_Sending_Empty_List_Of_Messages(unittest.TestCase):
     def setUp(self) -> None:
         self.app = _app.get_test_app(base_url="/v2/protocol/")
-        self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
+        self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
         self.status_payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
         self.command_payload = Payload(MessageType.COMMAND_TYPE, "JSON", {"command": "start"})
         self.status = Message(device_id=self.device_id, payload=self.status_payload)
