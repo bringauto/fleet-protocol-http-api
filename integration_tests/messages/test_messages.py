@@ -102,30 +102,40 @@ class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
             encoding="JSON",
             data={"phone_number": "1234567890"},
         )
-        command_payload = Payload(
+        command_payload_1 = Payload(
             message_type=MessageType.COMMAND_TYPE,
             encoding="JSON",
             data={"command": "start"},
         )
+        command_payload_2 = Payload(
+            message_type=MessageType.COMMAND_TYPE,
+            encoding="JSON",
+            data={"command": "continue"},
+        )
         self.status = Message(device_id=self.device_id, payload=status_payload)
-        self.command = Message(device_id=self.device_id, payload=command_payload)
+        self.command_1 = Message(device_id=self.device_id, payload=command_payload_1)
+        self.command_2 = Message(device_id=self.device_id, payload=command_payload_2)
 
     @patch("fleetv2_http_api.impl.controllers.timestamp")
-    def test_retrieving_command_succesfully_sent_to_available_car(
+    def test_retrieving_commands_succesfully_sent_to_available_car(
         self, mock_timestamp: Mock
     ) -> None:
         with self.app.app.test_client() as client:
-            mock_timestamp.return_value = 11111
+            mock_timestamp.return_value = 1000
             client.post("/status/test_company/test_car", json=[self.status])
-            mock_timestamp.return_value = 11112
-            client.post("/command/test_company/test_car", json=[self.command])
+
+            mock_timestamp.return_value = 1234
+            client.post("/command/test_company/test_car", json=[self.command_1])
+            mock_timestamp.return_value = 1235
+            client.post("/command/test_company/test_car", json=[self.command_2])
+
             response = client.get("/command/test_company/test_car")
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
                 response.json,
                 [
                     {
-                        "timestamp": 11112,
+                        "timestamp": 1234,
                         "device_id": {
                             "module_id": 7,
                             "type": 8,
@@ -136,6 +146,20 @@ class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
                             "message_type": "COMMAND",
                             "encoding": "JSON",
                             "data": {"command": "start"},
+                        },
+                    },
+                    {
+                        "timestamp": 1235,
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_device",
+                            "name": "Test Device",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "continue"},
                         },
                     }
                 ],
