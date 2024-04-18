@@ -8,7 +8,7 @@ info:
     name: GPLv3
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
   title: Fleet v2 HTTP API
-  version: 2.2.0
+  version: 2.2.2
 servers:
 - url: /v2/protocol
 security:
@@ -80,7 +80,7 @@ paths:
       parameters:
       - description: "An empty parameter. If specified, the method waits for predefined\
           \ period of time, until some data to be sent in response are available."
-        example: true
+        example: false
         explode: true
         in: query
         name: wait
