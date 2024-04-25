@@ -148,7 +148,7 @@ def token_refresh(
     return _log_and_respond(token, 200, "Jwt token refreshed.")
 
 
-def available_cars(wait: bool = False) -> tuple[list[Car], int]:
+def available_cars(wait: bool = False, since: int = 0) -> tuple[list[Car], int]:
     """available_cars
 
     Return list of available cars for all companies registered in the database. # noqa: E501
