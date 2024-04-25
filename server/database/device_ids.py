@@ -114,14 +114,19 @@ def clean_up_disconnected_cars_and_modules() -> None:
         _connected_cars.pop(company)
 
 
-def store_connected_device_if_new(company_name: str, car_name: str, device_id: DeviceId) -> bool:
+def store_connected_device_if_new(company_name: str, car_name: str, device_id: DeviceId, timestamp: int) -> bool:
     """Add a device id to the device_ids dictionary if it is not already there.
 
     Returns True if the device id was stored, False otherwise.
     """
 
     if car_name not in _connected_cars[company_name]:
-        _connected_cars[company_name][car_name] = ConnectedCar(company_name=company_name, car_name=car_name, timestamp=0)
+        _connected_cars[company_name][car_name] = ConnectedCar(
+            company_name=company_name,
+            car_name=car_name,
+            timestamp=timestamp,
+            modules={},
+        )
     return _connected_cars[company_name][car_name].add_device(device_id)
 
 

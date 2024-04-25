@@ -98,8 +98,18 @@ class Test_Filtering_By_Since_Parameter(unittest.TestCase):
         send_statuses("test_company", "car_3", [self.status])
         mocked_time_in_ms.return_value = 4000
         send_statuses("test_company", "car_4", [self.status])
-        cars, code = available_cars(wait=True, since=2500)
+        cars, code = available_cars(since=2500)
         self.assertEqual(len(cars), 2)
+        self.assertEqual(cars[0].car_name, "car_3")
+        self.assertEqual(cars[1].car_name, "car_4")
+
+    @patch("database.time._time_in_ms")
+    def test_request_timeout_for_when_only_old_car_is_connected(self, mocked_time_in_ms: Mock):
+        set_car_wait_timeout_s(0.2)
+        mocked_time_in_ms.return_value = 1000
+        send_statuses("test_company", "car_1", [self.status])
+        cars, code = available_cars(wait=True, since=4500)
+        self.assertEqual(len(cars), 0)
 
     def tearDown(self) -> None:
         if os.path.exists("./example.db"):

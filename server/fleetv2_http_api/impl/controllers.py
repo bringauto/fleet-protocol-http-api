@@ -156,13 +156,16 @@ def available_cars(wait: bool = False, since: int = 0) -> tuple[list[Car], int]:
     :rtype: Union[list[Car], tuple[list[Car], int], tuple[list[Car], int, dict[str, str]]
     """
     cars: list[Car] = list()
-    device_dict = connected_cars()
-    for company_name in device_dict:
-        for car_name in device_dict[company_name]:
-            cars.append(Car(company_name, car_name))
+    car_dict = connected_cars()
+
+    for company_name in car_dict:
+        company_cars = [car for car in car_dict[company_name].values() if car.timestamp >= since]
+        company_cars.sort(key=lambda x: x.timestamp)
+        cars = [Car(company_name, car.car_name) for car in company_cars]
+
     if cars or not wait:
-        n = sum([len(device_dict[company_name]) for company_name in device_dict])
-        return _log_and_respond(cars, 200, f"Found {n} available cars for {len(device_dict)} companies.")
+        n = sum([len(car_dict[company_name]) for company_name in car_dict])
+        return _log_and_respond(cars, 200, f"Found {n} available cars for {len(car_dict)} companies.")
     else:
         awaited_cars: list[Any] = _car_wait_manager.wait_and_get_reponse()
         if awaited_cars:
@@ -193,23 +196,23 @@ def available_devices(
     company_and_car_name = f"Company='{company_name}', car='{car_name}'"
     empty_response_body: Collection = [] if module_id is None else {}
 
-    device_dict = connected_cars()
-    if company_name not in device_dict:
+    cars_dict = connected_cars()
+    if company_name not in cars_dict:
         return _log_and_respond(
             empty_response_body, 404, f"No company named '{company_name}' is registered."
         )
 
-    elif car_name not in device_dict[company_name]:
+    elif car_name not in cars_dict[company_name]:
         return _log_and_respond(
             empty_response_body, 404, f"No car named '{car_name}' is registered."
         )
 
     if module_id is None:
-        car_modules = device_dict[company_name][car_name].modules
+        car_modules = cars_dict[company_name][car_name].modules
         modules = [_available_module(company_name, car_name, id) for id in car_modules]
         return _log_and_respond(modules, 200, f"listing available modules ({company_and_car_name})")
     else:
-        if module_id not in device_dict[company_name][car_name].modules:
+        if module_id not in cars_dict[company_name][car_name].modules:
             return _log_and_respond(
                 empty_response_body,
                 404,
@@ -431,7 +434,8 @@ def _available_module(company_name: str, car_name: str, module_id: int) -> Modul
 def _check_and_handle_first_status(company: str, car: str, messages: list[Message]) -> str:
     command_removal_warnings = ""
     for msg in messages:
-        first_status_was_sent = store_connected_device_if_new(company, car, msg.device_id)
+        timestamp = min(messages, key=lambda x: x.timestamp).timestamp
+        first_status_was_sent = store_connected_device_if_new(company, car, msg.device_id, timestamp)
         sdevice_id = serialized_device_id(msg.device_id)
         if first_status_was_sent:
             command_removal_warnings = "\n".join(
