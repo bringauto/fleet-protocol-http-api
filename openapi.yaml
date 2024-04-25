@@ -112,6 +112,7 @@ paths:
 
       parameters:
         - $ref: '#/components/parameters/Wait'
+        - $ref: '#/components/parameters/Since'
 
   /available-devices/{company_name}/{car_name}:
     get:

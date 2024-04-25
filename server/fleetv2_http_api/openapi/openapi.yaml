@@ -90,6 +90,19 @@ paths:
           nullable: true
           type: boolean
         style: form
+      - description: "A Unix timestamp; if specified, the method returns all messages\
+          \ inclusivelly newer than the specified timestamp \\ (i.e., messages with\
+          \ timestamp greater than or equal to the 'since' timestamp)"
+        example: 1699262836
+        explode: true
+        in: query
+        name: since
+        required: false
+        schema:
+          default: 0
+          nullable: true
+          type: integer
+        style: form
       responses:
         "200":
           content:
