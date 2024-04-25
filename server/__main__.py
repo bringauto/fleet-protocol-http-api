@@ -5,7 +5,7 @@ import logging
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
 
 from database.database_controller import remove_old_messages, set_message_retention_period  # type: ignore
-from database.device_ids import clear_device_ids  # type: ignore
+from database.device_ids import clear_connected_cars  # type: ignore
 from database.connection import set_db_connection  # type: ignore
 from database.time import timestamp  # type: ignore
 from fleetv2_http_api.__main__ import main as run_server  # type: ignore
@@ -24,7 +24,7 @@ def _clean_up_messages() -> None:
 
 def _connect_to_database(vals:script_args.ScriptArgs) -> None:
     """Clear previously stored available devices and connect to the database."""
-    clear_device_ids()
+    clear_connected_cars()
     set_db_connection(
         dblocation = vals.argvals["location"] + ":" + str(vals.argvals["port"]),
         username = vals.argvals["username"],

@@ -26,13 +26,14 @@ from enums import MessageType  # type: ignore
 import database.connection  # type: ignore
 from database.connection import get_connection_source, Base
 from database.device_ids import (  # type: ignore
-    device_ids,
+    connected_cars,
     clean_up_disconnected_cars_and_modules,
-    remove_device_id,
-    store_device_id_if_new,
-    clear_device_ids
+    remove_connected_device,
+    store_connected_device_if_new,
+    clear_connected_cars
 )
 from fleetv2_http_api.models.device_id import DeviceId  # type: ignore
+from database.device_ids import serialized_device_id  # type: ignore
 
 
 @dataclasses.dataclass
@@ -145,7 +146,7 @@ def set_test_db_connection(dblocation: str) -> None:
 
 
 def get_available_devices_from_database() -> None:
-    clear_device_ids()
+    clear_connected_cars()
     load_available_devices_from_database()
 
 
@@ -282,19 +283,18 @@ def clean_up_disconnected_cars() -> None:
     """Remove all car keys from the device_ids dictionary that do not have any modules.
     Then remove all companies that do not have any cars left.
     """
-    device_dict = copy.deepcopy(device_ids())
+    device_dict = copy.deepcopy(connected_cars())
     for company in device_dict:
         for car in device_dict[company]:
-            for module_id in device_dict[company][car]:
+            for module_id in device_dict[company][car].modules:
                 _clean_up_disconnected_devices(company, car, module_id)
     clean_up_disconnected_cars_and_modules()
 
 
 def _clean_up_disconnected_devices(company: str, car: str, module_id: int) -> None:
     """Remove all device ids from the device_ids dictionary that do not have any messages."""
-    module_devices = device_ids()[company][car][module_id]
-    for sdevice_id in module_devices:
-        _, device_type, device_role = deserialize_device_id(sdevice_id)
+    module_devices = connected_cars()[company][car].modules[module_id].device_ids
+    for device_id in module_devices:
         with Session(get_connection_source()) as session:
             table = MessageBase.__table__
             select_stmt = select(MessageBase).where(
@@ -302,12 +302,12 @@ def _clean_up_disconnected_devices(company: str, car: str, module_id: int) -> No
                 table.c.company_name == company,
                 table.c.car_name == car,
                 table.c.module_id == module_id,
-                table.c.device_type == device_type,
-                table.c.device_role == device_role,
+                table.c.device_type == device_id.type,
+                table.c.device_role == device_id.role,
             )
             selection = session.execute(select_stmt)
             if selection.first() is None:
-                remove_device_id(company, car, sdevice_id)
+                remove_connected_device(company, car, device_id)
 
 
 def deserialize_device_id(serialized_id: str) -> tuple[int, int, str]:
@@ -328,4 +328,4 @@ def load_available_devices_from_database() -> None:
                 role=base.device_role,
                 name=base.device_name,
             )
-            store_device_id_if_new(base.company_name, base.car_name, device_id)
+            store_connected_device_if_new(base.company_name, base.car_name, device_id)

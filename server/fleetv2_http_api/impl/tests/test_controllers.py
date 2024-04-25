@@ -11,7 +11,7 @@ sys.path.append("server")
 from sqlalchemy import insert
 
 from enums import MessageType, EncodingType  # type: ignore
-from database.device_ids import clear_device_ids, serialized_device_id  # type: ignore
+from database.device_ids import clear_connected_cars, serialized_device_id  # type: ignore
 from database.connection import get_connection_source  # type: ignore
 from database.database_controller import (   # type: ignore
     set_test_db_connection,
@@ -68,7 +68,7 @@ class Test_Sending_Status(unittest.TestCase):
         self.status_example = Message(
             timestamp=123456789, device_id=self.device_id, payload=payload_example
         )
-        clear_device_ids()
+        clear_connected_cars()
 
     def test_convert_status_to_messagebase_preserves_device_name(self):
         msg_db_list = _message_db_list([self.status_example], message_type=MessageType.STATUS_TYPE)
@@ -95,16 +95,15 @@ class Test_listing_Available_Devices_And_Cars(unittest.TestCase):
         self.status_example = Message(
             timestamp=123456789, device_id=self.device_id, payload=payload_example
         )
-        clear_device_ids()
+        clear_connected_cars()
 
     def test_device_is_considered_available_if_at_least_one_status_is_in_the_database(self):
         self.assertEqual(available_devices("test_company", "test_car"), ([], 404))
         send_statuses("test_company", "test_car", body=[self.status_example])
-        self.assertEqual(
-            available_devices("test_company", "test_car")[0],
-            [
-                Module(module_id=42, device_list=[self.device_id]),
-            ],
+        available_devices_ = available_devices("test_company", "test_car")[0]
+        self.assertListEqual(
+            available_devices_,
+            [Module(module_id=42, device_list=[self.device_id])],
         )
         self.assertEqual(available_devices("other_company", "some_car"), ([], 404))
 
@@ -191,7 +190,7 @@ class Test_Sending_And_listing_Multiple_Messages(unittest.TestCase):
                 data={"message": "Beep"},
             ),
         )
-        clear_device_ids()
+        clear_connected_cars()
 
     def test_listing_sent_statuses(self) -> None:
         send_statuses("test_company", "test_car", body=[self.status_example])
@@ -389,7 +388,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
 
     def setUp(self) -> None:
         set_test_db_connection("/:memory:")
-        clear_device_ids()
+        clear_connected_cars()
         self.device_id = DeviceId(module_id=42, type=5, role="left_light", name="Left light")
         self.status_payload = Payload(
             message_type=MessageType.STATUS_TYPE,
@@ -560,7 +559,7 @@ class Test_Store_Available_Device_Ids_After_Connecting_To_Database_Already_Conta
     unittest.TestCase
 ):
     def setUp(self) -> None:
-        clear_device_ids()
+        clear_connected_cars()
 
     def test_list_available_cars(self):
         set_test_db_connection("/:memory:")
@@ -588,7 +587,7 @@ class Test_Store_Available_Device_Ids_After_Connecting_To_Database_Already_Conta
 
 class Test_Sending_Messages_To_Multiple_Devices_In_A_Single_Request(unittest.TestCase):
     def setUp(self) -> None:
-        clear_device_ids()
+        clear_connected_cars()
         set_test_db_connection("/:memory:")
         self.device_1_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
         self.device_2_id = DeviceId(module_id=43, type=7, role="test_device_2", name="Right light")
@@ -618,7 +617,13 @@ class Test_Sending_Messages_To_Multiple_Devices_In_A_Single_Request(unittest.Tes
             [
                 Module(module_id=42, device_list=[self.device_1_id]),
                 Module(module_id=43, device_list=[self.device_2_id]),
-                Module(module_id=124, device_list=[self.device_3_id, self.device_4_id]),
+                Module(
+                    module_id=124,
+                    device_list=[
+                        self.device_3_id,
+                        self.device_4_id
+                    ]
+                ),
             ],
         )
 

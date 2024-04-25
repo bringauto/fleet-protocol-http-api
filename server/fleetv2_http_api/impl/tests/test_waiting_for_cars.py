@@ -8,7 +8,7 @@ sys.path.append("server")
 
 from fleetv2_http_api.models import Payload, Message, Car, DeviceId  # type: ignore
 from enums import MessageType, EncodingType  # type: ignore
-from database.database_controller import set_test_db_connection, clear_device_ids  # type: ignore
+from database.database_controller import set_test_db_connection, clear_connected_cars  # type: ignore
 from fleetv2_http_api.impl.controllers import (  # type: ignore
     available_cars, send_statuses, set_car_wait_timeout_s
 )
@@ -20,7 +20,7 @@ class Test_Waiting_For_Available_Cars(unittest.TestCase):
         if os.path.exists("./example.db"):
             os.remove("./example.db")
         set_test_db_connection("/example.db")
-        clear_device_ids()
+        clear_connected_cars()
         self.status_1 = Message(
             device_id=DeviceId(module_id=47, type=5, role="test_device", name="Test Device"),
             payload=Payload(
@@ -73,7 +73,7 @@ class Test_Filtering_By_Since_Parameter(unittest.TestCase):
         if os.path.exists("./example.db"):
             os.remove("./example.db")
         set_test_db_connection("/example.db")
-        clear_device_ids()
+        clear_connected_cars()
         self.status = Message(
             device_id=DeviceId(module_id=47, type=5, role="test_device", name="Test Device"),
             payload=Payload(
