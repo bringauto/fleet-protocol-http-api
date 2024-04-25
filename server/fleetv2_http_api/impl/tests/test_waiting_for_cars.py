@@ -2,6 +2,7 @@ import unittest
 import sys
 import os
 import time
+from unittest.mock import patch, Mock
 
 sys.path.append("server")
 
@@ -61,6 +62,44 @@ class Test_Waiting_For_Available_Cars(unittest.TestCase):
             send_statuses("test_company", "test_car", [self.status_1])
         run_in_threads(list_cars_1, list_cars_2, send_test_status)
 
+    def tearDown(self) -> None:
+        if os.path.exists("./example.db"):
+            os.remove("./example.db")
+
+
+class Test_Filtering_By_Since_Parameter(unittest.TestCase):
+
+    def setUp(self) -> None:
+        if os.path.exists("./example.db"):
+            os.remove("./example.db")
+        set_test_db_connection("/example.db")
+        clear_device_ids()
+        self.status = Message(
+            device_id=DeviceId(module_id=47, type=5, role="test_device", name="Test Device"),
+            payload=Payload(
+                message_type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={}
+            ),
+        )
+
+    @patch("database.time._time_in_ms")
+    def test_set_to_zero_returns_all_connected_cars(self, mocked_time_in_ms: Mock):
+        mocked_time_in_ms.return_value = 0
+        send_statuses("test_company", "test_car", [self.status])
+        cars, code = available_cars(wait=True, since=0)
+        self.assertEqual(len(cars), 1)
+
+    @patch("database.time._time_in_ms")
+    def test_set_to_positive_value_returns_all_cars_connected_at_the_time_or_later(self, mocked_time_in_ms: Mock):
+        mocked_time_in_ms.return_value = 1000
+        send_statuses("test_company", "car_1", [self.status])
+        mocked_time_in_ms.return_value = 2000
+        send_statuses("test_company", "car_2", [self.status])
+        mocked_time_in_ms.return_value = 3000
+        send_statuses("test_company", "car_3", [self.status])
+        mocked_time_in_ms.return_value = 4000
+        send_statuses("test_company", "car_4", [self.status])
+        cars, code = available_cars(wait=True, since=2500)
+        self.assertEqual(len(cars), 2)
 
     def tearDown(self) -> None:
         if os.path.exists("./example.db"):
