@@ -161,11 +161,14 @@ def available_cars(wait: bool = False) -> tuple[list[Car], int]:
         for car_name in device_dict[company_name]:
             cars.append(Car(company_name, car_name))
     if cars:
-        return _log_and_respond(cars, 200, "listing available cars.")
+        n = sum([len(device_dict[company_name]) for company_name in device_dict])
+        return _log_and_respond(cars, 200, f"Found {n} available cars for {len(device_dict)} companies.")
     else:
-        awaited_cars: list[Car] = _car_wait_manager.wait_and_get_reponse()
+        awaited_cars: list[Any] = _car_wait_manager.wait_and_get_reponse()
         if awaited_cars:
-            return _log_and_respond(awaited_cars, 200, "listing available cars.")
+            n = len(awaited_cars)
+            response = _log_and_respond(awaited_cars, 200, f"Returning {n} new available cars.")
+            return response
         else:
             return _log_and_respond([], 200, "No cars were found. Returning empty list.")
 
