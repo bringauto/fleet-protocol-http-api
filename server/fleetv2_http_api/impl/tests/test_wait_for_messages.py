@@ -434,5 +434,48 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             os.remove("./example.db")
 
 
+class Test_Waiting_For_Messsages_From_Multiple_Cars(unittest.TestCase):
+
+    def setUp(self) -> None:
+        if os.path.exists("./example.db"):
+            os.remove("./example.db")
+        set_test_db_connection("/example.db")
+        clear_device_ids()
+        payload_example = Payload(
+            message_type="STATUS", encoding="JSON", data={"message": "Device is running"}
+        )
+        self.device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
+        self.sdevice_id = serialized_device_id(self.device_id)
+        self.status = Message(
+            timestamp=123456789,
+            device_id=self.device_id,
+            payload=payload_example
+        )
+
+    def test_return_statuses_sent_after_the_request_when_wait_mechanism_is_applied(self):
+        set_status_wait_timeout_s(1)
+        def list_test_statuses_from_car_1():
+            time.sleep(0.0)
+            msg, code = list_statuses("test_company", "test_car", wait=True)
+            self.assertEqual(code, 200)
+            self.assertEqual(len(msg), 1)
+
+        def list_test_statuses_from_car_2():
+            time.sleep(0.0)
+            msg, code = list_statuses("test_company", "test_car_2", wait=True)
+            self.assertEqual(code, 200)
+            self.assertEqual(len(msg), 1)
+
+        def send_test_statuses():
+            time.sleep(0.01)
+            send_statuses("test_company", "test_car", [self.status.to_dict()])
+            send_statuses("test_company", "test_car_2", [self.status.to_dict()])
+
+        run_in_threads(list_test_statuses_from_car_1, list_test_statuses_from_car_2, send_test_statuses)
+
+    def tearDown(self) -> None:
+        if os.path.exists("./example.db"):
+            os.remove("./example.db")
+
 if __name__ == "__main__":
     unittest.main()

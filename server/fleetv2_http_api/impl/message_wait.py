@@ -26,10 +26,12 @@ class MessageWaitObjManager:
     def new_wait_obj(self, company_name: str, car_name: str) -> MessageWaitObj:
         """Create a new wait object and adds it to the wait queue for given company and car."""
         wait_obj = MessageWaitObj(company_name, car_name, self._timeout_ms)
+
         if not company_name in self._wait_dict:
             self._wait_dict[company_name] = dict()
-            if not car_name in self._wait_dict[company_name]:
-                self._wait_dict[company_name][car_name] = list()
+        if not car_name in self._wait_dict[company_name]:
+            self._wait_dict[company_name][car_name] = list()
+
         self._wait_dict[company_name][car_name].append(wait_obj)
         return wait_obj
 
