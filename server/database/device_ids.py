@@ -90,6 +90,11 @@ def connected_cars() -> dict[str, dict[str, ConnectedCar]]:
     return deepcopy(_connected_cars)
 
 
+def is_car_connected(company_name: str, car_name: str) -> bool:
+    """Check if a car is connected."""
+    return company_name in _connected_cars and car_name in _connected_cars[company_name]
+
+
 def clear_connected_cars() -> None:
     """Clear the whole device_ids dictionary.""" ""
     _connected_cars.clear()

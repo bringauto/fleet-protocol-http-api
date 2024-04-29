@@ -21,7 +21,7 @@ from database.database_controller import (  # type: ignore
     cleanup_device_commands_and_warn_before_future_commands,
 )
 from database.database_controller import list_messages as _list_messages  # type: ignore
-from database.device_ids import store_connected_device_if_new, connected_cars, serialized_device_id  # type: ignore
+from database.device_ids import store_connected_device_if_new, connected_cars, serialized_device_id, is_car_connected  # type: ignore
 from database.time import timestamp  # type: ignore
 from fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
 from fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
@@ -167,7 +167,8 @@ def available_cars(wait: bool = False, since: int = 0) -> tuple[list[Car], int]:
         n = sum([len(car_dict[company_name]) for company_name in car_dict])
         return _log_and_respond(cars, 200, f"Found {n} available cars for {len(car_dict)} companies.")
     else:
-        awaited_cars: list[Any] = _car_wait_manager.wait_and_get_reponse()
+        all_awaited_cars: list[Car] = _car_wait_manager.wait_and_get_reponse()
+        awaited_cars = [car for car in all_awaited_cars if not is_car_connected(car.company_name, car.car_name)]
         if awaited_cars:
             n = len(awaited_cars)
             response = _log_and_respond(awaited_cars, 200, f"Returning {n} new available cars.")
@@ -563,10 +564,11 @@ def _message_db_list(messages: list[Message], message_type: str) -> list[Message
     ]
 
 
-def _update_messages_timestamp(messages: Iterable[Message_DB]) -> None:
+def _update_messages_timestamp(messages: Iterable[Message_DB]) -> int:
     timestamp_now = timestamp()
     for message in messages:
         message.timestamp = timestamp_now
+    return timestamp_now
 
 
 def _log_and_respond(body: Any, code: int, log_msg: str = "") -> tuple[Any, int]:

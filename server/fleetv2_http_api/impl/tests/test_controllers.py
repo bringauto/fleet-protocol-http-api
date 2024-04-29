@@ -671,6 +671,4 @@ class Test_Sending_Messages_To_Multiple_Devices_In_A_Single_Request(unittest.Tes
 
 
 if __name__ == "__main__":
-    # runner = unittest.TextTestRunner()
-    # runner.run(Test_Listing_Available_Devices_And_Cars("test_listing_devices_for_particular_module"))
     unittest.main()

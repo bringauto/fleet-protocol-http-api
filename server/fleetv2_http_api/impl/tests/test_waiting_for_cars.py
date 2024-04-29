@@ -142,6 +142,21 @@ class Test_Filtering_By_Since_Parameter(unittest.TestCase):
         cars, code = available_cars(wait=True, since=4500)
         self.assertEqual(len(cars), 0)
 
+    @patch("database.time._time_in_ms")
+    def test_multiple_requests_for_cars(self, mocked_time_in_ms: Mock):
+        set_car_wait_timeout_s(1)
+        mocked_time_in_ms.return_value = 1000
+        send_statuses("test_company", "test_car", [self.status])
+
+        def list_cars_connected_after_1500():
+            cmds, code = available_cars(wait=True, since=1501)
+            self.assertEqual(len(cmds), 0)
+        def send_test_status():
+            mocked_time_in_ms.return_value = 2000
+            time.sleep(1)
+            send_statuses("test_company", "test_car", [self.status])
+
+        run_in_threads(list_cars_connected_after_1500, send_test_status)
 
     def tearDown(self) -> None:
         if os.path.exists("./example.db"):
