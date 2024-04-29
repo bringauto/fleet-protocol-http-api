@@ -21,7 +21,7 @@ from database.database_controller import (  # type: ignore
     cleanup_device_commands_and_warn_before_future_commands,
 )
 from database.database_controller import list_messages as _list_messages  # type: ignore
-from database.device_ids import store_device_id_if_new, device_ids, serialized_device_id  # type: ignore
+from database.device_ids import store_connected_device_if_new, connected_cars, serialized_device_id  # type: ignore
 from database.time import timestamp  # type: ignore
 from fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
 from fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
@@ -148,7 +148,7 @@ def token_refresh(
     return _log_and_respond(token, 200, "Jwt token refreshed.")
 
 
-def available_cars(wait: bool = False) -> tuple[list[Car], int]:
+def available_cars(wait: bool = False, since: int = 0) -> tuple[list[Car], int]:
     """available_cars
 
     Return list of available cars for all companies registered in the database. # noqa: E501
@@ -156,13 +156,16 @@ def available_cars(wait: bool = False) -> tuple[list[Car], int]:
     :rtype: Union[list[Car], tuple[list[Car], int], tuple[list[Car], int, dict[str, str]]
     """
     cars: list[Car] = list()
-    device_dict = device_ids()
-    for company_name in device_dict:
-        for car_name in device_dict[company_name]:
-            cars.append(Car(company_name, car_name))
+    car_dict = connected_cars()
+
+    for company_name in car_dict:
+        company_cars = [car for car in car_dict[company_name].values() if car.timestamp >= since]
+        company_cars.sort(key=lambda x: x.timestamp)
+        cars = [Car(company_name, car.car_name) for car in company_cars]
+
     if cars or not wait:
-        n = sum([len(device_dict[company_name]) for company_name in device_dict])
-        return _log_and_respond(cars, 200, f"Found {n} available cars for {len(device_dict)} companies.")
+        n = sum([len(car_dict[company_name]) for company_name in car_dict])
+        return _log_and_respond(cars, 200, f"Found {n} available cars for {len(car_dict)} companies.")
     else:
         awaited_cars: list[Any] = _car_wait_manager.wait_and_get_reponse()
         if awaited_cars:
@@ -193,23 +196,23 @@ def available_devices(
     company_and_car_name = f"Company='{company_name}', car='{car_name}'"
     empty_response_body: Collection = [] if module_id is None else {}
 
-    device_dict = device_ids()
-    if company_name not in device_dict:
+    cars_dict = connected_cars()
+    if company_name not in cars_dict:
         return _log_and_respond(
             empty_response_body, 404, f"No company named '{company_name}' is registered."
         )
 
-    elif car_name not in device_dict[company_name]:
+    elif car_name not in cars_dict[company_name]:
         return _log_and_respond(
             empty_response_body, 404, f"No car named '{car_name}' is registered."
         )
 
     if module_id is None:
-        car_modules = device_dict[company_name][car_name]
+        car_modules = cars_dict[company_name][car_name].modules
         modules = [_available_module(company_name, car_name, id) for id in car_modules]
         return _log_and_respond(modules, 200, f"listing available modules ({company_and_car_name})")
     else:
-        if module_id not in device_dict[company_name][car_name]:
+        if module_id not in cars_dict[company_name][car_name].modules:
             return _log_and_respond(
                 empty_response_body,
                 404,
@@ -270,7 +273,7 @@ def list_commands(
                 awaited_commands, 200, f"Returning awaited commands ({company_and_car_name})."
             )
         else:
-            if company_name not in device_ids() or car_name not in device_ids()[company_name]:
+            if company_name not in connected_cars() or car_name not in connected_cars()[company_name]:
                 return _log_and_respond(
                     [], 404, f"No commands available before timeout ({company_and_car_name})."
                 )
@@ -425,13 +428,14 @@ def _message_list_from_request_body(body: list[dict | Message]) -> list[Message]
 
 
 def _available_module(company_name: str, car_name: str, module_id: int) -> Module:
-    device_id_list = list((device_ids()[company_name][car_name][module_id]).values())
+    device_id_list = connected_cars()[company_name][car_name].modules[module_id].device_ids
     return Module(module_id, device_id_list)
 
 def _check_and_handle_first_status(company: str, car: str, messages: list[Message]) -> str:
     command_removal_warnings = ""
     for msg in messages:
-        first_status_was_sent = store_device_id_if_new(company, car, msg.device_id)
+        timestamp = min(messages, key=lambda x: x.timestamp).timestamp
+        first_status_was_sent = store_connected_device_if_new(company, car, msg.device_id, timestamp)
         sdevice_id = serialized_device_id(msg.device_id)
         if first_status_was_sent:
             command_removal_warnings = "\n".join(
@@ -450,8 +454,7 @@ def _check_sent_commands(
         return errors, code
     for cmd in messages:
         module_id = cmd.device_id.module_id
-        sdevice_id = serialized_device_id(cmd.device_id)
-        msg, code = _check_device_availability(company_name, car_name, module_id, sdevice_id)
+        msg, code = _check_device_availability(company_name, car_name, module_id, cmd.device_id)
         if code != 200:
             return msg, code
     return "", 200
@@ -479,22 +482,22 @@ def _check_message_types(expected_message_type: str, *messages: Message) -> str:
 
 
 def _check_device_availability(
-    company_name: str, car_name: str, module_id: int, sdevice_id: str
+    company: str, car: str, module_id: int, device_id: DeviceId
 ) -> tuple[str, int]:
-    device_dict = device_ids()
-    msg, code = _check_car_availability(company_name, car_name)
+    device_dict = connected_cars()
+    msg, code = _check_car_availability(company, car)
     if code != 200:
         return msg, code
-    elif module_id not in device_dict[company_name][car_name]:
+    elif module_id not in device_dict[company][car].modules:
         return (
             f"No module with id '{module_id}' is available in car "
-            f"'{car_name}' under the company '{company_name}'",
+            f"'{car}' under the company '{company}'",
             404,
         )
-    elif sdevice_id not in device_dict[company_name][car_name][module_id]:
+    elif not device_dict[company][car].is_connected(device_id):
         return (
-            f"No device with id '{sdevice_id}' is available in module "
-            f"'{module_id}' in car '{car_name}' under the company '{company_name}'",
+            f"No device with id '{serialized_device_id(device_id)}' is available in module "
+            f"'{module_id}' in car '{car}' under the company '{company}'",
             404,
         )
     else:
@@ -502,7 +505,7 @@ def _check_device_availability(
 
 
 def _check_car_availability(company_name: str, car_name: str) -> tuple[str, int]:
-    device_dict = device_ids()
+    device_dict = connected_cars()
     if company_name not in device_dict:
         return f"No car is available under a company '{company_name}'.", 404  # type: ignore
     elif car_name not in device_dict[company_name]:

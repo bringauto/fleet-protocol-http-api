@@ -6,7 +6,7 @@ import os
 import time
 import unittest
 
-from database.device_ids import clear_device_ids, serialized_device_id  # type: ignore
+from database.device_ids import clear_connected_cars, serialized_device_id  # type: ignore
 from database.database_controller import set_test_db_connection  # type: ignore
 from database.time import timestamp  # type: ignore
 from fleetv2_http_api.impl.controllers import (  # type: ignore
@@ -30,7 +30,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         if os.path.exists("./example.db"):
             os.remove("./example.db")
         set_test_db_connection("/example.db")
-        clear_device_ids()
+        clear_connected_cars()
         payload_example = Payload(
             message_type="STATUS", encoding="JSON", data={"message": "Device is running"}
         )
@@ -189,7 +189,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         if os.path.exists("./example.db"):
             os.remove("./example.db")
         set_test_db_connection("/example.db")
-        clear_device_ids()
+        clear_connected_cars()
         self.device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
         self.status = Message(123456789, self.device_id, Payload("STATUS", "JSON", {}))
         self.command = Message(123456789, self.device_id, Payload("COMMAND", "JSON", {}))
@@ -440,7 +440,7 @@ class Test_Waiting_For_Messsages_From_Multiple_Cars(unittest.TestCase):
         if os.path.exists("./example.db"):
             os.remove("./example.db")
         set_test_db_connection("/example.db")
-        clear_device_ids()
+        clear_connected_cars()
         payload_example = Payload(
             message_type="STATUS", encoding="JSON", data={"message": "Device is running"}
         )
