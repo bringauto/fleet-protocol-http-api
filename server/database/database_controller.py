@@ -293,7 +293,7 @@ def clean_up_disconnected_cars() -> None:
 
 def _clean_up_disconnected_devices(company: str, car: str, module_id: int) -> None:
     """Remove all device ids from the device_ids dictionary that do not have any messages."""
-    module_devices = connected_cars()[company][car].modules[module_id].device_ids
+    module_devices = connected_cars()[company][car].modules[module_id].device_ids.values()
     for device_id in module_devices:
         with Session(get_connection_source()) as session:
             table = MessageBase.__table__
@@ -328,4 +328,5 @@ def load_available_devices_from_database() -> None:
                 role=base.device_role,
                 name=base.device_name,
             )
-            store_connected_device_if_new(base.company_name, base.car_name, device_id)
+            timestamp = base.timestamp
+            store_connected_device_if_new(base.company_name, base.car_name, device_id, timestamp)

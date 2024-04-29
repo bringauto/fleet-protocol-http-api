@@ -26,24 +26,25 @@ class TestDeviceIds(unittest.TestCase):
 
     def test_cleaning_up_cars_without_any_device_ids(self):
         clear_connected_cars()
-        store_connected_device_if_new("company1", "car1", self.device_1_id)
-        store_connected_device_if_new("company1", "car2", self.device_x_id)
+        store_connected_device_if_new("company1", "car1", self.device_1_id, timestamp=0)
+        store_connected_device_if_new("company1", "car2", self.device_x_id, timestamp=0)
         self.assertEqual(list(connected_cars()["company1"].keys()), ["car1", "car2"])
         remove_connected_device("company1", "car1", self.device_1_id)
         clean_up_disconnected_cars_and_modules()
         self.assertDictEqual(
             connected_cars(), {
                 "company1": {
-                    "car2": ConnectedCar("company1", "car2", 0, {48: ConnectedModule(48, [self.device_x_id])})
+                    "car2": ConnectedCar("company1", "car2", 0, {
+                        48: ConnectedModule(48, {serialized_device_id(self.device_x_id): self.device_x_id})
+                    })
                 }
             }
-            # connected_cars(), {"company1": {"car2": {48: {"48_7_role_x": self.device_x_id}}}}
         )
 
     def test_cleaning_up_modules_without_any_device_ids(self):
         clear_connected_cars()
-        store_connected_device_if_new("company1", "car1", self.device_1_id)
-        store_connected_device_if_new("company1", "car1", self.device_x_id)
+        store_connected_device_if_new("company1", "car1", self.device_1_id, timestamp=0)
+        store_connected_device_if_new("company1", "car1", self.device_x_id, timestamp=0)
         remove_connected_device("company1", "car1", self.device_x_id)
 
         clean_up_disconnected_cars_and_modules()
@@ -56,7 +57,9 @@ class TestDeviceIds(unittest.TestCase):
                         "car1",
                         0,
                         {
-                            45: ConnectedModule(45, [self.device_1_id])
+                            45: ConnectedModule(45, {
+                                serialized_device_id(self.device_1_id): self.device_1_id
+                            })
                         }
                     )
                 }
@@ -65,12 +68,12 @@ class TestDeviceIds(unittest.TestCase):
 
     def test_cleaning_up_companies_without_any_cars(self):
         clear_connected_cars()
-        store_connected_device_if_new("company1", "car1", self.device_1_id)
-        store_connected_device_if_new("company2", "car1", self.device_x_id)
-        store_connected_device_if_new("company3", "carA", self.device_123_id)
-        store_connected_device_if_new("company3", "carB", self.device_456_id)
+        store_connected_device_if_new("company1", "car1", self.device_1_id, timestamp=0)
+        store_connected_device_if_new("company2", "car1", self.device_x_id, timestamp=0)
+        store_connected_device_if_new("company3", "carA", self.device_123_id, timestamp=0)
+        store_connected_device_if_new("company3", "carB", self.device_456_id, timestamp=0)
 
-        store_connected_device_if_new("company1", "car1", self.device_1_id)
+        store_connected_device_if_new("company1", "car1", self.device_1_id, timestamp=0)
 
         remove_connected_device("company2", "car1", self.device_x_id)
         clean_up_disconnected_cars_and_modules()

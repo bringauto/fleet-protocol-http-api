@@ -428,7 +428,7 @@ def _message_list_from_request_body(body: list[dict | Message]) -> list[Message]
 
 
 def _available_module(company_name: str, car_name: str, module_id: int) -> Module:
-    device_id_list = connected_cars()[company_name][car_name].modules[module_id].device_ids
+    device_id_list = list(connected_cars()[company_name][car_name].modules[module_id].device_ids.values())
     return Module(module_id, device_id_list)
 
 def _check_and_handle_first_status(company: str, car: str, messages: list[Message]) -> str:
@@ -484,17 +484,17 @@ def _check_message_types(expected_message_type: str, *messages: Message) -> str:
 def _check_device_availability(
     company: str, car: str, module_id: int, device_id: DeviceId
 ) -> tuple[str, int]:
-    device_dict = connected_cars()
+    connected_cars_dict = connected_cars()
     msg, code = _check_car_availability(company, car)
     if code != 200:
         return msg, code
-    elif module_id not in device_dict[company][car].modules:
+    elif module_id not in connected_cars_dict[company][car].modules:
         return (
             f"No module with id '{module_id}' is available in car "
             f"'{car}' under the company '{company}'",
             404,
         )
-    elif not device_dict[company][car].is_connected(device_id):
+    elif not connected_cars_dict[company][car].is_connected(device_id):
         return (
             f"No device with id '{serialized_device_id(device_id)}' is available in module "
             f"'{module_id}' in car '{car}' under the company '{company}'",

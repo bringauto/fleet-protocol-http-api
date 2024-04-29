@@ -12,29 +12,36 @@ from fleetv2_http_api.models.device_id import DeviceId  # type: ignore
 @dataclasses.dataclass(frozen=True)
 class ConnectedModule:
     id: int
-    device_ids: list[DeviceId] = dataclasses.field(default_factory=list)
+    device_ids: dict[str, DeviceId] = dataclasses.field(default_factory=dict)
 
     @property
     def sdevice_ids(self) -> list[str]:
-        return [serialized_device_id(device_id) for device_id in self.device_ids]
+        return [device_id for device_id in self.device_ids]
 
     def add_device(self, device_id: DeviceId) -> bool:
         """Add a device id to the device_ids list.
 
         Returns True if the device id was stored, False otherwise.
         """
-        if device_id not in self.device_ids:
-            self.device_ids.append(device_id)
+        sdevice_id = serialized_device_id(device_id)
+        if sdevice_id not in self.device_ids:
+            self.device_ids[sdevice_id] = device_id
             return True
         return False
+
+    def is_connected(self, device_id: DeviceId) -> bool:
+        """Check if a device id is connected to this module."""
+        sdevice_id = serialized_device_id(device_id)
+        return sdevice_id in self.device_ids
 
     def remove_device(self, device_id: DeviceId) -> bool:
         """Remove a device id from the device_ids list.
 
         Returns True if the device id was removed, False otherwise.
         """
-        if device_id in self.device_ids:
-            self.device_ids.remove(device_id)
+        sdevice_id = serialized_device_id(device_id)
+        if sdevice_id in self.device_ids:
+            del self.device_ids[sdevice_id]
             return True
         return False
 
@@ -59,7 +66,7 @@ class ConnectedCar:
     def is_connected(self, device_id: DeviceId) -> bool:
         """Check if a device id is connected to this car."""
         assert isinstance(device_id, DeviceId)
-        return device_id.module_id in self.modules and device_id in self.modules[device_id.module_id].device_ids
+        return device_id.module_id in self.modules and self.modules[device_id.module_id].is_connected(device_id)
 
     def remove_device(self, device_id: DeviceId) -> bool:
         """Remove a device id from its module dict in the device_ids dictionary.

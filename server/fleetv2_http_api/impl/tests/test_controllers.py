@@ -83,7 +83,7 @@ class Test_Sending_Status(unittest.TestCase):
         self.assertEqual(status.device_id.name, self.status_example.device_id.name)
 
 
-class Test_listing_Available_Devices_And_Cars(unittest.TestCase):
+class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
     def setUp(self) -> None:
         set_test_db_connection("/:memory:")
         payload_example = Payload(
@@ -671,4 +671,6 @@ class Test_Sending_Messages_To_Multiple_Devices_In_A_Single_Request(unittest.Tes
 
 
 if __name__ == "__main__":
+    # runner = unittest.TextTestRunner()
+    # runner.run(Test_Listing_Available_Devices_And_Cars("test_listing_devices_for_particular_module"))
     unittest.main()

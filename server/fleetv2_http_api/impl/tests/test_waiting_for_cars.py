@@ -3,6 +3,7 @@ import sys
 import os
 import time
 from unittest.mock import patch, Mock
+import json
 
 sys.path.append("server")
 
@@ -104,12 +105,43 @@ class Test_Filtering_By_Since_Parameter(unittest.TestCase):
         self.assertEqual(cars[1].car_name, "car_4")
 
     @patch("database.time._time_in_ms")
+    def test_repeatedly_sending_status_to_single_car_does_not_affect_its_connectinon_timestamp(self, mocked_time_in_ms: Mock):
+        mocked_time_in_ms.return_value = 1000
+        send_statuses("test_company", "car_1", [self.status])
+
+        cars, code = available_cars(since=1000)
+        self.assertEqual(len(cars), 1)
+
+        mocked_time_in_ms.return_value = 2000
+        send_statuses("test_company", "car_1", [self.status])
+
+        cars, code = available_cars(since=1001)
+        self.assertEqual(len(cars), 0)
+
+        mocked_time_in_ms.return_value = 3000
+        send_statuses("test_company", "car_1", [self.status])
+
+        cars, code = available_cars(since=1001)
+        self.assertEqual(len(cars), 0)
+
+    @patch("database.time._time_in_ms")
     def test_request_timeout_for_when_only_old_car_is_connected(self, mocked_time_in_ms: Mock):
         set_car_wait_timeout_s(0.2)
         mocked_time_in_ms.return_value = 1000
         send_statuses("test_company", "car_1", [self.status])
         cars, code = available_cars(wait=True, since=4500)
         self.assertEqual(len(cars), 0)
+
+    @patch("database.time._time_in_ms")
+    def test_request_timeout_for_when_old_car_is_connected_with_repeatedly_sent_status(self, mocked_time_in_ms: Mock):
+        set_car_wait_timeout_s(0.5)
+        mocked_time_in_ms.return_value = 1000
+        send_statuses("test_company", "car_1", [self.status])
+        mocked_time_in_ms.return_value = 5000
+        send_statuses("test_company", "car_1", [self.status])
+        cars, code = available_cars(wait=True, since=4500)
+        self.assertEqual(len(cars), 0)
+
 
     def tearDown(self) -> None:
         if os.path.exists("./example.db"):
