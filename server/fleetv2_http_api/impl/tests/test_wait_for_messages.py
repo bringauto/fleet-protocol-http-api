@@ -13,14 +13,13 @@ from fleetv2_http_api.impl.controllers import (  # type: ignore
     send_statuses,
     list_statuses,
     send_commands,
-    list_commands,
+    list_commands
 )
 from fleetv2_http_api.models.device_id import DeviceId  # type: ignore
 from fleetv2_http_api.models.message import Payload, Message  # type: ignore
 from fleetv2_http_api.impl.controllers import (  # type: ignore
     set_status_wait_timeout_s,
-    get_status_wait_timeout_s,
-    set_command_wait_timeout_s,
+    set_command_wait_timeout_s
 )
 from _misc import run_in_threads  # type: ignore
 
