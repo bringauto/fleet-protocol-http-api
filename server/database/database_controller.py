@@ -25,7 +25,7 @@ from sqlalchemy import Integer, String, JSON, select, insert, delete, BigInteger
 from enums import MessageType  # type: ignore
 import database.connection  # type: ignore
 from database.connection import get_connection_source, Base
-from database.device_ids import (  # type: ignore
+from server.database.connected_cars import (  # type: ignore
     add_car,
     add_device,
     connected_cars,
@@ -34,7 +34,7 @@ from database.device_ids import (  # type: ignore
     clear_connected_cars
 )
 from fleetv2_http_api.models.device_id import DeviceId  # type: ignore
-from database.device_ids import serialized_device_id  # type: ignore
+from server.database.connected_cars import serialized_device_id  # type: ignore
 
 
 @dataclasses.dataclass

@@ -4,7 +4,7 @@ sys.path.append("server")
 import unittest
 
 from fleetv2_http_api.models.device_id import DeviceId   # type: ignore
-from database.device_ids import (  # type: ignore
+from server.database.connected_cars import (  # type: ignore
     add_car,
     add_device,
     connected_cars,
@@ -47,7 +47,7 @@ class TestDeviceIds(unittest.TestCase):
     def test_cleaning_up_modules_without_any_device_ids(self):
         clear_connected_cars()
         add_car("company1", "car1", timestamp=0)
-        add_device("company1", "car1", self.device_1_id, timestamp=0)
+        add_device("company1", "car1", self.device_1_id)
         add_device("company1", "car1", self.device_x_id, timestamp=0)
         remove_connected_device("company1", "car1", self.device_x_id)
 

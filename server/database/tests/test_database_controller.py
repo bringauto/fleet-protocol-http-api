@@ -8,7 +8,7 @@ import unittest
 from enums import EncodingType, MessageType  # type: ignore
 
 from fleetv2_http_api.models.device_id import DeviceId  # type: ignore
-from database.device_ids import serialized_device_id  # type: ignore
+from server.database.connected_cars import serialized_device_id  # type: ignore
 from database.connection import (  # type: ignore
     set_test_db_connection,
     unset_connection_source,

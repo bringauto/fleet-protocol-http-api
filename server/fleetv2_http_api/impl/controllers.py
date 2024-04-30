@@ -21,7 +21,7 @@ from database.database_controller import (  # type: ignore
     cleanup_device_commands_and_warn_before_future_commands,
 )
 from database.database_controller import list_messages as _list_messages  # type: ignore
-from database.device_ids import (  # type: ignore
+from server.database.connected_cars import (  # type: ignore
     add_car,
     add_device,
     connected_cars,
