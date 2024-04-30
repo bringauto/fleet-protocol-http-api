@@ -11,7 +11,7 @@ sys.path.append("server")
 from sqlalchemy import insert
 
 from enums import MessageType, EncodingType  # type: ignore
-from server.database.connected_cars import clear_connected_cars, serialized_device_id  # type: ignore
+from database.connected_cars import clear_connected_cars, serialized_device_id  # type: ignore
 from database.connection import get_connection_source  # type: ignore
 from database.database_controller import (   # type: ignore
     set_test_db_connection,

@@ -4,7 +4,7 @@ sys.path.append("server")
 import unittest
 
 from fleetv2_http_api.models.device_id import DeviceId   # type: ignore
-from server.database.connected_cars import (  # type: ignore
+from database.connected_cars import (  # type: ignore
     add_car,
     add_device,
     connected_cars,
@@ -29,8 +29,8 @@ class TestDeviceIds(unittest.TestCase):
         clear_connected_cars()
         add_car("company1", "car1",  timestamp=0)
         add_car("company1", "car2",  timestamp=0)
-        add_device("company1", "car1", self.device_1_id, timestamp=0)
-        add_device("company1", "car2", self.device_x_id, timestamp=0)
+        add_device("company1", "car1", self.device_1_id)
+        add_device("company1", "car2", self.device_x_id)
         self.assertEqual(list(connected_cars()["company1"].keys()), ["car1", "car2"])
         remove_connected_device("company1", "car1", self.device_1_id)
         clean_up_disconnected_cars_and_modules()
@@ -48,7 +48,7 @@ class TestDeviceIds(unittest.TestCase):
         clear_connected_cars()
         add_car("company1", "car1", timestamp=0)
         add_device("company1", "car1", self.device_1_id)
-        add_device("company1", "car1", self.device_x_id, timestamp=0)
+        add_device("company1", "car1", self.device_x_id)
         remove_connected_device("company1", "car1", self.device_x_id)
 
         clean_up_disconnected_cars_and_modules()
@@ -76,9 +76,9 @@ class TestDeviceIds(unittest.TestCase):
         add_car("company2", "car1", timestamp=0)
         add_car("company3", "carA", timestamp=0)
         add_car("company3", "carB", timestamp=0)
-        add_device("company1", "car1", self.device_1_id, timestamp=0)
-        add_device("company3", "carA", self.device_123_id, timestamp=0)
-        add_device("company3", "carB", self.device_456_id, timestamp=0)
+        add_device("company1", "car1", self.device_1_id)
+        add_device("company3", "carA", self.device_123_id)
+        add_device("company3", "carB", self.device_456_id)
         remove_connected_device("company2", "car1", self.device_x_id)
         clean_up_disconnected_cars_and_modules()
         self.assertListEqual(list(connected_cars().keys()), ["company1", "company3"])

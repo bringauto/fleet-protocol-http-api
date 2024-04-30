@@ -21,7 +21,7 @@ from database.database_controller import (  # type: ignore
     cleanup_device_commands_and_warn_before_future_commands,
 )
 from database.database_controller import list_messages as _list_messages  # type: ignore
-from server.database.connected_cars import (  # type: ignore
+from database.connected_cars import (  # type: ignore
     add_car,
     add_device,
     connected_cars,
@@ -449,7 +449,7 @@ def _check_and_handle_first_status(company: str, car: str, messages: list[Messag
         add_car(company, car, timestamp)
 
     for msg in messages:
-        device_added = add_device(company, car, msg.device_id, 0)
+        device_added = add_device(company, car, msg.device_id)
         if device_added:
             sdevice_id = serialized_device_id(msg.device_id)
             command_removal_warnings = "\n".join(

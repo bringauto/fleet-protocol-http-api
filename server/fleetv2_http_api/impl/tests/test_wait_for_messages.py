@@ -6,7 +6,7 @@ import os
 import time
 import unittest
 
-from server.database.connected_cars import clear_connected_cars, serialized_device_id  # type: ignore
+from database.connected_cars import clear_connected_cars, serialized_device_id  # type: ignore
 from database.database_controller import set_test_db_connection  # type: ignore
 from database.time import timestamp  # type: ignore
 from fleetv2_http_api.impl.controllers import (  # type: ignore

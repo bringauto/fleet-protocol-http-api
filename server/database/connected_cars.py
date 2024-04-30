@@ -100,7 +100,7 @@ def add_car(company_name: str, car_name: str, timestamp: int) -> bool:
     return False
 
 
-def add_device(company_name: str, car_name: str, device_id: DeviceId, timestamp: int) -> bool:
+def add_device(company_name: str, car_name: str, device_id: DeviceId) -> bool:
     """Add a device id to the device_ids dictionary.
 
     Returns True if the device id was stored, False otherwise.

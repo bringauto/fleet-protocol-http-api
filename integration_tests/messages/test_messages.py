@@ -8,7 +8,7 @@ import server.app as _app
 from server.fleetv2_http_api.models.message import Message, Payload, DeviceId
 from server.enums import MessageType, EncodingType
 
-from server.database.database_controller import remove_old_messages
+from database.database_controller import remove_old_messages
 
 
 class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):

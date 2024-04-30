@@ -7,7 +7,7 @@ sys.path.append("server")
 import server.app as _app
 from server.fleetv2_http_api.models.message import Message, Payload, DeviceId
 from server.enums import MessageType
-from server.database.time import timestamp
+from database.time import timestamp
 
 
 class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
