@@ -8,13 +8,7 @@ from flask import redirect, Response  # type: ignore
 from werkzeug import Response as WerkzeugResponse  # type: ignore
 
 from enums import MessageType  # type: ignore
-from fleetv2_http_api.models import (  # type: ignore
-    Payload,
-    DeviceId,
-    Message,
-    Module,
-    Car
-)
+from fleetv2_http_api.models import Payload, DeviceId, Message, Module, Car  # type: ignore
 from database.database_controller import (  # type: ignore
     send_messages_to_database,
     Message_DB,
@@ -26,9 +20,9 @@ from database.connected_cars import (  # type: ignore
     add_device as _add_device,
     connected_cars as _connected_cars,
     serialized_device_id as _serialized_device_id,
-    is_car_connected as _is_car_connected
+    is_car_connected as _is_car_connected,
 )
-from database.time import timestamp as _timestamp # type: ignore
+from database.time import timestamp as _timestamp  # type: ignore
 from fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
 from fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
 from fleetv2_http_api.impl.security import SecurityObj  # type: ignore
@@ -47,37 +41,33 @@ def set_status_wait_timeout_s(timeout_s: float) -> None:
     _status_wait_manager.set_timeout(int(1000 * timeout_s))
 
 
-
 def get_status_wait_timeout_s() -> float:
     return _status_wait_manager.timeout_ms * 0.001
-
 
 
 def set_command_wait_timeout_s(timeout_s: float) -> None:
     _command_wait_manager.set_timeout(int(1000 * timeout_s))
 
 
-
 def get_command_wait_timeout_s() -> float:
     return _command_wait_manager.timeout_ms * 0.001
 
 
-
-def init_security(keycloak_url: str, client_id: str, secret_key: str, scope: str, realm: str, callback: str) -> None:
+def init_security(
+    keycloak_url: str, client_id: str, secret_key: str, scope: str, realm: str, callback: str
+) -> None:
     _security.set_config(keycloak_url, client_id, secret_key, scope, realm, callback)
 
 
 def set_car_wait_timeout_s(timeout_s: float) -> None:
-    _car_wait_manager.set_timeout(int(1000*timeout_s))
+    _car_wait_manager.set_timeout(int(1000 * timeout_s))
 
 
 def get_car_wait_timeout_s() -> float:
-    return _car_wait_manager.timeout_ms*0.001
+    return _car_wait_manager.timeout_ms * 0.001
 
 
-def login(
-    device: Optional[str] = None
-) -> WerkzeugResponse|Response|tuple[dict|str, int]:
+def login(device: Optional[str] = None) -> WerkzeugResponse | Response | tuple[dict | str, int]:
     """login
 
     Redirect to keycloak login page. If empty device is specified, get authentication url and device code. Try authenticate if device code is provided. # noqa: E501
@@ -109,7 +99,7 @@ def token_get(
     state: Optional[str] = None,
     session_state: Optional[str] = None,
     iss: Optional[str] = None,
-    code: Optional[str] = None
+    code: Optional[str] = None,
 ) -> tuple[dict, int]:
     """token_get
 
@@ -134,9 +124,7 @@ def token_get(
     return _log_and_respond(token, 200, "Jwt token generated.")
 
 
-def token_refresh(
-    refresh_token: str
-) -> tuple[dict, int]:
+def token_refresh(refresh_token: str) -> tuple[dict, int]:
     """token_refresh
 
     Generate a new token using the refresh token. # noqa: E501
@@ -171,10 +159,14 @@ def available_cars(wait: bool = False, since: int = 0) -> tuple[list[Car], int]:
 
     if cars or not wait:
         n = sum([len(car_dict[company_name]) for company_name in car_dict])
-        return _log_and_respond(cars, 200, f"Found {n} available cars for {len(car_dict)} companies.")
+        return _log_and_respond(
+            cars, 200, f"Found {n} available cars for {len(car_dict)} companies."
+        )
     else:
         all_awaited_cars: list[Car] = _car_wait_manager.wait_and_get_reponse()
-        awaited_cars = [car for car in all_awaited_cars if not _is_car_connected(car.company_name, car.car_name)]
+        awaited_cars = [
+            car for car in all_awaited_cars if not _is_car_connected(car.company_name, car.car_name)
+        ]
         if awaited_cars:
             n = len(awaited_cars)
             response = _log_and_respond(awaited_cars, 200, f"Returning {n} new available cars.")
@@ -186,10 +178,14 @@ def available_cars(wait: bool = False, since: int = 0) -> tuple[list[Car], int]:
 def available_devices(
     company_name: str, car_name: str, module_id: Optional[int] = None
 ) -> tuple[Module | list[Module], int]:  # noqa: E501
-
     """available_devices
 
-    Return device Ids for all devices available for contained in the specified car.&lt;br&gt; For a single car module, the device Ids are returned as an object containing module Id and the list of device Ids. &lt;br&gt; If a module Id is specified, only a single such object is returned. &lt;br&gt; Otherwise, a list of such objects is returned, one for each module contained in the car. &lt;br&gt; # noqa: E501
+    Return device Ids for all devices available for contained in the specified car.&lt;br&gt;
+
+    For a single car module, the device Ids are returned as an object containing module Id
+    and the list of device Ids. &lt;br&gt; If a module Id is specified, only a single such
+    object is returned. &lt;br&gt; Otherwise, a list of such objects is returned, one for
+    each module contained in the car. &lt;br&gt; # noqa: E501
 
     :param company_name: Name of the company, following a pattern ^[0-9a-z_]+$.
     :type company_name: str
@@ -198,7 +194,8 @@ def available_devices(
     :param module_id: An Id of module, an unsigned integer.
     :type module_id: int
 
-    :rtype: Union[AvailableDevices, tuple[AvailableDevices, int], tuple[AvailableDevices, int, dict[str, str]]
+    :rtype: Union[AvailableDevices, tuple[AvailableDevices, int],
+    tuple[AvailableDevices, int, dict[str, str]]
     """
     company_and_car_name = f"Company='{company_name}', car='{car_name}'"
     empty_response_body: Collection = [] if module_id is None else {}
@@ -227,16 +224,16 @@ def available_devices(
             )
         else:
             module = _available_module(company_name, car_name, module_id)
-            return _log_and_respond(module, 200, f"listing available devices in the module '{module_id}' ({company_and_car_name}).")
+            return _log_and_respond(
+                module,
+                200,
+                f"listing available devices in the module '{module_id}' ({company_and_car_name}).",
+            )
 
 
 def list_commands(
-    company_name: str,
-    car_name: str,
-    since: int = 0,
-    wait: bool = False
-    ) -> tuple[list[Message], int]:  # noqa: E501
-
+    company_name: str, car_name: str, since: int = 0, wait: bool = False
+) -> tuple[list[Message], int]:  # noqa: E501
     """list_commands
 
     Returns list of the Device Commands. # noqa: E501
@@ -245,9 +242,12 @@ def list_commands(
     :type company_name: str
     :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
     :type car_name: str
-    :param since: A Unix timestamp; if specified, the method returns all messages inclusivelly newer than the specified timestamp \\ (i.e., messages with timestamp greater than or equal to the &#39;since&#39; timestamp)
+    :param since: A Unix timestamp; if specified, the method returns all messages inclusivelly
+    newer than the specified timestamp \\ (i.e., messages with timestamp greater than or equal
+    to the &#39;since&#39; timestamp)
     :type since: int
-    :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
+    :param wait: An empty parameter. If specified, the method waits for predefined period of time,
+    until some data to be sent in response are available.
     :type wait: bool
 
     :rtype: Union[list[Message], tuple[list[Message], int], tuple[list[Message], int, dict[str, str]]
@@ -268,7 +268,9 @@ def list_commands(
             )
     else:
         # no commands are available for given device, wait for them
-        awaited_commands: list[Message] = _command_wait_manager.wait_and_get_reponse(company_name, car_name)
+        awaited_commands: list[Message] = _command_wait_manager.wait_and_get_reponse(
+            company_name, car_name
+        )
         if awaited_commands:
             if since is not None and awaited_commands[-1].timestamp < since:
                 return _log_and_respond(
@@ -280,7 +282,10 @@ def list_commands(
                 awaited_commands, 200, f"Returning awaited commands ({company_and_car_name})."
             )
         else:
-            if company_name not in _connected_cars() or car_name not in _connected_cars()[company_name]:
+            if (
+                company_name not in _connected_cars()
+                or car_name not in _connected_cars()[company_name]
+            ):
                 return _log_and_respond(
                     [], 404, f"No commands available before timeout ({company_and_car_name})."
                 )
@@ -290,12 +295,8 @@ def list_commands(
 
 
 def list_statuses(
-    company_name: str,
-    car_name: str,
-    since: int = 0,
-    wait: bool = False
-    ) -> tuple[list[Message], int]:  # noqa: E501
-
+    company_name: str, car_name: str, since: int = 0, wait: bool = False
+) -> tuple[list[Message], int]:  # noqa: E501
     """list_statuses
 
     It returns list of the Device Statuses. # noqa: E501
@@ -304,9 +305,12 @@ def list_statuses(
     :type company_name: str
     :param car_name: Name of the Car, following a pattern ^[0-9a-z_]+$.
     :type car_name: str
-    :param since: A Unix timestamp; if specified, the method returns all messages inclusivelly newer than the specified timestamp \\ (i.e., messages with timestamp greater than or equal to the &#39;since&#39; timestamp)
+    :param since: A Unix timestamp; if specified, the method returns all messages inclusivelly
+    newer than the specified timestamp \\ (i.e., messages with timestamp greater than or equal
+    to the &#39;since&#39; timestamp)
     :type since: int
-    :param wait: An empty parameter. If specified, the method waits for predefined period of time, until some data to be sent in response are available.
+    :param wait: An empty parameter. If specified, the method waits for predefined period of time,
+    until some data to be sent in response are available.
     :type wait: bool
 
     :rtype: Union[list[Message], tuple[list[Message], int], tuple[list[Message], int, dict[str, str]]
@@ -355,7 +359,6 @@ def list_statuses(
 def send_commands(
     company_name: str, car_name: str, body: list[dict | Message]
 ) -> tuple[str, int]:  # noqa: E501
-
     """send_commands
 
     It adds new device Commands. # noqa: E501
@@ -389,11 +392,8 @@ def send_commands(
 
 
 def send_statuses(
-    company_name: str,
-    car_name: str,
-    body: list[dict|Message]
-    ) -> tuple[str|list[str],int]:  # noqa: E501
-
+    company_name: str, car_name: str, body: list[dict | Message]
+) -> tuple[str | list[str], int]:  # noqa: E501
     """send_statuses
 
     Add statuses received from the Device. # noqa: E501
@@ -412,7 +412,7 @@ def send_statuses(
     messages = _message_list_from_request_body(body)
     if messages == []:
         msg = f"Empty list of statuses was sent to the API; no statuses were sent to the device."
-        return _log_and_respond(msg , 200, msg)
+        return _log_and_respond(msg, 200, msg)
     errors = _check_messages(MessageType.STATUS_TYPE, *messages)
     if errors[0] != "":
         msg = "; ".join(errors[0].split("\n"))
@@ -421,10 +421,12 @@ def send_statuses(
     _update_messages_timestamp(messages)
     _status_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
     _car_wait_manager.add_response_content_and_stop_waiting([Car(company_name, car_name)])
-    response_msg = send_messages_to_database(company_name, car_name, *_message_db_list(messages, MessageType.STATUS_TYPE))
+    response_msg = send_messages_to_database(
+        company_name, car_name, *_message_db_list(messages, MessageType.STATUS_TYPE)
+    )
     cmd_warnings = _check_and_handle_first_status(company_name, car_name, messages)
     msg, code = response_msg[0] + cmd_warnings, response_msg[1]
-    return  _log_and_respond(msg, code, msg)
+    return _log_and_respond(msg, code, msg)
 
 
 def _message_list_from_request_body(body: list[dict | Message]) -> list[Message]:
@@ -435,8 +437,11 @@ def _message_list_from_request_body(body: list[dict | Message]) -> list[Message]
 
 
 def _available_module(company_name: str, car_name: str, module_id: int) -> Module:
-    device_id_list = list(_connected_cars()[company_name][car_name].modules[module_id].device_ids.values())
+    device_id_list = list(
+        _connected_cars()[company_name][car_name].modules[module_id].device_ids.values()
+    )
     return Module(module_id, device_id_list)
+
 
 def _check_and_handle_first_status(company: str, car: str, messages: list[Message]) -> str:
     command_removal_warnings = ""
@@ -595,4 +600,3 @@ def _validate_name_string(name: str, text_label: str) -> None:
     if not re.match(_NAME_PATTERN, name):
         msg = f"{text_label} '{name}' does not match pattern '{_NAME_PATTERN}'."
         raise ValueError(msg)
-
