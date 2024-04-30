@@ -12,29 +12,36 @@ from fleetv2_http_api.models.device_id import DeviceId  # type: ignore
 @dataclasses.dataclass(frozen=True)
 class ConnectedModule:
     id: int
-    device_ids: list[DeviceId] = dataclasses.field(default_factory=list)
+    device_ids: dict[str, DeviceId] = dataclasses.field(default_factory=dict)
 
     @property
     def sdevice_ids(self) -> list[str]:
-        return [serialized_device_id(device_id) for device_id in self.device_ids]
+        return [device_id for device_id in self.device_ids]
 
     def add_device(self, device_id: DeviceId) -> bool:
         """Add a device id to the device_ids list.
 
         Returns True if the device id was stored, False otherwise.
         """
-        if device_id not in self.device_ids:
-            self.device_ids.append(device_id)
+        sdevice_id = serialized_device_id(device_id)
+        if sdevice_id not in self.device_ids:
+            self.device_ids[sdevice_id] = device_id
             return True
         return False
+
+    def is_connected(self, device_id: DeviceId) -> bool:
+        """Check if a device id is connected to this module."""
+        sdevice_id = serialized_device_id(device_id)
+        return sdevice_id in self.device_ids
 
     def remove_device(self, device_id: DeviceId) -> bool:
         """Remove a device id from the device_ids list.
 
         Returns True if the device id was removed, False otherwise.
         """
-        if device_id in self.device_ids:
-            self.device_ids.remove(device_id)
+        sdevice_id = serialized_device_id(device_id)
+        if sdevice_id in self.device_ids:
+            del self.device_ids[sdevice_id]
             return True
         return False
 
@@ -59,7 +66,7 @@ class ConnectedCar:
     def is_connected(self, device_id: DeviceId) -> bool:
         """Check if a device id is connected to this car."""
         assert isinstance(device_id, DeviceId)
-        return device_id.module_id in self.modules and device_id in self.modules[device_id.module_id].device_ids
+        return device_id.module_id in self.modules and self.modules[device_id.module_id].is_connected(device_id)
 
     def remove_device(self, device_id: DeviceId) -> bool:
         """Remove a device id from its module dict in the device_ids dictionary.
@@ -78,9 +85,40 @@ class ConnectedCar:
 _connected_cars: dict[str, dict[str, ConnectedCar]] = defaultdict(dict)
 
 
+def add_car(company_name: str, car_name: str, timestamp: int) -> bool:
+    """Add a car to the device_ids dictionary if it is not already there.
+
+    Returns True if the car was added, False otherwise.
+    """
+    if company_name not in _connected_cars:
+        _connected_cars[company_name] = {}
+    if car_name not in _connected_cars[company_name]:
+        _connected_cars[company_name][car_name] = ConnectedCar(
+            company_name=company_name, car_name=car_name, timestamp=timestamp
+        )
+        return True
+    return False
+
+
+def add_device(company_name: str, car_name: str, device_id: DeviceId) -> bool:
+    """Add a device id to the device_ids dictionary.
+
+    Returns True if the device id was stored, False otherwise.
+    """
+    assert isinstance(device_id, DeviceId)
+    if not is_car_connected(company_name, car_name):
+        return False
+    return _connected_cars[company_name][car_name].add_device(device_id)
+
+
 def connected_cars() -> dict[str, dict[str, ConnectedCar]]:
     """Return a deep copy of the device_ids dictionary.""" ""
     return deepcopy(_connected_cars)
+
+
+def is_car_connected(company_name: str, car_name: str) -> bool:
+    """Check if a car is connected."""
+    return company_name in _connected_cars and car_name in _connected_cars[company_name]
 
 
 def clear_connected_cars() -> None:
@@ -112,22 +150,6 @@ def clean_up_disconnected_cars_and_modules() -> None:
     companies_without_cars = [company for company in _connected_cars.keys() if not _connected_cars[company]]
     for company in companies_without_cars:
         _connected_cars.pop(company)
-
-
-def store_connected_device_if_new(company_name: str, car_name: str, device_id: DeviceId, timestamp: int) -> bool:
-    """Add a device id to the device_ids dictionary if it is not already there.
-
-    Returns True if the device id was stored, False otherwise.
-    """
-
-    if car_name not in _connected_cars[company_name]:
-        _connected_cars[company_name][car_name] = ConnectedCar(
-            company_name=company_name,
-            car_name=car_name,
-            timestamp=timestamp,
-            modules={},
-        )
-    return _connected_cars[company_name][car_name].add_device(device_id)
 
 
 def serialized_device_id(device_id: DeviceId) -> str:

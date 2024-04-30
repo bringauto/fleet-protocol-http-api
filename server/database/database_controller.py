@@ -25,15 +25,15 @@ from sqlalchemy import Integer, String, JSON, select, insert, delete, BigInteger
 from enums import MessageType  # type: ignore
 import database.connection  # type: ignore
 from database.connection import get_connection_source, Base
-from database.device_ids import (  # type: ignore
+from database.connected_cars import (  # type: ignore
+    add_car,
+    add_device,
     connected_cars,
     clean_up_disconnected_cars_and_modules,
     remove_connected_device,
-    store_connected_device_if_new,
     clear_connected_cars
 )
 from fleetv2_http_api.models.device_id import DeviceId  # type: ignore
-from database.device_ids import serialized_device_id  # type: ignore
 
 
 @dataclasses.dataclass
@@ -293,7 +293,7 @@ def clean_up_disconnected_cars() -> None:
 
 def _clean_up_disconnected_devices(company: str, car: str, module_id: int) -> None:
     """Remove all device ids from the device_ids dictionary that do not have any messages."""
-    module_devices = connected_cars()[company][car].modules[module_id].device_ids
+    module_devices = connected_cars()[company][car].modules[module_id].device_ids.values()
     for device_id in module_devices:
         with Session(get_connection_source()) as session:
             table = MessageBase.__table__
@@ -328,4 +328,6 @@ def load_available_devices_from_database() -> None:
                 role=base.device_role,
                 name=base.device_name,
             )
-            store_connected_device_if_new(base.company_name, base.car_name, device_id)
+            timestamp = base.timestamp
+            add_car(base.company_name, base.car_name, timestamp)
+            add_device(base.company_name, base.car_name, device_id)

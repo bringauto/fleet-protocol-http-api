@@ -11,7 +11,7 @@ sys.path.append("server")
 from sqlalchemy import insert
 
 from enums import MessageType, EncodingType  # type: ignore
-from database.device_ids import clear_connected_cars, serialized_device_id  # type: ignore
+from database.connected_cars import clear_connected_cars, serialized_device_id  # type: ignore
 from database.connection import get_connection_source  # type: ignore
 from database.database_controller import (   # type: ignore
     set_test_db_connection,
@@ -83,7 +83,7 @@ class Test_Sending_Status(unittest.TestCase):
         self.assertEqual(status.device_id.name, self.status_example.device_id.name)
 
 
-class Test_listing_Available_Devices_And_Cars(unittest.TestCase):
+class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
     def setUp(self) -> None:
         set_test_db_connection("/:memory:")
         payload_example = Payload(

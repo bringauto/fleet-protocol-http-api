@@ -8,8 +8,8 @@ root_path = os.path.dirname(os.path.dirname(sys.path[0]))
 sys.path[0] = root_path
 sys.path.append("server")
 
-from server.database.connection import set_test_db_connection, get_connection_source
-from server.database.security import number_of_admin_keys
+from database.connection import set_test_db_connection, get_connection_source
+from database.security import number_of_admin_keys
 
 DB_FILE_LOCATION = "/scripts/tests/example.db"
 
