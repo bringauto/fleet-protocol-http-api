@@ -3,9 +3,9 @@ sys.path[0] = os.path.abspath(os.path.join(sys.path[0], os.pardir))
 sys.path.append("server")
 
 from sqlalchemy.engine import Engine
-from database.security import add_admin_key
-from database.connection import get_db_connection, get_test_db_connection
-from database.script_args import (
+from server.database.security import add_admin_key
+from server.database.connection import get_db_connection, get_test_db_connection
+from server.database.script_args import (
     request_and_get_script_arguments,
     PositionalArgInfo,
 )
@@ -35,4 +35,7 @@ if __name__=="__main__":
             password=arguments["password"],
             db_name=arguments["database_name"]
         )
-    _add_key_if_admin_name_not_already_in_db(source, arguments["<admin-name>"])
+    if source is not None:
+        _add_key_if_admin_name_not_already_in_db(source, arguments["<admin-name>"])
+    else:
+        print("Could not connect to the database.")
