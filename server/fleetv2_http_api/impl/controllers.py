@@ -21,7 +21,13 @@ from database.database_controller import (  # type: ignore
     cleanup_device_commands_and_warn_before_future_commands,
 )
 from database.database_controller import list_messages as _list_messages  # type: ignore
-from database.device_ids import store_connected_device_if_new, connected_cars, serialized_device_id, is_car_connected  # type: ignore
+from database.device_ids import (  # type: ignore
+    add_car,
+    add_device,
+    connected_cars,
+    serialized_device_id,
+    is_car_connected
+)
 from database.time import timestamp  # type: ignore
 from fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
 from fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
@@ -434,11 +440,18 @@ def _available_module(company_name: str, car_name: str, module_id: int) -> Modul
 
 def _check_and_handle_first_status(company: str, car: str, messages: list[Message]) -> str:
     command_removal_warnings = ""
+    if not is_car_connected(company, car):
+        response = list_statuses(company, car, wait=False, since=0)
+        if response[1] == 200:
+            timestamp = min([msg.timestamp for msg in response[0]])
+        else:
+            timestamp = min([msg.timestamp for msg in messages])
+        add_car(company, car, timestamp)
+
     for msg in messages:
-        timestamp = min(messages, key=lambda x: x.timestamp).timestamp
-        first_status_was_sent = store_connected_device_if_new(company, car, msg.device_id, timestamp)
-        sdevice_id = serialized_device_id(msg.device_id)
-        if first_status_was_sent:
+        device_added = add_device(company, car, msg.device_id, 0)
+        if device_added:
+            sdevice_id = serialized_device_id(msg.device_id)
             command_removal_warnings = "\n".join(
                 _handle_first_status_and_return_warnings(msg.timestamp, company, car, sdevice_id)
             )

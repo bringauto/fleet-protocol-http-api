@@ -85,6 +85,32 @@ class ConnectedCar:
 _connected_cars: dict[str, dict[str, ConnectedCar]] = defaultdict(dict)
 
 
+def add_car(company_name: str, car_name: str, timestamp: int) -> bool:
+    """Add a car to the device_ids dictionary if it is not already there.
+
+    Returns True if the car was added, False otherwise.
+    """
+    if company_name not in _connected_cars:
+        _connected_cars[company_name] = {}
+    if car_name not in _connected_cars[company_name]:
+        _connected_cars[company_name][car_name] = ConnectedCar(
+            company_name=company_name, car_name=car_name, timestamp=timestamp
+        )
+        return True
+    return False
+
+
+def add_device(company_name: str, car_name: str, device_id: DeviceId, timestamp: int) -> bool:
+    """Add a device id to the device_ids dictionary.
+
+    Returns True if the device id was stored, False otherwise.
+    """
+    assert isinstance(device_id, DeviceId)
+    if not is_car_connected(company_name, car_name):
+        return False
+    return _connected_cars[company_name][car_name].add_device(device_id)
+
+
 def connected_cars() -> dict[str, dict[str, ConnectedCar]]:
     """Return a deep copy of the device_ids dictionary.""" ""
     return deepcopy(_connected_cars)
@@ -124,22 +150,6 @@ def clean_up_disconnected_cars_and_modules() -> None:
     companies_without_cars = [company for company in _connected_cars.keys() if not _connected_cars[company]]
     for company in companies_without_cars:
         _connected_cars.pop(company)
-
-
-def store_connected_device_if_new(company_name: str, car_name: str, device_id: DeviceId, timestamp: int) -> bool:
-    """Add a device id to the device_ids dictionary if it is not already there.
-
-    Returns True if the device id was stored, False otherwise.
-    """
-
-    if car_name not in _connected_cars[company_name]:
-        _connected_cars[company_name][car_name] = ConnectedCar(
-            company_name=company_name,
-            car_name=car_name,
-            timestamp=timestamp,
-            modules={},
-        )
-    return _connected_cars[company_name][car_name].add_device(device_id)
 
 
 def serialized_device_id(device_id: DeviceId) -> str:

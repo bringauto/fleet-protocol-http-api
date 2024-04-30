@@ -5,10 +5,11 @@ import unittest
 
 from fleetv2_http_api.models.device_id import DeviceId   # type: ignore
 from database.device_ids import (  # type: ignore
+    add_car,
+    add_device,
     connected_cars,
     clean_up_disconnected_cars_and_modules,
     clear_connected_cars,
-    store_connected_device_if_new,
     remove_connected_device,
     serialized_device_id,
     ConnectedCar,
@@ -26,8 +27,10 @@ class TestDeviceIds(unittest.TestCase):
 
     def test_cleaning_up_cars_without_any_device_ids(self):
         clear_connected_cars()
-        store_connected_device_if_new("company1", "car1", self.device_1_id, timestamp=0)
-        store_connected_device_if_new("company1", "car2", self.device_x_id, timestamp=0)
+        add_car("company1", "car1",  timestamp=0)
+        add_car("company1", "car2",  timestamp=0)
+        add_device("company1", "car1", self.device_1_id, timestamp=0)
+        add_device("company1", "car2", self.device_x_id, timestamp=0)
         self.assertEqual(list(connected_cars()["company1"].keys()), ["car1", "car2"])
         remove_connected_device("company1", "car1", self.device_1_id)
         clean_up_disconnected_cars_and_modules()
@@ -43,8 +46,9 @@ class TestDeviceIds(unittest.TestCase):
 
     def test_cleaning_up_modules_without_any_device_ids(self):
         clear_connected_cars()
-        store_connected_device_if_new("company1", "car1", self.device_1_id, timestamp=0)
-        store_connected_device_if_new("company1", "car1", self.device_x_id, timestamp=0)
+        add_car("company1", "car1", timestamp=0)
+        add_device("company1", "car1", self.device_1_id, timestamp=0)
+        add_device("company1", "car1", self.device_x_id, timestamp=0)
         remove_connected_device("company1", "car1", self.device_x_id)
 
         clean_up_disconnected_cars_and_modules()
@@ -68,13 +72,13 @@ class TestDeviceIds(unittest.TestCase):
 
     def test_cleaning_up_companies_without_any_cars(self):
         clear_connected_cars()
-        store_connected_device_if_new("company1", "car1", self.device_1_id, timestamp=0)
-        store_connected_device_if_new("company2", "car1", self.device_x_id, timestamp=0)
-        store_connected_device_if_new("company3", "carA", self.device_123_id, timestamp=0)
-        store_connected_device_if_new("company3", "carB", self.device_456_id, timestamp=0)
-
-        store_connected_device_if_new("company1", "car1", self.device_1_id, timestamp=0)
-
+        add_car("company1", "car1", timestamp=0)
+        add_car("company2", "car1", timestamp=0)
+        add_car("company3", "carA", timestamp=0)
+        add_car("company3", "carB", timestamp=0)
+        add_device("company1", "car1", self.device_1_id, timestamp=0)
+        add_device("company3", "carA", self.device_123_id, timestamp=0)
+        add_device("company3", "carB", self.device_456_id, timestamp=0)
         remove_connected_device("company2", "car1", self.device_x_id)
         clean_up_disconnected_cars_and_modules()
         self.assertListEqual(list(connected_cars().keys()), ["company1", "company3"])

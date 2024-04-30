@@ -26,10 +26,11 @@ from enums import MessageType  # type: ignore
 import database.connection  # type: ignore
 from database.connection import get_connection_source, Base
 from database.device_ids import (  # type: ignore
+    add_car,
+    add_device,
     connected_cars,
     clean_up_disconnected_cars_and_modules,
     remove_connected_device,
-    store_connected_device_if_new,
     clear_connected_cars
 )
 from fleetv2_http_api.models.device_id import DeviceId  # type: ignore
@@ -329,4 +330,5 @@ def load_available_devices_from_database() -> None:
                 name=base.device_name,
             )
             timestamp = base.timestamp
-            store_connected_device_if_new(base.company_name, base.car_name, device_id, timestamp)
+            add_car(base.company_name, base.car_name, timestamp)
+            add_device(base.company_name, base.car_name, device_id, timestamp)
