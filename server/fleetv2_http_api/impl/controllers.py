@@ -22,13 +22,13 @@ from database.database_controller import (  # type: ignore
 )
 from database.database_controller import list_messages as _list_messages  # type: ignore
 from database.connected_cars import (  # type: ignore
-    add_car,
-    add_device,
-    connected_cars,
-    serialized_device_id,
-    is_car_connected
+    add_car as _add_car,
+    add_device as _add_device,
+    connected_cars as _connected_cars,
+    serialized_device_id as _serialized_device_id,
+    is_car_connected as _is_car_connected
 )
-from database.time import timestamp  # type: ignore
+from database.time import timestamp as _timestamp # type: ignore
 from fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
 from fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
 from fleetv2_http_api.impl.security import SecurityObj  # type: ignore
@@ -162,7 +162,7 @@ def available_cars(wait: bool = False, since: int = 0) -> tuple[list[Car], int]:
     :rtype: Union[list[Car], tuple[list[Car], int], tuple[list[Car], int, dict[str, str]]
     """
     cars: list[Car] = list()
-    car_dict = connected_cars()
+    car_dict = _connected_cars()
 
     for company_name in car_dict:
         company_cars = [car for car in car_dict[company_name].values() if car.timestamp >= since]
@@ -174,7 +174,7 @@ def available_cars(wait: bool = False, since: int = 0) -> tuple[list[Car], int]:
         return _log_and_respond(cars, 200, f"Found {n} available cars for {len(car_dict)} companies.")
     else:
         all_awaited_cars: list[Car] = _car_wait_manager.wait_and_get_reponse()
-        awaited_cars = [car for car in all_awaited_cars if not is_car_connected(car.company_name, car.car_name)]
+        awaited_cars = [car for car in all_awaited_cars if not _is_car_connected(car.company_name, car.car_name)]
         if awaited_cars:
             n = len(awaited_cars)
             response = _log_and_respond(awaited_cars, 200, f"Returning {n} new available cars.")
@@ -203,7 +203,7 @@ def available_devices(
     company_and_car_name = f"Company='{company_name}', car='{car_name}'"
     empty_response_body: Collection = [] if module_id is None else {}
 
-    cars_dict = connected_cars()
+    cars_dict = _connected_cars()
     if company_name not in cars_dict:
         return _log_and_respond(
             empty_response_body, 404, f"No company named '{company_name}' is registered."
@@ -280,7 +280,7 @@ def list_commands(
                 awaited_commands, 200, f"Returning awaited commands ({company_and_car_name})."
             )
         else:
-            if company_name not in connected_cars() or car_name not in connected_cars()[company_name]:
+            if company_name not in _connected_cars() or car_name not in _connected_cars()[company_name]:
                 return _log_and_respond(
                     [], 404, f"No commands available before timeout ({company_and_car_name})."
                 )
@@ -435,23 +435,23 @@ def _message_list_from_request_body(body: list[dict | Message]) -> list[Message]
 
 
 def _available_module(company_name: str, car_name: str, module_id: int) -> Module:
-    device_id_list = list(connected_cars()[company_name][car_name].modules[module_id].device_ids.values())
+    device_id_list = list(_connected_cars()[company_name][car_name].modules[module_id].device_ids.values())
     return Module(module_id, device_id_list)
 
 def _check_and_handle_first_status(company: str, car: str, messages: list[Message]) -> str:
     command_removal_warnings = ""
-    if not is_car_connected(company, car):
+    if not _is_car_connected(company, car):
         response = list_statuses(company, car, wait=False, since=0)
         if response[1] == 200:
             timestamp = min([msg.timestamp for msg in response[0]])
         else:
             timestamp = min([msg.timestamp for msg in messages])
-        add_car(company, car, timestamp)
+        _add_car(company, car, timestamp)
 
     for msg in messages:
-        device_added = add_device(company, car, msg.device_id)
+        device_added = _add_device(company, car, msg.device_id)
         if device_added:
-            sdevice_id = serialized_device_id(msg.device_id)
+            sdevice_id = _serialized_device_id(msg.device_id)
             command_removal_warnings = "\n".join(
                 _handle_first_status_and_return_warnings(msg.timestamp, company, car, sdevice_id)
             )
@@ -498,7 +498,7 @@ def _check_message_types(expected_message_type: str, *messages: Message) -> str:
 def _check_device_availability(
     company: str, car: str, module_id: int, device_id: DeviceId
 ) -> tuple[str, int]:
-    connected_cars_dict = connected_cars()
+    connected_cars_dict = _connected_cars()
     msg, code = _check_car_availability(company, car)
     if code != 200:
         return msg, code
@@ -510,7 +510,7 @@ def _check_device_availability(
         )
     elif not connected_cars_dict[company][car].is_connected(device_id):
         return (
-            f"No device with id '{serialized_device_id(device_id)}' is available in module "
+            f"No device with id '{_serialized_device_id(device_id)}' is available in module "
             f"'{module_id}' in car '{car}' under the company '{company}'",
             404,
         )
@@ -519,7 +519,7 @@ def _check_device_availability(
 
 
 def _check_car_availability(company_name: str, car_name: str) -> tuple[str, int]:
-    device_dict = connected_cars()
+    device_dict = _connected_cars()
     if company_name not in device_dict:
         return f"No car is available under a company '{company_name}'.", 404  # type: ignore
     elif car_name not in device_dict[company_name]:
@@ -564,7 +564,7 @@ def _message_db_list(messages: list[Message], message_type: str) -> list[Message
     return [
         Message_DB(
             timestamp=message.timestamp,
-            serialized_device_id=serialized_device_id(message.device_id),
+            serialized_device_id=_serialized_device_id(message.device_id),
             module_id=message.device_id.module_id,
             device_type=message.device_id.type,
             device_role=message.device_id.role,
@@ -578,7 +578,7 @@ def _message_db_list(messages: list[Message], message_type: str) -> list[Message
 
 
 def _update_messages_timestamp(messages: Iterable[Message_DB]) -> int:
-    timestamp_now = timestamp()
+    timestamp_now = _timestamp()
     for message in messages:
         message.timestamp = timestamp_now
     return timestamp_now
