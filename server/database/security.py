@@ -60,7 +60,7 @@ def _admin_already_exists_msg(name: str) -> str:
 def _create_admin_table_if_it_does_not_exist(connection_source: Engine) -> None:
     with connection_source.connect() as connection:
         if not connection_source.dialect.has_table(connection, _AdminBase.__tablename__):
-            _AdminBase.create(connection_source)
+            _AdminBase.metadata.create_all(connection_source)
 
 
 def get_admin(key: str) -> AdminDB | None:
