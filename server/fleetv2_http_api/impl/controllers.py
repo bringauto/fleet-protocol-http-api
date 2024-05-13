@@ -568,6 +568,9 @@ def _message_from_db(message_db: Message_DB) -> Message:
 
 
 def _message_db_list(messages: list[Message]) -> list[Message_DB]:
+    for m in messages:
+        if isinstance(m.payload.message_type, MessageType):
+            m.payload.message_type = m.payload.message_type.value
     return [
         Message_DB(
             timestamp=message.timestamp,
@@ -576,7 +579,7 @@ def _message_db_list(messages: list[Message]) -> list[Message_DB]:
             device_type=message.device_id.type,
             device_role=message.device_id.role,
             device_name=message.device_id.name,
-            message_type=message.payload.message_type.value,
+            message_type=message.payload.message_type,
             payload_encoding=message.payload.encoding,
             payload_data=message.payload.data,  # type: ignore
         )

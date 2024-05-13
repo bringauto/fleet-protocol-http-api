@@ -138,7 +138,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         messages = list_messages(
             company_name="company1",
             car_name="car1",
-            message_type=MessageType.STATUS,
+            message_type=(MessageType.STATUS,),
         )
         self.assertEqual(len(messages), 2)
         self.assertEqual(messages[0].timestamp, 1)
@@ -176,7 +176,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
                 device_type=device_id.type,
                 device_role=device_id.role,
                 device_name=device_id.name,
-                message_type=MessageType.COMMAND,
+                message_type="COMMAND",
                 payload_encoding=EncodingType.JSON,
                 payload_data={"key1": "value1"},
             ),
@@ -211,7 +211,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         messages = list_messages(
             company_name="test_company",
             car_name="test_car",
-            message_type=MessageType.COMMAND,
+            message_type=(MessageType.COMMAND,)
         )
         self.assertEqual(len(messages), 0)
 
@@ -254,7 +254,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         messages = list_messages(
             company_name="company1",
             car_name="car1",
-            message_type=MessageType.STATUS,
+            message_type=(MessageType.STATUS,)
         )
         self.assertEqual(len(messages), 1)
 
@@ -319,16 +319,16 @@ class Test_Send_And_Read_Message(unittest.TestCase):
         mock_time_in_ms.return_value = 150
         send_messages_to_database("test_company", "test_car", message_2)
         # read all statuses
-        read_messages = list_messages("test_company", "test_car", MessageType.STATUS)
+        read_messages = list_messages("test_company", "test_car", (MessageType.STATUS,))
         self.assertEqual(len(read_messages), 2)
         # read only the last status
         read_messages = list_messages(
-            "test_company", "test_car", MessageType.STATUS, since=150
+            "test_company", "test_car", (MessageType.STATUS,), since=150
         )
         self.assertEqual(len(read_messages), 1)
         # read only statuses after timestamp 120
         read_messages = list_messages(
-            "test_company", "test_car", MessageType.STATUS, since=120
+            "test_company", "test_car", (MessageType.STATUS,), since=120
         )
         self.assertEqual(len(read_messages), 1)
         self.assertEqual(read_messages[0].timestamp, 150)
