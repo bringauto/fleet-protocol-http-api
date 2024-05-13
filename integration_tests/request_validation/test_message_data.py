@@ -97,7 +97,7 @@ class Test_Invalid_Message_Payload_Yields_Code_400(unittest.TestCase):
     def setUp(self) -> None:
         self.app = _app.get_test_app(base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
-        self.invalid_message_types = ["status", 0, None, "unknown type"]
+        self.invalid_message_types = ["status", 0, None, "unknown type", "ERROR"]
         self.invalid_encodings = ["json", 0, None, "unknown encoding"]
         self.invalid_data = [123, 0.5, None]
 
