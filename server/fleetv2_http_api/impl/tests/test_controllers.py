@@ -71,7 +71,7 @@ class Test_Sending_Status(unittest.TestCase):
         clear_connected_cars()
 
     def test_convert_status_to_messagebase_preserves_device_name(self):
-        msg_db_list = _message_db_list([self.status_example], message_type=MessageType.STATUS)
+        msg_db_list = _message_db_list([self.status_example])
         msg_db = msg_db_list[0]
         self.assertEqual(msg_db.device_name, self.status_example.device_id.name)
         msg_base = MessageBase.from_message("test_company", "test_car", msg_db)
@@ -87,19 +87,19 @@ class Test_Sending_Status_Error(unittest.TestCase):
 
     def setUp(self) -> None:
         set_test_db_connection("/:memory:")
-        payload_example = Payload(
+        error_payload = Payload(
             message_type=MessageType.STATUS_ERROR,
             encoding=EncodingType.JSON,
             data={"message": "Device was not running"},
         )
         self.device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
         self.status_error = Message(
-            timestamp=123456789, device_id=self.device_id, payload=payload_example
+            timestamp=123456789, device_id=self.device_id, payload=error_payload
         )
         clear_connected_cars()
 
     def test_convert_status_error_to_messagebase_preserves_device_name(self):
-        msg_db_list = _message_db_list([self.status_error], message_type=MessageType.STATUS_ERROR)
+        msg_db_list = _message_db_list([self.status_error])
         msg_db = msg_db_list[0]
         self.assertEqual(msg_db.device_name, self.status_error.device_id.name)
         msg_base = MessageBase.from_message("test_company", "test_car", msg_db)
@@ -109,6 +109,26 @@ class Test_Sending_Status_Error(unittest.TestCase):
         send_statuses("test_company", "test_car", body=[self.status_error])
         status_error = list_statuses("test_company", "test_car")[0][0]
         self.assertEqual(status_error.device_id.name, self.status_error.device_id.name)
+
+    def test_status_and_status_error_can_be_send_and_returned_from_common_endpoint(self):
+        status_payload = Payload(
+            message_type=MessageType.STATUS,
+            encoding=EncodingType.JSON,
+            data={"message": "Device is running"},
+        )
+        status = Message(
+            timestamp=123456789, device_id=self.device_id, payload=status_payload
+        )
+        send_statuses("test_company", "test_car", body=[status, self.status_error])
+        statuses, code = list_statuses("test_company", "test_car")
+        self.assertEqual(code, 200)
+        self.assertEqual(len(statuses), 2)
+        self.assertEqual(statuses[0].device_id.name, self.device_id.name)
+        self.assertEqual(statuses[1].device_id.name, self.device_id.name)
+        self.assertEqual(statuses[0].payload.data["message"], "Device is running")
+        self.assertEqual(statuses[1].payload.data["message"], "Device was not running")
+        self.assertEqual(statuses[0].payload.message_type, MessageType.STATUS)
+        self.assertEqual(statuses[1].payload.message_type, MessageType.STATUS_ERROR)
 
 
 class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
@@ -699,4 +719,6 @@ class Test_Sending_Messages_To_Multiple_Devices_In_A_Single_Request(unittest.Tes
 
 
 if __name__ == "__main__":
+    # runner = unittest.TextTestRunner()
+    # runner.run(Test_Options_For_listing_Multiple_Statuses("test_since_parameter_larger_to_newest_status_timestamp_yields_empty_status_list"))
     unittest.main()

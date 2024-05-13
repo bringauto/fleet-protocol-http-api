@@ -253,7 +253,7 @@ def list_commands(
     :rtype: Union[list[Message], tuple[list[Message], int], tuple[list[Message], int, dict[str, str]]
     """
     company_and_car_name = f"Company='{company_name}', car='{car_name}'"
-    db_commands = _list_messages(company_name, car_name, MessageType.COMMAND, since)
+    db_commands = _list_messages(company_name, car_name, (MessageType.COMMAND,), since)
     if db_commands or not wait:
         msg, code = _check_car_availability(company_name, car_name)
         if code == 200:
@@ -315,23 +315,25 @@ def list_statuses(
 
     :rtype: Union[list[Message], tuple[list[Message], int], tuple[list[Message], int, dict[str, str]]
     """
-    company_and_car_name = f"Company='{company_name}', car='{car_name}'"
+    car = f"Company='{company_name}', car='{car_name}'"
 
-    db_statuses = _list_messages(company_name, car_name, MessageType.STATUS, since)
+    db_statuses = _list_messages(
+        company_name, car_name, (MessageType.STATUS, MessageType.STATUS_ERROR), since
+    )
     if db_statuses:
         statuses = [_message_from_db(m) for m in db_statuses]
         return _log_and_respond(
-            statuses, 200, f"Returning statuses for available car ({company_and_car_name})."
+            statuses, 200, f"Returning statuses for available car ({car})."
         )
     elif not wait:
         if _check_car_availability(company_name, car_name)[1] == 200:
             return _log_and_respond(
-                [], 200, f"No statuses are available at the moment ({company_and_car_name})."
+                [], 200, f"No statuses are available at the moment ({car})."
             )
         return _log_and_respond(
             [],
             404,
-            f"No devices (nor their statuses) are available at the moment ({company_and_car_name}).",
+            f"No devices (nor their statuses) are available at the moment ({car}).",
         )
     else:
         awaited_statuses: list[Message] = _status_wait_manager.wait_and_get_reponse(
@@ -342,17 +344,17 @@ def list_statuses(
                 return _log_and_respond(
                     [],
                     200,
-                    f"Found statuses, but all are older than 'since' parameter ({company_and_car_name}).",
+                    f"Found statuses, but all are older than 'since' parameter ({car}).",
                 )
             else:
                 return _log_and_respond(
-                    awaited_statuses, 200, f"Returning awaited statuses ({company_and_car_name})."
+                    awaited_statuses, 200, f"Returning awaited statuses ({car})."
                 )
         else:
             return _log_and_respond(
                 [],
                 404,
-                f"No devices (nor their statuses) were available before timeout ({company_and_car_name}).",
+                f"No devices (nor their statuses) were available before timeout ({car}).",
             )
 
 
@@ -386,7 +388,7 @@ def send_commands(
 
     _update_messages_timestamp(messages)
     _command_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
-    commands_to_db = _message_db_list(messages, MessageType.COMMAND)
+    commands_to_db = _message_db_list(messages)
     msg, code = send_messages_to_database(company_name, car_name, *commands_to_db)
     return _log_and_respond(msg, code, msg)
 
@@ -413,7 +415,7 @@ def send_statuses(
     if messages == []:
         msg = f"Empty list of statuses was sent to the API; no statuses were sent to the device."
         return _log_and_respond(msg, 200, msg)
-    errors = _check_messages(MessageType.STATUS, *messages)
+    errors = _check_messages((MessageType.STATUS, MessageType.STATUS_ERROR), *messages)
     if errors[0] != "":
         msg = "; ".join(errors[0].split("\n"))
         return _log_and_respond(errors[0], errors[1], msg)
@@ -422,7 +424,7 @@ def send_statuses(
     _status_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
     _car_wait_manager.add_response_content_and_stop_waiting([Car(company_name, car_name)])
     response_msg = send_messages_to_database(
-        company_name, car_name, *_message_db_list(messages, MessageType.STATUS)
+        company_name, car_name, *_message_db_list(messages)
     )
     cmd_warnings = _check_and_handle_first_status(company_name, car_name, messages)
     msg, code = response_msg[0] + cmd_warnings, response_msg[1]
@@ -479,24 +481,24 @@ def _check_sent_commands(
     return "", 200
 
 
-def _check_messages(expected_message_type: str, *messages: Message) -> tuple[str, int]:
+def _check_messages(expected_message_types: tuple[str, ...], *messages: Message) -> tuple[str, int]:
 
     errors: str = ""
-    errors = _check_message_types(expected_message_type, *messages)
+    errors = _check_message_types(expected_message_types, *messages)
     if not errors.strip() == "":
         return errors, 400
     else:
         return "", 200
 
 
-def _check_message_types(expected_message_type: str, *messages: Message) -> str:
+def _check_message_types(expected_message_types: tuple[str, ...], *messages: Message) -> str:
     """Check that type of every message matches the method (send command or send status)."""
     for message in messages:
-        if message.payload.message_type != expected_message_type:
-            if expected_message_type == MessageType.COMMAND:
-                return f"Cannot send a status as a command: {message}"
-            else:
-                return f"Cannot send a command as a status: {message}"
+        if message.payload.message_type not in expected_message_types:
+            return (
+                f"Cannot send a {message.payload.message_type}. "
+                f"Expected one of the following messsage type: {expected_message_types}"
+            )
     return ""
 
 
@@ -565,7 +567,7 @@ def _message_from_db(message_db: Message_DB) -> Message:
     )
 
 
-def _message_db_list(messages: list[Message], message_type: str) -> list[Message_DB]:
+def _message_db_list(messages: list[Message]) -> list[Message_DB]:
     return [
         Message_DB(
             timestamp=message.timestamp,
@@ -574,7 +576,7 @@ def _message_db_list(messages: list[Message], message_type: str) -> list[Message
             device_type=message.device_id.type,
             device_role=message.device_id.role,
             device_name=message.device_id.name,
-            message_type=message_type,
+            message_type=message.payload.message_type.value,
             payload_encoding=message.payload.encoding,
             payload_data=message.payload.data,  # type: ignore
         )
