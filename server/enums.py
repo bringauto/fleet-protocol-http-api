@@ -3,6 +3,7 @@ from aenum import UpperStrEnum
 
 class MessageType(UpperStrEnum):
     STATUS = "STATUS"
+    STATUS_ERROR = "STATUS_ERROR"
     COMMAND = "COMMAND"
 
 

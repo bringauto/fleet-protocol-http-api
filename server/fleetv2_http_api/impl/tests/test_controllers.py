@@ -88,28 +88,27 @@ class Test_Sending_Status_Error(unittest.TestCase):
     def setUp(self) -> None:
         set_test_db_connection("/:memory:")
         payload_example = Payload(
-            message_type=MessageType.STATUS,
+            message_type=MessageType.STATUS_ERROR,
             encoding=EncodingType.JSON,
-            data={"message": "Device is running"},
+            data={"message": "Device was not running"},
         )
         self.device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
-        self.status_example = Message(
+        self.status_error = Message(
             timestamp=123456789, device_id=self.device_id, payload=payload_example
         )
         clear_connected_cars()
 
-    def test_convert_status_to_messagebase_preserves_device_name(self):
-        msg_db_list = _message_db_list([self.status_example], message_type=MessageType.STATUS)
+    def test_convert_status_error_to_messagebase_preserves_device_name(self):
+        msg_db_list = _message_db_list([self.status_error], message_type=MessageType.STATUS_ERROR)
         msg_db = msg_db_list[0]
-        self.assertEqual(msg_db.device_name, self.status_example.device_id.name)
+        self.assertEqual(msg_db.device_name, self.status_error.device_id.name)
         msg_base = MessageBase.from_message("test_company", "test_car", msg_db)
-        self.assertEqual(msg_base.device_name, self.status_example.device_id.name)
+        self.assertEqual(msg_base.device_name, self.status_error.device_id.name)
 
-    def test_status_sent_to_and_retrieved_from_database_has_unchanged_attributes(self):
-        send_statuses("test_company", "test_car", body=[self.status_example])
-        status = list_statuses("test_company", "test_car")[0][0]
-        self.assertEqual(status.device_id.name, self.status_example.device_id.name)
-
+    def test_status_error_sent_to_and_retrieved_from_database_has_unchanged_attributes(self):
+        send_statuses("test_company", "test_car", body=[self.status_error])
+        status_error = list_statuses("test_company", "test_car")[0][0]
+        self.assertEqual(status_error.device_id.name, self.status_error.device_id.name)
 
 
 class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
