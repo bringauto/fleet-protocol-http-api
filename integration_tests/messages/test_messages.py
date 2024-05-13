@@ -334,14 +334,9 @@ class Test_Sending_And_Viewing_Statuses_Of_Multiple_Cars(unittest.TestCase):
             mock_timestamp.return_value = 333
             client.post("/status/test_company_2/test_car_3", json=[self.status_error])
             response = client.get("/cars")
-
-            for item in response.json:
-                print(item)
-
-            self.fail()
-            # self.assertIn({"company_name": "test_company", "car_name": "test_car"}, response.json)
-            # self.assertIn({"company_name": "test_company", "car_name": "test_car_2"}, response.json)
-            # self.assertIn({"company_name": "test_company_2", "car_name": "test_car_3"}, response.json)
+            self.assertIn({"company_name": "test_company", "car_name": "test_car"}, response.json)
+            self.assertIn({"company_name": "test_company", "car_name": "test_car_2"}, response.json)
+            self.assertIn({"company_name": "test_company_2", "car_name": "test_car_3"}, response.json)
             response = client.get("/status/test_company/test_car")
             self.assertEqual(
                 response.json,
