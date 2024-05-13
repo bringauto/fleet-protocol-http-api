@@ -12,7 +12,7 @@ class Test_Using_Invalid_Device_ID(unittest.TestCase):
     def setUp(self) -> None:
         self.app = _app.get_test_app(base_url="/v2/protocol/")
         self.payload = Payload(
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             encoding="JSON",
             data={"phone_number": "1234567890"},
         )

@@ -15,7 +15,7 @@ class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         status_payload = Payload(
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             encoding="JSON",
             data={"phone_number": "1234567890"},
         )
@@ -41,7 +41,7 @@ class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
 
     def test_command_timestamp_value_in_ms(self):
         command_payload = Payload(
-            message_type=MessageType.COMMAND_TYPE,
+            message_type=MessageType.COMMAND,
             encoding="JSON",
             data={"phone_number": "1234567890"},
         )

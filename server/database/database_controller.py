@@ -222,7 +222,7 @@ def cleanup_device_commands_and_warn_before_future_commands(
         stmt = (
             delete(table)
             .where(  # type: ignore
-                table.c.message_type == MessageType.COMMAND_TYPE,
+                table.c.message_type == MessageType.COMMAND,
                 table.c.company_name == company_name,
                 table.c.car_name == car_name,
                 table.c.serialized_device_id == serialized_device_id,
@@ -298,7 +298,7 @@ def _clean_up_disconnected_devices(company: str, car: str, module_id: int) -> No
         with Session(get_connection_source()) as session:
             table = MessageBase.__table__
             select_stmt = select(MessageBase).where(
-                table.c.message_type == MessageType.STATUS_TYPE,
+                table.c.message_type == MessageType.STATUS,
                 table.c.company_name == company,
                 table.c.car_name == car,
                 table.c.module_id == module_id,
@@ -318,7 +318,7 @@ def deserialize_device_id(serialized_id: str) -> tuple[int, int, str]:
 
 def load_available_devices_from_database() -> None:
     with Session(get_connection_source()) as session:
-        stmt = select(MessageBase).where(MessageBase.message_type == MessageType.STATUS_TYPE)
+        stmt = select(MessageBase).where(MessageBase.message_type == MessageType.STATUS)
         result = session.execute(stmt)
         for row in result:
             base: MessageBase = row[0]

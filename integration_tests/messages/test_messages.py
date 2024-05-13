@@ -16,7 +16,7 @@ class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
         self.payload = Payload(
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             encoding="JSON",
             data={"phone_number": "1234567890"},
         )
@@ -95,27 +95,27 @@ class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
         status_payload = Payload(
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             encoding="JSON",
             data={"phone_number": "1234567890"},
         )
         command_payload_1 = Payload(
-            message_type=MessageType.COMMAND_TYPE,
+            message_type=MessageType.COMMAND,
             encoding="JSON",
             data={"command": "start"},
         )
         command_payload_2 = Payload(
-            message_type=MessageType.COMMAND_TYPE,
+            message_type=MessageType.COMMAND,
             encoding="JSON",
             data={"command": "continue"},
         )
         command_payload_3 = Payload(
-            message_type=MessageType.COMMAND_TYPE,
+            message_type=MessageType.COMMAND,
             encoding="JSON",
             data={"command": "stop"},
         )
         command_payload_4 = Payload(
-            message_type=MessageType.COMMAND_TYPE,
+            message_type=MessageType.COMMAND,
             encoding="JSON",
             data={"command": "stay"},
         )
@@ -220,7 +220,7 @@ class Test_Sending_And_Viewing_Commands_For_Unavailable_Car(unittest.TestCase):
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
         command_payload = Payload(
-            message_type=MessageType.COMMAND_TYPE,
+            message_type=MessageType.COMMAND,
             encoding="JSON",
             data={"command": "start"},
         )
@@ -246,7 +246,7 @@ class Test_Sending_And_Viewing_Statuses_To_Multiple_Cars(unittest.TestCase):
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
         status_payload = Payload(
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             encoding="JSON",
             data={"phone_number": "1234567890"},
         )
@@ -321,17 +321,17 @@ class Test_Sending_And_Viewing_Statuses_Sent_To_Multiple_Devices_On_Single_Car(u
         device_B_id = DeviceId(module_id=7, type=9, role="test_device_r", name="Test Device B")
         device_C_id = DeviceId(module_id=14, type=8, role="test_dev", name="Test Device C")
         status_payload_A = Payload(
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             encoding=EncodingType.JSON,
             data={"phone_number": "1234567890"},
         )
         status_payload_B = Payload(
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             encoding=EncodingType.JSON,
             data={"phone_number": "1234567890"},
         )
         status_payload_C = Payload(
-            message_type=MessageType.STATUS_TYPE, encoding=EncodingType.BASE64, data={}
+            message_type=MessageType.STATUS, encoding=EncodingType.BASE64, data={}
         )
         self.status_1 = Message(device_id=device_A_id, payload=status_payload_A)
         self.status_2 = Message(device_id=device_B_id, payload=status_payload_B)
@@ -436,12 +436,12 @@ class Test_Sending_Multiple_Statuses_To_The_Same_Car_At_Once(unittest.TestCase):
         device_A_id = DeviceId(module_id=7, type=8, role="test_device_x", name="Test Device_X")
         device_B_id = DeviceId(module_id=9, type=9, role="test_device_y", name="Test Device Y")
         status_payload_A = Payload(
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             encoding=EncodingType.JSON,
             data={"phone_number": "1234567890"},
         )
         status_payload_B = Payload(
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             encoding=EncodingType.JSON,
             data={"phone_number": "1234567890"},
         )
@@ -549,9 +549,9 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_1_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test Device 1")
         self.device_2_id = DeviceId(module_id=9, type=5, role="test_dev", name="Test Device 2")
-        status_payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
-        command_payload_A = Payload(MessageType.COMMAND_TYPE, "JSON", {"command": "start"})
-        command_payload_B = Payload(MessageType.COMMAND_TYPE, "JSON", {"command": "continue"})
+        status_payload = Payload(MessageType.STATUS, "JSON", {"phone": "1234567890"})
+        command_payload_A = Payload(MessageType.COMMAND, "JSON", {"command": "start"})
+        command_payload_B = Payload(MessageType.COMMAND, "JSON", {"command": "continue"})
         status_1 = Message(device_id=self.device_1_id, payload=status_payload)
         status_2 = Message(device_id=self.device_2_id, payload=status_payload)
         self.command_A = Message(device_id=self.device_1_id, payload=command_payload_A)
@@ -660,8 +660,8 @@ class Test_Mismatch_Between_Endpoint_And_Message_Type(unittest.TestCase):
     def setUp(self) -> None:
         self.app = _app.get_test_app(base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
-        self.status_payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
-        self.command_payload = Payload(MessageType.COMMAND_TYPE, "JSON", {"command": "start"})
+        self.status_payload = Payload(MessageType.STATUS, "JSON", {"phone": "1234567890"})
+        self.command_payload = Payload(MessageType.COMMAND, "JSON", {"command": "start"})
         self.status_1 = Message(device_id=self.device_id, payload=self.status_payload)
         self.status_2 = Message(device_id=self.device_id, payload=self.status_payload)
         self.command = Message(device_id=self.device_id, payload=self.command_payload)
@@ -707,8 +707,8 @@ class Test_Sending_Empty_List_Of_Messages(unittest.TestCase):
     def setUp(self) -> None:
         self.app = _app.get_test_app(base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
-        self.status_payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
-        self.command_payload = Payload(MessageType.COMMAND_TYPE, "JSON", {"command": "start"})
+        self.status_payload = Payload(MessageType.STATUS, "JSON", {"phone": "1234567890"})
+        self.command_payload = Payload(MessageType.COMMAND, "JSON", {"command": "start"})
         self.status = Message(device_id=self.device_id, payload=self.status_payload)
         self.command = Message(device_id=self.device_id, payload=self.command_payload)
 

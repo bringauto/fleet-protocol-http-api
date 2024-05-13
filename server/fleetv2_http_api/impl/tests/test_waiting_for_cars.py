@@ -30,7 +30,7 @@ class Test_Waiting_For_Available_Cars(unittest.TestCase):
         self.status_1 = Message(
             device_id=DeviceId(module_id=47, type=5, role="test_device", name="Test Device"),
             payload=Payload(
-                message_type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={}
+                message_type=MessageType.STATUS, encoding=EncodingType.JSON, data={}
             ),
         )
 
@@ -90,7 +90,7 @@ class Test_Storing_Car_Connection_Time(unittest.TestCase):
         self.status = Message(
             device_id=DeviceId(module_id=47, type=5, role="test_device", name="Test Device"),
             payload=Payload(
-                message_type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={}
+                message_type=MessageType.STATUS, encoding=EncodingType.JSON, data={}
             ),
         )
 
@@ -138,7 +138,7 @@ class Test_Filtering_Connected_Car_By_Connection_Time_With_Since_Parameter(unitt
         self.status = Message(
             device_id=DeviceId(module_id=47, type=5, role="test_device", name="Test Device"),
             payload=Payload(
-                message_type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={}
+                message_type=MessageType.STATUS, encoding=EncodingType.JSON, data={}
             ),
         )
 

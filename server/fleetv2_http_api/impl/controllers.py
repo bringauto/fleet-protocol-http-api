@@ -253,7 +253,7 @@ def list_commands(
     :rtype: Union[list[Message], tuple[list[Message], int], tuple[list[Message], int, dict[str, str]]
     """
     company_and_car_name = f"Company='{company_name}', car='{car_name}'"
-    db_commands = _list_messages(company_name, car_name, MessageType.COMMAND_TYPE, since)
+    db_commands = _list_messages(company_name, car_name, MessageType.COMMAND, since)
     if db_commands or not wait:
         msg, code = _check_car_availability(company_name, car_name)
         if code == 200:
@@ -317,7 +317,7 @@ def list_statuses(
     """
     company_and_car_name = f"Company='{company_name}', car='{car_name}'"
 
-    db_statuses = _list_messages(company_name, car_name, MessageType.STATUS_TYPE, since)
+    db_statuses = _list_messages(company_name, car_name, MessageType.STATUS, since)
     if db_statuses:
         statuses = [_message_from_db(m) for m in db_statuses]
         return _log_and_respond(
@@ -386,7 +386,7 @@ def send_commands(
 
     _update_messages_timestamp(messages)
     _command_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
-    commands_to_db = _message_db_list(messages, MessageType.COMMAND_TYPE)
+    commands_to_db = _message_db_list(messages, MessageType.COMMAND)
     msg, code = send_messages_to_database(company_name, car_name, *commands_to_db)
     return _log_and_respond(msg, code, msg)
 
@@ -413,7 +413,7 @@ def send_statuses(
     if messages == []:
         msg = f"Empty list of statuses was sent to the API; no statuses were sent to the device."
         return _log_and_respond(msg, 200, msg)
-    errors = _check_messages(MessageType.STATUS_TYPE, *messages)
+    errors = _check_messages(MessageType.STATUS, *messages)
     if errors[0] != "":
         msg = "; ".join(errors[0].split("\n"))
         return _log_and_respond(errors[0], errors[1], msg)
@@ -422,7 +422,7 @@ def send_statuses(
     _status_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
     _car_wait_manager.add_response_content_and_stop_waiting([Car(company_name, car_name)])
     response_msg = send_messages_to_database(
-        company_name, car_name, *_message_db_list(messages, MessageType.STATUS_TYPE)
+        company_name, car_name, *_message_db_list(messages, MessageType.STATUS)
     )
     cmd_warnings = _check_and_handle_first_status(company_name, car_name, messages)
     msg, code = response_msg[0] + cmd_warnings, response_msg[1]
@@ -468,7 +468,7 @@ def _check_and_handle_first_status(company: str, car: str, messages: list[Messag
 def _check_sent_commands(
     company_name: str, car_name: str, messages: list[Message]
 ) -> tuple[str, int]:
-    errors, code = _check_messages(MessageType.COMMAND_TYPE, *messages)
+    errors, code = _check_messages(MessageType.COMMAND, *messages)
     if errors != "" or code != 200:
         return errors, code
     for cmd in messages:
@@ -493,7 +493,7 @@ def _check_message_types(expected_message_type: str, *messages: Message) -> str:
     """Check that type of every message matches the method (send command or send status)."""
     for message in messages:
         if message.payload.message_type != expected_message_type:
-            if expected_message_type == MessageType.COMMAND_TYPE:
+            if expected_message_type == MessageType.COMMAND:
                 return f"Cannot send a status as a command: {message}"
             else:
                 return f"Cannot send a command as a status: {message}"

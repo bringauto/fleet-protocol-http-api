@@ -18,7 +18,7 @@ class Test_Waiting_For_Statuses_To_Become_Available(unittest.TestCase):
         )
         self.deviceA_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         self.deviceB_id = DeviceId(module_id=9, type=10, role="test_device", name="Test Device")
-        self.payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
+        self.payload = Payload(MessageType.STATUS, "JSON", {"phone": "1234567890"})
         self.statusA = Message(device_id=self.deviceA_id, payload=self.payload)
         self.statusB = Message(device_id=self.deviceB_id, payload=self.payload)
 
@@ -66,7 +66,7 @@ class Test_Waiting_Request_Ignores_Statuses_Send_To_Other_Cars(unittest.TestCase
         )
         self.deviceA_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         self.deviceB_id = DeviceId(module_id=9, type=10, role="test_device", name="Test Device")
-        self.payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
+        self.payload = Payload(MessageType.STATUS, "JSON", {"phone": "1234567890"})
         self.statusA = Message(device_id=self.deviceA_id, payload=self.payload)
         self.statusB = Message(device_id=self.deviceB_id, payload=self.payload)
 
