@@ -155,7 +155,7 @@ def available_cars(wait: bool = False, since: int = 0) -> tuple[list[Car], int]:
     for company_name in car_dict:
         company_cars = [car for car in car_dict[company_name].values() if car.timestamp >= since]
         company_cars.sort(key=lambda x: x.timestamp)
-        cars = [Car(company_name, car.car_name) for car in company_cars]
+        cars.extend([Car(company_name, car.car_name) for car in company_cars])
 
     if cars or not wait:
         n = sum([len(car_dict[company_name]) for company_name in car_dict])
