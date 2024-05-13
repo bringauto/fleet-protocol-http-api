@@ -134,31 +134,43 @@ class Test_Sending_Status_Error(unittest.TestCase):
 class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
     def setUp(self) -> None:
         set_test_db_connection("/:memory:")
-        payload_example = Payload(
+        payload = Payload(
             message_type=MessageType.STATUS,
             encoding=EncodingType.JSON,
             data={"message": "Device is running"},
         )
         self.device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
-        self.status_example = Message(
-            timestamp=123456789, device_id=self.device_id, payload=payload_example
+        self.status = Message(
+            timestamp=123456789, device_id=self.device_id, payload=payload
         )
         clear_connected_cars()
 
     def test_device_is_considered_available_if_at_least_one_status_is_in_the_database(self):
         self.assertEqual(available_devices("test_company", "test_car"), ([], 404))
-        send_statuses("test_company", "test_car", body=[self.status_example])
-        available_devices_ = available_devices("test_company", "test_car")[0]
+        send_statuses("test_company", "test_car", body=[self.status])
+        devices = available_devices("test_company", "test_car")[0]
         self.assertListEqual(
-            available_devices_,
+            devices,
             [Module(module_id=42, device_list=[self.device_id])],
         )
         self.assertEqual(available_devices("other_company", "some_car"), ([], 404))
 
+    def test_device_is_considered_available_if_at_least_one_status_error_is_in_the_database(self):
+        self.assertEqual(available_devices("test_company", "test_car"), ([], 404))
+        error_payload = Payload(
+            message_type=MessageType.STATUS_ERROR,
+            encoding=EncodingType.JSON,
+            data={"message": "Device was not running"},
+        )
+        status_error = Message(123456789, self.device_id, error_payload)
+        send_statuses("test_company", "test_car", body=[status_error])
+        devices = available_devices("test_company", "test_car")[0]
+        self.assertListEqual(devices, [Module(module_id=42, device_list=[self.device_id])])
+
     def test_car_is_considered_available_if_at_least_one_of_its_devices_are_available(self):
         self.assertListEqual(available_cars()[0], [])
         response, code = send_statuses(
-            company_name="test_company", car_name="test_car", body=[self.status_example]
+            company_name="test_company", car_name="test_car", body=[self.status]
         )
         self.assertEqual(code, 200)
         self.assertListEqual(available_cars()[0], [Car("test_company", "test_car")])
@@ -341,42 +353,57 @@ class Test_Options_For_listing_Multiple_Statuses(unittest.TestCase):
     @patch("database.time._time_in_ms")
     def setUp(self, mock_time_in_ms: Mock) -> None:
         set_test_db_connection("/:memory:")
-        payload = Payload(
+        status_payload = Payload(
             message_type=MessageType.STATUS,
             encoding=EncodingType.JSON,
             data={"message": "Device is running"},
         )
+        error_payload = Payload(
+            message_type=MessageType.STATUS_ERROR,
+            encoding=EncodingType.JSON,
+            data={"message": "Device was not running"},
+        )
+
         device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
 
-        message_1 = Message(timestamp=10, device_id=device_id, payload=payload)
-        message_2 = Message(timestamp=20, device_id=device_id, payload=payload)
-        message_3 = Message(timestamp=37, device_id=device_id, payload=payload)
+        message_1 = Message(device_id=device_id, payload=status_payload)
+        message_2 = Message(device_id=device_id, payload=status_payload)
+        message_3 = Message(device_id=device_id, payload=status_payload)
+        erorr_1 = Message(device_id=device_id, payload=error_payload)
+        erorr_2 = Message(device_id=device_id, payload=error_payload)
 
         mock_time_in_ms.return_value = 10
         send_statuses("company", "car", body=[message_1])
         mock_time_in_ms.return_value = 20
         send_statuses("company", "car", body=[message_2])
+        mock_time_in_ms.return_value = 30
+        send_statuses("company", "car", body=[erorr_1])
         mock_time_in_ms.return_value = 37
         send_statuses("company", "car", body=[message_3])
+        mock_time_in_ms.return_value = 40
+        send_statuses("company", "car", body=[erorr_2])
 
-    def test_by_default_all_statuses_are_returned(self):
+    def test_by_default_all_statuses_are_returned_sorted_by_timestamp_in_ascending_order(self):
         statuses, _ = list_statuses("company", "car")
-        self.assertEqual(len(statuses), 3)
-        self.assertEqual(statuses[-1].timestamp, 37)
+        self.assertEqual(len(statuses), 5)
+        self.assertEqual(statuses[0].timestamp, 10)
+        self.assertEqual(statuses[-1].timestamp, 40)
 
     def test_since_parameter_equal_to_newest_status_timestamp_yields_the_newest_status(self):
-        statuses, _ = list_statuses("company", "car", since=37)
+        statuses, _ = list_statuses("company", "car", since=40)
         self.assertEqual(len(statuses), 1)
-        self.assertEqual(statuses[-1].timestamp, 37)
+        self.assertEqual(statuses[-1].timestamp, 40)
+        self.assertEqual(statuses[-1].payload.message_type, MessageType.STATUS_ERROR)
 
     def test_since_parameter_larger_to_newest_status_timestamp_yields_empty_status_list(self):
-        statuses, _ = list_statuses("company", "car", since=38)
+        statuses, _ = list_statuses("company", "car", since=41)
         self.assertEqual(len(statuses), 0)
 
     def test_since_option_returns_all_statuses_inclusivelly_newer_than_the_specified_time(self):
-        statuses, _ = list_statuses("company", "car", since=20)
-        self.assertEqual(statuses[0].timestamp, 20)
+        statuses, _ = list_statuses("company", "car", since=30)
+        self.assertEqual(statuses[0].timestamp, 30)
         self.assertEqual(statuses[1].timestamp, 37)
+        self.assertEqual(statuses[2].timestamp, 40)
 
 
 class Test_Options_For_listing_Multiple_Commands(unittest.TestCase):
@@ -588,14 +615,23 @@ class Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_
         self.assertEqual(code, 400)
 
     def test_send_commands_accepts_only_commands(self):
-        payload = Payload(
+        status_payload = Payload(
             message_type=MessageType.STATUS,
             encoding=EncodingType.JSON,
             data={"message": "Device is running"},
         )
         device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
-        status = Message(timestamp=10, device_id=device_id, payload=payload)
+        status = Message(timestamp=10, device_id=device_id, payload=status_payload)
         _, code = send_commands("test_company", "test_car", [status])
+        self.assertEqual(code, 400)
+
+        error_payload = Payload(
+            message_type=MessageType.STATUS_ERROR,
+            encoding=EncodingType.JSON,
+            data={"message": "Device was not running"},
+        )
+        error = Message(timestamp=10, device_id=device_id, payload=error_payload)
+        _, code = send_commands("test_company", "test_car", [error])
         self.assertEqual(code, 400)
 
     def tearDown(self) -> None:
