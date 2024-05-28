@@ -75,8 +75,8 @@ class Payload(Model):
         """
         if message_type is None:
             raise ValueError("Invalid value for `message_type`, must not be `None`")  # noqa: E501
-        if message_type is not None and not re.search(r'^(STATUS)|(COMMAND)$', message_type):  # noqa: E501
-            raise ValueError("Invalid value for `message_type`, must be a follow pattern or equal to `/^(STATUS)|(COMMAND)$/`")  # noqa: E501
+        if message_type is not None and not re.search(r'^(STATUS)|(COMMAND)|(STATUS_ERROR)$', message_type):  # noqa: E501
+            raise ValueError("Invalid value for `message_type`, must be a follow pattern or equal to `/^(STATUS)|(COMMAND)|(STATUS_ERROR)$/`")  # noqa: E501
 
         self._message_type = message_type
 

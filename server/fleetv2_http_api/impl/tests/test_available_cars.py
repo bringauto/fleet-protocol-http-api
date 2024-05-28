@@ -22,7 +22,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
     def setUp(self) -> None:
         set_test_db_connection("/:memory:")
         payload = Payload(
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             encoding=EncodingType.JSON,
             data={"message": "Device is running"},
         )

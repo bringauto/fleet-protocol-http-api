@@ -41,7 +41,7 @@ class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
             device_type=device_id.type,
             device_role=device_id.role,
             device_name=device_id.name,
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             payload_encoding=EncodingType.JSON,
             payload_data={"content": "..."},
         )
@@ -53,7 +53,7 @@ class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
         self.assertEqual(message_base.device_type, device_id.type)
         self.assertEqual(message_base.device_role, device_id.role)
         self.assertEqual(message_base.device_name, device_id.name)
-        self.assertEqual(message_base.message_type, MessageType.STATUS_TYPE)
+        self.assertEqual(message_base.message_type, MessageType.STATUS)
         self.assertEqual(message_base.payload_encoding, EncodingType.JSON)
         self.assertEqual(message_base.payload_data, {"content": "..."})
 
@@ -66,7 +66,7 @@ class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
             device_type=2,
             device_role="role1",
             device_name="device1",
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             payload_encoding=EncodingType.JSON,
             payload_data={"content": "..."},
         )
@@ -76,7 +76,7 @@ class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
         self.assertEqual(message_db.device_type, 2)
         self.assertEqual(message_db.device_role, "role1")
         self.assertEqual(message_db.device_name, "device1")
-        self.assertEqual(message_db.message_type, MessageType.STATUS_TYPE)
+        self.assertEqual(message_db.message_type, MessageType.STATUS)
         self.assertEqual(message_db.payload_encoding, EncodingType.JSON)
         self.assertEqual(message_db.payload_data, {"content": "..."})
 
@@ -114,7 +114,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
             device_type=device_id_1.type,
             device_role=device_id_1.role,
             device_name=device_id_1.name,
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             payload_encoding=EncodingType.BASE64,
             payload_data={"key1": "value1"},
         )
@@ -125,7 +125,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
             device_type=device_id_2.type,
             device_role=device_id_2.role,
             device_name=device_id_2.name,
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             payload_encoding=EncodingType.BASE64,
             payload_data={"key2": "value2"},
         )
@@ -138,7 +138,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         messages = list_messages(
             company_name="company1",
             car_name="car1",
-            message_type=MessageType.STATUS_TYPE,
+            message_type=(MessageType.STATUS,),
         )
         self.assertEqual(len(messages), 2)
         self.assertEqual(messages[0].timestamp, 1)
@@ -160,7 +160,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
                 device_type=device_id.type,
                 device_role=device_id.role,
                 device_name=device_id.name,
-                message_type=MessageType.STATUS_TYPE,
+                message_type=MessageType.STATUS,
                 payload_encoding=EncodingType.JSON,
                 payload_data={"key1": "value1"},
             ),
@@ -176,7 +176,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
                 device_type=device_id.type,
                 device_role=device_id.role,
                 device_name=device_id.name,
-                message_type=MessageType.COMMAND_TYPE,
+                message_type="COMMAND",
                 payload_encoding=EncodingType.JSON,
                 payload_data={"key1": "value1"},
             ),
@@ -192,13 +192,13 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
                 device_type=device_id.type,
                 device_role=device_id.role,
                 device_name=device_id.name,
-                message_type=MessageType.COMMAND_TYPE,
+                message_type=MessageType.COMMAND,
                 payload_encoding=EncodingType.JSON,
                 payload_data={"key1": "value1"},
             ),
         )
         remove_old_messages(current_timestamp=MessageBase.data_retention_period_ms() + 50)
-        self.assertEqual(len(list_messages("test_company", "test_car", MessageType.STATUS_TYPE)), 0)
+        self.assertEqual(len(list_messages("test_company", "test_car", MessageType.STATUS)), 0)
         warnings = cleanup_device_commands_and_warn_before_future_commands(
             current_timestamp=MessageBase.data_retention_period_ms() + 55,
             company_name="test_company",
@@ -211,7 +211,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         messages = list_messages(
             company_name="test_company",
             car_name="test_car",
-            message_type=MessageType.COMMAND_TYPE,
+            message_type=(MessageType.COMMAND,)
         )
         self.assertEqual(len(messages), 0)
 
@@ -226,7 +226,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
             device_type=device_id.type,
             device_role=device_id.role,
             device_name=device_id.name,
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             payload_encoding=EncodingType.JSON,
             payload_data={"key1": "value1"},
         )
@@ -237,7 +237,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
             device_type=device_id.type,
             device_role=device_id.role,
             device_name=device_id.name,
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             payload_encoding=EncodingType.BASE64,
             payload_data={"key2": "value2"},
         )
@@ -254,7 +254,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         messages = list_messages(
             company_name="company1",
             car_name="car1",
-            message_type=MessageType.STATUS_TYPE,
+            message_type=(MessageType.STATUS,)
         )
         self.assertEqual(len(messages), 1)
 
@@ -298,7 +298,7 @@ class Test_Send_And_Read_Message(unittest.TestCase):
             device_type=device_id.type,
             device_role=device_id.role,
             device_name=device_id.name,
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             payload_encoding=EncodingType.BASE64,
             payload_data={"content": "..."},
         )
@@ -309,7 +309,7 @@ class Test_Send_And_Read_Message(unittest.TestCase):
             device_type=device_id.type,
             device_role=device_id.role,
             device_name=device_id.name,
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             payload_encoding=EncodingType.BASE64,
             payload_data={"content": "other content"},
         )
@@ -319,16 +319,16 @@ class Test_Send_And_Read_Message(unittest.TestCase):
         mock_time_in_ms.return_value = 150
         send_messages_to_database("test_company", "test_car", message_2)
         # read all statuses
-        read_messages = list_messages("test_company", "test_car", MessageType.STATUS_TYPE)
+        read_messages = list_messages("test_company", "test_car", (MessageType.STATUS,))
         self.assertEqual(len(read_messages), 2)
         # read only the last status
         read_messages = list_messages(
-            "test_company", "test_car", MessageType.STATUS_TYPE, since=150
+            "test_company", "test_car", (MessageType.STATUS,), since=150
         )
         self.assertEqual(len(read_messages), 1)
         # read only statuses after timestamp 120
         read_messages = list_messages(
-            "test_company", "test_car", MessageType.STATUS_TYPE, since=120
+            "test_company", "test_car", (MessageType.STATUS,), since=120
         )
         self.assertEqual(len(read_messages), 1)
         self.assertEqual(read_messages[0].timestamp, 150)

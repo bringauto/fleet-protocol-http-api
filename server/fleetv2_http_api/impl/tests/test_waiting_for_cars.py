@@ -29,9 +29,7 @@ class Test_Waiting_For_Available_Cars(unittest.TestCase):
         clear_connected_cars()
         self.status_1 = Message(
             device_id=DeviceId(module_id=47, type=5, role="test_device", name="Test Device"),
-            payload=Payload(
-                message_type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={}
-            ),
+            payload=Payload(message_type=MessageType.STATUS, encoding=EncodingType.JSON, data={}),
         )
 
     def test_if_cars_are_available_no_waiting_applies(self):
@@ -89,15 +87,29 @@ class Test_Storing_Car_Connection_Time(unittest.TestCase):
         clear_connected_cars()
         self.status = Message(
             device_id=DeviceId(module_id=47, type=5, role="test_device", name="Test Device"),
+            payload=Payload(message_type=MessageType.STATUS, encoding=EncodingType.JSON, data={}),
+        )
+        self.status_error = Message(
+            device_id=DeviceId(module_id=47, type=5, role="test_device", name="Test Device"),
             payload=Payload(
-                message_type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={}
+                message_type=MessageType.STATUS_ERROR, encoding=EncodingType.JSON, data={}
             ),
         )
 
     @patch("database.time._time_in_ms")
-    def test_connection_time_is_stored_with_the_car(self, mocked_time_in_ms: Mock):
+    def test_connection_time_is_taken_from_first_status_and_stored_with_the_car(
+        self, mocked_time_in_ms: Mock
+    ):
         mocked_time_in_ms.return_value = 1000
         send_statuses("test_company", "test_car", [self.status])
+        self.assertEqual(connected_cars()["test_company"]["test_car"].timestamp, 1000)
+
+    @patch("database.time._time_in_ms")
+    def test_connection_time_is_taken_from_the_first_status_error_stored_with_the_car_(
+        self, mocked_time_in_ms: Mock
+    ):
+        mocked_time_in_ms.return_value = 1000
+        send_statuses("test_company", "test_car", [self.status_error])
         self.assertEqual(connected_cars()["test_company"]["test_car"].timestamp, 1000)
 
     @patch("database.time._time_in_ms")
@@ -108,6 +120,9 @@ class Test_Storing_Car_Connection_Time(unittest.TestCase):
         send_statuses("test_company", "test_car", [self.status])
         mocked_time_in_ms.return_value = 2000
         send_statuses("test_company", "test_car", [self.status])
+        self.assertEqual(connected_cars()["test_company"]["test_car"].timestamp, 1000)
+        mocked_time_in_ms.return_value = 3000
+        send_statuses("test_company", "test_car", [self.status_error])
         self.assertEqual(connected_cars()["test_company"]["test_car"].timestamp, 1000)
 
     @patch("database.time._time_in_ms")
@@ -137,8 +152,12 @@ class Test_Filtering_Connected_Car_By_Connection_Time_With_Since_Parameter(unitt
         clear_connected_cars()
         self.status = Message(
             device_id=DeviceId(module_id=47, type=5, role="test_device", name="Test Device"),
+            payload=Payload(message_type=MessageType.STATUS, encoding=EncodingType.JSON, data={}),
+        )
+        self.status_error = Message(
+            device_id=DeviceId(module_id=47, type=5, role="test_device", name="Test Device"),
             payload=Payload(
-                message_type=MessageType.STATUS_TYPE, encoding=EncodingType.JSON, data={}
+                message_type=MessageType.STATUS_ERROR, encoding=EncodingType.JSON, data={}
             ),
         )
 
@@ -158,7 +177,7 @@ class Test_Filtering_Connected_Car_By_Connection_Time_With_Since_Parameter(unitt
         mocked_time_in_ms.return_value = 2000
         send_statuses("test_company", "car_2", [self.status])
         mocked_time_in_ms.return_value = 3000
-        send_statuses("test_company", "car_3", [self.status])
+        send_statuses("test_company", "car_3", [self.status_error])
         mocked_time_in_ms.return_value = 4000
         send_statuses("test_company", "car_4", [self.status])
         cars, code = available_cars(since=2500)

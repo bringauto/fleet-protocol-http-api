@@ -17,8 +17,8 @@ class Test_Waiting_For_Commands_For_Already_Available_Car(unittest.TestCase):
             db_location="test_db.db", request_timeout_s=0.2, base_url="/v2/protocol/"
         )
         self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
-        status_payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
-        self.command_payload = Payload(MessageType.COMMAND_TYPE, "JSON", {"instruction": "start"})
+        status_payload = Payload(MessageType.STATUS, "JSON", {"phone": "1234567890"})
+        self.command_payload = Payload(MessageType.COMMAND, "JSON", {"instruction": "start"})
         self.command = Message(device_id=self.device_id, payload=self.command_payload)
         status = Message(device_id=self.device_id, payload=status_payload)
         with self.app.app.test_client() as c:
@@ -66,9 +66,9 @@ class Test_Waiting_For_Commands_Of_Initially_Unavailable_Car(unittest.TestCase):
             db_location="test_db.db", request_timeout_s=0.2, base_url="/v2/protocol/"
         )
         self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
-        self.status_payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
-        self.command_1_payload = Payload(MessageType.COMMAND_TYPE, "JSON", {"instruction": "start"})
-        self.command_2_payload = Payload(MessageType.COMMAND_TYPE, "JSON", {"instruction": "stop"})
+        self.status_payload = Payload(MessageType.STATUS, "JSON", {"phone": "1234567890"})
+        self.command_1_payload = Payload(MessageType.COMMAND, "JSON", {"instruction": "start"})
+        self.command_2_payload = Payload(MessageType.COMMAND, "JSON", {"instruction": "stop"})
         self.command_1 = Message(device_id=self.device_id, payload=self.command_1_payload)
         self.command_2 = Message(device_id=self.device_id, payload=self.command_2_payload)
         self.status = Message(device_id=self.device_id, payload=self.status_payload)

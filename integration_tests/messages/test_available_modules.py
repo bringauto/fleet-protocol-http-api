@@ -14,7 +14,7 @@ class Test_Listing_Available_Devices_Without_Filtering_By_Module(unittest.TestCa
         self.app = _app.get_test_app(base_url="/v2/protocol/")
         self.device_1_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device 1")
         self.device_2_id = DeviceId(module_id=9, type=5, role="test_device", name="Test Device 2")
-        status_payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
+        status_payload = Payload(MessageType.STATUS, "JSON", {"phone": "1234567890"})
         self.status_1 = Message(device_id=self.device_1_id, payload=status_payload)
         self.status_2 = Message(device_id=self.device_2_id, payload=status_payload)
 
@@ -77,7 +77,7 @@ class Test_Filtering_Available_Devices_By_Module(unittest.TestCase):
         self.app = _app.get_test_app(base_url="/v2/protocol/")
         self.device_1_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device 1")
         self.device_2_id = DeviceId(module_id=9, type=5, role="test_device", name="Test Device 2")
-        status_payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
+        status_payload = Payload(MessageType.STATUS, "JSON", {"phone": "1234567890"})
         self.status_1 = Message(device_id=self.device_1_id, payload=status_payload)
         self.status_2 = Message(device_id=self.device_2_id, payload=status_payload)
 

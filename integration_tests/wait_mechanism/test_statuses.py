@@ -18,18 +18,20 @@ class Test_Waiting_For_Statuses_To_Become_Available(unittest.TestCase):
         )
         self.deviceA_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         self.deviceB_id = DeviceId(module_id=9, type=10, role="test_device", name="Test Device")
-        self.payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
+        self.payload = Payload(MessageType.STATUS, "JSON", {"phone": "1234567890"})
         self.statusA = Message(device_id=self.deviceA_id, payload=self.payload)
         self.statusB = Message(device_id=self.deviceB_id, payload=self.payload)
+        self.error_payload = Payload(MessageType.STATUS_ERROR, "JSON", {"phone": "1234567890"})
+        self.status_error = Message(device_id=self.deviceA_id, payload=self.error_payload)
 
     def test_awaited_statuses_are_returned_if_some_status_is_sent_in_other_thread(self):
         with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
             future = executor.submit(c.get, "/status/test_company/test_car?wait=True")
             time.sleep(0.1)
-            executor.submit(c.post, "/status/test_company/test_car", json=[self.statusA])
+            executor.submit(c.post, "/status/test_company/test_car", json=[self.statusA, self.status_error])
             response = future.result()
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.json), 1)
+            self.assertEqual(len(response.json), 2)
             self.assertEqual(response.json[0]["device_id"], self.deviceA_id.to_dict())
 
     def test_all_relevant_statuses_sent_in_one_thread_are_returned_in_second_waiting_thread(self):
@@ -39,11 +41,11 @@ class Test_Waiting_For_Statuses_To_Become_Available(unittest.TestCase):
             executor.submit(
                 c.post,
                 "/status/test_company/test_car",
-                json=[self.statusA, self.statusB],
+                json=[self.statusA, self.statusB, self.status_error],
             )
             response = future.result()
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.json), 2)
+            self.assertEqual(len(response.json), 3)
             self.assertEqual(response.json[0]["device_id"], self.deviceA_id.to_dict())
             self.assertEqual(response.json[1]["device_id"], self.deviceB_id.to_dict())
 
@@ -66,15 +68,17 @@ class Test_Waiting_Request_Ignores_Statuses_Send_To_Other_Cars(unittest.TestCase
         )
         self.deviceA_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         self.deviceB_id = DeviceId(module_id=9, type=10, role="test_device", name="Test Device")
-        self.payload = Payload(MessageType.STATUS_TYPE, "JSON", {"phone": "1234567890"})
+        self.payload = Payload(MessageType.STATUS, "JSON", {"phone": "1234567890"})
+        self.error_payload = Payload(MessageType.STATUS_ERROR, "JSON", {"phone": "1234567890"})
         self.statusA = Message(device_id=self.deviceA_id, payload=self.payload)
         self.statusB = Message(device_id=self.deviceB_id, payload=self.payload)
+        self.status_error = Message(device_id=self.deviceA_id, payload=self.error_payload )
 
     def test_status_for_other_car_than_awaited_is_not_send_to_waiting_thread(self):
         with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
             future = executor.submit(c.get, "/status/company/car_x?wait=True")
             time.sleep(0.1)
-            executor.submit(c.post, "/status/company/car_y", json=[self.statusA, self.statusB])
+            executor.submit(c.post, "/status/company/car_y", json=[self.statusA, self.statusB, self.status_error])
             response = future.result()
             self.assertEqual(response.status_code, 404)
             self.assertEqual(len(response.json), 0)

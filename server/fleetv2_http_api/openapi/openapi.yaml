@@ -8,7 +8,7 @@ info:
     name: GPLv3
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
   title: Fleet v2 HTTP API
-  version: 2.3.3
+  version: 2.4.0
 servers:
 - url: /v2/protocol
 security:
@@ -412,7 +412,7 @@ paths:
             example:
             - device_id:
                 module_id: 47
-                type: 2
+                type: 0
                 role: test_device
                 name: Test Device
               payload:
@@ -775,7 +775,7 @@ components:
       properties:
         message_type:
           description: Type of the payload
-          pattern: ^(STATUS)|(COMMAND)$
+          pattern: ^(STATUS)|(COMMAND)|(STATUS_ERROR)$
           type: string
         encoding:
           description: Encoding of the payload

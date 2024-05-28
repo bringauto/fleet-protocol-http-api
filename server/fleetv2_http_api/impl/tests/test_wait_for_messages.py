@@ -35,10 +35,11 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         )
         self.device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
         self.sdevice_id = serialized_device_id(self.device_id)
-        self.status = Message(
-            timestamp=123456789,
+
+        self.status = Message(device_id=self.device_id, payload=payload_example)
+        self.status_error = Message(
             device_id=self.device_id,
-            payload=payload_example
+            payload=Payload(message_type="STATUS_ERROR", encoding="JSON", data={})
         )
         set_status_wait_timeout_s(1)
 
@@ -190,8 +191,8 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         set_test_db_connection("/example.db")
         clear_connected_cars()
         self.device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
-        self.status = Message(123456789, self.device_id, Payload("STATUS", "JSON", {}))
-        self.command = Message(123456789, self.device_id, Payload("COMMAND", "JSON", {}))
+        self.status = Message(device_id=self.device_id, payload=Payload("STATUS", "JSON", {}))
+        self.command = Message(device_id=self.device_id, payload=Payload("COMMAND", "JSON", {}))
         set_command_wait_timeout_s(1)
 
     def test_return_commands_sent_to_available_device_after_the_request_when_wait_mechanism_is_applied(

@@ -20,7 +20,7 @@ import dataclasses
 import copy
 
 from sqlalchemy.orm import Mapped, mapped_column, Session
-from sqlalchemy import Integer, String, JSON, select, insert, delete, BigInteger, and_
+from sqlalchemy import Integer, String, JSON, select, insert, delete, BigInteger, and_, or_
 
 from enums import MessageType  # type: ignore
 import database.connection  # type: ignore
@@ -176,7 +176,7 @@ def _get_message_for_n_messages_succesfully_sent(number_of_sent_messages: int) -
 
 
 def list_messages(
-    company_name: str, car_name: str, message_type: str, since: int = 0
+    company_name: str, car_name: str, message_type: tuple[str, ...], since: int = 0
 ) -> list[Message_DB]:  # noqa:
 
     """Return a list of messages of the given type, optionally filtered by the given parameters.
@@ -189,7 +189,8 @@ def list_messages(
     statuses: list[Message_DB] = list()
     with Session(get_connection_source()) as session:
         table = MessageBase.__table__
-        selection = select(MessageBase).where(table.c.message_type == message_type)
+        selection = select(MessageBase)
+        selection = selection.where(or_(*[table.c.message_type == type for type in message_type]))
         selection = selection.where(
             and_(
                 table.c.company_name == company_name,
@@ -222,7 +223,7 @@ def cleanup_device_commands_and_warn_before_future_commands(
         stmt = (
             delete(table)
             .where(  # type: ignore
-                table.c.message_type == MessageType.COMMAND_TYPE,
+                table.c.message_type == MessageType.COMMAND,
                 table.c.company_name == company_name,
                 table.c.car_name == car_name,
                 table.c.serialized_device_id == serialized_device_id,
@@ -298,7 +299,7 @@ def _clean_up_disconnected_devices(company: str, car: str, module_id: int) -> No
         with Session(get_connection_source()) as session:
             table = MessageBase.__table__
             select_stmt = select(MessageBase).where(
-                table.c.message_type == MessageType.STATUS_TYPE,
+                table.c.message_type == MessageType.STATUS,
                 table.c.company_name == company,
                 table.c.car_name == car,
                 table.c.module_id == module_id,
@@ -318,7 +319,7 @@ def deserialize_device_id(serialized_id: str) -> tuple[int, int, str]:
 
 def load_available_devices_from_database() -> None:
     with Session(get_connection_source()) as session:
-        stmt = select(MessageBase).where(MessageBase.message_type == MessageType.STATUS_TYPE)
+        stmt = select(MessageBase).where(MessageBase.message_type == MessageType.STATUS)
         result = session.execute(stmt)
         for row in result:
             base: MessageBase = row[0]

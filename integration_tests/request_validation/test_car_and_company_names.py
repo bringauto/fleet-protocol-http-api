@@ -15,7 +15,7 @@ class Test_Company_And_Car_Name_Not_Following_Pattern_From_OpenAPI_Spec_Yield_Co
         self.app = _app.get_test_app(base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         self.payload = Payload(
-            message_type=MessageType.STATUS_TYPE,
+            message_type=MessageType.STATUS,
             encoding="JSON",
             data={"phone_number": "1234567890"},
         )
