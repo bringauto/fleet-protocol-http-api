@@ -1,6 +1,7 @@
 import sys
 sys.path.append("server")
 import logging
+import requests
 
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
 
@@ -44,6 +45,18 @@ def _set_up_database_jobs(db_cleanup_config: dict[str,int]) -> None:
     scheduler.start()
 
 
+def _retrieve_keycloak_public_key(keycloak_url: str, realm: str) -> str:
+    """Retrieve the public key from the Keycloak server."""
+    try:
+        response = requests.get(keycloak_url + "/realms/" + realm)
+        response.raise_for_status()
+    except:
+        logging.getLogger("werkzeug").warning("Failed to retrieve public key from Keycloak server.")
+        return ""
+    logging.getLogger("werkzeug").info("Retrieved public key from Keycloak server.")
+    return response.json()["public_key"]
+
+
 def _set_up_log_format() -> None:
     """Set up the logging format."""
     FORMAT = '%(asctime)s -- %(message)s'
@@ -67,10 +80,11 @@ if __name__ == '__main__':
         realm=config["security"]["realm"],
         callback=config["http_server"]["base_uri"]
     )
-    public_key_file = open(config["security"]["keycloak_public_key_file"], "r")
     set_auth_params(
-        public_key=public_key_file.read(),
+        public_key=_retrieve_keycloak_public_key(
+            keycloak_url=config["security"]["keycloak_url"],
+            realm=config["security"]["realm"]
+        ),
         client_id=config["security"]["client_id"]
     )
-    public_key_file.close()
     run_server()

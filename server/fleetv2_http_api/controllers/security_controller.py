@@ -6,7 +6,7 @@ _public_key: str
 _client_id: str
 def set_auth_params(public_key: str, client_id: str) -> None:
     global _public_key
-    _public_key = public_key
+    _public_key = "-----BEGIN PUBLIC KEY-----\n" + public_key + "\n-----END PUBLIC KEY-----"
     global _client_id
     _client_id = client_id
 

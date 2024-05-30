@@ -125,8 +125,7 @@ To get Keycloak authentication working, all parameters in the security section o
         "client_id": "",
         "client_secret_key": "",
         "scope": "",
-        "realm": "",
-        "keycloak_public_key_file": "config/keycloak.pem"
+        "realm": ""
     }
 ```
 
@@ -135,7 +134,6 @@ To get Keycloak authentication working, all parameters in the security section o
 - client_secret_key : secret key of client (Clients -> click on client representing HTTP API -> Credentials -> Client Secret)
 - scope : checking of scopes is not yet implemented (must be `email` for now!)
 - realm : realm in which the client belongs (seen on top of the left side panel in Keycloak GUI)
-- keycloak_public_key_file : path to the public key used to decode JWT tokens (Realm settings -> Keys -> RS256 -> Public key)
 
 ### Configuration
 The server settings can be found in the `config/config.json`, including the database logging information and parameters for the database cleanup.
