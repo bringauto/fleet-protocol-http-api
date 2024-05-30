@@ -3,9 +3,12 @@ from database.security import get_admin
 import jwt
 
 _public_key: str
-def set_public_key(public_key: str) -> None:
+_client_id: str
+def set_auth_params(public_key: str, client_id: str) -> None:
     global _public_key
-    _public_key = public_key
+    _public_key = "-----BEGIN PUBLIC KEY-----\n" + public_key + "\n-----END PUBLIC KEY-----"
+    global _client_id
+    _client_id = client_id
 
 
 def info_from_AdminAuth(api_key, *args) -> Dict:
@@ -43,15 +46,11 @@ def info_from_oAuth2AuthCode(token) -> Dict:
     except:
         return None
 
-    #TODO temporary until keycloak configuration is decided
-    #roles = decoded_token["realm_access"]["roles"]
-
-    #for role in roles:
-    #    if role == "test_role":
-    #        return {'scopes': {}, 'uid': ''}
-
-    return {'scopes': {}, 'uid': ''}
-    #return None # type: ignore
+    for origin in decoded_token["allowed-origins"]:
+        if origin == _client_id:
+            return {'scopes': {}, 'uid': ''}
+    
+    return None # type: ignore
 
 
 def validate_scope_oAuth2AuthCode(required_scopes, token_scopes):
