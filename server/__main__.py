@@ -15,7 +15,7 @@ from fleetv2_http_api.impl.controllers import (  # type: ignore
     set_command_wait_timeout_s,
     init_security
 )
-from fleetv2_http_api.controllers.security_controller import set_public_key  # type: ignore
+from fleetv2_http_api.controllers.security_controller import set_auth_params  # type: ignore
 import database.script_args as script_args  # type: ignore
 
 def _clean_up_messages() -> None:
@@ -68,6 +68,9 @@ if __name__ == '__main__':
         callback=config["http_server"]["base_uri"]
     )
     public_key_file = open(config["security"]["keycloak_public_key_file"], "r")
-    set_public_key(public_key_file.read())
+    set_auth_params(
+        public_key=public_key_file.read(),
+        client_id=config["security"]["client_id"]
+    )
     public_key_file.close()
     run_server()
