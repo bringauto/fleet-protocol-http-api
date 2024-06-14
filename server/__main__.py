@@ -1,7 +1,7 @@
 import sys
 sys.path.append("server")
 import logging
-import requests
+import requests  # type: ignore
 
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
 
@@ -18,6 +18,10 @@ from fleetv2_http_api.impl.controllers import (  # type: ignore
 )
 from fleetv2_http_api.controllers.security_controller import set_auth_params  # type: ignore
 import database.script_args as script_args  # type: ignore
+
+
+logging.getLogger("werkzeug").setLevel(logging.DEBUG)
+
 
 def _clean_up_messages() -> None:
     """Clean up messages from the database."""
