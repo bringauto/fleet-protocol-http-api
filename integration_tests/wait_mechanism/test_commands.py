@@ -62,8 +62,9 @@ class Test_Waiting_For_Commands_For_Already_Available_Car(unittest.TestCase):
 
 class Test_Waiting_For_Commands_Of_Initially_Unavailable_Car(unittest.TestCase):
     def setUp(self) -> None:
+        self._timeout = 0.5
         self.app = _app.get_test_app(
-            db_location="test_db.db", request_timeout_s=0.2, base_url="/v2/protocol/"
+            db_location="test_db.db", request_timeout_s=self._timeout, base_url="/v2/protocol/"
         )
         self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         self.status_payload = Payload(MessageType.STATUS, "JSON", {"phone": "1234567890"})
@@ -73,15 +74,18 @@ class Test_Waiting_For_Commands_Of_Initially_Unavailable_Car(unittest.TestCase):
         self.command_2 = Message(device_id=self.device_id, payload=self.command_2_payload)
         self.status = Message(device_id=self.device_id, payload=self.status_payload)
 
-    def test_no_status_being_sent_before_timeout_yields_code_404_and_empty_list(self):
-        with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
+    def test_no_status_being_sent_before_timeout_yields_code_404_and_empty_list_after_timeout_is_exceeded(self):
+        with _Executor() as executor, self.app.app.test_client() as c:
+            start_time = time.time()
             future = executor.submit(c.get, "/command/test_company/test_car?wait=True")
             response = future.result()
+            response_time = time.time() - start_time
             self.assertEqual(response.status_code, 404)
             self.assertEqual(response.json, [])
+            self.assertGreaterEqual(response_time, self._timeout)
 
     def test_commands_sent_before_car_becomes_available_are_not_sent_to_waiting_thread(self):
-        with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
+        with _Executor() as executor, self.app.app.test_client() as c:
             future = executor.submit(c.get, "/command/test_company/test_car?wait=True")
             time.sleep(0.05)
             # this command will be ignored by the waiting thread
@@ -101,4 +105,4 @@ class Test_Waiting_For_Commands_Of_Initially_Unavailable_Car(unittest.TestCase):
 
 
 if __name__ == "__main__":  # pragma: no cover
-    unittest.main(verbosity=2, buffer=True)
+    unittest.main(verbosity=2)

@@ -32,12 +32,13 @@ _NAME_PATTERN = "^[0-9a-z_]+$"
 
 
 _status_wait_manager = MessageWaitObjManager()
-_command_wait_manager = MessageWaitObjManager()
+_cmd_wait_manager = MessageWaitObjManager()
 _car_wait_manager = CarWaitObjManager()
 _security = SecurityObj()
 
 
 def set_status_wait_timeout_s(timeout_s: float) -> None:
+    logging.getLogger("werkzeug").info(f"Setting status wait timeout of Fleet Protocol HTTP API to {timeout_s} s.")
     _status_wait_manager.set_timeout(int(1000 * timeout_s))
 
 
@@ -46,11 +47,12 @@ def get_status_wait_timeout_s() -> float:
 
 
 def set_command_wait_timeout_s(timeout_s: float) -> None:
-    _command_wait_manager.set_timeout(int(1000 * timeout_s))
+    logging.getLogger("werkzeug").info(f"Setting command wait timeout of Fleet Protocol HTTP API to {timeout_s} s.")
+    _cmd_wait_manager.set_timeout(int(1000 * timeout_s))
 
 
 def get_command_wait_timeout_s() -> float:
-    return _command_wait_manager.timeout_ms * 0.001
+    return _cmd_wait_manager.timeout_ms * 0.001
 
 
 def init_security(
@@ -60,6 +62,7 @@ def init_security(
 
 
 def set_car_wait_timeout_s(timeout_s: float) -> None:
+    logging.getLogger("werkzeug").info(f"Setting car wait timeout of Fleet Protocol HTTP API to {timeout_s} s.")
     _car_wait_manager.set_timeout(int(1000 * timeout_s))
 
 
@@ -252,46 +255,12 @@ def list_commands(
 
     :rtype: Union[list[Message], tuple[list[Message], int], tuple[list[Message], int, dict[str, str]]
     """
-    company_and_car_name = f"Company='{company_name}', car='{car_name}'"
-    db_commands = _list_messages(company_name, car_name, (MessageType.COMMAND,), since)
-    if db_commands or not wait:
-        msg, code = _check_car_availability(company_name, car_name)
-        if code == 200:
-            # device is available and has commands, return them
-            cmds = [_message_from_db(m) for m in db_commands]
-            return _log_and_respond(
-                cmds, 200, f"Returning commands for available car ({company_and_car_name})."
-            )
-        else:
-            return _log_and_respond(
-                [], 404, f"No commands available at the moment ({company_and_car_name})."
-            )
+    _, code = _check_car_availability(company_name, car_name)
+    car_available = code==200
+    if car_available:
+        return _response_for_request_for_connected_cars_commands(company_name, car_name, since, wait)
     else:
-        # no commands are available for given device, wait for them
-        awaited_commands: list[Message] = _command_wait_manager.wait_and_get_reponse(
-            company_name, car_name
-        )
-        if awaited_commands:
-            if since is not None and awaited_commands[-1].timestamp < since:
-                return _log_and_respond(
-                    [],
-                    200,
-                    f"Found commands, but all are older than 'since' parameter ({company_and_car_name}).",
-                )
-            return _log_and_respond(
-                awaited_commands, 200, f"Returning awaited commands ({company_and_car_name})."
-            )
-        else:
-            if (
-                company_name not in _connected_cars()
-                or car_name not in _connected_cars()[company_name]
-            ):
-                return _log_and_respond(
-                    [], 404, f"No commands available before timeout ({company_and_car_name})."
-                )
-            return _log_and_respond(
-                [], 200, f"Car exists, no command occured before timeout ({company_and_car_name})."
-            )
+        return _response_for_request_for_disconnected_cars_commands(company_name, car_name, since, wait)
 
 
 def list_statuses(
@@ -387,7 +356,7 @@ def send_commands(
         return _log_and_respond(errors[0], errors[1], msg)
 
     _update_messages_timestamp(messages)
-    _command_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
+    _cmd_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
     commands_to_db = _message_db_list(messages)
     msg, code = send_messages_to_database(company_name, car_name, *commands_to_db)
     return _log_and_respond(msg, code, msg)
@@ -585,6 +554,34 @@ def _message_db_list(messages: list[Message]) -> list[Message_DB]:
         )
         for message in messages
     ]
+
+
+def _response_for_request_for_connected_cars_commands(
+    company: str, car_name: str, since: int, wait: bool
+) -> tuple[list[Message], int]:
+
+    car = f"car '{car_name}' of '{company}'"
+    db_commands = _list_messages(company, car_name, (MessageType.COMMAND,), since)
+    if db_commands:
+        cmds = [_message_from_db(m) for m in db_commands]
+        return _log_and_respond(body=cmds, code=200, log_msg=f"Commands for {car}")
+    elif wait:
+        cmds = _cmd_wait_manager.wait_and_get_reponse(company, car_name)
+        if cmds and cmds[-1].timestamp >= since:
+            return _log_and_respond(cmds, 200, f"Awaited commands for {car}")
+    return _log_and_respond([], 200, f"No commands for {car}.")
+
+
+def _response_for_request_for_disconnected_cars_commands(
+    company: str, car_name: str, since: int, wait: bool
+) -> tuple[list[Message], int]:
+
+    if wait:
+        cmds = _cmd_wait_manager.wait_and_get_reponse(company, car_name)
+        if cmds and cmds[-1].timestamp >= since:
+            return _log_and_respond(cmds, 200, f"Awaited commands for '{car_name}' of '{company}'")
+    return _log_and_respond([], 404, f"Car '{car_name}' of '{company}' is disconnected. No commands.")
+
 
 
 def _update_messages_timestamp(messages: Iterable[Message_DB]) -> int:
