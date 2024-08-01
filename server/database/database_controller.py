@@ -22,10 +22,10 @@ import copy
 from sqlalchemy.orm import Mapped, mapped_column, Session
 from sqlalchemy import Integer, String, JSON, select, insert, delete, BigInteger, and_, or_
 
-from enums import MessageType  # type: ignore
-import database.connection  # type: ignore
-from database.connection import get_connection_source, Base
-from database.connected_cars import (  # type: ignore
+from server.enums import MessageType  # type: ignore
+import server.database.connection as _connection # type: ignore
+from server.database.connection import get_connection_source, Base
+from server.database.connected_cars import (  # type: ignore
     add_car,
     add_device,
     connected_cars,
@@ -33,7 +33,7 @@ from database.connected_cars import (  # type: ignore
     remove_connected_device,
     clear_connected_cars
 )
-from fleetv2_http_api.models.device_id import DeviceId  # type: ignore
+from server.fleetv2_http_api.models.device_id import DeviceId  # type: ignore
 
 
 @dataclasses.dataclass
@@ -132,7 +132,6 @@ def set_message_retention_period(seconds: int) -> None:
 
 
 def set_db_connection(dblocation: str, username: str = "", password: str = "") -> None:
-
     database.connection.set_db_connection(
         dblocation=dblocation,
         username=username,
@@ -142,7 +141,7 @@ def set_db_connection(dblocation: str, username: str = "", password: str = "") -
 
 
 def set_test_db_connection(dblocation: str) -> None:
-    database.connection.set_test_db_connection(dblocation=dblocation)
+    _connection.set_test_db_connection(dblocation=dblocation)
 
 
 def get_available_devices_from_database() -> None:

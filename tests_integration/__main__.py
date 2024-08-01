@@ -7,7 +7,7 @@ import coverage
 import coverage.exceptions as _cov_exceptions
 
 
-TEST_DIR_NAME = "integration_tests"
+TEST_DIR_NAME = "tests_integration"
 OMITTED_FILES = [
     "__init__.py",
     "server/fleetv2_http_api/controllers/*",
@@ -16,7 +16,7 @@ OMITTED_FILES = [
     "server/fleetv2_http_api/typing_utils.py",
     "server/fleetv2_http_api/encoder.py",
     "server/enums.py",
-    "integration_tests/__main__.py",
+    "tests_integratio/__main__.py",
     "server/database/*",  # none of the database-related functions/object are subject to the testing
 ]
 HTML_REPORT_FLAG = "-h"

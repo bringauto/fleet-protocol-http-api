@@ -7,7 +7,7 @@ import string
 from sqlalchemy import Engine, Select, func, select
 from sqlalchemy.orm import Session
 
-from database.connection import (  # type: ignore
+from server.database.connection import (  # type: ignore
     get_connection_source,
     AdminBase as _AdminBase
 )

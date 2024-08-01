@@ -1,27 +1,26 @@
 import sys
-
-sys.path.append("server")
+sys.path.append(".")
 
 import os
 import time
 import unittest
 
-from database.connected_cars import clear_connected_cars, serialized_device_id  # type: ignore
-from database.database_controller import set_test_db_connection  # type: ignore
-from database.time import timestamp  # type: ignore
-from fleetv2_http_api.impl.controllers import (  # type: ignore
+from server.database.connected_cars import clear_connected_cars, serialized_device_id  # type: ignore
+from server.database.database_controller import set_test_db_connection  # type: ignore
+from server.database.time import timestamp  # type: ignore
+from server.fleetv2_http_api.impl.controllers import (  # type: ignore
     send_statuses,
     list_statuses,
     send_commands,
     list_commands
 )
-from fleetv2_http_api.models.device_id import DeviceId  # type: ignore
-from fleetv2_http_api.models.message import Payload, Message  # type: ignore
-from fleetv2_http_api.impl.controllers import (  # type: ignore
+from server.fleetv2_http_api.models.device_id import DeviceId  # type: ignore
+from server.fleetv2_http_api.models.message import Payload, Message  # type: ignore
+from server.fleetv2_http_api.impl.controllers import (  # type: ignore
     set_status_wait_timeout_s,
     set_command_wait_timeout_s
 )
-from _misc import run_in_threads  # type: ignore
+from tests.api.misc import run_in_threads  # type: ignore
 
 
 class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.TestCase):

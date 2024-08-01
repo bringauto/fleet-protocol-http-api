@@ -1,12 +1,11 @@
 import sys
 
-sys.path.append("server")
-
+sys.path.append(".")
 
 import unittest
 from unittest.mock import patch, Mock
-from database.connection import set_test_db_connection
-from database.security import (
+from server.database.connection import set_test_db_connection
+from server.database.security import (
     get_admin,
     add_admin_key,
     clear_loaded_admins,
@@ -21,14 +20,14 @@ class Test_Getting_Admin(unittest.TestCase):
         set_test_db_connection(dblocation="/:memory:")
         clear_loaded_admins()
 
-    @patch("database.security._generate_key")
+    @patch("server.database.security._generate_key")
     def test_getting_admin_from_database(self, mock_generate_key: Mock):
         self.assertTrue(get_admin("1234567890") is None)
         mock_generate_key.return_value = "1234567890"
         add_admin_key("Alice")
         self.assertTrue(get_admin("1234567890") is not None)
 
-    @patch("database.security._generate_key")
+    @patch("server.database.security._generate_key")
     def test_getting_admin_not_yet_loaded(self, mock_generate_key: Mock) -> None:
         mock_generate_key.return_value = "abcdef"
 

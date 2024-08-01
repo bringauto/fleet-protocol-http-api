@@ -7,25 +7,25 @@ import re
 from flask import redirect, Response  # type: ignore
 from werkzeug import Response as WerkzeugResponse  # type: ignore
 
-from enums import MessageType  # type: ignore
-from fleetv2_http_api.models import Payload, DeviceId, Message, Module, Car  # type: ignore
-from database.database_controller import (  # type: ignore
+from server.enums import MessageType  # type: ignore
+from server.fleetv2_http_api.models import Payload, DeviceId, Message, Module, Car  # type: ignore
+from server.database.database_controller import (  # type: ignore
     send_messages_to_database,
     Message_DB,
     cleanup_device_commands_and_warn_before_future_commands,
 )
-from database.database_controller import list_messages as _list_messages  # type: ignore
-from database.connected_cars import (  # type: ignore
+from server.database.database_controller import list_messages as _list_messages  # type: ignore
+from server.database.connected_cars import (  # type: ignore
     add_car as _add_car,
     add_device as _add_device,
     connected_cars as _connected_cars,
     serialized_device_id as _serialized_device_id,
     is_car_connected as _is_car_connected,
 )
-from database.time import timestamp as _timestamp  # type: ignore
-from fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
-from fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
-from fleetv2_http_api.impl.security import SecurityObj  # type: ignore
+from server.database.time import timestamp as _timestamp  # type: ignore
+from server.fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
+from server.fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
+from server.fleetv2_http_api.impl.security import SecurityObj  # type: ignore
 
 
 _NAME_PATTERN = "^[0-9a-z_]+$"
