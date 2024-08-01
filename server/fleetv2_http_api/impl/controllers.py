@@ -266,9 +266,7 @@ def list_commands(
 def list_statuses(
     company_name: str, car_name: str, since: int = 0, wait: bool = False
 ) -> tuple[list[Message], int]:  # noqa: E501
-    """list_statuses
-
-    It returns list of the Device Statuses. # noqa: E501
+    """Return list of the device statuses.
 
     :param company_name: Name of the company, following a pattern ^[0-9a-z_]+$.
     :type company_name: str
@@ -281,49 +279,33 @@ def list_statuses(
     :param wait: An empty parameter. If specified, the method waits for predefined period of time,
     until some data to be sent in response are available.
     :type wait: bool
-
-    :rtype: Union[list[Message], tuple[list[Message], int], tuple[list[Message], int, dict[str, str]]
     """
     car = f"Company='{company_name}', car='{car_name}'"
-
     db_statuses = _list_messages(
         company_name, car_name, (MessageType.STATUS, MessageType.STATUS_ERROR), since
     )
     if db_statuses:
         statuses = [_message_from_db(m) for m in db_statuses]
-        return _log_and_respond(
-            statuses, 200, f"Returning statuses for available car ({car})."
-        )
+        return _log_and_respond(statuses, 200, f"Returning statuses for car ({car}).")
     elif not wait:
         if _check_car_availability(company_name, car_name)[1] == 200:
-            return _log_and_respond(
-                [], 200, f"No statuses are available at the moment ({car})."
-            )
-        return _log_and_respond(
-            [],
-            404,
-            f"No devices (nor their statuses) are available at the moment ({car}).",
-        )
+            return _log_and_respond([], 200, f"No statuses are available ({car}).")
+        else:
+            return _log_and_respond([], 404, f"Car is not available. No statuses can be returned.")
     else:
-        awaited_statuses: list[Message] = _status_wait_manager.wait_and_get_reponse(
+        awaited: list[Message] = _status_wait_manager.wait_and_get_reponse(
             company_name, car_name
         )
-        if awaited_statuses:
-            if since is not None and awaited_statuses[-1].timestamp < since:
+        if awaited:
+            if since is not None and awaited[-1].timestamp < since:
                 return _log_and_respond(
-                    [],
-                    200,
-                    f"Found statuses, but all are older than 'since' parameter ({car}).",
+                    [], 200, f"Found statuses, but all older than 'since' ({car}).",
                 )
             else:
-                return _log_and_respond(
-                    awaited_statuses, 200, f"Returning awaited statuses ({car})."
-                )
+                return _log_and_respond( awaited, 200, f"Returning awaited statuses ({car}).")
         else:
             return _log_and_respond(
-                [],
-                404,
-                f"No devices (nor their statuses) were available before timeout ({car}).",
+                [], 404, f"No devices (nor statuses) available before timeout ({car}).",
             )
 
 
