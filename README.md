@@ -140,7 +140,7 @@ MzLwgWGitBSDTNLjqktSnzNZQAjKaC
 
 To get Keycloak authentication working, all parameters in the security section of `config/config.json` need to be filled in. Most information is found in the Keycloak GUI.
 
-```
+```json
 "security": {
         "keycloak_url": "https://keycloak.bringauto.com",
         "client_id": "",
@@ -150,11 +150,11 @@ To get Keycloak authentication working, all parameters in the security section o
     }
 ```
 
-- keycloak_url : base URL of a working Keycloak instance
-- client_id : id of client in Keycloak (Clients -> click on client representing HTTP API -> Settings -> Client ID)
-- client_secret_key : secret key of client (Clients -> click on client representing HTTP API -> Credentials -> Client Secret)
-- scope : checking of scopes is not yet implemented (must be `email` for now!)
-- realm : realm in which the client belongs (seen on top of the left side panel in Keycloak GUI)
+- keycloak_url: base URL of a working Keycloak instance
+- client_id: id of client in Keycloak (Clients -> click on client representing HTTP API -> Settings -> Client ID)
+- client_secret_key: secret key of client (Clients -> click on client representing HTTP API -> Credentials -> Client Secret)
+- scope: checking of scopes is not yet implemented (must be `email` for now!)
+- realm: realm in which the client belongs (seen on top of the left side panel in Keycloak GUI)
 
 ### Configuration
 The server settings can be found in the `config/config.json`, including the database logging information and parameters for the database cleanup.
