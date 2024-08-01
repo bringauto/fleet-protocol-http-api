@@ -5,19 +5,19 @@ import requests  # type: ignore
 
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
 
-from database.database_controller import remove_old_messages, set_message_retention_period  # type: ignore
-from database.connected_cars import clear_connected_cars  # type: ignore
-from database.connection import set_db_connection  # type: ignore
-from database.time import timestamp  # type: ignore
-from fleetv2_http_api.__main__ import main as run_server  # type: ignore
-from fleetv2_http_api.impl.controllers import (  # type: ignore
+from server.database.database_controller import remove_old_messages, set_message_retention_period  # type: ignore
+from server.database.connected_cars import clear_connected_cars  # type: ignore
+from server.database.connection import set_db_connection  # type: ignore
+from server.database.time import timestamp  # type: ignore
+from server.fleetv2_http_api.__main__ import main as run_server  # type: ignore
+from server.fleetv2_http_api.impl.controllers import (  # type: ignore
     set_car_wait_timeout_s,
     set_status_wait_timeout_s,
     set_command_wait_timeout_s,
     init_security
 )
-from fleetv2_http_api.controllers.security_controller import set_auth_params  # type: ignore
-import database.script_args as script_args  # type: ignore
+from server.fleetv2_http_api.controllers.security_controller import set_auth_params  # type: ignore
+import server.database.script_args as script_args  # type: ignore
 
 
 logging.getLogger("werkzeug").setLevel(logging.DEBUG)
