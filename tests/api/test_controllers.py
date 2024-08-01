@@ -1,26 +1,23 @@
 import os
 import sys
-
-sys.path.append("server")
-from enums import MessageType, EncodingType  # type: ignore
 import unittest
 from unittest.mock import patch, Mock
 
-sys.path.append("server")
+sys.path.append(".")
 
 from sqlalchemy import insert
 
-from enums import MessageType, EncodingType  # type: ignore
-from database.connected_cars import clear_connected_cars, serialized_device_id  # type: ignore
-from database.connection import get_connection_source  # type: ignore
-from database.database_controller import (   # type: ignore
+from server.enums import MessageType, EncodingType  # type: ignore
+from server.database.connected_cars import clear_connected_cars, serialized_device_id  # type: ignore
+from server.database.connection import get_connection_source  # type: ignore
+from server.database.database_controller import (  # type: ignore
     set_test_db_connection,
     MessageBase,
     remove_old_messages,
     future_command_warning,
-    get_available_devices_from_database
+    get_available_devices_from_database,
 )
-from fleetv2_http_api.impl.controllers import (  # type: ignore
+from server.fleetv2_http_api.impl.controllers import (  # type: ignore
     available_devices,
     available_cars,
     send_statuses,
@@ -29,7 +26,7 @@ from fleetv2_http_api.impl.controllers import (  # type: ignore
     list_commands,
     _message_db_list,
 )
-from fleetv2_http_api.models import DeviceId, Payload, Message, Module, Car  # type: ignore
+from server.fleetv2_http_api.models import DeviceId, Payload, Message, Module, Car  # type: ignore
 
 
 class Test_Device_Id_Validity(unittest.TestCase):
@@ -116,9 +113,7 @@ class Test_Sending_Status_Error(unittest.TestCase):
             encoding=EncodingType.JSON,
             data={"message": "Device is running"},
         )
-        status = Message(
-            timestamp=123456789, device_id=self.device_id, payload=status_payload
-        )
+        status = Message(timestamp=123456789, device_id=self.device_id, payload=status_payload)
         send_statuses("test_company", "test_car", body=[status, self.status_error])
         statuses, code = list_statuses("test_company", "test_car")
         self.assertEqual(code, 200)
@@ -140,9 +135,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
             data={"message": "Device is running"},
         )
         self.device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
-        self.status = Message(
-            timestamp=123456789, device_id=self.device_id, payload=payload
-        )
+        self.status = Message(timestamp=123456789, device_id=self.device_id, payload=payload)
         clear_connected_cars()
 
     def test_device_is_considered_available_if_at_least_one_status_is_in_the_database(self):
@@ -331,7 +324,7 @@ class Test_Sending_And_listing_Multiple_Messages(unittest.TestCase):
 
 
 class Test_Timestamp_Of_A_Sent_Message_Is_Set_To_Time_Of_Its_Sending(unittest.TestCase):
-    @patch("database.time._time_in_ms")
+    @patch("server.database.time._time_in_ms")
     def test_status_original_timestamp_is_set_to_the_current_timestamp_when_sending_the_status(
         self, mock_time_ms: Mock
     ):
@@ -350,7 +343,7 @@ class Test_Timestamp_Of_A_Sent_Message_Is_Set_To_Time_Of_Its_Sending(unittest.Te
 
 
 class Test_Options_For_listing_Multiple_Statuses(unittest.TestCase):
-    @patch("database.time._time_in_ms")
+    @patch("server.database.time._time_in_ms")
     def setUp(self, mock_time_in_ms: Mock) -> None:
         set_test_db_connection("/:memory:")
         status_payload = Payload(
@@ -407,7 +400,7 @@ class Test_Options_For_listing_Multiple_Statuses(unittest.TestCase):
 
 
 class Test_Options_For_listing_Multiple_Commands(unittest.TestCase):
-    @patch("database.time._time_in_ms")
+    @patch("server.database.time._time_in_ms")
     def setUp(self, mock_time_in_ms: Mock) -> None:
         set_test_db_connection("/:memory:")
         device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
@@ -476,7 +469,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
             data={"message": "Beep"},
         )
 
-    @patch("database.time._time_in_ms")
+    @patch("server.database.time._time_in_ms")
     def test_cleaning_up_commands(self, mock_time_in_ms: Mock):
         status = Message(timestamp=0, device_id=self.device_id, payload=self.status_payload)
         command_1 = Message(timestamp=10, device_id=self.device_id, payload=self.command_payload)
@@ -506,7 +499,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
         self.assertEqual(len(list_statuses("company", "car", since=0)[0]), 1)
         self.assertEqual(len(list_commands("company", "car", since=0)[0]), 0)
 
-    @patch("database.time._time_in_ms")
+    @patch("server.database.time._time_in_ms")
     def test_cleaning_up_command_with_newer_timestamp_relative_to_the_first_status_raises_warning(
         self, mock_time_in_ms: Mock
     ):
@@ -701,13 +694,7 @@ class Test_Sending_Messages_To_Multiple_Devices_In_A_Single_Request(unittest.Tes
             [
                 Module(module_id=42, device_list=[self.device_1_id]),
                 Module(module_id=43, device_list=[self.device_2_id]),
-                Module(
-                    module_id=124,
-                    device_list=[
-                        self.device_3_id,
-                        self.device_4_id
-                    ]
-                ),
+                Module(module_id=124, device_list=[self.device_3_id, self.device_4_id]),
             ],
         )
 

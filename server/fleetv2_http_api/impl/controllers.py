@@ -1,31 +1,30 @@
 from __future__ import annotations
 from typing import Optional, Any, Iterable, Collection
-from enums import MessageType  # type: ignore
 import logging
 import re
 
 from flask import redirect, Response  # type: ignore
 from werkzeug import Response as WerkzeugResponse  # type: ignore
 
-from enums import MessageType  # type: ignore
-from fleetv2_http_api.models import Payload, DeviceId, Message, Module, Car  # type: ignore
-from database.database_controller import (  # type: ignore
+from server.enums import MessageType  # type: ignore
+from server.fleetv2_http_api.models import Payload, DeviceId, Message, Module, Car  # type: ignore
+from server.database.database_controller import (  # type: ignore
     send_messages_to_database,
     Message_DB,
     cleanup_device_commands_and_warn_before_future_commands,
 )
-from database.database_controller import list_messages as _list_messages  # type: ignore
-from database.connected_cars import (  # type: ignore
+from server.database.database_controller import list_messages as _list_messages  # type: ignore
+from server.database.connected_cars import (  # type: ignore
     add_car as _add_car,
     add_device as _add_device,
     connected_cars as _connected_cars,
     serialized_device_id as _serialized_device_id,
     is_car_connected as _is_car_connected,
 )
-from database.time import timestamp as _timestamp  # type: ignore
-from fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
-from fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
-from fleetv2_http_api.impl.security import SecurityObj  # type: ignore
+from server.database.time import timestamp as _timestamp  # type: ignore
+from server.fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
+from server.fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
+from server.fleetv2_http_api.impl.security import SecurityObj  # type: ignore
 
 
 _NAME_PATTERN = "^[0-9a-z_]+$"
@@ -255,7 +254,7 @@ def list_commands(
 
     :rtype: Union[list[Message], tuple[list[Message], int], tuple[list[Message], int, dict[str, str]]
     """
-    _, code = _check_car_availability(company_name, car_name)
+    _, code = _car_availability(company_name, car_name)
     car_available = code==200
     if car_available:
         return _response_for_request_for_connected_cars_commands(company_name, car_name, since, wait)
@@ -266,9 +265,7 @@ def list_commands(
 def list_statuses(
     company_name: str, car_name: str, since: int = 0, wait: bool = False
 ) -> tuple[list[Message], int]:  # noqa: E501
-    """list_statuses
-
-    It returns list of the Device Statuses. # noqa: E501
+    """Return list of the device statuses.
 
     :param company_name: Name of the company, following a pattern ^[0-9a-z_]+$.
     :type company_name: str
@@ -281,50 +278,37 @@ def list_statuses(
     :param wait: An empty parameter. If specified, the method waits for predefined period of time,
     until some data to be sent in response are available.
     :type wait: bool
-
-    :rtype: Union[list[Message], tuple[list[Message], int], tuple[list[Message], int, dict[str, str]]
     """
     car = f"Company='{company_name}', car='{car_name}'"
-
     db_statuses = _list_messages(
         company_name, car_name, (MessageType.STATUS, MessageType.STATUS_ERROR), since
     )
     if db_statuses:
         statuses = [_message_from_db(m) for m in db_statuses]
-        return _log_and_respond(
-            statuses, 200, f"Returning statuses for available car ({car})."
-        )
+        return _log_and_respond(statuses, 200, f"Returning statuses for car ({car}).")
     elif not wait:
-        if _check_car_availability(company_name, car_name)[1] == 200:
-            return _log_and_respond(
-                [], 200, f"No statuses are available at the moment ({car})."
-            )
-        return _log_and_respond(
-            [],
-            404,
-            f"No devices (nor their statuses) are available at the moment ({car}).",
-        )
+        if _car_availability(company_name, car_name)[1] == 200:
+            return _log_and_respond([], 200, f"No statuses are available ({car}).")
+        else:
+            return _log_and_respond([], 404, f"Car is not available. No statuses can be returned.")
     else:
-        awaited_statuses: list[Message] = _status_wait_manager.wait_and_get_reponse(
+        awaited: list[Message] = _status_wait_manager.wait_and_get_reponse(
             company_name, car_name
         )
-        if awaited_statuses:
-            if since is not None and awaited_statuses[-1].timestamp < since:
+        if awaited:
+            if since is not None and awaited[-1].timestamp < since:
                 return _log_and_respond(
-                    [],
-                    200,
-                    f"Found statuses, but all are older than 'since' parameter ({car}).",
+                    [], 200, f"Found statuses, but all older than 'since' ({car}).",
                 )
             else:
-                return _log_and_respond(
-                    awaited_statuses, 200, f"Returning awaited statuses ({car})."
-                )
+                return _log_and_respond( awaited, 200, f"Returning awaited statuses ({car}).")
         else:
-            return _log_and_respond(
-                [],
-                404,
-                f"No devices (nor their statuses) were available before timeout ({car}).",
-            )
+            if _car_availability(company_name, car_name)[1] == 200:
+                return _log_and_respond([], 200, f"No statuses are available before timeout ({car}).")
+            else:
+                return _log_and_respond(
+                    [], 404, f"No devices (nor statuses) available before timeout ({car}).",
+                )
 
 
 def send_commands(
@@ -345,7 +329,7 @@ def send_commands(
     """
     messages = _message_list_from_request_body(body)
     if messages == []:
-        response = _check_car_availability(company_name, car_name)
+        response = _car_availability(company_name, car_name)
         if response[1] != 200:
             return response
         msg = f"Empty list of commands was sent to the API; no commands were sent to the device."
@@ -475,7 +459,7 @@ def _check_device_availability(
     company: str, car: str, module_id: int, device_id: DeviceId
 ) -> tuple[str, int]:
     connected_cars_dict = _connected_cars()
-    msg, code = _check_car_availability(company, car)
+    msg, code = _car_availability(company, car)
     if code != 200:
         return msg, code
     elif module_id not in connected_cars_dict[company][car].modules:
@@ -494,7 +478,7 @@ def _check_device_availability(
         return "", 200
 
 
-def _check_car_availability(company_name: str, car_name: str) -> tuple[str, int]:
+def _car_availability(company_name: str, car_name: str) -> tuple[str, int]:
     device_dict = _connected_cars()
     if company_name not in device_dict:
         return f"No car is available under a company '{company_name}'.", 404  # type: ignore
@@ -520,6 +504,7 @@ def _handle_first_status_and_return_warnings(
 
 
 def _message_from_db(message_db: Message_DB) -> Message:
+    """Convert Message_DB to Message."""
     return Message(
         timestamp=message_db.timestamp,
         device_id=DeviceId(
@@ -537,6 +522,7 @@ def _message_from_db(message_db: Message_DB) -> Message:
 
 
 def _message_db_list(messages: list[Message]) -> list[Message_DB]:
+    """Convert list of messages to list of Message_DB."""
     for m in messages:
         if isinstance(m.payload.message_type, MessageType):
             m.payload.message_type = m.payload.message_type.value

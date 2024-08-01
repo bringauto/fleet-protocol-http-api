@@ -29,23 +29,44 @@ If you have trouble with running the generator, visit [docs](https://openapi-gen
 
 ## Tests
 
-### Unit tests
+Testing of a cloned repository requires two steps:
 
-You can run unit tests for the server by running `./test_server.sh` in the root directory. Do not forget to install the requirements as shown in the [usage](#usage) section.
+- install this package,
+- run the tests (or their subset).
 
-### Integration tests
+**Before installation, make sure you have the [virtual environment](https://docs.python.org/3/library/venv.html#creating-virtual-environments) activated.** This is a necessary step to avoid conflicts with the system packages.
 
-In the root folder, there is a package `integration_tests`. To run then, use
+## Package installation
+
+Run the command below in the root directory. `-e` is used to install the package in the [editable mode](https://packaging.python.org/en/latest/guides/distributing-packages-using-setuptools/#working-in-development-mode).
 
 ```bash
-python -m integration_tests [-h] [PATH1] [PATH2] ...
+pip install [-e] .
 ```
 
-Each PATH is specified relative to the `tests` folder. If no PATH is specified, all the tests will run. Otherwise,
+## Running the tests
+
+In the root directory, run the following
+
+```bash
+python -m tests [-h] [PATH1] [PATH2] ...
+```
+
+Each PATH is specified relative to the `tests` directory. If no PATH is specified, all the tests will run. Otherwise
+
 - when PATH is a directory, the script will run all tests in this directory (and subdirectories),
 - when PATH is a Python file, the script will run all tests in the file.
 
-The `-h` flag makes the script display tests' coverage in HTML format, for example in your web browser.
+The `-h` flag makes the script display tests' coverage in an HTML format, for example in your web browser.
+
+The same applies to integration tests using containerized HTTP servers.
+
+To run the integration tests, run the following in the root directory:
+
+```bash
+python -m tests_integration [-h] [PATH1] [PATH2] ...
+```
+
 
 ## Usage
 

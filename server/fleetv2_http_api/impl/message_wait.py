@@ -2,8 +2,8 @@ from __future__ import annotations
 import time
 import threading
 
-from fleetv2_http_api.models.message import Message  # type: ignore
-from database.time import timestamp as _timestamp  # type: ignore
+from server.fleetv2_http_api.models.message import Message  # type: ignore
+from server.database.time import timestamp as _timestamp  # type: ignore
 
 
 class MessageWaitObjManager:

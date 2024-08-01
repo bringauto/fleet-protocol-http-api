@@ -6,21 +6,21 @@ from flask.testing import FlaskClient as _FlaskClient  # type: ignore
 import connexion as _connexion  # type: ignore
 from sqlalchemy.orm import Session as _Session
 
-from database.connection import ( # type: ignore
+from server.database.connection import ( # type: ignore
     get_connection_source as _get_connection_source,
     set_test_db_connection as _set_test_db_connection,
     create_all_tables as _create_all_tables
 )
-from fleetv2_http_api.impl.controllers import ( # type: ignore
+from server.fleetv2_http_api.impl.controllers import ( # type: ignore
     set_command_wait_timeout_s,
     set_status_wait_timeout_s
 )
 
-from fleetv2_http_api.encoder import JSONEncoder  # type: ignore
-from database.security import _AdminBase as _AdminBase  # type: ignore
+from server.fleetv2_http_api.encoder import JSONEncoder  # type: ignore
+from server.database.security import _AdminBase as _AdminBase  # type: ignore
 
 # Keep the following import to make all the tables be created by the get_test_app function
-from database.connected_cars import clear_connected_cars as _clear_device_ids  # type: ignore
+from server.database.connected_cars import clear_connected_cars as _clear_device_ids  # type: ignore
 
 
 def get_app() -> _connexion.FlaskApp:

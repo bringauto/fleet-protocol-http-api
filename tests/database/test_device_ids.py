@@ -1,10 +1,10 @@
 import sys
 
-sys.path.append("server")
+sys.path.append(".")
 import unittest
 
-from fleetv2_http_api.models.device_id import DeviceId   # type: ignore
-from database.connected_cars import (  # type: ignore
+from server.fleetv2_http_api.models.device_id import DeviceId   # type: ignore
+from server.database.connected_cars import (  # type: ignore
     add_car,
     add_device,
     connected_cars,

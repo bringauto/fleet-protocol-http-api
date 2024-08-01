@@ -2,11 +2,8 @@ import sys
 import dataclasses
 from collections import defaultdict
 
-sys.path.append("source")
-
 from copy import deepcopy
-
-from fleetv2_http_api.models.device_id import DeviceId  # type: ignore
+from server.fleetv2_http_api.models.device_id import DeviceId  # type: ignore
 
 
 @dataclasses.dataclass(frozen=True)
@@ -58,14 +55,12 @@ class ConnectedCar:
 
         Returns True if the device id was stored, False otherwise.
         """
-        assert isinstance(device_id, DeviceId)
         if not device_id.module_id in self.modules:
             self.modules[device_id.module_id] = ConnectedModule(id=device_id.module_id)
         return self.modules[device_id.module_id].add_device(device_id)
 
     def is_connected(self, device_id: DeviceId) -> bool:
         """Check if a device id is connected to this car."""
-        assert isinstance(device_id, DeviceId)
         return device_id.module_id in self.modules and self.modules[device_id.module_id].is_connected(device_id)
 
     def remove_device(self, device_id: DeviceId) -> bool:
@@ -73,7 +68,6 @@ class ConnectedCar:
 
         Returns True if the device id was removed, False otherwise.
         """
-        assert isinstance(device_id, DeviceId)
         if device_id.module_id in self.modules:
             self.modules[device_id.module_id].remove_device(device_id)
             if not self.modules[device_id.module_id].device_ids:
@@ -105,7 +99,6 @@ def add_device(company_name: str, car_name: str, device_id: DeviceId) -> bool:
 
     Returns True if the device id was stored, False otherwise.
     """
-    assert isinstance(device_id, DeviceId)
     if not is_car_connected(company_name, car_name):
         return False
     return _connected_cars[company_name][car_name].add_device(device_id)
@@ -128,7 +121,6 @@ def clear_connected_cars() -> None:
 
 def remove_connected_device(company_name: str, car_name: str, device_id: DeviceId) -> None:
     """Remove a device id from its module dict in the device_ids dictionary."""
-    assert isinstance(device_id, DeviceId)
     _connected_cars[company_name][car_name].remove_device(device_id)
 
 

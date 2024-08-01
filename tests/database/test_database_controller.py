@@ -1,22 +1,21 @@
 import os
 import sys
-
-sys.path.append("server")
-
 from unittest.mock import patch, Mock
 import unittest
-from enums import EncodingType, MessageType  # type: ignore
 
-from fleetv2_http_api.models.device_id import DeviceId  # type: ignore
-from database.connected_cars import serialized_device_id  # type: ignore
-from database.connection import (  # type: ignore
+sys.path.append(".")
+
+from server.enums import EncodingType, MessageType  # type: ignore
+from server.fleetv2_http_api.models.device_id import DeviceId  # type: ignore
+from server.database.connected_cars import serialized_device_id  # type: ignore
+from server.database.connection import (  # type: ignore
     set_test_db_connection,
     unset_connection_source,
     ConnectionSourceNotSet,
     get_connection_source,
     set_test_db_connection,
 )
-from database.database_controller import (  # type: ignore
+from server.database.database_controller import (  # type: ignore
     set_message_retention_period,
     send_messages_to_database,
     list_messages,
@@ -25,7 +24,6 @@ from database.database_controller import (  # type: ignore
     Message_DB,
     MessageBase,
 )
-from fleetv2_http_api.impl.controllers import DeviceId  # type: ignore
 
 
 class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
@@ -99,7 +97,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         unset_connection_source()
         self.assertRaises(ConnectionSourceNotSet, get_connection_source)
 
-    @patch("database.time._time_in_ms")
+    @patch("server.database.time._time_in_ms")
     def test_send_messages_to_database(self, mock_time_in_ms: Mock):
         mock_time_in_ms.return_value = 80
         device_id_1 = DeviceId(module_id=45, type=2, role="role1", name="device1")
@@ -144,7 +142,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         self.assertEqual(messages[0].timestamp, 1)
         self.assertEqual(messages[1].timestamp, 7)
 
-    @patch("database.time._time_in_ms")
+    @patch("server.database.time._time_in_ms")
     def test_cleanup_device_commands_and_warn_before_future_commands(self, mock_time_in_ms: Mock):
         device_id = DeviceId(module_id=45, type=2, role="role1", name="device1")
         sdevice_id = serialized_device_id(device_id)
@@ -198,7 +196,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
             ),
         )
         remove_old_messages(current_timestamp=MessageBase.data_retention_period_ms() + 50)
-        self.assertEqual(len(list_messages("test_company", "test_car", MessageType.STATUS)), 0)
+        self.assertEqual(len(list_messages("test_company", "test_car", (MessageType.STATUS,))), 0)
         warnings = cleanup_device_commands_and_warn_before_future_commands(
             current_timestamp=MessageBase.data_retention_period_ms() + 55,
             company_name="test_company",
@@ -215,7 +213,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         )
         self.assertEqual(len(messages), 0)
 
-    @patch("database.time._time_in_ms")
+    @patch("server.database.time._time_in_ms")
     def test_remove_old_messages(self, mock_time_in_ms: Mock):
         device_id = DeviceId(module_id=45, type=2, role="role1", name="device1")
         sdevice_id = serialized_device_id(device_id)
@@ -286,7 +284,7 @@ class Test_Send_And_Read_Message(unittest.TestCase):
         # Set up the database connection before running the tests
         set_test_db_connection(dblocation="/:memory:")
 
-    @patch("database.time._time_in_ms")
+    @patch("server.database.time._time_in_ms")
     def test_send_and_read_message(self, mock_time_in_ms: Mock):
         device_id = DeviceId(module_id=45, type=2, role="role1", name="device1")
         sdevice_id = serialized_device_id(device_id)
