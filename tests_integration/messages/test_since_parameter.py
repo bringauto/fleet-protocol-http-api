@@ -12,7 +12,7 @@ from server.enums import MessageType
 
 
 class Test_Filtering_Sent_Statuses_By_Since_Parameter(unittest.TestCase):
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def setUp(self, mock_timestamp: Mock) -> None:
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
@@ -64,7 +64,7 @@ class Test_Filtering_Sent_Statuses_By_Since_Parameter(unittest.TestCase):
 
 
 class Test_Filtering_Sent_Commands_By_Since_Parameter(unittest.TestCase):
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def setUp(self, mock_timestamp: Mock) -> None:
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
@@ -127,7 +127,7 @@ class Test_Filtering_Sent_Commands_By_Since_Parameter(unittest.TestCase):
 class Test_Setting_Wait_To_True_When_All_Statuses_Are_Filtered_Out_By_Since_Parameter(
     unittest.TestCase
 ):
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def setUp(self, mock_timestamp: Mock) -> None:
         self.app = _app.get_test_app(
             db_location="test_db.db", base_url="/v2/protocol/", request_timeout_s=0.2
@@ -149,7 +149,7 @@ class Test_Setting_Wait_To_True_When_All_Statuses_Are_Filtered_Out_By_Since_Para
             mock_timestamp.return_value = 40
             c.post("/status/test_company/test_car", json=[self.status_4])
 
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def test_thread_waits_for_status_with_newer_timestamp_than_since_parameter(
         self, mock_timestamp: Mock
     ):
@@ -162,7 +162,7 @@ class Test_Setting_Wait_To_True_When_All_Statuses_Are_Filtered_Out_By_Since_Para
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.json[0]["timestamp"], 60)  # type: ignore
 
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def test_sending_status_with_timestamp_older_than_since_parameter_will_not_resume_waiting_thread(
         self, mock_timestamp: Mock
     ):
@@ -182,7 +182,7 @@ class Test_Setting_Wait_To_True_When_All_Statuses_Are_Filtered_Out_By_Since_Para
 class Test_Setting_Wait_To_True_When_All_Commands_Are_Filtered_Out_By_Since_Parameter(
     unittest.TestCase
 ):
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def setUp(self, mock_timestamp: Mock) -> None:
         self.app = _app.get_test_app(
             db_location="test_db.db", base_url="/v2/protocol/", request_timeout_s=0.2
@@ -211,7 +211,7 @@ class Test_Setting_Wait_To_True_When_All_Commands_Are_Filtered_Out_By_Since_Para
             mock_timestamp.return_value = 40
             c.post("/command/test_company/test_car", json=[self.command_3])
 
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def test_thread_waits_for_command_with_newer_timestamp_than_since_parameter(
         self, mock_timestamp: Mock
     ):
@@ -224,7 +224,7 @@ class Test_Setting_Wait_To_True_When_All_Commands_Are_Filtered_Out_By_Since_Para
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.json[0]["timestamp"], 55)  # type: ignore
 
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def test_sending_command_with_timestamp_older_than_since_parameter_will_not_resume_waiting_thread(
         self, mock_timestamp: Mock
     ):

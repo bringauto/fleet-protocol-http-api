@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch, Mock
 import sys
 
-sys.path.append("server")
+sys.path.append(".")
 
 import server.app as _app
 from server.fleetv2_http_api.models.message import Message, Payload, DeviceId
@@ -58,7 +58,7 @@ class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):
                 ],
             )
 
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def test_retrieving_sent_status(self, mock_timestamp: Mock) -> None:
         mock_timestamp.return_value = 11111
         with self.app.app.test_client() as client:
@@ -128,7 +128,7 @@ class Test_Making_Car_Available_By_Sending_First_Status_Error(unittest.TestCase)
                 ],
             )
 
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def test_retrieving_sent_status_error(self, mock_timestamp: Mock) -> None:
         mock_timestamp.return_value = 11111
         with self.app.app.test_client() as client:
@@ -195,7 +195,7 @@ class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
         self.command_3 = Message(device_id=self.device_id, payload=command_payload_3)
         self.command_4 = Message(device_id=self.device_id, payload=command_payload_4)
 
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def test_retrieving_commands_succesfully_sent_to_available_car(
         self, mock_timestamp: Mock
     ) -> None:
@@ -257,7 +257,7 @@ class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
                 }
             ])
 
-    @patch("server.fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def test_sending_commands_and_automatically_cleaning_them_up(self, mock_timestamp: Mock):
        with self.app.app.test_client() as client:
             mock_timestamp.return_value = 0
@@ -270,8 +270,7 @@ class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
             remove_old_messages(current_timestamp=1000000000000000)
 
             client.post("/status/test_company/test_car", json=[self.status])
-            client.post("/command/test_company/test_car", json=[self.command_3])
-            client.post("/command/test_company/test_car", json=[self.command_4])
+            client.post("/command/test_company/test_car", json=[self.command_3, self.command_4])
             response = client.get("/command/test_company/test_car")
             self.assertEqual(response.status_code, 200)
             assert response.json is not None
@@ -323,7 +322,7 @@ class Test_Sending_And_Viewing_Statuses_Of_Multiple_Cars(unittest.TestCase):
         self.status_2 = Message(device_id=self.device_id, payload=status_payload)
         self.status_error = Message(device_id=self.device_id, payload=Payload(MessageType.STATUS_ERROR, "JSON", {}))
 
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def test_sending_statuses_to_mutliple_cars_of_multiple_companies(self, mock_timestamp: Mock) -> None:
         with self.app.app.test_client() as client:
             self.maxDiff = None
@@ -422,7 +421,7 @@ class Test_Sending_And_Viewing_Statuses_Sent_To_Multiple_Devices_On_Single_Car(u
         self.status_2 = Message(device_id=device_B_id, payload=status_payload_B)
         self.status_3 = Message(device_id=device_C_id, payload=status_payload_C)
 
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def test_sending_two_statuses_to_different_devices_is_possible(
         self, mock_timestamp: Mock
     ) -> None:
@@ -467,7 +466,7 @@ class Test_Sending_And_Viewing_Statuses_Sent_To_Multiple_Devices_On_Single_Car(u
                 ],
             )
 
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def test_sending_statuses_to_different_modules_is_possible(self, mock_timestamp: Mock) -> None:
         with self.app.app.test_client() as client:
             mock_timestamp.return_value = 111
@@ -533,7 +532,7 @@ class Test_Sending_Multiple_Statuses_To_The_Same_Car_At_Once(unittest.TestCase):
         self.status_1 = Message(device_id=device_A_id, payload=status_payload_A)
         self.status_2 = Message(device_id=device_B_id, payload=status_payload_B)
 
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def test_sending_two_statuses_at_once_is_possible_for_two_distinct_devices(
         self, mock_timestamp: Mock
     ) -> None:
@@ -579,7 +578,7 @@ class Test_Sending_Multiple_Statuses_To_The_Same_Car_At_Once(unittest.TestCase):
                 ],
             )
 
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def test_sending_one_status_twice_in_one_request_is_allowed(self, mock_timestamp: Mock) -> None:
         with self.app.app.test_client() as client:
             mock_timestamp.return_value = 11111
@@ -628,7 +627,7 @@ class Test_Sending_Multiple_Statuses_To_The_Same_Car_At_Once(unittest.TestCase):
 
 
 class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def setUp(self, mock_timestamp: Mock) -> None:
         self.maxDiff = 1000
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
@@ -647,7 +646,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
             client.post("/status/test_company/test_car", json=[status_1, status_2])
             client.get("/v2/protocol/available-devices/test_company/test_car")
 
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def test_sending_two_commands_to_the_same_device_is_allowed(self, mock_timestamp: Mock):
         mock_timestamp.return_value = 11112
         with self.app.app.test_client() as client:
@@ -692,7 +691,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
                 ],
             )
 
-    @patch("fleetv2_http_api.impl.controllers._timestamp")
+    @patch("server.database.time._time_in_ms")
     def test_sending_command_twice_in_one_request_is_allowed(self, mock_timestamp: Mock):
         mock_timestamp.return_value = 11112
         with self.app.app.test_client() as client:
