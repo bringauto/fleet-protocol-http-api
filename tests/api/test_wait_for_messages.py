@@ -1,9 +1,9 @@
 import sys
-sys.path.append(".")
-
 import os
 import time
 import unittest
+
+sys.path.append(".")
 
 from server.database.connected_cars import clear_connected_cars, serialized_device_id  # type: ignore
 from server.database.database_controller import set_test_db_connection  # type: ignore
@@ -12,13 +12,13 @@ from server.fleetv2_http_api.impl.controllers import (  # type: ignore
     send_statuses,
     list_statuses,
     send_commands,
-    list_commands
+    list_commands,
 )
-from server.fleetv2_http_api.models.device_id import DeviceId  # type: ignore
-from server.fleetv2_http_api.models.message import Payload, Message  # type: ignore
+from server.fleetv2_http_api.models import Car, DeviceId, Payload, Message  # type: ignore
 from server.fleetv2_http_api.impl.controllers import (  # type: ignore
+    available_cars,
     set_status_wait_timeout_s,
-    set_command_wait_timeout_s
+    set_command_wait_timeout_s,
 )
 from tests.api.misc import run_in_threads  # type: ignore
 
@@ -38,7 +38,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
         self.status = Message(device_id=self.device_id, payload=payload_example)
         self.status_error = Message(
             device_id=self.device_id,
-            payload=Payload(message_type="STATUS_ERROR", encoding="JSON", data={})
+            payload=Payload(message_type="STATUS_ERROR", encoding="JSON", data={}),
         )
         set_status_wait_timeout_s(1)
 
@@ -114,7 +114,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
 
         run_in_threads(list_test_statuses_1, list_test_statuses_2, send_single_status)
 
-    def test_sending_second_request_after_statuses_are_available_but_before_timeout(self):
+    def test_second_request_after_statuses_are_available_but_before_timeout_receives_statuses(self):
         TIMEOUT = 0.05
         T_FIRST_REQUEST = 0.00
         T_SECOND_REQUEST = 0.08
@@ -157,6 +157,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
 
     def test_multiple_requests_for_commands(self):
         set_command_wait_timeout_s(5)
+
         def list_test_statuses_1():
             statuses, code = list_statuses("test_company", "test_car", wait=True)
             self.assertEqual(len(statuses), 1, "First response contains the status.")
@@ -433,6 +434,50 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
             os.remove("./example.db")
 
 
+class Test_Car_Availability(unittest.TestCase):
+
+    def setUp(self) -> None:
+        if os.path.exists("./example.db"):
+            os.remove("./example.db")
+        set_test_db_connection("/example.db")
+        clear_connected_cars()
+        self.payload_example = Payload("STATUS", encoding="JSON", data={"message": "Running"})
+        self.device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
+        self.sdevice_id = serialized_device_id(self.device_id)
+        set_status_wait_timeout_s(0.1)
+        set_command_wait_timeout_s(0.1)
+
+    def test_waiting_for_statuses_of_car_not_becoming_available_before_timeout_yields_404(self):
+        result = list_statuses("test_company", "test_car", wait=True)
+        self.assertEqual(result[1], 404)
+
+    def test_waiting_for_statuses_of_car_available_before_timeout_but_wihout_new_statuses_yields_200(self):
+        status = Message(device_id=self.device_id, payload=self.payload_example)
+        send_statuses("test_company", "test_car", [status])
+        self.assertIn(Car("test_company", "test_car"), available_cars("test_company")[0])
+
+        current_timestamp = timestamp()
+        result = list_statuses("test_company", "test_car", wait=True, since=current_timestamp)
+        self.assertEqual(result[0], [])
+        self.assertEqual(result[1], 200)
+
+    def test_waiting_for_commands_of_car_not_becoming_available_before_timeout_yields_404(self):
+        current_timestamp = timestamp()
+        result = list_commands("test_company", "test_car", wait=True, since=current_timestamp)
+        self.assertEqual(result[0], [])
+        self.assertEqual(result[1], 404)
+
+    def test_waiting_for_commands_of_available_car_without_receiving_any_new_yields_200_and_empty_list(self):
+        status = Message(device_id=self.device_id, payload=self.payload_example)
+        send_statuses("test_company", "test_car", [status])
+        self.assertIn(Car("test_company", "test_car"), available_cars("test_company")[0])
+
+        current_timestamp = timestamp()
+        result = list_commands("test_company", "test_car", wait=True, since=current_timestamp)
+        self.assertEqual(result[0], [])
+        self.assertEqual(result[1], 200)
+
+
 class Test_Waiting_For_Messsages_From_Multiple_Cars(unittest.TestCase):
 
     def setUp(self) -> None:
@@ -446,13 +491,12 @@ class Test_Waiting_For_Messsages_From_Multiple_Cars(unittest.TestCase):
         self.device_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
         self.sdevice_id = serialized_device_id(self.device_id)
         self.status = Message(
-            timestamp=123456789,
-            device_id=self.device_id,
-            payload=payload_example
+            timestamp=123456789, device_id=self.device_id, payload=payload_example
         )
 
     def test_return_statuses_sent_after_the_request_when_wait_mechanism_is_applied(self):
         set_status_wait_timeout_s(1)
+
         def list_test_statuses_from_car_1():
             time.sleep(0.0)
             msg, code = list_statuses("test_company", "test_car", wait=True)
@@ -470,11 +514,14 @@ class Test_Waiting_For_Messsages_From_Multiple_Cars(unittest.TestCase):
             send_statuses("test_company", "test_car", [self.status.to_dict()])
             send_statuses("test_company", "test_car_2", [self.status.to_dict()])
 
-        run_in_threads(list_test_statuses_from_car_1, list_test_statuses_from_car_2, send_test_statuses)
+        run_in_threads(
+            list_test_statuses_from_car_1, list_test_statuses_from_car_2, send_test_statuses
+        )
 
     def tearDown(self) -> None:
         if os.path.exists("./example.db"):
             os.remove("./example.db")
+
 
 if __name__ == "__main__":
     unittest.main()

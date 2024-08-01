@@ -255,7 +255,7 @@ def list_commands(
 
     :rtype: Union[list[Message], tuple[list[Message], int], tuple[list[Message], int, dict[str, str]]
     """
-    _, code = _check_car_availability(company_name, car_name)
+    _, code = _car_availability(company_name, car_name)
     car_available = code==200
     if car_available:
         return _response_for_request_for_connected_cars_commands(company_name, car_name, since, wait)
@@ -288,7 +288,7 @@ def list_statuses(
         statuses = [_message_from_db(m) for m in db_statuses]
         return _log_and_respond(statuses, 200, f"Returning statuses for car ({car}).")
     elif not wait:
-        if _check_car_availability(company_name, car_name)[1] == 200:
+        if _car_availability(company_name, car_name)[1] == 200:
             return _log_and_respond([], 200, f"No statuses are available ({car}).")
         else:
             return _log_and_respond([], 404, f"Car is not available. No statuses can be returned.")
@@ -304,9 +304,12 @@ def list_statuses(
             else:
                 return _log_and_respond( awaited, 200, f"Returning awaited statuses ({car}).")
         else:
-            return _log_and_respond(
-                [], 404, f"No devices (nor statuses) available before timeout ({car}).",
-            )
+            if _car_availability(company_name, car_name)[1] == 200:
+                return _log_and_respond([], 200, f"No statuses are available before timeout ({car}).")
+            else:
+                return _log_and_respond(
+                    [], 404, f"No devices (nor statuses) available before timeout ({car}).",
+                )
 
 
 def send_commands(
@@ -327,7 +330,7 @@ def send_commands(
     """
     messages = _message_list_from_request_body(body)
     if messages == []:
-        response = _check_car_availability(company_name, car_name)
+        response = _car_availability(company_name, car_name)
         if response[1] != 200:
             return response
         msg = f"Empty list of commands was sent to the API; no commands were sent to the device."
@@ -457,7 +460,7 @@ def _check_device_availability(
     company: str, car: str, module_id: int, device_id: DeviceId
 ) -> tuple[str, int]:
     connected_cars_dict = _connected_cars()
-    msg, code = _check_car_availability(company, car)
+    msg, code = _car_availability(company, car)
     if code != 200:
         return msg, code
     elif module_id not in connected_cars_dict[company][car].modules:
@@ -476,7 +479,7 @@ def _check_device_availability(
         return "", 200
 
 
-def _check_car_availability(company_name: str, car_name: str) -> tuple[str, int]:
+def _car_availability(company_name: str, car_name: str) -> tuple[str, int]:
     device_dict = _connected_cars()
     if company_name not in device_dict:
         return f"No car is available under a company '{company_name}'.", 404  # type: ignore
@@ -502,6 +505,7 @@ def _handle_first_status_and_return_warnings(
 
 
 def _message_from_db(message_db: Message_DB) -> Message:
+    """Convert Message_DB to Message."""
     return Message(
         timestamp=message_db.timestamp,
         device_id=DeviceId(
@@ -519,6 +523,7 @@ def _message_from_db(message_db: Message_DB) -> Message:
 
 
 def _message_db_list(messages: list[Message]) -> list[Message_DB]:
+    """Convert list of messages to list of Message_DB."""
     for m in messages:
         if isinstance(m.payload.message_type, MessageType):
             m.payload.message_type = m.payload.message_type.value
