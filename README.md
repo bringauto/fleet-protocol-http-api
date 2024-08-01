@@ -61,8 +61,6 @@ The `-h` flag makes the script display tests' coverage in an HTML format, for ex
 
 The same applies to integration tests using containerized HTTP servers.
 
-WARNING: The integration tests require about 5-10 minutes to run.
-
 To run the integration tests, run the following in the root directory:
 
 ```bash
