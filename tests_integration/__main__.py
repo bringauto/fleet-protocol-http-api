@@ -16,7 +16,7 @@ OMITTED_FILES = [
     "server/fleetv2_http_api/typing_utils.py",
     "server/fleetv2_http_api/encoder.py",
     "server/enums.py",
-    "tests_integratio/__main__.py",
+    "tests_integration/__main__.py",
     "server/database/*",  # none of the database-related functions/object are subject to the testing
 ]
 HTML_REPORT_FLAG = "-h"

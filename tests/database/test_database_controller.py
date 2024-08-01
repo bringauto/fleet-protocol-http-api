@@ -24,7 +24,6 @@ from server.database.database_controller import (  # type: ignore
     Message_DB,
     MessageBase,
 )
-from server.fleetv2_http_api.impl.controllers import DeviceId  # type: ignore
 
 
 class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
