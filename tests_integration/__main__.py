@@ -56,7 +56,7 @@ def _run_tests(show_test_names: bool = True) -> None:
             pattern, dir = "test_*.py", path
         suite.addTests(unittest.TestLoader().discover(dir, pattern=pattern))
     verbosity = 2 if show_test_names else 1
-    unittest.TextTestRunner(verbosity=verbosity).run(suite)
+    unittest.TextTestRunner(verbosity=verbosity, buffer=True).run(suite)
 
 
 if __name__ == "__main__":
