@@ -451,7 +451,7 @@ class Test_Car_Availability(unittest.TestCase):
         result = list_statuses("test_company", "test_car", wait=True)
         self.assertEqual(result[1], 404)
 
-    def test_waiting_for_statuses_of_car_available_before_timeout_but_wihout_new_statuses_yields_200(self):
+    def test_waiting_for_statuses_of_car_available_before_timeout_but_wihout_new_statuses_yields_404(self):
         status = Message(device_id=self.device_id, payload=self.payload_example)
         send_statuses("test_company", "test_car", [status])
         self.assertIn(Car("test_company", "test_car"), available_cars("test_company")[0])
@@ -459,7 +459,7 @@ class Test_Car_Availability(unittest.TestCase):
         current_timestamp = timestamp()
         result = list_statuses("test_company", "test_car", wait=True, since=current_timestamp)
         self.assertEqual(result[0], [])
-        self.assertEqual(result[1], 200)
+        self.assertEqual(result[1], 404)
 
     def test_waiting_for_commands_of_car_not_becoming_available_before_timeout_yields_404(self):
         current_timestamp = timestamp()

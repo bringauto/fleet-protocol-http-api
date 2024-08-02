@@ -290,7 +290,9 @@ def list_statuses(
         if _car_availability(company_name, car_name)[1] == 200:
             return _log_and_respond([], 200, f"No statuses are available ({car}).")
         else:
-            return _log_and_respond([], 404, f"Car is not available. No statuses can be returned.")
+            return _log_and_respond(
+                [], 404, f"Car ({car}) not available. No statuses can be returned."
+            )
     else:
         awaited: list[Message] = _status_wait_manager.wait_and_get_reponse(
             company_name, car_name
@@ -298,17 +300,12 @@ def list_statuses(
         if awaited:
             if since is not None and awaited[-1].timestamp < since:
                 return _log_and_respond(
-                    [], 200, f"Found statuses, but all older than 'since' ({car}).",
+                    [], 200, f"Found only statuses older than 'since' ({car}).",
                 )
             else:
-                return _log_and_respond( awaited, 200, f"Returning awaited statuses ({car}).")
+                return _log_and_respond(awaited, 200, f"Returning awaited statuses ({car}).")
         else:
-            if _car_availability(company_name, car_name)[1] == 200:
-                return _log_and_respond([], 200, f"No statuses are available before timeout ({car}).")
-            else:
-                return _log_and_respond(
-                    [], 404, f"No devices (nor statuses) available before timeout ({car}).",
-                )
+            return _log_and_respond([], 404, f"No statuses available before timeout ({car}).")
 
 
 def send_commands(
