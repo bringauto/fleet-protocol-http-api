@@ -303,12 +303,9 @@ def list_statuses(
             else:
                 return _log_and_respond( awaited, 200, f"Returning awaited statuses ({car}).")
         else:
-            if _car_availability(company_name, car_name)[1] == 200:
-                return _log_and_respond([], 200, f"No statuses are available before timeout ({car}).")
-            else:
-                return _log_and_respond(
-                    [], 404, f"No devices (nor statuses) available before timeout ({car}).",
-                )
+            return _log_and_respond(
+                [], 404, f"No statuses available before timeout ({car}).",
+            )
 
 
 def send_commands(
