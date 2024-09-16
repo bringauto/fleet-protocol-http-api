@@ -21,10 +21,12 @@ from server.fleetv2_http_api.impl.controllers import (  # type: ignore
     set_command_wait_timeout_s,
 )
 from tests.api.misc import run_in_threads  # type: ignore
+from server.logs import clear_logs
 
 
 class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         if os.path.exists("./example.db"):
             os.remove("./example.db")
         set_test_db_connection("/example.db")
@@ -186,6 +188,7 @@ class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.Te
 
 class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         if os.path.exists("./example.db"):
             os.remove("./example.db")
         set_test_db_connection("/example.db")
@@ -437,6 +440,7 @@ class Test_Ask_For_Commands_Not_Available_At_The_Time_Of_The_Request(unittest.Te
 class Test_Car_Availability(unittest.TestCase):
 
     def setUp(self) -> None:
+        clear_logs()
         if os.path.exists("./example.db"):
             os.remove("./example.db")
         set_test_db_connection("/example.db")
@@ -481,6 +485,7 @@ class Test_Car_Availability(unittest.TestCase):
 class Test_Waiting_For_Messsages_From_Multiple_Cars(unittest.TestCase):
 
     def setUp(self) -> None:
+        clear_logs()
         if os.path.exists("./example.db"):
             os.remove("./example.db")
         set_test_db_connection("/example.db")

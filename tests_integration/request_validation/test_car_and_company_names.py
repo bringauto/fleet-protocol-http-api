@@ -6,12 +6,14 @@ sys.path.append("server")
 import server.app as _app
 from server.fleetv2_http_api.models.message import Message, Payload, DeviceId
 from server.enums import MessageType
+from server.logs import clear_logs
 
 
 class Test_Company_And_Car_Name_Not_Following_Pattern_From_OpenAPI_Spec_Yield_Code_400(
     unittest.TestCase
 ):
     def setUp(self) -> None:
+        clear_logs()
         self.app = _app.get_test_app(base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         self.payload = Payload(

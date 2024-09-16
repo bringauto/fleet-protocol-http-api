@@ -7,10 +7,12 @@ from server.database.connected_cars import clear_connected_cars, connected_cars 
 from server.database.database_controller import set_test_db_connection  # type: ignore
 from server.fleetv2_http_api.impl.controllers import available_cars, send_statuses  # type: ignore
 from server.fleetv2_http_api.models import DeviceId, Payload, Message, Car  # type: ignore
+from server.logs import clear_logs  # type: ignore
 
 
 class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         set_test_db_connection("/:memory:")
         payload = Payload(
             message_type=MessageType.STATUS,

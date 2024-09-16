@@ -13,10 +13,12 @@ from server.database.security import (
     get_loaded_admins,
     number_of_admin_keys,
 )
+from server.logs import clear_logs
 
 
 class Test_Getting_Admin(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         set_test_db_connection(dblocation="/:memory:")
         clear_loaded_admins()
 

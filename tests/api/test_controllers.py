@@ -27,10 +27,12 @@ from server.fleetv2_http_api.impl.controllers import (  # type: ignore
     _message_db_list,
 )
 from server.fleetv2_http_api.models import DeviceId, Payload, Message, Module, Car  # type: ignore
+from server.logs import clear_logs  # type: ignore
 
 
 class Test_Device_Id_Validity(unittest.TestCase):
     def test_devide_id_validity(self):
+        clear_logs()
         id = DeviceId(module_id=42, type=2, role="light", name="Left light")
         # module id cannot be negative
         id.module_id = 43
@@ -55,6 +57,7 @@ class Test_Device_Id_Validity(unittest.TestCase):
 
 class Test_Sending_Status(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         set_test_db_connection("/:memory:")
         payload_example = Payload(
             message_type=MessageType.STATUS,
@@ -83,6 +86,7 @@ class Test_Sending_Status(unittest.TestCase):
 class Test_Sending_Status_Error(unittest.TestCase):
 
     def setUp(self) -> None:
+        clear_logs()
         set_test_db_connection("/:memory:")
         error_payload = Payload(
             message_type=MessageType.STATUS_ERROR,
@@ -128,6 +132,7 @@ class Test_Sending_Status_Error(unittest.TestCase):
 
 class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         set_test_db_connection("/:memory:")
         payload = Payload(
             message_type=MessageType.STATUS,
@@ -223,6 +228,7 @@ class Test_Listing_Available_Devices_And_Cars(unittest.TestCase):
 
 class Test_Sending_And_listing_Multiple_Messages(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         set_test_db_connection("/:memory:")
         self.device_id = DeviceId(module_id=42, type=7, role="test_device", name="Test Device X")
         self.status_example = Message(
@@ -328,6 +334,7 @@ class Test_Timestamp_Of_A_Sent_Message_Is_Set_To_Time_Of_Its_Sending(unittest.Te
     def test_status_original_timestamp_is_set_to_the_current_timestamp_when_sending_the_status(
         self, mock_time_ms: Mock
     ):
+        clear_logs()
         payload = Payload(
             message_type=MessageType.STATUS,
             encoding=EncodingType.JSON,
@@ -345,6 +352,7 @@ class Test_Timestamp_Of_A_Sent_Message_Is_Set_To_Time_Of_Its_Sending(unittest.Te
 class Test_Options_For_listing_Multiple_Statuses(unittest.TestCase):
     @patch("server.database.time._time_in_ms")
     def setUp(self, mock_time_in_ms: Mock) -> None:
+        clear_logs()
         set_test_db_connection("/:memory:")
         status_payload = Payload(
             message_type=MessageType.STATUS,
@@ -402,6 +410,7 @@ class Test_Options_For_listing_Multiple_Statuses(unittest.TestCase):
 class Test_Options_For_listing_Multiple_Commands(unittest.TestCase):
     @patch("server.database.time._time_in_ms")
     def setUp(self, mock_time_in_ms: Mock) -> None:
+        clear_logs()
         set_test_db_connection("/:memory:")
         device_id = DeviceId(module_id=2, type=5, role="test_device", name="Test Device")
         status_payload = Payload(
@@ -456,6 +465,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
 
     def setUp(self) -> None:
         set_test_db_connection("/:memory:")
+        clear_logs()
         clear_connected_cars()
         self.device_id = DeviceId(module_id=42, type=5, role="left_light", name="Left light")
         self.status_payload = Payload(
@@ -562,6 +572,7 @@ class Test_Cleaning_Up_Commands(unittest.TestCase):
 
 class Test_listing_Commands_And_Statuses_Of_Nonexistent_Cars(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         set_test_db_connection("/:memory:")
         device_id = DeviceId(module_id=15, type=3, role="available_device", name="Available device")
         status = Message(
@@ -592,6 +603,7 @@ class Test_Correspondence_Between_Payload_Type_And_Send_Command_And_Send_Status_
     unittest.TestCase
 ):
     def setUp(self) -> None:
+        clear_logs()
         if os.path.exists("./example.db"):
             os.remove("./example.db")
         set_test_db_connection("/example.db")
@@ -636,6 +648,7 @@ class Test_Store_Available_Device_Ids_After_Connecting_To_Database_Already_Conta
     unittest.TestCase
 ):
     def setUp(self) -> None:
+        clear_logs()
         clear_connected_cars()
 
     def test_list_available_cars(self):
@@ -664,6 +677,7 @@ class Test_Store_Available_Device_Ids_After_Connecting_To_Database_Already_Conta
 
 class Test_Sending_Messages_To_Multiple_Devices_In_A_Single_Request(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         clear_connected_cars()
         set_test_db_connection("/:memory:")
         self.device_1_id = DeviceId(module_id=42, type=7, role="test_device_1", name="Left light")
@@ -742,6 +756,4 @@ class Test_Sending_Messages_To_Multiple_Devices_In_A_Single_Request(unittest.Tes
 
 
 if __name__ == "__main__":
-    # runner = unittest.TextTestRunner()
-    # runner.run(Test_Options_For_listing_Multiple_Statuses("test_since_parameter_larger_to_newest_status_timestamp_yields_empty_status_list"))
     unittest.main()

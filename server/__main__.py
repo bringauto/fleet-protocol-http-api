@@ -18,9 +18,10 @@ from server.fleetv2_http_api.impl.controllers import (  # type: ignore
 )
 from server.fleetv2_http_api.controllers.security_controller import set_auth_params  # type: ignore
 import server.database.script_args as script_args  # type: ignore
+from server.logs import configure_logging
 
 
-logging.getLogger("werkzeug").setLevel(logging.DEBUG)
+logger = logging.getLogger("werkzeug")
 
 
 def _clean_up_messages() -> None:
@@ -55,22 +56,16 @@ def _retrieve_keycloak_public_key(keycloak_url: str, realm: str) -> str:
         response = requests.get(keycloak_url + "/realms/" + realm)
         response.raise_for_status()
     except:
-        logging.getLogger("werkzeug").warning("Failed to retrieve public key from Keycloak server.")
+        logger.warning("Failed to retrieve public key from Keycloak server.")
         return ""
-    logging.getLogger("werkzeug").info("Retrieved public key from Keycloak server.")
+    logger.info("Retrieved public key from Keycloak server.")
     return response.json()["public_key"]
-
-
-def _set_up_log_format() -> None:
-    """Set up the logging format."""
-    FORMAT = '%(asctime)s -- %(message)s'
-    logging.basicConfig(format=FORMAT)
 
 
 if __name__ == '__main__':
     vals = script_args.request_and_get_script_arguments("Run the Fleet Protocol v2 HTTP API server.")
     config = vals.config
-    _set_up_log_format()
+    configure_logging("./config/logging.json")
     _connect_to_database(vals)
     _set_up_database_jobs(config["database"]["cleanup"]["timing_in_seconds"])
     set_car_wait_timeout_s(config["request_for_messages"]["timeout_in_seconds"])

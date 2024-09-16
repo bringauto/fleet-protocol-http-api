@@ -25,6 +25,11 @@ from server.database.time import timestamp as _timestamp  # type: ignore
 from server.fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
 from server.fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
 from server.fleetv2_http_api.impl.security import SecurityObj  # type: ignore
+from server.logs import configure_logging
+
+
+configure_logging("config/logging.json")
+logger = logging.getLogger("werkzeug")
 
 
 _NAME_PATTERN = "^[0-9a-z_]+$"
@@ -37,7 +42,7 @@ _security = SecurityObj()
 
 
 def set_status_wait_timeout_s(timeout_s: float) -> None:
-    logging.getLogger("werkzeug").info(f"Setting status wait timeout of Fleet Protocol HTTP API to {timeout_s} s.")
+    logger.info(f"Setting status wait timeout of Fleet Protocol HTTP API to {timeout_s} s.")
     _status_wait_manager.set_timeout(int(1000 * timeout_s))
 
 
@@ -46,7 +51,7 @@ def get_status_wait_timeout_s() -> float:
 
 
 def set_command_wait_timeout_s(timeout_s: float) -> None:
-    logging.getLogger("werkzeug").info(f"Setting command wait timeout of Fleet Protocol HTTP API to {timeout_s} s.")
+    logger.info(f"Setting command wait timeout of Fleet Protocol HTTP API to {timeout_s} s.")
     _cmd_wait_manager.set_timeout(int(1000 * timeout_s))
 
 
@@ -61,7 +66,7 @@ def init_security(
 
 
 def set_car_wait_timeout_s(timeout_s: float) -> None:
-    logging.getLogger("werkzeug").info(f"Setting car wait timeout of Fleet Protocol HTTP API to {timeout_s} s.")
+    logger.info(f"Setting car wait timeout of Fleet Protocol HTTP API to {timeout_s} s.")
     _car_wait_manager.set_timeout(int(1000 * timeout_s))
 
 
@@ -85,7 +90,7 @@ def login(device: Optional[str] = None) -> WerkzeugResponse | Response | tuple[d
         return _log_and_respond(auth_json, 200, "Device authentication initialized.")
     elif device != None:
         try:
-            token = _security.device_token_get(device)
+            token = _security.device_token_get(device)  # type: ignore
             return _log_and_respond(token, 200, "Device authenticated, jwt token generated.")
         except:
             msg = "Invalid device code or device still authenticating."
@@ -119,7 +124,7 @@ def token_get(
     :rtype: dict
     """
     try:
-        token = _security.token_get(state, session_state, iss, code)
+        token = _security.token_get(state, session_state, iss, code)  # type: ignore
     except:
         msg = "Problem getting token from oAuth service."
         return _log_and_respond(msg, 500, msg)
@@ -255,11 +260,15 @@ def list_commands(
     :rtype: Union[list[Message], tuple[list[Message], int], tuple[list[Message], int, dict[str, str]]
     """
     _, code = _car_availability(company_name, car_name)
-    car_available = code==200
+    car_available = code == 200
     if car_available:
-        return _response_for_request_for_connected_cars_commands(company_name, car_name, since, wait)
+        return _response_for_request_for_connected_cars_commands(
+            company_name, car_name, since, wait
+        )
     else:
-        return _response_for_request_for_disconnected_cars_commands(company_name, car_name, since, wait)
+        return _response_for_request_for_disconnected_cars_commands(
+            company_name, car_name, since, wait
+        )
 
 
 def list_statuses(
@@ -294,13 +303,13 @@ def list_statuses(
                 [], 404, f"Car ({car}) not available. No statuses can be returned."
             )
     else:
-        awaited: list[Message] = _status_wait_manager.wait_and_get_reponse(
-            company_name, car_name
-        )
+        awaited: list[Message] = _status_wait_manager.wait_and_get_reponse(company_name, car_name)
         if awaited:
             if since is not None and awaited[-1].timestamp < since:
                 return _log_and_respond(
-                    [], 200, f"Found only statuses older than 'since' ({car}).",
+                    [],
+                    200,
+                    f"Found only statuses older than 'since' ({car}).",
                 )
             else:
                 return _log_and_respond(awaited, 200, f"Returning awaited statuses ({car}).")
@@ -373,9 +382,7 @@ def send_statuses(
     _update_messages_timestamp(messages)
     _status_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
     _car_wait_manager.add_response_content_and_stop_waiting([Car(company_name, car_name)])
-    response_msg = send_messages_to_database(
-        company_name, car_name, *_message_db_list(messages)
-    )
+    response_msg = send_messages_to_database(company_name, car_name, *_message_db_list(messages))
     cmd_warnings = _check_and_handle_first_status(company_name, car_name, messages)
     msg, code = response_msg[0] + cmd_warnings, response_msg[1]
     return _log_and_respond(msg, code, msg)
@@ -420,7 +427,7 @@ def _check_and_handle_first_status(company: str, car: str, messages: list[Messag
 def _check_sent_commands(
     company_name: str, car_name: str, messages: list[Message]
 ) -> tuple[str, int]:
-    errors, code = _check_messages(MessageType.COMMAND, *messages)
+    errors, code = _check_messages(MessageType.COMMAND, *messages)  # type: ignore
     if errors != "" or code != 200:
         return errors, code
     for cmd in messages:
@@ -445,9 +452,10 @@ def _check_message_types(expected_message_types: tuple[str, ...], *messages: Mes
     """Check that type of every message matches the method (send command or send status)."""
     for message in messages:
         if message.payload.message_type not in expected_message_types:
+            types = ", ".join(f"{t}" for t in expected_message_types)
             return (
                 f"Cannot send a {message.payload.message_type}. "
-                f"Expected one of the following messsage type: {expected_message_types}"
+                f"Expected one of the following message types: {types}"
             )
     return ""
 
@@ -563,8 +571,9 @@ def _response_for_request_for_disconnected_cars_commands(
         cmds = _cmd_wait_manager.wait_and_get_reponse(company, car_name)
         if cmds and cmds[-1].timestamp >= since:
             return _log_and_respond(cmds, 200, f"Awaited commands for '{car_name}' of '{company}'")
-    return _log_and_respond([], 404, f"Car '{car_name}' of '{company}' is disconnected. No commands.")
-
+    return _log_and_respond(
+        [], 404, f"Car '{car_name}' of '{company}' is disconnected. No commands."
+    )
 
 
 def _update_messages_timestamp(messages: Iterable[Message_DB]) -> int:
@@ -576,7 +585,6 @@ def _update_messages_timestamp(messages: Iterable[Message_DB]) -> int:
 
 def _log_and_respond(body: Any, code: int, log_msg: str = "") -> tuple[Any, int]:
     if log_msg.strip() != "":
-        logger = logging.getLogger("werkzeug")
         logger.info(log_msg)
     return body, code  # type: ignore
 

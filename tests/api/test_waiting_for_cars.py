@@ -18,10 +18,12 @@ from server.fleetv2_http_api.impl.controllers import (  # type: ignore
     set_car_wait_timeout_s,
 )
 from tests.api.misc import run_in_threads  # type: ignore
+from server.logs import clear_logs  # type: ignore
 
 
 class Test_Waiting_For_Available_Cars(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         if os.path.exists("./example.db"):
             os.remove("./example.db")
         set_test_db_connection("/example.db")
@@ -80,6 +82,7 @@ class Test_Waiting_For_Available_Cars(unittest.TestCase):
 class Test_Storing_Car_Connection_Time(unittest.TestCase):
 
     def setUp(self) -> None:
+        clear_logs()
         if os.path.exists("./example.db"):
             os.remove("./example.db")
         set_test_db_connection("/example.db")
@@ -145,6 +148,7 @@ class Test_Storing_Car_Connection_Time(unittest.TestCase):
 class Test_Filtering_Connected_Car_By_Connection_Time_With_Since_Parameter(unittest.TestCase):
 
     def setUp(self) -> None:
+        clear_logs()
         if os.path.exists("./example.db"):
             os.remove("./example.db")
         set_test_db_connection("/example.db")

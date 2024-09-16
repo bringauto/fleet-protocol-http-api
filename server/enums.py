@@ -1,4 +1,4 @@
-from aenum import UpperStrEnum
+from aenum import UpperStrEnum  # type: ignore
 
 
 class MessageType(UpperStrEnum):
@@ -10,4 +10,3 @@ class MessageType(UpperStrEnum):
 class EncodingType(UpperStrEnum):
     BASE64 = "BASE64"
     JSON = "JSON"
-

@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
+import connexion  # type: ignore
+import logging
 
-import connexion
+from fleetv2_http_api import encoder  # type: ignore
 
-from fleetv2_http_api import encoder
+
+logger = logging.getLogger("werkzeug")
 
 
 def main():
@@ -12,6 +15,7 @@ def main():
                 arguments={'title': 'Fleet v2 HTTP API'},
                 pythonic_params=True)
 
+    logger.info("Starting the Fleet Protocol v2 HTTP API server.")
     app.run(port=8080)
 
 

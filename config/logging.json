@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {
+    "simple": {
+      "format": "[%(asctime)s.%(msecs)03d] [fleet-protocol-http-api] [%(levelname)s]\t %(message)s",
+      "datefmt": "%Y-%m-%d %H:%M:%S"
+    }
+  },
+  "handlers": {
+    "console": {
+      "class": "logging.StreamHandler",
+      "level": "DEBUG",
+     "formatter": "simple",
+       "stream": "ext://sys.stdout"
+    },
+    "file": {
+      "class": "logging.handlers.RotatingFileHandler",
+      "level": "DEBUG",
+      "formatter": "simple",
+      "filename": "log/fleet_protocol_http_api.log"
+    }
+  },
+  "loggers": {
+    "werkzeug": {
+      "level": "DEBUG",
+      "handlers": ["console", "file"],
+      "propagate": "no"
+    }
+  },
+  "root": {
+    "level": "INFO",
+    "handlers": []
+  }
+}
