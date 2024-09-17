@@ -25,10 +25,8 @@ from server.database.time import timestamp as _timestamp  # type: ignore
 from server.fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
 from server.fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
 from server.fleetv2_http_api.impl.security import SecurityObj  # type: ignore
-from server.logs import configure_logging
 
 
-configure_logging("config/logging.json")
 logger = logging.getLogger("werkzeug")
 
 
