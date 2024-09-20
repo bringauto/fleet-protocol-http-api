@@ -1,4 +1,0 @@
-[2024-09-16 12:19:16.079] [fleet-protocol-http-api] [INFO]	 Setting command wait timeout of Fleet Protocol HTTP API to 1 s.
-[2024-09-16 12:19:16.079] [fleet-protocol-http-api] [INFO]	 Setting status wait timeout of Fleet Protocol HTTP API to 1 s.
-[2024-09-16 12:19:16.163] [fleet-protocol-http-api] [INFO]	 Cannot send a COMMAND. Expected one of the following message types: STATUS, STATUS_ERROR
-[2024-09-16 12:19:16.166] [fleet-protocol-http-api] [INFO]	 Car (Company='company', car='test_car') not available. No statuses can be returned.

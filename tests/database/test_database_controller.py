@@ -5,17 +5,17 @@ import unittest
 
 sys.path.append(".")
 
-from server.enums import EncodingType, MessageType  # type: ignore
-from server.fleetv2_http_api.models.device_id import DeviceId  # type: ignore
-from server.database.connected_cars import serialized_device_id  # type: ignore
-from server.database.connection import (  # type: ignore
+from server.enums import EncodingType, MessageType
+from server.fleetv2_http_api.models.device_id import DeviceId
+from server.database.connected_cars import serialized_device_id
+from server.database.connection import (
     set_test_db_connection,
     unset_connection_source,
     ConnectionSourceNotSet,
     get_connection_source,
     set_test_db_connection,
 )
-from server.database.database_controller import (  # type: ignore
+from server.database.database_controller import (
     set_message_retention_period,
     send_messages_to_database,
     list_messages,
@@ -24,7 +24,7 @@ from server.database.database_controller import (  # type: ignore
     Message_DB,
     MessageBase,
 )
-from server.logs import clear_logs  # type: ignore
+from tests._utils.logs import clear_logs
 
 
 class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):

@@ -9,36 +9,30 @@ from typing import TypeVar, Mapping
 T = TypeVar("T", bound=Mapping)
 
 
-LOG_FILE_NAME = "fleet_protocol_http_api.log"
 LOGGER_NAME = "werkzeug"
-LOGGING_CONFIG_PATH = "config/logging.json"
+LOG_FILE_NAME = "fleet_protocol_http_api.log"
 DEFAULT_LOG_DIR = "log"
+DEFAULT_LOG_FORMAT = (
+    "[%(asctime)s.%(msecs)03d] [fleet-protocol-http-api] [%(levelname)s]\t %(message)s"
+)
+DEFAULT_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-def clear_logs() -> None:
-    """Clear the log file."""
-    log_file_path = _get_log_dir_path()
-    with open(log_file_path, "w") as f:
-        f.write("")
+def configure_logging(log_config_path: str, component_name: str) -> None:
+    """Configure the logging for the application.
 
+    The component name is written in the log messages to identify the source of the log message.
 
-def _get_log_dir_path() -> str:
+    The logging configuration is read from a JSON file. If the file is not found, a default configuration is used.
+    """
     try:
-        with open(LOGGING_CONFIG_PATH) as f:
-            config = json.load(f)
-            return config["handlers"]["file"]["filename"]
-    except:
-        return DEFAULT_LOG_DIR
-
-
-def configure_logging(config_path: str) -> None:
-    try:
-        with open(config_path) as f:
+        with open(log_config_path) as f:
             logging.config.dictConfig(json.load(f))
-    except Exception:
+    except Exception as e:
         logger = logging.getLogger(LOGGER_NAME)
         logger.warning(
-            f"Fleet Protocol HTTP API: Could not find a logging configuration file (entered path: {config_path}. Using default logging configuration."
+            f"{component_name}: Could not find a logging configuration file (entered path: {log_config_path}. "
+            f"Using default logging configuration. The error was: {e}"
         )
         default_log_path = os.path.join(DEFAULT_LOG_DIR, LOG_FILE_NAME)
         if not os.path.isfile(default_log_path):
@@ -48,10 +42,7 @@ def configure_logging(config_path: str) -> None:
                 f.write("")
 
         logger.propagate = False
-        formatter = logging.Formatter(
-            fmt="[%(asctime)s.%(msecs)03d] [fleet-protocol-http-api] [%(levelname)s]\t %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
+        formatter = logging.Formatter(_default_log_format(component_name), DEFAULT_DATE_FORMAT)
         file_handler = logging.FileHandler(filename=default_log_path)
         file_handler.setLevel(level=logging.INFO)
         file_handler.setFormatter(formatter)
@@ -63,3 +54,10 @@ def configure_logging(config_path: str) -> None:
         logger.addHandler(stream_handler)
 
         logger.setLevel(level=logging.INFO)
+
+
+def _default_log_format(component_name: str) -> str:
+    log_component_name = "-".join(component_name.lower().split())
+    return f"[%(asctime)s.%(msecs)03d] [{log_component_name}] [%(levelname)s]\t %(message)s"
+
+

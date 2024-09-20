@@ -6,7 +6,7 @@ sys.path.append("server")
 import server.app as _app
 from server.fleetv2_http_api.models.message import Payload, DeviceId
 from server.enums import MessageType
-from server.logs import clear_logs
+from tests._utils.logs import clear_logs
 
 
 class Test_Using_Invalid_Device_ID(unittest.TestCase):

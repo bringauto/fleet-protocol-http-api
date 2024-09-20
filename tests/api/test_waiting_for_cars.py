@@ -5,20 +5,20 @@ import time
 from unittest.mock import patch, Mock
 sys.path.append(".")
 
-from server.fleetv2_http_api.models import Payload, Message, Car, DeviceId  # type: ignore
-from server.enums import MessageType, EncodingType  # type: ignore
-from server.database.database_controller import (  # type: ignore
+from server.fleetv2_http_api.models import Payload, Message, Car, DeviceId
+from server.enums import MessageType, EncodingType
+from server.database.database_controller import (
     set_test_db_connection,
     clear_connected_cars,
     connected_cars,
 )
-from server.fleetv2_http_api.impl.controllers import (  # type: ignore
+from server.fleetv2_http_api.impl.controllers import (
     available_cars,
     send_statuses,
     set_car_wait_timeout_s,
 )
-from tests.api.misc import run_in_threads  # type: ignore
-from server.logs import clear_logs  # type: ignore
+from tests.api.misc import run_in_threads
+from tests._utils.logs import clear_logs
 
 
 class Test_Waiting_For_Available_Cars(unittest.TestCase):

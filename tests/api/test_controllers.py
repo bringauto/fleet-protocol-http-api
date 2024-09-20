@@ -27,7 +27,7 @@ from server.fleetv2_http_api.impl.controllers import (  # type: ignore
     _message_db_list,
 )
 from server.fleetv2_http_api.models import DeviceId, Payload, Message, Module, Car  # type: ignore
-from server.logs import clear_logs  # type: ignore
+from tests._utils.logs import clear_logs  # type: ignore
 
 
 class Test_Device_Id_Validity(unittest.TestCase):

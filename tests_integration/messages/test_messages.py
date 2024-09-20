@@ -9,7 +9,7 @@ from server.fleetv2_http_api.models.message import Message, Payload, DeviceId
 from server.enums import MessageType, EncodingType
 
 from server.database.database_controller import remove_old_messages
-from server.logs import clear_logs
+from tests._utils.logs import clear_logs
 
 
 class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):

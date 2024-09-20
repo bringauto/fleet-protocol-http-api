@@ -3,8 +3,8 @@ import sys
 sys.path.append(".")
 import unittest
 
-from server.fleetv2_http_api.models.device_id import DeviceId   # type: ignore
-from server.database.connected_cars import (  # type: ignore
+from server.fleetv2_http_api.models.device_id import DeviceId
+from server.database.connected_cars import (
     add_car,
     add_device,
     connected_cars,
@@ -15,7 +15,7 @@ from server.database.connected_cars import (  # type: ignore
     ConnectedCar,
     ConnectedModule
 )
-from server.logs import clear_logs
+from tests._utils.logs import clear_logs
 
 
 class TestDeviceIds(unittest.TestCase):

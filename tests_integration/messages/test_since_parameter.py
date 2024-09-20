@@ -9,7 +9,7 @@ sys.path.append("server")
 import server.app as _app
 from server.fleetv2_http_api.models.message import Message, Payload, DeviceId
 from server.enums import MessageType
-from server.logs import clear_logs
+from tests._utils.logs import clear_logs
 
 
 class Test_Filtering_Sent_Statuses_By_Since_Parameter(unittest.TestCase):

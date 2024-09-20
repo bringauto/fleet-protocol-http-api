@@ -61,6 +61,7 @@ class Test_Waiting_For_Commands_For_Already_Available_Car(unittest.TestCase):
 
 
 class Test_Waiting_For_Commands_Of_Initially_Unavailable_Car(unittest.TestCase):
+
     def setUp(self) -> None:
         self._timeout = 0.5
         self.app = _app.get_test_app(

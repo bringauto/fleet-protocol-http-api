@@ -21,7 +21,7 @@ from server.fleetv2_http_api.impl.controllers import (  # type: ignore
     set_command_wait_timeout_s,
 )
 from tests.api.misc import run_in_threads  # type: ignore
-from server.logs import clear_logs
+from tests._utils.logs import clear_logs  # type: ignore
 
 
 class Test_Ask_For_Statuses_Not_Available_At_The_Time_Of_The_Request(unittest.TestCase):
