@@ -13,7 +13,8 @@ from server.database.database_controller import (  # type: ignore
     Message_DB,
     cleanup_device_commands_and_warn_before_future_commands,
 )
-from server.database.database_controller import list_messages as _list_messages  # type: ignore
+from server.database.database_controller import list_messages as _list_messages
+from server.database.restart_connection import restart_connection_on_error as _restart_connection_on_error
 from server.database.connected_cars import (  # type: ignore
     add_car as _add_car,
     add_device as _add_device,
@@ -26,6 +27,7 @@ from server.fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # t
 from server.fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
 from server.fleetv2_http_api.impl.security import SecurityObj  # type: ignore
 from server.logs import LOGGER_NAME
+
 
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -237,6 +239,7 @@ def available_devices(
             )
 
 
+@_restart_connection_on_error
 def list_commands(
     company_name: str, car_name: str, since: int = 0, wait: bool = False
 ) -> tuple[list[Message], int]:  # noqa: E501
@@ -270,6 +273,7 @@ def list_commands(
         )
 
 
+@_restart_connection_on_error
 def list_statuses(
     company_name: str, car_name: str, since: int = 0, wait: bool = False
 ) -> tuple[list[Message], int]:  # noqa: E501
@@ -351,6 +355,7 @@ def send_commands(
     return _log_and_respond(msg, code, msg)
 
 
+@_restart_connection_on_error
 def send_statuses(
     company_name: str, car_name: str, body: list[dict | Message]
 ) -> tuple[str | list[str], int]:  # noqa: E501
@@ -370,6 +375,7 @@ def send_statuses(
     _validate_name_string(company_name, "Company name")
     _validate_name_string(car_name, "Car name")
     messages = _message_list_from_request_body(body)
+
     if messages == []:
         msg = f"Empty list of statuses was sent to the API; no statuses were sent to the device."
         return _log_and_respond(msg, 200, msg)
@@ -592,3 +598,5 @@ def _validate_name_string(name: str, text_label: str) -> None:
     if not re.match(_NAME_PATTERN, name):
         msg = f"{text_label} '{name}' does not match pattern '{_NAME_PATTERN}'."
         raise ValueError(msg)
+
+

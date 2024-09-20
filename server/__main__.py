@@ -32,7 +32,8 @@ def _connect_to_database(vals:script_args.ScriptArgs) -> None:
     """Clear previously stored available devices and connect to the database."""
     clear_connected_cars()
     set_db_connection(
-        dblocation = vals.argvals["location"] + ":" + str(vals.argvals["port"]),
+        dblocation = vals.argvals["location"],
+        port = vals.argvals["port"],
         username = vals.argvals["username"],
         password = vals.argvals["password"],
         db_name = vals.argvals["database_name"]

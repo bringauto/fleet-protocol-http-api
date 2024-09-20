@@ -6,6 +6,7 @@ example.db
 .coverage
 
 /*.sh
+/*.db
 !test_server.sh
 !regen.sh
 

@@ -22,3 +22,5 @@ def _get_log_dir_path() -> str:
             f"Error when attepting to find a configuration file. Using default logging configuration. The error was: {e}"
         )
         return DEFAULT_LOG_DIR
+
+

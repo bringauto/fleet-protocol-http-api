@@ -1,19 +1,3 @@
-# Fleet Protocol v2 HTTP API
-# Copyright (C) 2023 BringAuto s.r.o.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 from __future__ import annotations
 from typing import ClassVar, Any
 import dataclasses
@@ -21,17 +5,22 @@ import copy
 
 from sqlalchemy.orm import Mapped, mapped_column, Session
 from sqlalchemy import Integer, String, JSON, select, insert, delete, BigInteger, and_, or_
+from sqlalchemy.exc import IntegrityError as _IntegrityError
 
 from server.enums import MessageType  # type: ignore
-import server.database.connection as _connection # type: ignore
-from server.database.connection import get_connection_source, Base
+import server.database.connection as _connection  # type: ignore
+from server.database.connection import (
+    Base,
+    get_connection_source as _get_connection_source,
+    set_db_connection as _set_db_connection,
+)
 from server.database.connected_cars import (  # type: ignore
     add_car,
     add_device,
     connected_cars,
     clean_up_disconnected_cars_and_modules,
     remove_connected_device,
-    clear_connected_cars
+    clear_connected_cars as _clear_connected_cars,
 )
 from server.fleetv2_http_api.models.device_id import DeviceId  # type: ignore
 
@@ -40,7 +29,7 @@ from server.fleetv2_http_api.models.device_id import DeviceId  # type: ignore
 class MessageBase(Base):
     """Object defining message table inside the database."""
 
-    __tablename__: ClassVar[str] = "message"
+    __tablename__: ClassVar[str] = "message"  # type: ignore
     _data_retention_period_in_seconds: ClassVar[int] = 10000
     __table_args__ = {"extend_existing": True}
 
@@ -132,7 +121,7 @@ def set_message_retention_period(seconds: int) -> None:
 
 
 def set_db_connection(dblocation: str, username: str = "", password: str = "") -> None:
-    database.connection.set_db_connection(
+    _set_db_connection(
         dblocation=dblocation,
         username=username,
         password=password,
@@ -145,7 +134,7 @@ def set_test_db_connection(dblocation: str) -> None:
 
 
 def get_available_devices_from_database() -> None:
-    clear_connected_cars()
+    _clear_connected_cars()
     load_available_devices_from_database()
 
 
@@ -154,17 +143,19 @@ def send_messages_to_database(
 ) -> tuple[str, int]:
     """Send a list of messages to the database, returns number of succesfully sent messages (int)."""
     try:
-        with get_connection_source().begin() as conn:
+        with _get_connection_source().begin() as conn:
             stmt = insert(MessageBase.__table__)  # type: ignore
             msg_base = MessageBase.from_messages(company_name, car_name, *messages)
             data_list = [msg.__dict__ for msg in msg_base]
             conn.execute(stmt, data_list)
             return _get_message_for_n_messages_succesfully_sent(len(messages)), 200
-    except:
+    except _IntegrityError:
         return (
-            "Error: Some of the messages are identical to those sent previously, including their timestamps.",
-            500,
+            "Some of the messages are identical to those sent previously, including their timestamps.",
+            400
         )
+    except Exception as e:
+        return f"Error: Internal server error : {e}.", 500
 
 
 def _get_message_for_n_messages_succesfully_sent(number_of_sent_messages: int) -> str:
@@ -177,7 +168,6 @@ def _get_message_for_n_messages_succesfully_sent(number_of_sent_messages: int) -
 def list_messages(
     company_name: str, car_name: str, message_type: tuple[str, ...], since: int = 0
 ) -> list[Message_DB]:  # noqa:
-
     """Return a list of messages of the given type, optionally filtered by the given parameters.
     If all is not None, then all messages of the given type are returned.
 
@@ -186,7 +176,7 @@ def list_messages(
     """
 
     statuses: list[Message_DB] = list()
-    with Session(get_connection_source()) as session:
+    with Session(_get_connection_source()) as session:
         table = MessageBase.__table__
         selection = select(MessageBase)
         selection = selection.where(or_(*[table.c.message_type == type for type in message_type]))
@@ -207,7 +197,6 @@ def list_messages(
 def cleanup_device_commands_and_warn_before_future_commands(
     current_timestamp: int, company_name: str, car_name: str, serialized_device_id: str
 ) -> list[str]:
-
     """Remove all device commands assigned to a device before the first status was sent.
 
     All such commands ought to have timestamp less than or equal to the timestamp
@@ -218,10 +207,10 @@ def cleanup_device_commands_and_warn_before_future_commands(
 
     """
     table = MessageBase.__table__
-    with get_connection_source().begin() as conn:
+    with _get_connection_source().begin() as conn:
         stmt = (
-            delete(table)
-            .where(  # type: ignore
+            delete(table)  # type: ignore
+            .where(
                 table.c.message_type == MessageType.COMMAND,
                 table.c.company_name == company_name,
                 table.c.car_name == car_name,
@@ -254,7 +243,6 @@ def cleanup_device_commands_and_warn_before_future_commands(
 def future_command_warning(
     timestamp: int, company_name: str, car_name: str, serialized_device_id: str, payload_data: Any
 ) -> str:
-
     """Construct a warning message for a command with a timestamp greater
     than the timestamp of the first status.
     """
@@ -270,7 +258,7 @@ def remove_old_messages(current_timestamp: int) -> None:
     """Remove all messages with a timestamp older than the current timestamp
     minus the data retention period.
     """
-    with get_connection_source().begin() as conn:
+    with _get_connection_source().begin() as conn:
         oldest_timestamp_to_be_kept = current_timestamp - MessageBase.data_retention_period_ms()
         stmt = delete(MessageBase.__table__).where(  # type: ignore
             MessageBase.__table__.c.timestamp < oldest_timestamp_to_be_kept
@@ -295,7 +283,7 @@ def _clean_up_disconnected_devices(company: str, car: str, module_id: int) -> No
     """Remove all device ids from the device_ids dictionary that do not have any messages."""
     module_devices = connected_cars()[company][car].modules[module_id].device_ids.values()
     for device_id in module_devices:
-        with Session(get_connection_source()) as session:
+        with Session(_get_connection_source()) as session:
             table = MessageBase.__table__
             select_stmt = select(MessageBase).where(
                 table.c.message_type == MessageType.STATUS,
@@ -317,7 +305,7 @@ def deserialize_device_id(serialized_id: str) -> tuple[int, int, str]:
 
 
 def load_available_devices_from_database() -> None:
-    with Session(get_connection_source()) as session:
+    with Session(_get_connection_source()) as session:
         stmt = select(MessageBase).where(MessageBase.message_type == MessageType.STATUS)
         result = session.execute(stmt)
         for row in result:

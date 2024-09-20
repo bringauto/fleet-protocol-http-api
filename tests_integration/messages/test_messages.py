@@ -72,7 +72,12 @@ class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):
                 [
                     {
                         "timestamp": 11111,
-                        "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_dev",
+                            "name": "Test",
+                        },
                         "payload": {
                             "message_type": "STATUS",
                             "encoding": "JSON",
@@ -143,7 +148,12 @@ class Test_Making_Car_Available_By_Sending_First_Status_Error(unittest.TestCase)
                 [
                     {
                         "timestamp": 11111,
-                        "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_dev",
+                            "name": "Test",
+                        },
                         "payload": {
                             "message_type": "STATUS_ERROR",
                             "encoding": "JSON",
@@ -220,50 +230,116 @@ class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
                 [
                     {
                         "timestamp": 1234,
-                        "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
-                        "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "start"}},
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_dev",
+                            "name": "Test",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "start"},
+                        },
                     },
                     {
                         "timestamp": 1235,
-                        "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
-                        "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "continue"}},
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_dev",
+                            "name": "Test",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "continue"},
+                        },
                     },
                     {
                         "timestamp": 1236,
-                        "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
-                        "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "stop"}},
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_dev",
+                            "name": "Test",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "stop"},
+                        },
                     },
                     {
                         "timestamp": 1236,
-                        "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
-                        "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "stay"}},
-                    }
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_dev",
+                            "name": "Test",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "stay"},
+                        },
+                    },
                 ],
             )
 
             response = client.get("/command/test_company/test_car?since=1235")
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.json, [
-                {
-                    "timestamp": 1235,
-                    "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
-                    "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "continue"}},
-                },
-                {
-                    "timestamp": 1236,
-                    "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
-                    "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "stop"}},
-                },
-                {
-                    "timestamp": 1236,
-                    "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
-                    "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "stay"}},
-                }
-            ])
+            self.assertEqual(
+                response.json,
+                [
+                    {
+                        "timestamp": 1235,
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_dev",
+                            "name": "Test",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "continue"},
+                        },
+                    },
+                    {
+                        "timestamp": 1236,
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_dev",
+                            "name": "Test",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "stop"},
+                        },
+                    },
+                    {
+                        "timestamp": 1236,
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_dev",
+                            "name": "Test",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "stay"},
+                        },
+                    },
+                ],
+            )
 
     @patch("server.database.time._time_in_ms")
     def test_sending_commands_and_automatically_cleaning_them_up(self, mock_timestamp: Mock):
-       with self.app.app.test_client() as client:
+        with self.app.app.test_client() as client:
             mock_timestamp.return_value = 0
             client.post("/status/test_company/test_car", json=[self.status])
             mock_timestamp.return_value = 1
@@ -281,7 +357,6 @@ class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
             self.assertEqual(len(response.json), 2)
             self.assertEqual(response.json[0]["payload"]["data"]["command"], "stop")
             self.assertEqual(response.json[1]["payload"]["data"]["command"], "stay")
-
 
     def tearDown(self) -> None:  # pragma: no cover
         self.app.clear_all()
@@ -326,10 +401,14 @@ class Test_Sending_And_Viewing_Statuses_Of_Multiple_Cars(unittest.TestCase):
         )
         self.status_1 = Message(device_id=self.device_id, payload=status_payload)
         self.status_2 = Message(device_id=self.device_id, payload=status_payload)
-        self.status_error = Message(device_id=self.device_id, payload=Payload(MessageType.STATUS_ERROR, "JSON", {}))
+        self.status_error = Message(
+            device_id=self.device_id, payload=Payload(MessageType.STATUS_ERROR, "JSON", {})
+        )
 
     @patch("server.database.time._time_in_ms")
-    def test_sending_statuses_to_mutliple_cars_of_multiple_companies(self, mock_timestamp: Mock) -> None:
+    def test_sending_statuses_to_mutliple_cars_of_multiple_companies(
+        self, mock_timestamp: Mock
+    ) -> None:
         with self.app.app.test_client() as client:
             self.maxDiff = None
             mock_timestamp.return_value = 111

@@ -1,23 +1,8 @@
-# Fleet Protocol v2 HTTP API
-# Copyright (C) 2023 BringAuto s.r.o.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-
 from typing import Optional, Callable
+
 from sqlalchemy import create_engine, Engine, Integer, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
 
 _connection_source: Optional[Engine] = None
 
@@ -65,15 +50,14 @@ def unset_connection_source() -> None:
     _connection_source = None
 
 
-
 def set_db_connection(
     dblocation: str,
+    port: int | str = "",
     username: str = "",
     password: str = "",
     db_name: str = "",
     after_connect: tuple[Callable[[], None], ...] = (),
 ) -> None:
-
     """Create SQLAlchemy engine object used to connect to the database.
     Set module-level variable _connection_source to the new engine object."""
 
@@ -81,7 +65,7 @@ def set_db_connection(
     source = _new_connection_source(
         dialect="postgresql",
         dbapi="psycopg",
-        dblocation=dblocation,
+        dblocation=":".join((dblocation, str(port))),
         username=username,
         password=password,
         db_name=db_name,

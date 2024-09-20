@@ -7,10 +7,7 @@ import string
 from sqlalchemy import Engine, Select, func, select
 from sqlalchemy.orm import Session
 
-from server.database.connection import (  # type: ignore
-    get_connection_source,
-    AdminBase as _AdminBase
-)
+from server.database.connection import get_connection_source, AdminBase as _AdminBase
 
 
 _loaded_admins: list[AdminDB] = []

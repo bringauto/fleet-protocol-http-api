@@ -1,5 +1,6 @@
 from typing import Dict
-from database.security import get_admin
+
+from server.database.security import get_admin
 import jwt
 
 _public_key: str
@@ -49,7 +50,7 @@ def info_from_oAuth2AuthCode(token) -> Dict:
     for origin in decoded_token["allowed-origins"]:
         if origin == _client_id:
             return {'scopes': {}, 'uid': ''}
-    
+
     return None # type: ignore
 
 
