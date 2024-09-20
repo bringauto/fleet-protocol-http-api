@@ -7,7 +7,7 @@ sys.path.append(".")
 
 from server.enums import EncodingType, MessageType
 from server.fleetv2_http_api.models.device_id import DeviceId
-from server.database.connected_cars import serialized_device_id
+from server.database.cache import serialized_device_id
 from server.database.connection import (
     set_test_db_connection,
     unset_connection_source,

@@ -1,9 +1,28 @@
-import sys
+from __future__ import annotations
 import dataclasses
 from collections import defaultdict
 
 from copy import deepcopy
 from server.fleetv2_http_api.models.device_id import DeviceId  # type: ignore
+from .models import AdminDB  # type: ignore
+
+
+_loaded_admins: list[AdminDB] = []
+_connected_cars: dict[str, dict[str, ConnectedCar]] = defaultdict(dict)
+
+
+
+def clear_loaded_admins() -> None:
+    global _loaded_admins
+    _loaded_admins.clear()
+
+
+def get_loaded_admins() -> list[AdminDB]:
+    return _loaded_admins.copy()
+
+
+def store_admin(admin: AdminDB) -> None:
+    _loaded_admins.append(admin)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -76,9 +95,6 @@ class ConnectedCar:
         return False
 
 
-_connected_cars: dict[str, dict[str, ConnectedCar]] = defaultdict(dict)
-
-
 def add_car(company_name: str, car_name: str, timestamp: int) -> bool:
     """Add a car to the device_ids dictionary if it is not already there.
 
@@ -146,3 +162,5 @@ def clean_up_disconnected_cars_and_modules() -> None:
 
 def serialized_device_id(device_id: DeviceId) -> str:
     return f"{device_id.module_id}_{device_id.type}_{device_id.role}"
+
+

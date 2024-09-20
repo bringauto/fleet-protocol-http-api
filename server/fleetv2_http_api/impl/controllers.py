@@ -14,8 +14,8 @@ from server.database.database_controller import (  # type: ignore
     cleanup_device_commands_and_warn_before_future_commands,
 )
 from server.database.database_controller import list_messages as _list_messages
-from server.database.restart_connection import restart_connection_on_error as _restart_connection_on_error
-from server.database.connected_cars import (  # type: ignore
+from server.database.restart_connection import db_access_method as _restart_connection_on_error
+from server.database.cache import (  # type: ignore
     add_car as _add_car,
     add_device as _add_device,
     connected_cars as _connected_cars,

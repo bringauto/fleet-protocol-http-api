@@ -25,7 +25,7 @@ class Test_API_After_Restart_Of_Database(unittest.TestCase):
         clear_logs()
         subprocess.run(["docker", "compose", "down", "postgresql-database"])
         subprocess.run(["docker", "compose", "up", "postgresql-database", "-d"])
-        time.sleep(1)
+        time.sleep(1.5)
         _connection.set_db_connection(
             dblocation="localhost",
             port="5432",
@@ -48,7 +48,7 @@ class Test_API_After_Restart_Of_Database(unittest.TestCase):
 
         subprocess.run(["docker", "compose", "down", "postgresql-database"])
         subprocess.run(["docker", "compose", "up", "postgresql-database", "-d"])
-        time.sleep(1)
+        time.sleep(1.5)
         response = list_statuses("company_x", "car_a")
         self.assertEqual(response, ([], 404))
         response = list_commands("company_x", "car_a")
@@ -57,7 +57,7 @@ class Test_API_After_Restart_Of_Database(unittest.TestCase):
     def test_status_and_command_can_be_sent_after(self) -> None:
         subprocess.run(["docker", "compose", "down", "postgresql-database"])
         subprocess.run(["docker", "compose", "up", "postgresql-database", "-d"])
-        time.sleep(1)
+        time.sleep(1.5)
 
         device_id = DeviceId(1, 1, "test", "Test")
         status_payload = Payload.from_dict({"message_type": MessageType.STATUS, "encoding": "JSON", "data": {}})
@@ -83,7 +83,7 @@ class Test_API_After_Restart_Of_Database(unittest.TestCase):
 
         subprocess.run(["docker", "compose", "down", "postgresql-database"])
         subprocess.run(["docker", "compose", "up", "postgresql-database", "-d"])
-        time.sleep(1)
+        time.sleep(1.5)
 
         # The key is still reported as working by the API
         assert response is not None

@@ -27,10 +27,11 @@ def info_from_AdminAuth(api_key, *args) -> Dict:
     if admin == None:
         return None # type: ignore
     else:
+        assert admin is not None
         return {'id': admin.id,'name': admin.name}
 
 
-def info_from_oAuth2AuthCode(token) -> Dict:
+def info_from_oAuth2AuthCode(token) -> Dict | None:
     """
     Validate and decode token.
     Returned value will be passed in 'token_info' parameter of your operation function, if there is one.

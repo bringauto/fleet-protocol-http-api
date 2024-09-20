@@ -4,7 +4,7 @@ sys.path.append(".")
 import unittest
 
 from server.fleetv2_http_api.models.device_id import DeviceId
-from server.database.connected_cars import (
+from server.database.cache import (
     add_car,
     add_device,
     connected_cars,

@@ -2,19 +2,23 @@ from typing import Callable
 import logging as _logging
 import functools as _functools
 
+from sqlalchemy.exc import OperationalError
+
 from ..logs import LOGGER_NAME
 from .connection import (
     get_connection_source as _get_connection_source,
     set_db_connection as _set_db_connection,
 )
-from .security import clear_loaded_admins as _clear_loaded_admins
-from .connected_cars import clear_connected_cars as _clear_connected_cars
+from .cache import (
+    clear_loaded_admins as _clear_loaded_admins,
+    clear_connected_cars as _clear_connected_cars
+)
 
 
 _logger = _logging.getLogger(LOGGER_NAME)
 
 
-def restart_connection_on_error(func: Callable) -> Callable:
+def db_access_method(func: Callable) -> Callable:
     """Decorator for the function that restarts the database connection source in case of operational error."""
 
     @_functools.wraps(func)
@@ -29,7 +33,11 @@ def restart_connection_on_error(func: Callable) -> Callable:
                 "Restarting connection source due to a probable deletion of database tables."
             )
             _restart_connection_source()
-            return func(*args, **kwargs)
+            try:
+                return func(*args, **kwargs)
+            except OperationalError:
+                _logger.error("Database is not accessible.")
+                return None
 
     return wrapper
 

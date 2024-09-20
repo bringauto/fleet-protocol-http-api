@@ -5,7 +5,7 @@ import unittest
 
 sys.path.append(".")
 
-from server.database.connected_cars import clear_connected_cars, serialized_device_id  # type: ignore
+from server.database.cache import clear_connected_cars, serialized_device_id  # type: ignore
 from server.database.database_controller import set_test_db_connection  # type: ignore
 from server.database.time import timestamp  # type: ignore
 from server.fleetv2_http_api.impl.controllers import (  # type: ignore

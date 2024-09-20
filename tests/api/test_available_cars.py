@@ -3,7 +3,7 @@ import unittest
 
 sys.path.append(".")
 from server.enums import MessageType, EncodingType  # type: ignore
-from server.database.connected_cars import clear_connected_cars, connected_cars  # type: ignore
+from server.database.cache import clear_connected_cars, connected_cars  # type: ignore
 from server.database.database_controller import set_test_db_connection  # type: ignore
 from server.fleetv2_http_api.impl.controllers import available_cars, send_statuses  # type: ignore
 from server.fleetv2_http_api.models import DeviceId, Payload, Message, Car  # type: ignore

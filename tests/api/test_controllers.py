@@ -8,7 +8,7 @@ sys.path.append(".")
 from sqlalchemy import insert
 
 from server.enums import MessageType, EncodingType  # type: ignore
-from server.database.connected_cars import clear_connected_cars, serialized_device_id  # type: ignore
+from server.database.cache import clear_connected_cars, serialized_device_id  # type: ignore
 from server.database.connection import get_connection_source  # type: ignore
 from server.database.database_controller import (  # type: ignore
     set_test_db_connection,

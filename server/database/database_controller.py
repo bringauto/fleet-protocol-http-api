@@ -8,13 +8,14 @@ from sqlalchemy import Integer, String, JSON, select, insert, delete, BigInteger
 from sqlalchemy.exc import IntegrityError as _IntegrityError
 
 from server.enums import MessageType  # type: ignore
+from server.database.restart_connection import db_access_method
 import server.database.connection as _connection  # type: ignore
 from server.database.connection import (
     Base,
     get_connection_source as _get_connection_source,
     set_db_connection as _set_db_connection,
 )
-from server.database.connected_cars import (  # type: ignore
+from server.database.cache import (  # type: ignore
     add_car,
     add_device,
     connected_cars,
@@ -254,6 +255,7 @@ def future_command_warning(
     )
 
 
+@db_access_method
 def remove_old_messages(current_timestamp: int) -> None:
     """Remove all messages with a timestamp older than the current timestamp
     minus the data retention period.
