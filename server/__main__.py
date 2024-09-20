@@ -18,7 +18,7 @@ from server.fleetv2_http_api.impl.controllers import (  # type: ignore
 )
 from server.fleetv2_http_api.controllers.security_controller import set_auth_params  # type: ignore
 import server.database.script_args as script_args  # type: ignore
-from server.logs import configure_logging, LOGGER_NAME, LOGGING_CONFIG_PATH
+from server.logs import configure_logging, LOGGING_CONFIG_PATH, LOGGER_NAME
 
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -65,7 +65,7 @@ def _retrieve_keycloak_public_key(keycloak_url: str, realm: str) -> str:
 if __name__ == '__main__':
     vals = script_args.request_and_get_script_arguments("Run the Fleet Protocol v2 HTTP API server.")
     config = vals.config
-    configure_logging(LOGGING_CONFIG_PATH)
+    configure_logging(LOGGING_CONFIG_PATH, LOGGER_NAME)
     _connect_to_database(vals)
     _set_up_database_jobs(config["database"]["cleanup"]["timing_in_seconds"])
     set_car_wait_timeout_s(config["request_for_messages"]["timeout_in_seconds"])

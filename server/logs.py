@@ -9,16 +9,15 @@ from typing import TypeVar, Mapping
 T = TypeVar("T", bound=Mapping)
 
 
-LOGGER_NAME = "werkzeug"
-LOG_FILE_NAME = "fleet_protocol_http_api.log"
 DEFAULT_LOG_DIR = "log"
-DEFAULT_LOG_FORMAT = (
-    "[%(asctime)s.%(msecs)03d] [fleet-protocol-http-api] [%(levelname)s]\t %(message)s"
-)
 DEFAULT_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+LOGGING_CONFIG_PATH = "config/logging.json"
 
 
-def configure_logging(log_config_path: str, component_name: str) -> None:
+LOGGER_NAME = "werkzeug"
+
+
+def configure_logging(component_name: str, logger_name: str) -> None:
     """Configure the logging for the application.
 
     The component name is written in the log messages to identify the source of the log message.
@@ -26,15 +25,15 @@ def configure_logging(log_config_path: str, component_name: str) -> None:
     The logging configuration is read from a JSON file. If the file is not found, a default configuration is used.
     """
     try:
-        with open(log_config_path) as f:
+        with open(LOGGING_CONFIG_PATH) as f:
             logging.config.dictConfig(json.load(f))
     except Exception as e:
-        logger = logging.getLogger(LOGGER_NAME)
+        logger = logging.getLogger(logger_name)
         logger.warning(
-            f"{component_name}: Could not find a logging configuration file (entered path: {log_config_path}. "
+            f"{component_name}: Could not find a logging configuration file (path to logging config: {os.path.abspath(LOGGING_CONFIG_PATH)}). "
             f"Using default logging configuration. The error was: {e}"
         )
-        default_log_path = os.path.join(DEFAULT_LOG_DIR, LOG_FILE_NAME)
+        default_log_path = os.path.join(DEFAULT_LOG_DIR, _log_file_name(component_name))
         if not os.path.isfile(default_log_path):
             if not os.path.exists(DEFAULT_LOG_DIR):
                 os.makedirs(DEFAULT_LOG_DIR)
@@ -61,3 +60,5 @@ def _default_log_format(component_name: str) -> str:
     return f"[%(asctime)s.%(msecs)03d] [{log_component_name}] [%(levelname)s]\t %(message)s"
 
 
+def _log_file_name(component_name: str) -> str:
+    return "_".join(component_name.lower().split())

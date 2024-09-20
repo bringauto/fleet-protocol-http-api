@@ -1,10 +1,7 @@
 import json
 import logging
 
-from server.logs import LOGGER_NAME, DEFAULT_LOG_DIR
-
-
-LOGGING_CONFIG_PATH = "config/logging.json"
+from server.logs import LOGGER_NAME, DEFAULT_LOG_DIR, LOGGING_CONFIG_PATH
 
 
 def clear_logs() -> None:
