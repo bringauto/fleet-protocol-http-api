@@ -10,14 +10,17 @@ from sqlalchemy.exc import (
     IntegrityError as _IntegrityError,
     OperationalError as _OperationalError,
 )
+import psycopg
 
-from ..database.connection import DatabaseNotAccessible as _DatabaseNotAccessible
+from ..database.connection import (
+    DatabaseNotAccessible as _DatabaseNotAccessible,
+)
 from server.enums import MessageType  # type: ignore
-import server.database.connection as _connection  # type: ignore
 from server.database.connection import (
     Base,
     get_connection_source as _get_connection_source,
     set_db_connection as _set_db_connection,
+    set_test_db_connection as _set_test_db_connection
 )
 from server.database.cache import (  # type: ignore
     add_car,
@@ -141,7 +144,7 @@ def set_db_connection(dblocation: str, username: str = "", password: str = "") -
 
 
 def set_test_db_connection(dblocation: str) -> None:
-    _connection.set_test_db_connection(dblocation=dblocation)
+    _set_test_db_connection(dblocation=dblocation)
 
 
 def get_available_devices_from_database() -> None:
@@ -277,8 +280,10 @@ def remove_old_messages(current_timestamp: int) -> None:
             )
             conn.execute(stmt)
         clean_up_disconnected_cars()
-    except _DatabaseNotAccessible as e:
-        _logger.error("Cannot clean up old messages. Database is not accessible")
+    except psycopg.errors.UndefinedTable:
+        pass # Table does not exist yet, no messages to clean up
+    except _DatabaseNotAccessible:
+        pass # Database is not accessible, do nothing
     except _OperationalError as e:
         _logger.error(f"Cannot clean up old messages. Operational error: {e}")
     except Exception as e:

@@ -34,7 +34,7 @@ def db_access_method(func: Callable) -> Callable:
                 "Restarting connection source due to a probable deletion of database tables."
             )
             try:
-                _restart_connection_source()
+                restart_connection_source()
                 return func(*args, **kwargs)
             except _CannotConnectToDatabase:
                 _logger.error("Cannot connect to the database. Database is not accessible.")
@@ -46,7 +46,7 @@ def db_access_method(func: Callable) -> Callable:
     return wrapper
 
 
-def _restart_connection_source() -> None:
+def restart_connection_source() -> None:
     _connection_source = _get_connection_source()
     if _connection_source is None:
         _logger.error("Cannot reset connection source if its not currently set.")
