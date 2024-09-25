@@ -6,7 +6,7 @@ import string
 from sqlalchemy import Engine, Select, func, select
 from sqlalchemy.orm import Session
 
-from server.database.connection import get_connection_source, AdminBase as _AdminBase
+from server.database.connection import get_connection_source, AdminBase as _AdminBase, DatabaseNotAccessible
 from server.database.restart_connection import db_access_method as _db_access_method
 from server.database.cache import get_loaded_admins, store_admin
 from server.database.models import AdminDB
@@ -36,12 +36,6 @@ def get_admin(key: str) -> AdminDB | None:
     for admin in loaded_admins:
         if admin.key == key:
             return admin
-
-    source = get_connection_source()
-    if source is None:
-        return None
-
-    _create_admin_table_if_it_does_not_exist(source)
 
     with Session(get_connection_source()) as session:
         result = session.execute(select(_AdminBase).where(_AdminBase.key == key)).first()

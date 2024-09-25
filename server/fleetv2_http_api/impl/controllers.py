@@ -14,7 +14,7 @@ from server.database.database_controller import (  # type: ignore
     cleanup_device_commands_and_warn_before_future_commands,
 )
 from server.database.database_controller import list_messages as _list_messages
-from server.database.restart_connection import db_access_method as _restart_connection_on_error
+from server.database.restart_connection import db_access_method as _db_access_method
 from server.database.cache import (  # type: ignore
     add_car as _add_car,
     add_device as _add_device,
@@ -239,7 +239,7 @@ def available_devices(
             )
 
 
-@_restart_connection_on_error
+@_db_access_method
 def list_commands(
     company_name: str, car_name: str, since: int = 0, wait: bool = False
 ) -> tuple[list[Message], int]:  # noqa: E501
@@ -273,7 +273,7 @@ def list_commands(
         )
 
 
-@_restart_connection_on_error
+@_db_access_method
 def list_statuses(
     company_name: str, car_name: str, since: int = 0, wait: bool = False
 ) -> tuple[list[Message], int]:  # noqa: E501
@@ -355,7 +355,7 @@ def send_commands(
     return _log_and_respond(msg, code, msg)
 
 
-@_restart_connection_on_error
+@_db_access_method
 def send_statuses(
     company_name: str, car_name: str, body: list[dict | Message]
 ) -> tuple[str | list[str], int]:  # noqa: E501

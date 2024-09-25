@@ -2,13 +2,17 @@ from __future__ import annotations
 from typing import ClassVar, Any
 import dataclasses
 import copy
+import logging as _logging
 
 from sqlalchemy.orm import Mapped, mapped_column, Session
 from sqlalchemy import Integer, String, JSON, select, insert, delete, BigInteger, and_, or_
-from sqlalchemy.exc import IntegrityError as _IntegrityError
+from sqlalchemy.exc import (
+    IntegrityError as _IntegrityError,
+    OperationalError as _OperationalError,
+)
 
+from ..database.connection import DatabaseNotAccessible as _DatabaseNotAccessible
 from server.enums import MessageType  # type: ignore
-from server.database.restart_connection import db_access_method
 import server.database.connection as _connection  # type: ignore
 from server.database.connection import (
     Base,
@@ -24,6 +28,12 @@ from server.database.cache import (  # type: ignore
     clear_connected_cars as _clear_connected_cars,
 )
 from server.fleetv2_http_api.models.device_id import DeviceId  # type: ignore
+
+
+from ..logs import LOGGER_NAME
+
+
+_logger = _logging.getLogger(LOGGER_NAME)
 
 
 @dataclasses.dataclass
@@ -255,18 +265,24 @@ def future_command_warning(
     )
 
 
-@db_access_method
 def remove_old_messages(current_timestamp: int) -> None:
     """Remove all messages with a timestamp older than the current timestamp
     minus the data retention period.
     """
-    with _get_connection_source().begin() as conn:
-        oldest_timestamp_to_be_kept = current_timestamp - MessageBase.data_retention_period_ms()
-        stmt = delete(MessageBase.__table__).where(  # type: ignore
-            MessageBase.__table__.c.timestamp < oldest_timestamp_to_be_kept
-        )
-        conn.execute(stmt)
-    clean_up_disconnected_cars()
+    try:
+        with _get_connection_source().begin() as conn:
+            oldest_timestamp_to_be_kept = current_timestamp - MessageBase.data_retention_period_ms()
+            stmt = delete(MessageBase.__table__).where(  # type: ignore
+                MessageBase.__table__.c.timestamp < oldest_timestamp_to_be_kept
+            )
+            conn.execute(stmt)
+        clean_up_disconnected_cars()
+    except _DatabaseNotAccessible as e:
+        _logger.error("Cannot clean up old messages. Database is not accessible")
+    except _OperationalError as e:
+        _logger.error(f"Cannot clean up old messages. Operational error: {e}")
+    except Exception as e:
+        _logger.error(f"Cannot clean up old messages. Error: {e}")
 
 
 def clean_up_disconnected_cars() -> None:

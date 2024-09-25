@@ -7,7 +7,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 _connection_source: Optional[Engine] = None
 
 
-class CannotConnectToDatabase(Exception):
+class DatabaseNotAccessible(Exception):
     pass
 
 
@@ -148,7 +148,7 @@ def _new_connection_source(
         with engine.connect():
             pass
     except:
-        raise CannotConnectToDatabase(
+        raise DatabaseNotAccessible(
             "Could not connect to the database with the given connection parameters: \n"
             f"{url}\n\n"
             "Check the location, port number, username and password."

@@ -16,6 +16,7 @@ from server.fleetv2_http_api.impl.controllers import (
     send_statuses
 )
 import server.database.security as _security
+from server.fleetv2_http_api.controllers.security_controller import info_from_AdminAuth
 
 from tests._utils.logs import clear_logs
 
@@ -93,6 +94,23 @@ class Test_API_After_Restart_Of_Database(unittest.TestCase):
         list_statuses("company_x", "car_a")
         response = _security.get_admin("0123465798")
         self.assertIsNone(response)
+
+    @patch("server.database.security._generate_key")
+    def test_info_admin_auth_returns_invalid_dict_if_database_is_out(self, generate_key: Mock) -> None:
+        generate_key.return_value = "0123465798"
+        _security.add_admin_key("test_key")
+        response = _security.get_admin("0123465798")
+        assert response is not None
+        self.assertEqual(response.name, "test_key")
+
+        subprocess.run(["docker", "compose", "down", "postgresql-database"])
+        time.sleep(1.5)
+
+        # this clears up cached api keys
+        list_statuses("company_x", "car_a")
+
+        response = info_from_AdminAuth("0123465798")
+        self.assertIsNotNone(response)
 
     def tearDown(self):
         subprocess.run(["docker", "compose", "down", "postgresql-database"])
