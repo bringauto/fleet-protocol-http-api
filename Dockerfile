@@ -8,7 +8,6 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY log /usr/src/app/log
 COPY config /usr/src/app/config
-COPY config/config.json /usr/src/app/config/config.json
 
 COPY . /usr/src/app
 EXPOSE 8080
