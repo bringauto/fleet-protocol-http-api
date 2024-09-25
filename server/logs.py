@@ -10,7 +10,7 @@ T = TypeVar("T", bound=Mapping)
 
 
 _DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
-_LOGGER_NAME = "werkzeug"
+LOGGER_NAME = "werkzeug"
 
 
 log_level_by_verbosity = {False: logging.WARNING, True: logging.DEBUG}
@@ -25,7 +25,7 @@ def configure_logging(component_name: str, config: dict) -> None:
     """
     try:
         config["general-settings"]
-        logger = logging.getLogger(_LOGGER_NAME)
+        logger = logging.getLogger(LOGGER_NAME)
         verbose: bool = config["general-settings"]["verbose"]
         logger.setLevel(log_level_by_verbosity[verbose])
 

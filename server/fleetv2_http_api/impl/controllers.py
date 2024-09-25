@@ -26,15 +26,10 @@ from server.database.time import timestamp as _timestamp  # type: ignore
 from server.fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
 from server.fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
 from server.fleetv2_http_api.impl.security import SecurityObj  # type: ignore
-from server.logs import _LOGGER_NAME
+from server.logs import LOGGER_NAME
 
-
-<<<<<<< HEAD
 
 logger = logging.getLogger(LOGGER_NAME)
-=======
-logger = logging.getLogger(_LOGGER_NAME)
->>>>>>> @{-1}
 
 
 _NAME_PATTERN = "^[0-9a-z_]+$"
@@ -602,5 +597,3 @@ def _validate_name_string(name: str, text_label: str) -> None:
     if not re.match(_NAME_PATTERN, name):
         msg = f"{text_label} '{name}' does not match pattern '{_NAME_PATTERN}'."
         raise ValueError(msg)
-
-
