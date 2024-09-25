@@ -1,15 +1,16 @@
 import json
-import logging
-
-from server.logs import LOGGER_NAME, DEFAULT_LOG_DIR, LOGGING_CONFIG_PATH
+import os
 
 
 def clear_logs() -> None:
     """Find and clear the log file."""
-    log_file_path = _get_log_dir_path()
+    dir = os.path.dirname(__file__)
+    config = json.loads(open(os.path.join(dir,"test_config.json")).read())
+    log_file_path = config["general-settings"]["log-path"]
     with open(log_file_path, "w") as f:
         f.write("")
 
+<<<<<<< HEAD
 
 def _get_log_dir_path() -> str:
     try:
@@ -24,3 +25,5 @@ def _get_log_dir_path() -> str:
         return DEFAULT_LOG_DIR
 
 
+=======
+>>>>>>> @{-1}
