@@ -1,5 +1,5 @@
 from __future__ import annotations
-import json
+import logging.handlers
 import os
 import logging.config
 
@@ -9,15 +9,14 @@ from typing import TypeVar, Mapping
 T = TypeVar("T", bound=Mapping)
 
 
-DEFAULT_LOG_DIR = "log"
-DEFAULT_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
-LOGGING_CONFIG_PATH = "config/logging.json"
+_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+_LOGGER_NAME = "werkzeug"
 
 
-LOGGER_NAME = "werkzeug"
+log_level_by_verbosity = {False: logging.WARNING, True: logging.DEBUG}
 
 
-def configure_logging(component_name: str, logger_name: str) -> None:
+def configure_logging(component_name: str, config: dict) -> None:
     """Configure the logging for the application.
 
     The component name is written in the log messages to identify the source of the log message.
@@ -25,37 +24,35 @@ def configure_logging(component_name: str, logger_name: str) -> None:
     The logging configuration is read from a JSON file. If the file is not found, a default configuration is used.
     """
     try:
-        with open(LOGGING_CONFIG_PATH) as f:
-            logging.config.dictConfig(json.load(f))
-    except Exception as e:
-        logger = logging.getLogger(logger_name)
-        logger.warning(
-            f"{component_name}: Could not find a logging configuration file (path to logging config: {os.path.abspath(LOGGING_CONFIG_PATH)}). "
-            f"Using default logging configuration. The error was: {e}"
-        )
-        default_log_path = os.path.join(DEFAULT_LOG_DIR, _log_file_name(component_name))
-        if not os.path.isfile(default_log_path):
-            if not os.path.exists(DEFAULT_LOG_DIR):
-                os.makedirs(DEFAULT_LOG_DIR)
-            with open(default_log_path, "w") as f:
-                f.write("")
+        config["general-settings"]
+        logger = logging.getLogger(_LOGGER_NAME)
+        verbose: bool = config["general-settings"]["verbose"]
+        logger.setLevel(log_level_by_verbosity[verbose])
 
-        logger.propagate = False
-        formatter = logging.Formatter(_default_log_format(component_name), DEFAULT_DATE_FORMAT)
-        file_handler = logging.FileHandler(filename=default_log_path)
-        file_handler.setLevel(level=logging.INFO)
+        # create formatter
+        formatter = logging.Formatter(_log_format(component_name), datefmt=_DATE_FORMAT)
+
+        # file handler
+        file_path = os.path.join(
+            config["general-settings"]["log-path"], _log_file_name(component_name) + ".log"
+        )
+        file_handler = logging.handlers.RotatingFileHandler(
+            file_path, maxBytes=10485760, backupCount=5
+        )
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
-        stream_handler = logging.StreamHandler()
-        stream_handler.setFormatter(formatter)
-        stream_handler.setLevel(level=logging.INFO)
-        logger.addHandler(stream_handler)
+        # console handler
+        if verbose:
+            console_handler = logging.StreamHandler()
+            console_handler.setFormatter(formatter)
+            logger.addHandler(console_handler)
 
-        logger.setLevel(level=logging.INFO)
+    except Exception as e:
+        logging.error(f"{component_name}: Could not configure logging. {e}")
 
 
-def _default_log_format(component_name: str) -> str:
+def _log_format(component_name: str) -> str:
     log_component_name = "-".join(component_name.lower().split())
     return f"[%(asctime)s.%(msecs)03d] [{log_component_name}] [%(levelname)s]\t %(message)s"
 

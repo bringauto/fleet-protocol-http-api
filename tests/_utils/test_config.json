@@ -1,6 +1,6 @@
 {
     "general-settings": {
-        "log-path": "log",
+        "log-path": "tests/log",
         "verbose": true
     },
     "database": {
