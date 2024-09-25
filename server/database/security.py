@@ -6,7 +6,7 @@ import string
 from sqlalchemy import Engine, Select, func, select
 from sqlalchemy.orm import Session
 
-from server.database.connection import get_connection_source, AdminBase as _AdminBase, DatabaseNotAccessible
+from server.database.connection import AdminBase as _AdminBase, get_connection_source as _get_connection_source
 from server.database.restart_connection import db_access_method as _db_access_method
 from server.database.cache import get_loaded_admins, store_admin
 from server.database.models import AdminDB
@@ -15,7 +15,7 @@ from server.database.models import AdminDB
 @_db_access_method
 def add_admin_key(name: str, connection_source: Optional[Engine] = None) -> str:
     if connection_source is None:
-        connection_source = get_connection_source()
+        connection_source = _get_connection_source()
     """Add an admin to the database and return the key."""
     _create_admin_table_if_it_does_not_exist(connection_source)
     with Session(connection_source) as session:
@@ -37,7 +37,7 @@ def get_admin(key: str) -> AdminDB | None:
         if admin.key == key:
             return admin
 
-    with Session(get_connection_source()) as session:
+    with Session(_get_connection_source()) as session:
         result = session.execute(select(_AdminBase).where(_AdminBase.key == key)).first()
         if result is None:
             return None
@@ -55,7 +55,7 @@ def admin_selection(key: str) -> Select:
 
 def number_of_admin_keys(connection: Optional[Engine] = None) -> int:
     if connection is None:
-        connection = get_connection_source()
+        connection = _get_connection_source()
     with Session(connection) as session:
         try:
             return session.query(func.count(_AdminBase.__table__.c.id)).scalar()
