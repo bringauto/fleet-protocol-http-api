@@ -18,7 +18,7 @@ from server.fleetv2_http_api.impl.controllers import (  # type: ignore
 )
 from server.fleetv2_http_api.controllers.security_controller import set_auth_params  # type: ignore
 import server.database.script_args as script_args  # type: ignore
-from server.logs import configure_logging, LOGGING_CONFIG_PATH, LOGGER_NAME
+from server.logs import configure_logging, LOGGER_NAME
 
 
 logger = logging.getLogger(LOGGER_NAME)
