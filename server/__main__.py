@@ -28,6 +28,7 @@ def _clean_up_messages() -> None:
     """Clean up messages from the database."""
     remove_old_messages(current_timestamp=timestamp())
 
+
 def _connect_to_database(vals:script_args.ScriptArgs) -> None:
     """Clear previously stored available devices and connect to the database."""
     clear_connected_cars()
@@ -38,6 +39,7 @@ def _connect_to_database(vals:script_args.ScriptArgs) -> None:
         password = vals.argvals["password"],
         db_name = vals.argvals["database_name"]
     )
+
 
 def _set_up_database_jobs(db_cleanup_config: dict[str,int]) -> None:
     """Set message cleanup job and other customary jobs defined by the example method."""
