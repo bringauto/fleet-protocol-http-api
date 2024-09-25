@@ -2,7 +2,9 @@ from __future__ import annotations
 from typing import Optional
 import random
 import string
+import logging
 
+import psycopg
 from sqlalchemy import Engine, Select, func, select
 from sqlalchemy.orm import Session
 
@@ -10,6 +12,10 @@ from server.database.connection import AdminBase as _AdminBase, get_connection_s
 from server.database.restart_connection import db_access_method as _db_access_method
 from server.database.cache import get_loaded_admins, store_admin
 from server.database.models import AdminDB
+from ..logs import LOGGER_NAME
+
+
+_logger = logging.getLogger(LOGGER_NAME)
 
 
 @_db_access_method
@@ -38,14 +44,23 @@ def get_admin(key: str) -> AdminDB | None:
             return admin
 
     with Session(_get_connection_source()) as session:
-        result = session.execute(select(_AdminBase).where(_AdminBase.key == key)).first()
-        if result is None:
+        try:
+            result = session.execute(select(_AdminBase).where(_AdminBase.key == key)).first()
+            if result is None:
+                return None
+            else:
+                _logger.debug(f"Retrieved API key from database.")
+                admin_base: _AdminBase = result[0]
+                admin = AdminDB(id=admin_base.id, name=admin_base.name, key=admin_base.key)
+                store_admin(admin)
+                return admin
+        except psycopg.errors.UndefinedTable:
+            _logger.warning("Admin table does not exist. Creating new table.")
+            _create_admin_table_if_it_does_not_exist(_get_connection_source())
             return None
-        else:
-            admin_base: _AdminBase = result[0]
-            admin = AdminDB(id=admin_base.id, name=admin_base.name, key=admin_base.key)
-            store_admin(admin)
-            return admin
+        except Exception as e:
+            print(f"Error when reading API key from database: {e}")
+            return None
 
 
 @_db_access_method
