@@ -168,8 +168,10 @@ def send_messages_to_database(
             "Some of the messages are identical to those sent previously, including their timestamps.",
             400
         )
+    except _DatabaseNotAccessible:
+        return "Database not accessible.", 503
     except Exception as e:
-        return f"Error: Internal server error : {e}.", 500
+        return f"Internal server error : {e}.", 500
 
 
 def _get_message_for_n_messages_succesfully_sent(number_of_sent_messages: int) -> str:
@@ -281,9 +283,9 @@ def remove_old_messages(current_timestamp: int) -> None:
             conn.execute(stmt)
         clean_up_disconnected_cars()
     except psycopg.errors.UndefinedTable:
-        pass # Table does not exist yet, no messages to clean up
+        _logger.debug("The database table does not exist yet, no messages to clean up.")
     except _DatabaseNotAccessible:
-        pass # Database is not accessible, do nothing
+        _logger.debug("Database is not accessible, do nothing")
     except _OperationalError as e:
         _logger.error(f"Cannot clean up old messages. Operational error: {e}")
     except Exception as e:
