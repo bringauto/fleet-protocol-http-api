@@ -26,7 +26,7 @@ def db_access_method(func: Callable) -> Callable:
     def wrapper(*args, **kwargs):
         try:
             response = func(*args, **kwargs)
-            if isinstance(response, tuple) and len(response) > 1 and response[1] == 500:
+            if isinstance(response, tuple) and len(response) > 1 and (response[1]==503 or response[1] == 500):
                 raise Exception
             return response
         except Exception:
@@ -38,10 +38,10 @@ def db_access_method(func: Callable) -> Callable:
                 return func(*args, **kwargs)
             except _CannotConnectToDatabase:
                 _logger.error("Cannot connect to the database. Database is not accessible.")
-                return (None, 500)
+                return None
             except OperationalError:
                 _logger.error("Database is not accessible.")
-                return (None, 500)
+                return None
 
     return wrapper
 
