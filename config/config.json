@@ -23,7 +23,7 @@
         "base_uri": "https://api.bringautofleet.com/v2/protocol"
     },
     "request_for_messages": {
-        "timeout_in_seconds": 100
+        "timeout_in_seconds": 5
     },
     "security": {
         "keycloak_url": "https://keycloak.bringauto.com",
