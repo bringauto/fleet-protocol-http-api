@@ -10,10 +10,10 @@ T = TypeVar("T", bound=Mapping)
 
 
 _DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
-LOGGER_NAME = "werkzeug"
+_LOGGER_NAME = "werkzeug"
 
 
-log_level_by_verbosity = {False: logging.WARNING, True: logging.DEBUG}
+_log_level_by_verbosity = {False: logging.WARNING, True: logging.DEBUG}
 
 
 def configure_logging(component_name: str, config: dict) -> None:
@@ -24,18 +24,16 @@ def configure_logging(component_name: str, config: dict) -> None:
     The logging configuration is read from a JSON file. If the file is not found, a default configuration is used.
     """
     try:
-        config["general-settings"]
-        logger = logging.getLogger(LOGGER_NAME)
-        verbose: bool = config["general-settings"]["verbose"]
-        logger.setLevel(log_level_by_verbosity[verbose])
+        log_config = config["logging"]
+        logger = logging.getLogger(_LOGGER_NAME)
+        verbose: bool = log_config["verbose"]
+        logger.setLevel(_log_level_by_verbosity[verbose])
 
         # create formatter
         formatter = logging.Formatter(_log_format(component_name), datefmt=_DATE_FORMAT)
 
         # file handler
-        file_path = os.path.join(
-            config["general-settings"]["log-path"], _log_file_name(component_name) + ".log"
-        )
+        file_path = os.path.join(log_config["log-path"], _log_file_name(component_name) + ".log")
         file_handler = logging.handlers.RotatingFileHandler(
             file_path, maxBytes=10485760, backupCount=5
         )
@@ -59,3 +57,4 @@ def _log_format(component_name: str) -> str:
 
 def _log_file_name(component_name: str) -> str:
     return "_".join(component_name.lower().split())
+
