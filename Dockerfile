@@ -1,15 +1,14 @@
 FROM python:3.10-alpine
 
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
+WORKDIR /home/bringauto
 
-COPY ./requirements.txt /usr/src/app/
+COPY ./requirements.txt /home/bringauto
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-COPY log /usr/src/app/log
-COPY config /usr/src/app/config
+RUN mkdir /home/bringauto/log
+COPY config /home/bringauto/config
+COPY server /home/bringauto/server
 
-COPY . /usr/src/app
 EXPOSE 8080
 
 ENTRYPOINT ["python3"]
