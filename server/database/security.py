@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Optional
-import random
+import secrets
 import string
 import logging
 
@@ -79,7 +79,7 @@ def number_of_admin_keys(connection: Optional[Engine] = None) -> int:
 
 
 def _generate_key() -> str:  # pragma: no cover
-    return "".join(random.choice(string.ascii_letters) for _ in range(30))
+    return "".join(secrets.choice(string.ascii_letters) for _ in range(30))
 
 
 def _admin_added_msg(name: str, key: str) -> str:
