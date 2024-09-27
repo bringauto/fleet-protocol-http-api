@@ -46,8 +46,10 @@ def configure_logging(component_name: str, config: dict) -> None:
             console_handler.setFormatter(formatter)
             logger.addHandler(console_handler)
 
+    except ValueError as ve:
+        logging.error(f"{component_name}: Configuration error: {ve}")
     except Exception as e:
-        logging.error(f"{component_name}: Could not configure logging. {e}")
+        logging.error(f"{component_name}: Unexpected error configuring logging: {e}")
 
 
 def _log_format(component_name: str) -> str:
