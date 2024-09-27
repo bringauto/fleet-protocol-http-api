@@ -8,7 +8,10 @@ import psycopg
 from sqlalchemy import Engine, Select, func, select
 from sqlalchemy.orm import Session
 
-from server.database.connection import AdminBase as _AdminBase, get_connection_source as _get_connection_source
+from server.database.connection import (
+    AdminBase as _AdminBase,
+    get_connection_source as _get_connection_source,
+)
 from server.database.restart_connection import db_access_method as _db_access_method
 from server.database.cache import get_loaded_admins, store_admin
 from server.database.models import AdminDB
@@ -20,9 +23,9 @@ _logger = logging.getLogger(LOGGER_NAME)
 
 @_db_access_method
 def add_admin_key(name: str, connection_source: Optional[Engine] = None) -> str:
+    """Add an admin to the database and return the key."""
     if connection_source is None:
         connection_source = _get_connection_source()
-    """Add an admin to the database and return the key."""
     _create_admin_table_if_it_does_not_exist(connection_source)
     with Session(connection_source) as session:
         existing_admin = session.query(_AdminBase).filter(_AdminBase.name == name).first()
@@ -49,7 +52,7 @@ def get_admin(key: str) -> AdminDB | None:
             if result is None:
                 return None
             else:
-                _logger.debug(f"Retrieved API key from database.")
+                _logger.debug("Retrieved API key from database.")
                 admin_base: _AdminBase = result[0]
                 admin = AdminDB(id=admin_base.id, name=admin_base.name, key=admin_base.key)
                 store_admin(admin)
@@ -59,7 +62,7 @@ def get_admin(key: str) -> AdminDB | None:
             _create_admin_table_if_it_does_not_exist(_get_connection_source())
             return None
         except Exception as e:
-            print(f"Error when reading API key from database: {e}")
+            _logger.error(f"Error when reading API key from database: {e}")
             return None
 
 
