@@ -62,8 +62,9 @@ def restart_connection_source() -> None:
         _clear_loaded_admins()
         _set_db_connection(
             dblocation=host,
-            port=str(url_obj.port),
+            port=str(url_obj.port if url_obj.port is not None else ""),
             username=username,
             password=password,
             db_name=db_name,
         )
+    
