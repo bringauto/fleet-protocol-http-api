@@ -42,6 +42,9 @@ def configure_logging(component_name: str, config: dict) -> None:
         log_dir_path = log_config.get("log-path", None)
         if log_dir_path is None:
             raise ValueError("No log directory path found in logging configuration")
+        if not os.path.exists(log_dir_path):
+            raise ValueError(f"Log directory does not exist: {log_dir_path}. Check the config file.")
+
         file_path = os.path.join(log_config["log-path"], _log_file_name(component_name) + ".log")
         file_handler = logging.handlers.RotatingFileHandler(
             file_path, maxBytes=10485760, backupCount=5

@@ -1,6 +1,6 @@
 {
     "logging": {
-        "log-path": "log",
+        "log-path": "log/",
         "verbose": true
     },
     "database": {
@@ -32,4 +32,4 @@
         "scope": "",
         "realm": ""
     }
-}
+}   
