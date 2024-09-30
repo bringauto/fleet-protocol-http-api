@@ -61,11 +61,11 @@ def _retrieve_keycloak_public_key(keycloak_url: str, realm: str) -> str:
     try:
         response = requests.get(keycloak_url + "/realms/" + realm)
         response.raise_for_status()
-    except:
-        logger.warning("Failed to retrieve public key from Keycloak server.")
+        logger.info("Retrieved public key from Keycloak server.")
+        return response.json()["public_key"]
+    except Exception as e:
+        logger.warning("Failed to retrieve public key from Keycloak server. Error: %s", e)
         return ""
-    logger.info("Retrieved public key from Keycloak server.")
-    return response.json()["public_key"]
 
 
 if __name__ == '__main__':
