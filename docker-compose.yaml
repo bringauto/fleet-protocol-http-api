@@ -18,6 +18,7 @@ services:
     image: postgres:16
     restart: always
     environment:
+      POSTGRES_DB: protocol_api
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "1234"
     networks:

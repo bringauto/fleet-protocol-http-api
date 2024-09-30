@@ -33,7 +33,7 @@ class Test_API_After_Restart_Of_Database(unittest.TestCase):
         _connection.set_db_connection(
             dblocation="localhost",
             port="5432",
-            db_name="postgres",
+            db_name="protocol_api",
             username="postgres",
             password="1234",
         )

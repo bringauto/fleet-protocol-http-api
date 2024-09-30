@@ -15,7 +15,9 @@ Python 3.10.12+
 
 ### Configuration
 
-The configuration file is located in `config` directory. The file contains the following fields:
+The configuration file is located in `config` directory. The file contains the fields listed below.
+
+**Check carefully the correct name of the database the server should connect to.**
 
 - `logging` - contains the following keys:
   - `log-path` - path to the directory where logs will be stored.
