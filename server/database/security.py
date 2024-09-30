@@ -44,12 +44,15 @@ def get_admin(key: str) -> AdminDB | None:
     loaded_admins = get_loaded_admins()
     for admin in loaded_admins:
         if admin.key == key:
+            _logger.info("Retrieved API key from cache.")
             return admin
 
     with Session(_get_connection_source()) as session:
         try:
+            _logger.info("Retrieving API key from database.")
             result = session.execute(select(_AdminBase).where(_AdminBase.key == key)).first()
             if result is None:
+                _logger.debug("API key not found.")
                 return None
             else:
                 _logger.debug("Retrieved API key from database.")
@@ -63,7 +66,7 @@ def get_admin(key: str) -> AdminDB | None:
             return None
         except Exception as e:
             _logger.error(f"Error when reading API key from database: {e}")
-            return None
+            raise
 
 
 @_db_access_method
@@ -96,4 +99,5 @@ def _admin_already_exists_msg(name: str) -> str:
 def _create_admin_table_if_it_does_not_exist(connection_source: Engine) -> None:
     with connection_source.connect() as connection:
         if not connection_source.dialect.has_table(connection, _AdminBase.__tablename__):
+            _logger.info("Creating admin table.")
             _AdminBase.metadata.create_all(connection_source)
