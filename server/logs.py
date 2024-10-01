@@ -5,6 +5,8 @@ import logging.config
 
 from typing import TypeVar, Mapping
 
+from .config import APIConfig
+
 
 T = TypeVar("T", bound=Mapping)
 
@@ -16,8 +18,7 @@ LOGGER_NAME = "werkzeug"
 _log_level_by_verbosity = {False: logging.WARNING, True: logging.DEBUG}
 
 
-
-def configure_logging(component_name: str, config: dict) -> None:
+def configure_logging(component_name: str, config: APIConfig) -> None:
     """Configure the logging for the application.
 
     The component name is written in the log messages to identify the source of the log message.
@@ -25,11 +26,9 @@ def configure_logging(component_name: str, config: dict) -> None:
     The logging configuration is read from a JSON file. If the file is not found, a default configuration is used.
     """
     try:
-        log_config = config.get("logging", {})
-        if not log_config:
-            raise ValueError("No logging configuration found")
+        log_config = config.logging
         logger = logging.getLogger(LOGGER_NAME)
-        verbose: bool = log_config.get("verbose", None)
+        verbose: bool = log_config.verbose
         if verbose is None:
             raise ValueError("No verbosity level found in logging configuration")
 
@@ -39,13 +38,15 @@ def configure_logging(component_name: str, config: dict) -> None:
         formatter = logging.Formatter(_log_format(component_name), datefmt=_DATE_FORMAT)
 
         # file handler
-        log_dir_path = log_config.get("log-path", None)
+        log_dir_path = log_config.log_path
         if log_dir_path is None:
             raise ValueError("No log directory path found in logging configuration")
         if not os.path.exists(log_dir_path):
-            raise ValueError(f"Log directory does not exist: {log_dir_path}. Check the config file.")
+            raise ValueError(
+                f"Log directory does not exist: {log_dir_path}. Check the config file."
+            )
 
-        file_path = os.path.join(log_config["log-path"], _log_file_name(component_name) + ".log")
+        file_path = os.path.join(log_config.log_path, _log_file_name(component_name) + ".log")
         file_handler = logging.handlers.RotatingFileHandler(
             file_path, maxBytes=10485760, backupCount=5
         )
@@ -66,7 +67,6 @@ def configure_logging(component_name: str, config: dict) -> None:
         raise
 
 
-
 def _log_format(component_name: str) -> str:
     log_component_name = "-".join(component_name.lower().split())
     return f"[%(asctime)s.%(msecs)03d] [{log_component_name}] [%(levelname)s]\t %(message)s"
@@ -74,4 +74,3 @@ def _log_format(component_name: str) -> str:
 
 def _log_file_name(component_name: str) -> str:
     return "_".join(component_name.lower().split())
-

@@ -7,6 +7,7 @@ import connexion  # type: ignore
 from fleetv2_http_api import encoder  # type: ignore
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
 
+from .config import CleanupTiming
 from server.database.database_controller import remove_old_messages, set_message_retention_period  # type: ignore
 from server.database.cache import clear_connected_cars  # type: ignore
 from server.database.connection import set_db_connection  # type: ignore
@@ -45,14 +46,14 @@ def _connect_to_database(vals:script_args.ScriptArgs) -> None:
     )
 
 
-def _set_up_database_jobs(db_cleanup_config: dict[str,int]) -> None:
+def _set_up_database_jobs(config: CleanupTiming) -> None:
     """Set message cleanup job and other customary jobs defined by the example method."""
-    set_message_retention_period(db_cleanup_config["retention_period"])
+    set_message_retention_period(config.retention_period)
     scheduler = BackgroundScheduler()
     scheduler.add_job(
         func=_clean_up_messages,
         trigger="interval",
-        seconds=db_cleanup_config["cleanup_period"],
+        seconds=config.cleanup_period,
     )
     scheduler.start()
 
@@ -88,23 +89,23 @@ if __name__ == '__main__':
     config = vals.config
     configure_logging(COMPONENT_NAME, config)
     _connect_to_database(vals)
-    _set_up_database_jobs(config["database"]["cleanup"]["timing_in_seconds"])
-    set_car_wait_timeout_s(config["request_for_messages"]["timeout_in_seconds"])
-    set_status_wait_timeout_s(config["request_for_messages"]["timeout_in_seconds"])
-    set_command_wait_timeout_s(config["request_for_messages"]["timeout_in_seconds"])
+    _set_up_database_jobs(config.database.cleanup.timing_in_seconds)
+    set_car_wait_timeout_s(config.request_for_messages.timeout_in_seconds)
+    set_status_wait_timeout_s(config.request_for_messages.timeout_in_seconds)
+    set_command_wait_timeout_s(config.request_for_messages.timeout_in_seconds)
     init_security(
-        keycloak_url=config["security"]["keycloak_url"],
-        client_id=config["security"]["client_id"],
-        secret_key=config["security"]["client_secret_key"],
-        scope=config["security"]["scope"],
-        realm=config["security"]["realm"],
-        callback=config["http_server"]["base_uri"]
+        keycloak_url=str(config.security.keycloak_url),
+        client_id=config.security.client_id,
+        secret_key=config.security.client_secret_key,
+        scope=config.security.scope,
+        realm=config.security.realm,
+        callback=str(config.http_server.base_uri)
     )
     set_auth_params(
         public_key=_retrieve_keycloak_public_key(
-            keycloak_url=config["security"]["keycloak_url"],
-            realm=config["security"]["realm"]
+            keycloak_url=str(config.security.keycloak_url),
+            realm=config.security.realm
         ),
-        client_id=config["security"]["client_id"]
+        client_id=config.security.client_id
     )
-    run_server(config["http_server"]["port"])
+    run_server(config.http_server.port)
