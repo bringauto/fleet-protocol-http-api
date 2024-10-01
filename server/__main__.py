@@ -3,13 +3,14 @@ sys.path.append("server")
 import logging
 import requests  # type: ignore
 
+import connexion  # type: ignore
+from fleetv2_http_api import encoder  # type: ignore
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
 
 from server.database.database_controller import remove_old_messages, set_message_retention_period  # type: ignore
 from server.database.cache import clear_connected_cars  # type: ignore
 from server.database.connection import set_db_connection  # type: ignore
 from server.database.time import timestamp  # type: ignore
-from server.fleetv2_http_api.__main__ import main as run_server  # type: ignore
 from server.fleetv2_http_api.impl.controllers import (  # type: ignore
     set_car_wait_timeout_s,
     set_status_wait_timeout_s,
@@ -68,6 +69,20 @@ def _retrieve_keycloak_public_key(keycloak_url: str, realm: str) -> str:
         return ""
 
 
+SPECIFICATION_DIR = './server//fleetv2_http_api/openapi/'
+APP_NAME = 'Fleet v2 HTTP API'
+
+
+def run_server(port: int = 8080) -> None:
+    """Run the Fleet Protocol v2 HTTP API server."""
+    app = connexion.App(APP_NAME.lower().replace(" ", "-"), specification_dir=SPECIFICATION_DIR)
+    app.app.json_encoder = encoder.JSONEncoder
+    app.add_api('openapi.yaml',
+                arguments={'title': 'Fleet Protocol v2 HTTP API'},
+                pythonic_params=True)
+    app.run(port=port)
+
+
 if __name__ == '__main__':
     vals = script_args.request_and_get_script_arguments("Run the Fleet Protocol v2 HTTP API server.")
     config = vals.config
@@ -92,4 +107,4 @@ if __name__ == '__main__':
         ),
         client_id=config["security"]["client_id"]
     )
-    run_server()
+    run_server(config["http_server"]["port"])
