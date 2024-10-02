@@ -70,7 +70,7 @@ def _retrieve_keycloak_public_key(keycloak_url: str, realm: str) -> str:
         return ""
 
 
-SPECIFICATION_DIR = './server//fleetv2_http_api/openapi/'
+SPECIFICATION_DIR = ('.', 'server', 'fleetv2_http_api', 'openapi')
 APP_NAME = 'Fleet v2 HTTP API'
 
 
