@@ -44,18 +44,15 @@ def get_admin(key: str) -> AdminDB | None:
     loaded_admins = get_loaded_admins()
     for admin in loaded_admins:
         if admin.key == key:
-            _logger.info("Retrieved API key from cache.")
             return admin
 
     with Session(_get_connection_source()) as session:
         try:
-            _logger.info("Retrieving API key from database.")
             result = session.execute(select(_AdminBase).where(_AdminBase.key == key)).first()
             if result is None:
                 _logger.debug("API key not found.")
                 return None
             else:
-                _logger.debug("Retrieved API key from database.")
                 admin_base: _AdminBase = result[0]
                 admin = AdminDB(id=admin_base.id, name=admin_base.name, key=admin_base.key)
                 store_admin(admin)

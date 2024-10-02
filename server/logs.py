@@ -59,6 +59,8 @@ def configure_logging(component_name: str, config: APIConfig) -> None:
             console_handler.setFormatter(formatter)
             logger.addHandler(console_handler)
 
+        logger.propagate = False
+
     except ValueError as ve:
         logging.error(f"{component_name}: Configuration error: {ve}")
         raise
