@@ -6,21 +6,21 @@ from flask.testing import FlaskClient as _FlaskClient  # type: ignore
 import connexion as _connexion  # type: ignore
 from sqlalchemy.orm import Session as _Session
 
-from server.database.connection import ( # type: ignore
+from server.database.connection import (  # type: ignore
     get_connection_source as _get_connection_source,
     set_test_db_connection as _set_test_db_connection,
-    create_all_tables as _create_all_tables
+    create_all_tables as _create_all_tables,
 )
-from server.fleetv2_http_api.impl.controllers import ( # type: ignore
+from server.fleetv2_http_api.impl.controllers import (  # type: ignore
     set_command_wait_timeout_s,
-    set_status_wait_timeout_s
+    set_status_wait_timeout_s,
 )
 
 from server.fleetv2_http_api.encoder import JSONEncoder  # type: ignore
 from server.database.security import _AdminBase as _AdminBase  # type: ignore
 
 # Keep the following import to make all the tables be created by the get_test_app function
-from server.database.connected_cars import clear_connected_cars as _clear_device_ids  # type: ignore
+from server.database.cache import clear_connected_cars as _clear_device_ids  # type: ignore
 
 
 def get_app() -> _connexion.FlaskApp:
@@ -54,7 +54,6 @@ class TestApp:
         def test_client(self) -> _FlaskClient:
             return TestApp._TestClient(self._app, self._api_key, base_url=self._base_url)
 
-
     class _TestClient(_FlaskClient):
         def __init__(self, application, api_key: str, base_url: str, *args, **kwargs) -> None:
             super().__init__(application, *args, **kwargs)
@@ -81,7 +80,6 @@ class TestApp:
             url = self._construct_url(url)
             return super().delete(url, *args, **kwargs)
 
-
         def _construct_url(self, uri: str) -> str:
             uri = self._prepend_base_url(uri)
             return self._insert_key(uri)
@@ -106,7 +104,7 @@ def get_test_app(
     db_name: str = "",
     request_timeout_s: float = 1,
     remove_existing_db_file: bool = True,
-    base_url: str = ""
+    base_url: str = "",
 ) -> TestApp:
     """Creates a test app that can be used for testing purposes.
 

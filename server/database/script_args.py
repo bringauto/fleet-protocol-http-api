@@ -3,6 +3,9 @@ from typing import Type, Any
 import argparse
 import json
 
+from ..config import APIConfig
+
+
 EMPTY_VALUE = None
 
 
@@ -16,23 +19,21 @@ class PositionalArgInfo:
 @dataclasses.dataclass(frozen=True)
 class ScriptArgs:
     argvals: dict[str, str]
-    config: dict[str, Any] = dataclasses.field(default_factory=dict)
+    config: APIConfig
 
 
 def request_and_get_script_arguments(
     script_description: str,
     *positional_args: PositionalArgInfo,
-    use_config: bool = True,
     include_db_args: bool = True,
 ) -> ScriptArgs:
 
     parser = _new_arg_parser(script_description)
     _add_positional_args_to_parser(parser, *positional_args)
-    if use_config:
-        _add_config_arg_to_parser(parser)
+    _add_config_arg_to_parser(parser)
     if include_db_args:
         _add_db_args_to_parser(parser)
-    return _parse_arguments(parser, use_config)
+    return _parse_arguments(parser)
 
 
 def _add_config_arg_to_parser(parser: argparse.ArgumentParser) -> None:
@@ -106,20 +107,20 @@ def _new_arg_parser(script_description: str) -> argparse.ArgumentParser:
 def _load_config_file(path: str) -> dict[str, Any]:
     try:
         config = json.load(open(path))
-    except:
+    except FileNotFoundError:
         raise ConfigFileNotFound(f"Could not load config file from path '{path}'.")
     return config
 
 
-def _parse_arguments(parser: argparse.ArgumentParser, use_config: bool) -> ScriptArgs:
+def _parse_arguments(parser: argparse.ArgumentParser) -> ScriptArgs:
     args = parser.parse_args().__dict__
-    config = _load_config_file(args.pop("<config-file-path>"))
-    db_config = config["database"]["server"]
+    config_dict = _load_config_file(args.pop("<config-file-path>"))
+    config = APIConfig(**config_dict)
+    db_config = config_dict["database"]["server"]
 
-    if use_config:
-        for key in args:
-            if args[key] == EMPTY_VALUE:
-                args[key] = db_config[key]
+    for key in args:
+        if args[key] == EMPTY_VALUE:
+            args[key] = db_config[key]
 
     return ScriptArgs(args, config)
 

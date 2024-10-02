@@ -1,11 +1,7 @@
 {
     "logging": {
-        "log_path": "./log/",
+        "log-path": "tests/log",
         "verbose": true
-    },
-    "http_server": {
-        "base_uri": "https://test-api.bringautofleet.com/v2/protocol",
-        "port": 8080
     },
     "database": {
         "server": {
@@ -23,8 +19,11 @@
             }
         }
     },
+    "http_server": {
+        "base_uri": "https://test-api.bringautofleet.com/v2/protocol"
+    },
     "request_for_messages": {
-        "timeout_in_seconds": 5
+        "timeout_in_seconds": 100
     },
     "security": {
         "keycloak_url": "https://keycloak.bringauto.com",

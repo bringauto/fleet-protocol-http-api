@@ -9,11 +9,13 @@ sys.path.append("server")
 import server.app as _app
 from server.fleetv2_http_api.models.message import Message, Payload, DeviceId
 from server.enums import MessageType
+from tests._utils.logs import clear_logs
 
 
 class Test_Filtering_Sent_Statuses_By_Since_Parameter(unittest.TestCase):
     @patch("server.database.time._time_in_ms")
     def setUp(self, mock_timestamp: Mock) -> None:
+        clear_logs()
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         self.payload = Payload(MessageType.STATUS, "JSON", {"phone": "1234567890"})
@@ -66,6 +68,7 @@ class Test_Filtering_Sent_Statuses_By_Since_Parameter(unittest.TestCase):
 class Test_Filtering_Sent_Commands_By_Since_Parameter(unittest.TestCase):
     @patch("server.database.time._time_in_ms")
     def setUp(self, mock_timestamp: Mock) -> None:
+        clear_logs()
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_device", name="Test Device")
         self.status_payload = Payload(MessageType.STATUS, "JSON", {"phone": "1234567890"})
@@ -129,6 +132,7 @@ class Test_Setting_Wait_To_True_When_All_Statuses_Are_Filtered_Out_By_Since_Para
 ):
     @patch("server.database.time._time_in_ms")
     def setUp(self, mock_timestamp: Mock) -> None:
+        clear_logs()
         self.app = _app.get_test_app(
             db_location="test_db.db", base_url="/v2/protocol/", request_timeout_s=0.2
         )
@@ -184,6 +188,7 @@ class Test_Setting_Wait_To_True_When_All_Commands_Are_Filtered_Out_By_Since_Para
 ):
     @patch("server.database.time._time_in_ms")
     def setUp(self, mock_timestamp: Mock) -> None:
+        clear_logs()
         self.app = _app.get_test_app(
             db_location="test_db.db", base_url="/v2/protocol/", request_timeout_s=0.2
         )

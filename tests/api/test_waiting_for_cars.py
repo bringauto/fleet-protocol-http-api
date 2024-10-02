@@ -5,27 +5,29 @@ import time
 from unittest.mock import patch, Mock
 sys.path.append(".")
 
-from server.fleetv2_http_api.models import Payload, Message, Car, DeviceId  # type: ignore
-from server.enums import MessageType, EncodingType  # type: ignore
-from server.database.database_controller import (  # type: ignore
+from server.fleetv2_http_api.models import Payload, Message, Car, DeviceId
+from server.enums import MessageType, EncodingType
+from server.database.database_controller import (
     set_test_db_connection,
-    clear_connected_cars,
+    _clear_connected_cars,
     connected_cars,
 )
-from server.fleetv2_http_api.impl.controllers import (  # type: ignore
+from server.fleetv2_http_api.impl.controllers import (
     available_cars,
     send_statuses,
     set_car_wait_timeout_s,
 )
-from tests.api.misc import run_in_threads  # type: ignore
+from tests.api.misc import run_in_threads
+from tests._utils.logs import clear_logs
 
 
 class Test_Waiting_For_Available_Cars(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         if os.path.exists("./example.db"):
             os.remove("./example.db")
         set_test_db_connection("/example.db")
-        clear_connected_cars()
+        _clear_connected_cars()
         self.status_1 = Message(
             device_id=DeviceId(module_id=47, type=5, role="test_device", name="Test Device"),
             payload=Payload(message_type=MessageType.STATUS, encoding=EncodingType.JSON, data={}),
@@ -80,10 +82,11 @@ class Test_Waiting_For_Available_Cars(unittest.TestCase):
 class Test_Storing_Car_Connection_Time(unittest.TestCase):
 
     def setUp(self) -> None:
+        clear_logs()
         if os.path.exists("./example.db"):
             os.remove("./example.db")
         set_test_db_connection("/example.db")
-        clear_connected_cars()
+        _clear_connected_cars()
         self.status = Message(
             device_id=DeviceId(module_id=47, type=5, role="test_device", name="Test Device"),
             payload=Payload(message_type=MessageType.STATUS, encoding=EncodingType.JSON, data={}),
@@ -132,7 +135,7 @@ class Test_Storing_Car_Connection_Time(unittest.TestCase):
         send_statuses("test_company", "test_car", [self.status])
         mocked_time_in_ms.return_value = 2000
         send_statuses("test_company", "test_car", [self.status])
-        clear_connected_cars()
+        _clear_connected_cars()
         mocked_time_in_ms.return_value = 3000
         send_statuses("test_company", "test_car", [self.status])
         self.assertEqual(connected_cars()["test_company"]["test_car"].timestamp, 1000)
@@ -145,10 +148,11 @@ class Test_Storing_Car_Connection_Time(unittest.TestCase):
 class Test_Filtering_Connected_Car_By_Connection_Time_With_Since_Parameter(unittest.TestCase):
 
     def setUp(self) -> None:
+        clear_logs()
         if os.path.exists("./example.db"):
             os.remove("./example.db")
         set_test_db_connection("/example.db")
-        clear_connected_cars()
+        _clear_connected_cars()
         self.status = Message(
             device_id=DeviceId(module_id=47, type=5, role="test_device", name="Test Device"),
             payload=Payload(message_type=MessageType.STATUS, encoding=EncodingType.JSON, data={}),

@@ -1,9 +1,27 @@
-import sys
+from __future__ import annotations
 import dataclasses
 from collections import defaultdict
 
 from copy import deepcopy
 from server.fleetv2_http_api.models.device_id import DeviceId  # type: ignore
+from .models import AdminDB  # type: ignore
+
+
+_loaded_admins: list[AdminDB] = []
+_connected_cars: dict[str, dict[str, ConnectedCar]] = defaultdict(dict)
+
+
+def clear_loaded_admins() -> None:
+    global _loaded_admins
+    _loaded_admins.clear()
+
+
+def get_loaded_admins() -> list[AdminDB]:
+    return _loaded_admins.copy()
+
+
+def store_admin(admin: AdminDB) -> None:
+    _loaded_admins.append(admin)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -61,7 +79,9 @@ class ConnectedCar:
 
     def is_connected(self, device_id: DeviceId) -> bool:
         """Check if a device id is connected to this car."""
-        return device_id.module_id in self.modules and self.modules[device_id.module_id].is_connected(device_id)
+        return device_id.module_id in self.modules and self.modules[
+            device_id.module_id
+        ].is_connected(device_id)
 
     def remove_device(self, device_id: DeviceId) -> bool:
         """Remove a device id from its module dict in the device_ids dictionary.
@@ -74,9 +94,6 @@ class ConnectedCar:
                 self.modules.pop(device_id.module_id)
             return True
         return False
-
-
-_connected_cars: dict[str, dict[str, ConnectedCar]] = defaultdict(dict)
 
 
 def add_car(company_name: str, car_name: str, timestamp: int) -> bool:
@@ -135,11 +152,17 @@ def clean_up_disconnected_cars_and_modules() -> None:
             for module in empty_modules:
                 _connected_cars[company][car].modules.pop(module.id)
 
-        cars_without_modules = [car for car in _connected_cars[company].keys() if not _connected_cars[company][car].modules]
+        cars_without_modules = [
+            car
+            for car in _connected_cars[company].keys()
+            if not _connected_cars[company][car].modules
+        ]
         for car in cars_without_modules:
             _connected_cars[company].pop(car)
 
-    companies_without_cars = [company for company in _connected_cars.keys() if not _connected_cars[company]]
+    companies_without_cars = [
+        company for company in _connected_cars.keys() if not _connected_cars[company]
+    ]
     for company in companies_without_cars:
         _connected_cars.pop(company)
 

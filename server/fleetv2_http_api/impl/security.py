@@ -1,4 +1,4 @@
-from keycloak import KeycloakOpenID
+from keycloak import KeycloakOpenID  # type: ignore
 from urllib.parse import urlparse
 
 

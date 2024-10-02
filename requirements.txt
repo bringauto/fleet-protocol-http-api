@@ -13,3 +13,4 @@ python-keycloak == 3.7.0
 pyjwt == 2.3.0
 cryptography == 3.4.8
 coverage>=7.3.2
+pydantic >= 2.5.3

@@ -5,17 +5,17 @@ import unittest
 
 sys.path.append(".")
 
-from server.enums import EncodingType, MessageType  # type: ignore
-from server.fleetv2_http_api.models.device_id import DeviceId  # type: ignore
-from server.database.connected_cars import serialized_device_id  # type: ignore
-from server.database.connection import (  # type: ignore
+from server.enums import EncodingType, MessageType
+from server.fleetv2_http_api.models.device_id import DeviceId
+from server.database.cache import serialized_device_id
+from server.database.connection import (
     set_test_db_connection,
     unset_connection_source,
     ConnectionSourceNotSet,
     get_connection_source,
     set_test_db_connection,
 )
-from server.database.database_controller import (  # type: ignore
+from server.database.database_controller import (
     set_message_retention_period,
     send_messages_to_database,
     list_messages,
@@ -24,10 +24,12 @@ from server.database.database_controller import (  # type: ignore
     Message_DB,
     MessageBase,
 )
+from tests._utils.logs import clear_logs
 
 
 class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
     def test_creating_message_base_object_from_message(self):
+        clear_logs()
         company_name = "test_company"
         car_name = "test_car"
         device_id = DeviceId(module_id=45, type=2, role="role1", name="device1")
@@ -56,6 +58,7 @@ class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
         self.assertEqual(message_base.payload_data, {"content": "..."})
 
     def test_creating_message_from_base_object(self):
+        clear_logs()
         base = MessageBase(
             company_name="test_company",
             car_name="test_car",
@@ -81,6 +84,7 @@ class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
 
 class Test_Specifying_Database_Name(unittest.TestCase):
     def test_setting_database_name(self):
+        clear_logs()
         set_test_db_connection(db_name="test_db.db")
         source = get_connection_source()
         self.assertEqual(source.url.database, "test_db.db")
@@ -92,6 +96,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
     def setUp(self):
         # Set up the database connection before running the tests
         set_test_db_connection()
+        clear_logs()
 
     def test_accessing_not_set_connection_source_raises_exception(self):
         unset_connection_source()
@@ -259,6 +264,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
 
 class Test_Database_Cleanup(unittest.TestCase):
     def setUp(self):
+        clear_logs()
         # Set up the database connection before running the tests
         set_test_db_connection(dblocation="/:memory:")
 

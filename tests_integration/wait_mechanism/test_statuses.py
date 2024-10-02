@@ -13,6 +13,7 @@ from server.enums import MessageType
 
 class Test_Waiting_For_Statuses_To_Become_Available(unittest.TestCase):
     def setUp(self) -> None:
+
         self.app = _app.get_test_app(
             db_location="test_db.db", request_timeout_s=0.2, base_url="/v2/protocol/"
         )

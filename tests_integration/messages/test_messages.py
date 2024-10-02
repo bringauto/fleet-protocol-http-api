@@ -9,10 +9,12 @@ from server.fleetv2_http_api.models.message import Message, Payload, DeviceId
 from server.enums import MessageType, EncodingType
 
 from server.database.database_controller import remove_old_messages
+from tests._utils.logs import clear_logs
 
 
 class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
         self.payload = Payload(
@@ -70,7 +72,12 @@ class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):
                 [
                     {
                         "timestamp": 11111,
-                        "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_dev",
+                            "name": "Test",
+                        },
                         "payload": {
                             "message_type": "STATUS",
                             "encoding": "JSON",
@@ -92,6 +99,7 @@ class Test_Making_Car_Available_By_Sending_First_Status(unittest.TestCase):
 
 class Test_Making_Car_Available_By_Sending_First_Status_Error(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
         self.payload = Payload(
@@ -140,7 +148,12 @@ class Test_Making_Car_Available_By_Sending_First_Status_Error(unittest.TestCase)
                 [
                     {
                         "timestamp": 11111,
-                        "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_dev",
+                            "name": "Test",
+                        },
                         "payload": {
                             "message_type": "STATUS_ERROR",
                             "encoding": "JSON",
@@ -162,6 +175,7 @@ class Test_Making_Car_Available_By_Sending_First_Status_Error(unittest.TestCase)
 
 class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
         status_payload = Payload(
@@ -216,50 +230,116 @@ class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
                 [
                     {
                         "timestamp": 1234,
-                        "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
-                        "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "start"}},
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_dev",
+                            "name": "Test",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "start"},
+                        },
                     },
                     {
                         "timestamp": 1235,
-                        "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
-                        "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "continue"}},
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_dev",
+                            "name": "Test",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "continue"},
+                        },
                     },
                     {
                         "timestamp": 1236,
-                        "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
-                        "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "stop"}},
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_dev",
+                            "name": "Test",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "stop"},
+                        },
                     },
                     {
                         "timestamp": 1236,
-                        "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
-                        "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "stay"}},
-                    }
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_dev",
+                            "name": "Test",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "stay"},
+                        },
+                    },
                 ],
             )
 
             response = client.get("/command/test_company/test_car?since=1235")
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.json, [
-                {
-                    "timestamp": 1235,
-                    "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
-                    "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "continue"}},
-                },
-                {
-                    "timestamp": 1236,
-                    "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
-                    "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "stop"}},
-                },
-                {
-                    "timestamp": 1236,
-                    "device_id": {"module_id": 7, "type": 8, "role": "test_dev", "name": "Test"},
-                    "payload": {"message_type": "COMMAND", "encoding": "JSON", "data": {"command": "stay"}},
-                }
-            ])
+            self.assertEqual(
+                response.json,
+                [
+                    {
+                        "timestamp": 1235,
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_dev",
+                            "name": "Test",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "continue"},
+                        },
+                    },
+                    {
+                        "timestamp": 1236,
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_dev",
+                            "name": "Test",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "stop"},
+                        },
+                    },
+                    {
+                        "timestamp": 1236,
+                        "device_id": {
+                            "module_id": 7,
+                            "type": 8,
+                            "role": "test_dev",
+                            "name": "Test",
+                        },
+                        "payload": {
+                            "message_type": "COMMAND",
+                            "encoding": "JSON",
+                            "data": {"command": "stay"},
+                        },
+                    },
+                ],
+            )
 
     @patch("server.database.time._time_in_ms")
     def test_sending_commands_and_automatically_cleaning_them_up(self, mock_timestamp: Mock):
-       with self.app.app.test_client() as client:
+        with self.app.app.test_client() as client:
             mock_timestamp.return_value = 0
             client.post("/status/test_company/test_car", json=[self.status])
             mock_timestamp.return_value = 1
@@ -278,13 +358,13 @@ class Test_Sending_And_Viewing_Command_For_Available_Car(unittest.TestCase):
             self.assertEqual(response.json[0]["payload"]["data"]["command"], "stop")
             self.assertEqual(response.json[1]["payload"]["data"]["command"], "stay")
 
-
     def tearDown(self) -> None:  # pragma: no cover
         self.app.clear_all()
 
 
 class Test_Sending_And_Viewing_Commands_For_Unavailable_Car(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
         command_payload = Payload(
@@ -311,6 +391,7 @@ class Test_Sending_And_Viewing_Commands_For_Unavailable_Car(unittest.TestCase):
 
 class Test_Sending_And_Viewing_Statuses_Of_Multiple_Cars(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
         status_payload = Payload(
@@ -320,10 +401,14 @@ class Test_Sending_And_Viewing_Statuses_Of_Multiple_Cars(unittest.TestCase):
         )
         self.status_1 = Message(device_id=self.device_id, payload=status_payload)
         self.status_2 = Message(device_id=self.device_id, payload=status_payload)
-        self.status_error = Message(device_id=self.device_id, payload=Payload(MessageType.STATUS_ERROR, "JSON", {}))
+        self.status_error = Message(
+            device_id=self.device_id, payload=Payload(MessageType.STATUS_ERROR, "JSON", {})
+        )
 
     @patch("server.database.time._time_in_ms")
-    def test_sending_statuses_to_mutliple_cars_of_multiple_companies(self, mock_timestamp: Mock) -> None:
+    def test_sending_statuses_to_mutliple_cars_of_multiple_companies(
+        self, mock_timestamp: Mock
+    ) -> None:
         with self.app.app.test_client() as client:
             self.maxDiff = None
             mock_timestamp.return_value = 111
@@ -333,9 +418,9 @@ class Test_Sending_And_Viewing_Statuses_Of_Multiple_Cars(unittest.TestCase):
             mock_timestamp.return_value = 333
             client.post("/status/test_company_2/test_car_3", json=[self.status_error])
             response = client.get("/cars")
-            self.assertIn({"company_name": "test_company", "car_name": "test_car"}, response.json)
-            self.assertIn({"company_name": "test_company", "car_name": "test_car_2"}, response.json)
-            self.assertIn({"company_name": "test_company_2", "car_name": "test_car_3"}, response.json)
+            self.assertIn({"company_name": "test_company", "car_name": "test_car"}, response.json)  # type: ignore
+            self.assertIn({"company_name": "test_company", "car_name": "test_car_2"}, response.json)  # type: ignore
+            self.assertIn({"company_name": "test_company_2", "car_name": "test_car_3"}, response.json)  # type: ignore
             response = client.get("/status/test_company/test_car")
             self.assertEqual(
                 response.json,
@@ -400,6 +485,7 @@ class Test_Sending_And_Viewing_Statuses_Of_Multiple_Cars(unittest.TestCase):
 
 class Test_Sending_And_Viewing_Statuses_Sent_To_Multiple_Devices_On_Single_Car(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         device_A_id = DeviceId(module_id=7, type=8, role="test_device_l", name="Test Device A")
         device_B_id = DeviceId(module_id=7, type=9, role="test_device_r", name="Test Device B")
@@ -516,6 +602,7 @@ class Test_Sending_And_Viewing_Statuses_Sent_To_Multiple_Devices_On_Single_Car(u
 
 class Test_Sending_Multiple_Statuses_To_The_Same_Car_At_Once(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         device_A_id = DeviceId(module_id=7, type=8, role="test_device_x", name="Test Device_X")
         device_B_id = DeviceId(module_id=9, type=9, role="test_device_y", name="Test Device Y")
@@ -629,6 +716,7 @@ class Test_Sending_Multiple_Statuses_To_The_Same_Car_At_Once(unittest.TestCase):
 class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
     @patch("server.database.time._time_in_ms")
     def setUp(self, mock_timestamp: Mock) -> None:
+        clear_logs()
         self.maxDiff = 1000
         self.app = _app.get_test_app(db_location="test_db.db", base_url="/v2/protocol/")
         self.device_1_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test Device 1")
@@ -742,6 +830,7 @@ class Test_Sending_Multiple_Commands_To_The_Same_Car_At_Once(unittest.TestCase):
 
 class Test_Mismatch_Between_Endpoint_And_Message_Type(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         self.app = _app.get_test_app(base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
         self.status_payload = Payload(MessageType.STATUS, "JSON", {"phone": "1234567890"})
@@ -789,6 +878,7 @@ class Test_Mismatch_Between_Endpoint_And_Message_Type(unittest.TestCase):
 
 class Test_Sending_Empty_List_Of_Messages(unittest.TestCase):
     def setUp(self) -> None:
+        clear_logs()
         self.app = _app.get_test_app(base_url="/v2/protocol/")
         self.device_id = DeviceId(module_id=7, type=8, role="test_dev", name="Test")
         self.status_payload = Payload(MessageType.STATUS, "JSON", {"phone": "1234567890"})
