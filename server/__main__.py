@@ -2,6 +2,7 @@ import sys
 sys.path.append("server")
 import logging
 import requests  # type: ignore
+import os
 
 import connexion  # type: ignore
 from fleetv2_http_api import encoder  # type: ignore
@@ -70,7 +71,7 @@ def _retrieve_keycloak_public_key(keycloak_url: str, realm: str) -> str:
         return ""
 
 
-SPECIFICATION_DIR = ('.', 'server', 'fleetv2_http_api', 'openapi')
+SPECIFICATION_DIR = os.path.join('.', 'server', 'fleetv2_http_api', 'openapi')
 APP_NAME = 'Fleet v2 HTTP API'
 
 
