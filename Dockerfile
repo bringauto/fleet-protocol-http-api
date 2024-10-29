@@ -10,7 +10,6 @@ COPY server /home/bringauto/server
 
 EXPOSE 8080
 
-USER 5000:5000
 RUN mkdir /home/bringauto/log
 
 ENTRYPOINT ["bash", "-c", "$PYTHON_ENVIRONMENT_PYTHON3 -m server $0 $@"]
