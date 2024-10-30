@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append("server")
 import logging
 import requests  # type: ignore
@@ -17,7 +18,7 @@ from server.fleetv2_http_api.impl.controllers import (  # type: ignore
     set_car_wait_timeout_s,
     set_status_wait_timeout_s,
     set_command_wait_timeout_s,
-    init_security
+    init_security,
 )
 from server.fleetv2_http_api.controllers.security_controller import set_auth_params  # type: ignore
 import server.database.script_args as script_args  # type: ignore
@@ -35,15 +36,15 @@ def _clean_up_messages() -> None:
     remove_old_messages(current_timestamp=timestamp())
 
 
-def _connect_to_database(vals:script_args.ScriptArgs) -> None:
+def _connect_to_database(vals: script_args.ScriptArgs) -> None:
     """Clear previously stored available devices and connect to the database."""
     clear_connected_cars()
     set_db_connection(
-        dblocation = vals.argvals["location"],
-        port = vals.argvals["port"],
-        username = vals.argvals["username"],
-        password = vals.argvals["password"],
-        db_name = vals.argvals["database_name"]
+        dblocation=vals.argvals["location"],
+        port=vals.argvals["port"],
+        username=vals.argvals["username"],
+        password=vals.argvals["password"],
+        db_name=vals.argvals["database_name"],
     )
 
 
@@ -71,22 +72,24 @@ def _retrieve_keycloak_public_key(keycloak_url: str, realm: str) -> str:
         return ""
 
 
-SPECIFICATION_DIR = os.path.join('.', 'server', 'fleetv2_http_api', 'openapi')
-APP_NAME = 'Fleet v2 HTTP API'
+SPECIFICATION_DIR = os.path.join(".", "server", "fleetv2_http_api", "openapi")
+APP_NAME = "Fleet v2 HTTP API"
 
 
 def run_server(port: int = 8080) -> None:
     """Run the Fleet Protocol v2 HTTP API server."""
     app = connexion.App(APP_NAME.lower().replace(" ", "-"), specification_dir=SPECIFICATION_DIR)
     app.app.json_encoder = encoder.JSONEncoder
-    app.add_api('openapi.yaml',
-                arguments={'title': 'Fleet Protocol v2 HTTP API'},
-                pythonic_params=True)
+    app.add_api(
+        "openapi.yaml", arguments={"title": "Fleet Protocol v2 HTTP API"}, pythonic_params=True
+    )
     app.run(port=port)
 
 
-if __name__ == '__main__':
-    vals = script_args.request_and_get_script_arguments("Run the Fleet Protocol v2 HTTP API server.")
+if __name__ == "__main__":
+    vals = script_args.request_and_get_script_arguments(
+        "Run the Fleet Protocol v2 HTTP API server."
+    )
     config = vals.config
     configure_logging(COMPONENT_NAME, config)
     _connect_to_database(vals)
@@ -100,13 +103,12 @@ if __name__ == '__main__':
         secret_key=config.security.client_secret_key,
         scope=config.security.scope,
         realm=config.security.realm,
-        callback=str(config.http_server.base_uri)
+        callback=str(config.http_server.base_uri),
     )
     set_auth_params(
         public_key=_retrieve_keycloak_public_key(
-            keycloak_url=str(config.security.keycloak_url),
-            realm=config.security.realm
+            keycloak_url=str(config.security.keycloak_url), realm=config.security.realm
         ),
-        client_id=config.security.client_id
+        client_id=config.security.client_id,
     )
     run_server(config.http_server.port)

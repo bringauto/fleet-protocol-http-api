@@ -1,7 +1,14 @@
 {
     "logging": {
-        "log_path": "./log/",
-        "verbose": true
+        "console": {
+            "level": "debug",
+            "use": true
+        },
+        "file": {
+            "level": "debug",
+            "use": true,
+            "path": "./log"
+        }
     },
     "http_server": {
         "base_uri": "https://test-api.bringautofleet.com/v2/protocol",
