@@ -53,7 +53,7 @@ def _configure_logging_to_file(config: _Logging.HandlerConfig, component_name: s
     The file logging is configured to use the logging level and format specified in the configuration.
     """
     if not config.path:
-        raise ValueError(f"Log directory does not exist: {config.path}. Check the config file.")
+        raise ValueError("Log path is not specified in the configuration. Check the config file.")
     file_path = os.path.join(config.path, _log_file_name(component_name) + ".log")
     handler = logging.handlers.RotatingFileHandler(file_path, maxBytes=10485760, backupCount=5)
     handler.setLevel(config.level)

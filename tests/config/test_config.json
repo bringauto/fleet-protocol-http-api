@@ -7,7 +7,7 @@
         "file": {
             "level": "debug",
             "use": true,
-            "path": "./log/"
+            "path": "./log"
         }
     },
     "http_server": {
