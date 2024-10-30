@@ -19,9 +19,9 @@ The configuration file is located in `config` directory. The file contains the f
 
 **Check carefully the correct name of the database the server should connect to.**
 
-- `logging` - contains the following keys:
-  - `log-path` - path to the directory where logs will be stored.
-  - `verbosity` - if `True`, the server will print logs to both file and to console and set the logging level to `DEBUG`. If `False`, the server will only print logs to the file and set the logging level to `INFO`.
+- `logging` - contains the keys `console`and `file` for printing the logs into a console and a file, respectively. The `file` contains field `path` to set the (absolute or relative) path to the directory to store the logs. Both contain the following keys:
+  - `level` - logging level as a string (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`). Case-insensitive.
+  - `use` - set to `True` to allow to print the logs, otherwise set to `False`.
 - `database` - settings for the database associated with the server.
   - `server` - settings for the database server.
     - `username`
