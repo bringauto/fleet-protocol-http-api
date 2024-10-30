@@ -3,22 +3,15 @@ import logging.handlers
 import os
 import logging.config
 
-from typing import TypeVar, Mapping
 
-from .config import APIConfig
-
-
-T = TypeVar("T", bound=Mapping)
+from .config import APIConfig as _APIConfig, Logging as _Logging
 
 
 _DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 LOGGER_NAME = "werkzeug"
 
 
-_log_level_by_verbosity = {False: logging.WARNING, True: logging.DEBUG}
-
-
-def configure_logging(component_name: str, config: APIConfig) -> None:
+def configure_logging(component_name: str, config: _APIConfig) -> None:
     """Configure the logging for the application.
 
     The component name is written in the log messages to identify the source of the log message.
@@ -27,46 +20,53 @@ def configure_logging(component_name: str, config: APIConfig) -> None:
     """
     try:
         log_config = config.logging
-        logger = logging.getLogger(LOGGER_NAME)
-        verbose: bool = log_config.verbose
-        if verbose is None:
-            raise ValueError("No verbosity level found in logging configuration")
 
-        logger.setLevel(_log_level_by_verbosity[verbose])
-
-        # create formatter
-        formatter = logging.Formatter(_log_format(component_name), datefmt=_DATE_FORMAT)
-
-        # file handler
-        log_dir_path = log_config.log_path
-        if log_dir_path is None:
-            raise ValueError("No log directory path found in logging configuration")
-        if not os.path.exists(log_dir_path):
-            raise ValueError(
-                f"Log directory does not exist: {log_dir_path}. Check the config file."
-            )
-
-        file_path = os.path.join(log_config.log_path, _log_file_name(component_name) + ".log")
-        file_handler = logging.handlers.RotatingFileHandler(
-            file_path, maxBytes=10485760, backupCount=5
-        )
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-
-        # console handler
-        if verbose:
-            console_handler = logging.StreamHandler()
-            console_handler.setFormatter(formatter)
-            logger.addHandler(console_handler)
-
-        logger.propagate = False
-
+        if log_config.console.use:
+            _configure_logging_to_console(log_config.console, component_name)
+        if log_config.file.use:
+            _configure_logging_to_file(log_config.file, component_name)
     except ValueError as ve:
         logging.error(f"{component_name}: Configuration error: {ve}")
         raise
     except Exception as e:
-        logging.error(f"{component_name}: Unexpected error when configuring logging: {e}")
+        logging.error(f"{component_name}: Error when configuring logging: {e}")
         raise
+
+
+def _configure_logging_to_console(config: _Logging.HandlerConfig, component_name: str):
+    """Configure the logging to the console.
+
+    The console logging is configured to use the logging level and format specified in the configuration.
+    """
+    handler = logging.StreamHandler()
+    handler.setLevel(config.level)
+    _add_formatter(handler, component_name)
+    _use_handler(handler)
+
+
+def _configure_logging_to_file(config: _Logging.HandlerConfig, component_name: str) -> None:
+    """Configure the logging to a file.
+
+    The file logging is configured to use the logging level and format specified in the configuration.
+    """
+    if not config.path:
+        raise ValueError(f"Log directory does not exist: {config.path}. Check the config file.")
+    file_path = os.path.join(config.path, _log_file_name(component_name) + ".log")
+    handler = logging.handlers.RotatingFileHandler(file_path, maxBytes=10485760, backupCount=5)
+    handler.setLevel(config.level)
+    _add_formatter(handler, component_name)
+    _use_handler(handler)
+
+
+def _add_formatter(handler: logging.Handler, component_name: str) -> None:
+    """Set the formatter for the logging handler."""
+    formatter = logging.Formatter(_log_format(component_name), datefmt=_DATE_FORMAT)
+    handler.setFormatter(formatter)
+
+
+def _use_handler(handler: logging.Handler) -> None:
+    """Add handler to the logger."""
+    logging.getLogger(LOGGER_NAME).addHandler(handler)
 
 
 def _log_format(component_name: str) -> str:
