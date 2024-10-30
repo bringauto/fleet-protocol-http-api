@@ -11,8 +11,8 @@ services:
       - 8080:8080
     networks:
       - api-network
-    entrypoint:
-      ["python3", "-m", "server", "config/config.json", "--location", "postgresql-database"]
+    command:
+      ["config/config.json", "--location", "postgresql-database"]
 
   postgresql-database:
     image: postgres:16
