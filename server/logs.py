@@ -25,6 +25,9 @@ def configure_logging(component_name: str, config: _APIConfig) -> None:
             _configure_logging_to_console(log_config.console, component_name)
         if log_config.file.use:
             _configure_logging_to_file(log_config.file, component_name)
+        logging.getLogger(LOGGER_NAME).setLevel(
+            logging.DEBUG
+        )  # This ensures the logging level will be fully determined by the handlers
     except ValueError as ve:
         logging.error(f"{component_name}: Configuration error: {ve}")
         raise
