@@ -86,7 +86,7 @@ def login(device: Optional[str] = None) -> WerkzeugResponse | Response | tuple[d
             auth_json = _security.device_get_authentication()
         except Exception as e:
             msg = "Problem reaching oAuth service."
-            _log_debug(e)
+            _log_debug(str(e))
             return _log_info_and_respond(msg, 500, msg)
         return _log_info_and_respond(auth_json, 200, "Device authentication initialized.")
     elif device != None:
@@ -95,13 +95,13 @@ def login(device: Optional[str] = None) -> WerkzeugResponse | Response | tuple[d
             return _log_info_and_respond(token, 200, "Device authenticated, jwt token generated.")
         except Exception as e:
             msg = "Invalid device code or device still authenticating."
-            _log_debug(e)
+            _log_debug(str(e))
             return _log_info_and_respond(msg, 400, msg)
     try:
         return redirect(_security.get_authentication_url())
     except Exception as e:
         msg = "Problem reaching oAuth service."
-        _log_debug(e)
+        _log_debug(str(e))
         return _log_info_and_respond(msg, 500, msg)
 
 
