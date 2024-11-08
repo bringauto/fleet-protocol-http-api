@@ -84,22 +84,25 @@ def login(device: Optional[str] = None) -> WerkzeugResponse | Response | tuple[d
     if device == "":
         try:
             auth_json = _security.device_get_authentication()
-        except:
+        except Exception as e:
             msg = "Problem reaching oAuth service."
-            return _log_and_respond(msg, 500, msg)
-        return _log_and_respond(auth_json, 200, "Device authentication initialized.")
+            _log_debug(e)
+            return _log_info_and_respond(msg, 500, msg)
+        return _log_info_and_respond(auth_json, 200, "Device authentication initialized.")
     elif device != None:
         try:
             token = _security.device_token_get(device)  # type: ignore
-            return _log_and_respond(token, 200, "Device authenticated, jwt token generated.")
-        except:
+            return _log_info_and_respond(token, 200, "Device authenticated, jwt token generated.")
+        except Exception as e:
             msg = "Invalid device code or device still authenticating."
-            return _log_and_respond(msg, 400, msg)
+            _log_debug(e)
+            return _log_info_and_respond(msg, 400, msg)
     try:
         return redirect(_security.get_authentication_url())
-    except:
+    except Exception as e:
         msg = "Problem reaching oAuth service."
-        return _log_and_respond(msg, 500, msg)
+        _log_debug(e)
+        return _log_info_and_respond(msg, 500, msg)
 
 
 def token_get(
@@ -127,8 +130,8 @@ def token_get(
         token = _security.token_get(state, session_state, iss, code)  # type: ignore
     except:
         msg = "Problem getting token from oAuth service."
-        return _log_and_respond(msg, 500, msg)
-    return _log_and_respond(token, 200, "Jwt token generated.")
+        return _log_info_and_respond(msg, 500, msg)
+    return _log_info_and_respond(token, 200, "Jwt token generated.")
 
 
 def token_refresh(refresh_token: str) -> tuple[dict, int]:
@@ -145,8 +148,8 @@ def token_refresh(refresh_token: str) -> tuple[dict, int]:
         token = _security.token_refresh(refresh_token)
     except:
         msg = "Problem getting token from oAuth service."
-        return _log_and_respond(msg, 500, msg)
-    return _log_and_respond(token, 200, "Jwt token refreshed.")
+        return _log_info_and_respond(msg, 500, msg)
+    return _log_info_and_respond(token, 200, "Jwt token refreshed.")
 
 
 def available_cars(wait: bool = False, since: int = 0) -> tuple[list[Car], int]:
@@ -166,7 +169,7 @@ def available_cars(wait: bool = False, since: int = 0) -> tuple[list[Car], int]:
 
     if cars or not wait:
         n = sum([len(car_dict[company_name]) for company_name in car_dict])
-        return _log_and_respond(
+        return _log_info_and_respond(
             cars, 200, f"Found {n} available cars for {len(car_dict)} companies."
         )
     else:
@@ -176,10 +179,12 @@ def available_cars(wait: bool = False, since: int = 0) -> tuple[list[Car], int]:
         ]
         if awaited_cars:
             n = len(awaited_cars)
-            response = _log_and_respond(awaited_cars, 200, f"Returning {n} new available cars.")
+            response = _log_info_and_respond(
+                awaited_cars, 200, f"Returning {n} new available cars."
+            )
             return response
         else:
-            return _log_and_respond([], 200, "No cars were found. Returning empty list.")
+            return _log_info_and_respond([], 200, "No cars were found. Returning empty list.")
 
 
 def available_devices(
@@ -209,29 +214,31 @@ def available_devices(
 
     cars_dict = _connected_cars()
     if company_name not in cars_dict:
-        return _log_and_respond(
+        return _log_info_and_respond(
             empty_response_body, 404, f"No company named '{company_name}' is registered."
         )
 
     elif car_name not in cars_dict[company_name]:
-        return _log_and_respond(
+        return _log_info_and_respond(
             empty_response_body, 404, f"No car named '{car_name}' is registered."
         )
 
     if module_id is None:
         car_modules = cars_dict[company_name][car_name].modules
         modules = [_available_module(company_name, car_name, id) for id in car_modules]
-        return _log_and_respond(modules, 200, f"listing available modules ({company_and_car_name})")
+        return _log_info_and_respond(
+            modules, 200, f"listing available modules ({company_and_car_name})"
+        )
     else:
         if module_id not in cars_dict[company_name][car_name].modules:
-            return _log_and_respond(
+            return _log_info_and_respond(
                 empty_response_body,
                 404,
                 f"No module with id '{module_id}' is available ({company_and_car_name}).",
             )
         else:
             module = _available_module(company_name, car_name, module_id)
-            return _log_and_respond(
+            return _log_info_and_respond(
                 module,
                 200,
                 f"listing available devices in the module '{module_id}' ({company_and_car_name}).",
@@ -296,27 +303,27 @@ def list_statuses(
     )
     if db_statuses:
         statuses = [_message_from_db(m) for m in db_statuses]
-        return _log_and_respond(statuses, 200, f"Returning statuses for car ({car}).")
+        return _log_info_and_respond(statuses, 200, f"Returning statuses for car ({car}).")
     elif not wait:
         if _car_availability(company_name, car_name)[1] == 200:
-            return _log_and_respond([], 200, f"No statuses are available ({car}).")
+            return _log_info_and_respond([], 200, f"No statuses are available ({car}).")
         else:
-            return _log_and_respond(
+            return _log_info_and_respond(
                 [], 404, f"Car ({car}) not available. No statuses can be returned."
             )
     else:
         awaited: list[Message] = _status_wait_manager.wait_and_get_reponse(company_name, car_name)
         if awaited:
             if since is not None and awaited[-1].timestamp < since:
-                return _log_and_respond(
+                return _log_info_and_respond(
                     [],
                     200,
                     f"Found only statuses older than 'since' ({car}).",
                 )
             else:
-                return _log_and_respond(awaited, 200, f"Returning awaited statuses ({car}).")
+                return _log_info_and_respond(awaited, 200, f"Returning awaited statuses ({car}).")
         else:
-            return _log_and_respond([], 404, f"No statuses available before timeout ({car}).")
+            return _log_info_and_respond([], 404, f"No statuses available before timeout ({car}).")
 
 
 def send_commands(
@@ -341,17 +348,17 @@ def send_commands(
         if response[1] != 200:
             return response
         msg = f"Empty list of commands was sent to the API; no commands were sent to the device."
-        return _log_and_respond(msg, 200, msg)
+        return _log_info_and_respond(msg, 200, msg)
     errors = _check_sent_commands(company_name, car_name, messages)
     if errors[0] != "":
         msg = "; ".join(errors[0].split("\n"))
-        return _log_and_respond(errors[0], errors[1], msg)
+        return _log_info_and_respond(errors[0], errors[1], msg)
 
     _update_messages_timestamp(messages)
     _cmd_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
     commands_to_db = _message_db_list(messages)
     msg, code = send_messages_to_database(company_name, car_name, *commands_to_db)
-    return _log_and_respond(msg, code, msg)
+    return _log_info_and_respond(msg, code, msg)
 
 
 @_db_access_method
@@ -377,11 +384,11 @@ def send_statuses(
 
     if messages == []:
         msg = f"Empty list of statuses was sent to the API; no statuses were sent to the device."
-        return _log_and_respond(msg, 200, msg)
+        return _log_info_and_respond(msg, 200, msg)
     errors = _check_messages((MessageType.STATUS, MessageType.STATUS_ERROR), *messages)
     if errors[0] != "":
         msg = "; ".join(errors[0].split("\n"))
-        return _log_and_respond(errors[0], errors[1], msg)
+        return _log_info_and_respond(errors[0], errors[1], msg)
 
     _update_messages_timestamp(messages)
     _status_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
@@ -389,7 +396,7 @@ def send_statuses(
     response_msg = send_messages_to_database(company_name, car_name, *_message_db_list(messages))
     cmd_warnings = _check_and_handle_first_status(company_name, car_name, messages)
     msg, code = response_msg[0] + cmd_warnings, response_msg[1]
-    return _log_and_respond(msg, code, msg)
+    return _log_info_and_respond(msg, code, msg)
 
 
 def _message_list_from_request_body(body: list[dict | Message]) -> list[Message]:
@@ -559,12 +566,12 @@ def _response_for_request_for_connected_cars_commands(
     db_commands = _list_messages(company, car_name, (MessageType.COMMAND,), since)
     if db_commands:
         cmds = [_message_from_db(m) for m in db_commands]
-        return _log_and_respond(body=cmds, code=200, log_msg=f"Commands for {car}")
+        return _log_info_and_respond(body=cmds, code=200, log_msg=f"Commands for {car}")
     elif wait:
         cmds = _cmd_wait_manager.wait_and_get_reponse(company, car_name)
         if cmds and cmds[-1].timestamp >= since:
-            return _log_and_respond(cmds, 200, f"Awaited commands for {car}")
-    return _log_and_respond([], 200, f"No commands for {car}.")
+            return _log_info_and_respond(cmds, 200, f"Awaited commands for {car}")
+    return _log_info_and_respond([], 200, f"No commands for {car}.")
 
 
 def _response_for_request_for_disconnected_cars_commands(
@@ -574,8 +581,10 @@ def _response_for_request_for_disconnected_cars_commands(
     if wait:
         cmds = _cmd_wait_manager.wait_and_get_reponse(company, car_name)
         if cmds and cmds[-1].timestamp >= since:
-            return _log_and_respond(cmds, 200, f"Awaited commands for '{car_name}' of '{company}'")
-    return _log_and_respond(
+            return _log_info_and_respond(
+                cmds, 200, f"Awaited commands for '{car_name}' of '{company}'"
+            )
+    return _log_info_and_respond(
         [], 404, f"Car '{car_name}' of '{company}' is disconnected. No commands."
     )
 
@@ -587,10 +596,14 @@ def _update_messages_timestamp(messages: Iterable[Message_DB]) -> int:
     return timestamp_now
 
 
-def _log_and_respond(body: Any, code: int, log_msg: str = "") -> tuple[Any, int]:
+def _log_info_and_respond(body: Any, code: int, log_msg: str = "") -> tuple[Any, int]:
     if log_msg.strip() != "":
         logger.info(log_msg)
     return body, code  # type: ignore
+
+
+def _log_debug(log_msg: str) -> None:
+    logger.debug(log_msg)
 
 
 def _validate_name_string(name: str, text_label: str) -> None:
