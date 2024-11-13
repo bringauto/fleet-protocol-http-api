@@ -97,14 +97,7 @@ if __name__ == "__main__":
     set_car_wait_timeout_s(config.request_for_messages.timeout_in_seconds)
     set_status_wait_timeout_s(config.request_for_messages.timeout_in_seconds)
     set_command_wait_timeout_s(config.request_for_messages.timeout_in_seconds)
-    init_security(
-        keycloak_url=str(config.security.keycloak_url),
-        client_id=config.security.client_id,
-        secret_key=config.security.client_secret_key,
-        scope=config.security.scope,
-        realm=config.security.realm,
-        callback=str(config.http_server.base_uri),
-    )
+    init_security(config.security, str(config.http_server.base_uri))
     set_auth_params(
         public_key=_retrieve_keycloak_public_key(
             keycloak_url=str(config.security.keycloak_url), realm=config.security.realm

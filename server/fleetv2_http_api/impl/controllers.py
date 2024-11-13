@@ -25,7 +25,7 @@ from server.database.cache import (  # type: ignore
 from server.database.time import timestamp as _timestamp  # type: ignore
 from server.fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
 from server.fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
-from server.fleetv2_http_api.impl.security import SecurityObj  # type: ignore
+from server.fleetv2_http_api.impl.security import SecurityObj, SecurityObjImpl, empty_security_obj  # type: ignore
 from server.logs import LOGGER_NAME
 
 
@@ -38,7 +38,7 @@ _NAME_PATTERN = "^[0-9a-z_]+$"
 _status_wait_manager = MessageWaitObjManager()
 _cmd_wait_manager = MessageWaitObjManager()
 _car_wait_manager = CarWaitObjManager()
-_security = SecurityObj()
+_security: SecurityObj = empty_security_obj
 
 
 def set_status_wait_timeout_s(timeout_s: float) -> None:
@@ -59,10 +59,10 @@ def get_command_wait_timeout_s() -> float:
     return _cmd_wait_manager.timeout_ms * 0.001
 
 
-def init_security(
-    keycloak_url: str, client_id: str, secret_key: str, scope: str, realm: str, callback: str
-) -> None:
-    _security.set_config(keycloak_url, client_id, secret_key, scope, realm, callback)
+def init_security(config: Any, base_uri: str) -> None:
+    global _security
+    _security = SecurityObjImpl(config, base_uri)
+    assert _security.is_not_empty(), "Using empty security object - keycloak authentication set up."
 
 
 def set_car_wait_timeout_s(timeout_s: float) -> None:
