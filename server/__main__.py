@@ -26,6 +26,8 @@ from server.logs import configure_logging, LOGGER_NAME
 
 
 COMPONENT_NAME = "Fleet Protocol HTTP API"
+SPECIFICATION_DIR = os.path.join(".", "server", "fleetv2_http_api", "openapi")
+APP_NAME = "Fleet v2 HTTP API"
 
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -70,10 +72,6 @@ def _retrieve_keycloak_public_key(keycloak_url: str, realm: str) -> str:
     except Exception as e:
         logger.warning("Failed to retrieve public key from Keycloak server. Error: %s", e)
         return ""
-
-
-SPECIFICATION_DIR = os.path.join(".", "server", "fleetv2_http_api", "openapi")
-APP_NAME = "Fleet v2 HTTP API"
 
 
 def run_server(port: int = 8080) -> None:
