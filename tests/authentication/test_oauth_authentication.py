@@ -11,7 +11,7 @@ from server.fleetv2_http_api.impl.security import (
     GetTokenStateMismatch,
     GetTokenIssuerMismatch,
 )
-from server.fleetv2_http_api.impl.controllers import init_security_with_client, login
+from server.fleetv2_http_api.impl.controllers import init_security_with_client, login, deinit_security
 
 
 TEST_TOKEN_HEADER = {"alg": "RS256", "typ": "JWT", "kid": "test"}
@@ -118,6 +118,7 @@ class Test_Security_Endpoints(unittest.TestCase):
             realm="test",
             client_secret_key="test",
         )
+        deinit_security()
 
     def test_calling_login_without_initializing_security_yields_500_error(self):
         response = login()

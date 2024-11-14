@@ -80,6 +80,11 @@ def init_security_with_client(config: Any, base_uri: str, client: _KeycloakClien
     ), "Using empty security object - keycloak authentication is not set up."
 
 
+def deinit_security() -> None:
+    global _security
+    _security = _empty_security_obj
+
+
 def _get_keycloak_openid_client(config: _SecurityConfig) -> KeycloakOpenID:
     client = KeycloakOpenID(
         server_url=config.keycloak_url,
