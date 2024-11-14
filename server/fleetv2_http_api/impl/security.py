@@ -1,9 +1,17 @@
 from __future__ import annotations
 import abc
+from typing import Protocol
 from urllib.parse import urlparse
 
-from keycloak import KeycloakOpenID  # type: ignore
 import pydantic
+
+
+class KeycloakClient(Protocol):
+
+    def auth_url(self, redirect_uri: str, scope: str, state: str) -> str: ...
+    def device(self) -> dict: ...
+    def token(self, grant_type: str, device_code: str, redirect_uri: str) -> dict: ...
+    def refresh_token(self, refresh_token: str) -> dict: ...
 
 
 class SecurityConfig(pydantic.BaseModel):
@@ -17,7 +25,9 @@ class SecurityConfig(pydantic.BaseModel):
 class SecurityObj(abc.ABC):
 
     @abc.abstractmethod
-    def __init__(self, config: SecurityConfig, base_uri: str) -> None:
+    def __init__(
+        self, config: SecurityConfig, base_uri: str, openid_client: KeycloakClient
+    ) -> None:
         pass
 
     @abc.abstractmethod
@@ -47,7 +57,7 @@ class SecurityObj(abc.ABC):
 
 class SecurityObjEmpty(SecurityObj):
 
-    def __init__(self, config: SecurityConfig, base_uri: str) -> None:
+    def __init__(self, config: SecurityConfig, base_uri: str, *args, **kwargs) -> None:
         pass
 
     def get_authentication_url(self) -> str:
@@ -92,7 +102,9 @@ empty_security_obj = SecurityObjEmpty(
 
 
 class SecurityObjImpl(SecurityObj):
-    def __init__(self, config: SecurityConfig, base_uri: str) -> None:
+    def __init__(
+        self, config: SecurityConfig, base_uri: str, keycloak_client: KeycloakClient
+    ) -> None:
         """Set configuration for keycloak authentication and initialize KeycloakOpenID."""
 
         self._keycloak_url = config.keycloak_url
@@ -100,23 +112,18 @@ class SecurityObjImpl(SecurityObj):
         self._realm_name = config.realm
         self._callback = base_uri + "/token_get"
         self._state = "state"
-        self._oid = KeycloakOpenID(
-            server_url=config.keycloak_url,
-            client_id=config.client_id,
-            realm_name=config.realm,
-            client_secret_key=config.client_secret_key,
-        )
+        self._client = keycloak_client
 
     def get_authentication_url(self) -> str:
         """Get keycloak url used for authentication."""
-        auth_url = self._oid.auth_url(
+        auth_url = self._client.auth_url(
             redirect_uri=self._callback, scope=self._scope, state=self._state
         )
         return auth_url
 
     def device_get_authentication(self) -> dict:
         """Get a json for authenticating a device on keycloak."""
-        auth_url_device = self._oid.device()
+        auth_url_device = self._client.device()
         return auth_url_device
 
     def token_get(self, state: str, session_state: str, iss: str, code: str) -> dict:
@@ -127,19 +134,23 @@ class SecurityObjImpl(SecurityObj):
         if urlparse(iss).geturl() != str(self._keycloak_url) + "/realms/" + self._realm_name:
             raise Exception("Invalid issuer")
 
-        token = self._oid.token(
-            grant_type="authorization_code", code=code, redirect_uri=self._callback
+        token = self._client.token(
+            grant_type="authorization_code",
+            device_code=code,
+            redirect_uri=self._callback,
         )
         return token
 
     def device_token_get(self, device_code: str) -> dict:
         """Get token from keycloak using a device code returned by keycloak."""
-        token = self._oid.token(
-            grant_type="urn:ietf:params:oauth:grant-type:device_code", device_code=device_code
+        token = self._client.token(
+            grant_type="urn:ietf:params:oauth:grant-type:device_code",
+            device_code=device_code,
+            redirect_uri=self._callback,
         )
         return token
 
     def token_refresh(self, refresh_token: str) -> dict:
         """Get a new token from keycloak using the refresh token."""
-        token = self._oid.refresh_token(refresh_token=refresh_token)
+        token = self._client.refresh_token(refresh_token=refresh_token)
         return token

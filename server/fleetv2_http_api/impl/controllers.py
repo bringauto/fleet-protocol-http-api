@@ -5,6 +5,7 @@ import re
 
 from flask import redirect, Response  # type: ignore
 from werkzeug import Response as WerkzeugResponse  # type: ignore
+from keycloak import KeycloakOpenID  # type: ignore
 
 from server.enums import MessageType  # type: ignore
 from server.fleetv2_http_api.models import Payload, DeviceId, Message, Module, Car  # type: ignore
@@ -25,7 +26,13 @@ from server.database.cache import (  # type: ignore
 from server.database.time import timestamp as _timestamp  # type: ignore
 from server.fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
 from server.fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
-from server.fleetv2_http_api.impl.security import SecurityObj, SecurityObjImpl, empty_security_obj  # type: ignore
+from server.fleetv2_http_api.impl.security import (  # type: ignore
+    SecurityObj,
+    SecurityObjImpl,
+    SecurityConfig,
+    KeycloakClient,
+    empty_security_obj,
+)
 from server.logs import LOGGER_NAME
 
 
@@ -60,9 +67,26 @@ def get_command_wait_timeout_s() -> float:
 
 
 def init_security(config: Any, base_uri: str) -> None:
+    client = _get_keycloak_openid_client(config)
+    init_security_with_client(config, base_uri, client)
+
+
+def init_security_with_client(config: Any, base_uri: str, client: KeycloakClient) -> None:
     global _security
-    _security = SecurityObjImpl(config, base_uri)
-    assert _security.is_not_empty(), "Using empty security object - keycloak authentication set up."
+    _security = SecurityObjImpl(config, base_uri, client)
+    assert (
+        _security.is_not_empty()
+    ), "Using empty security object - keycloak authentication is not set up."
+
+
+def _get_keycloak_openid_client(config: SecurityConfig) -> KeycloakOpenID:
+    client = KeycloakOpenID(
+        server_url=config.keycloak_url,
+        client_id=config.client_id,
+        realm_name=config.realm,
+        client_secret_key=config.client_secret_key,
+    )
+    return client
 
 
 def set_car_wait_timeout_s(timeout_s: float) -> None:
