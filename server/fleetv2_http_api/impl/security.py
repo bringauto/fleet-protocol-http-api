@@ -21,7 +21,7 @@ class KeycloakClient(Protocol):
 
     def auth_url(self, redirect_uri: str, scope: str, state: str) -> str: ...
     def device(self) -> dict: ...
-    def token(self, grant_type: str, device_code: str, redirect_uri: str) -> dict: ...
+    def token(self, grant_type: str, code: str, redirect_uri: str) -> dict: ...
     def refresh_token(self, refresh_token: str) -> dict: ...
 
 
@@ -105,7 +105,7 @@ class OAuthAuthenticationNotSet(Exception):
 
 empty_security_obj = SecurityObjEmpty(
     config=SecurityConfig(
-        keycloak_url=pydantic.AnyUrl("https://empty"),
+        keycloak_url="https://empty",
         scope="",
         client_id="",
         client_secret_key="",
@@ -153,7 +153,7 @@ class SecurityObjImpl(SecurityObj):
 
         token = self._client.token(
             grant_type="authorization_code",
-            device_code=code,
+            code=code,
             redirect_uri=self._callback,
         )
         return token
@@ -162,7 +162,7 @@ class SecurityObjImpl(SecurityObj):
         """Get token from keycloak using a device code returned by keycloak."""
         token = self._client.token(
             grant_type="urn:ietf:params:oauth:grant-type:device_code",
-            device_code=device_code,
+            code=device_code,
             redirect_uri=self._callback,
         )
         return token
