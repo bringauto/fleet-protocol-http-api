@@ -22,7 +22,7 @@ The first way is to use the `/login` endpoint with no parameters.
 
 This redirects the User to the Keycloak login page.
 
-![Keycloal login page snapshot](.images/keycloak_login_page_snapshot.png)
+![Keycloak login page snapshot](.images/keycloak_login_page_snapshot.png)
 
 If the credentials are valid, the User gets automatically redirected back to the API and receives a JWT token in the response body.
 

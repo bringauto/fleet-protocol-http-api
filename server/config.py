@@ -5,6 +5,7 @@ import json
 
 
 LoggingLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+from .fleetv2_http_api.impl.security import SecurityConfig as _SecurityConfig
 
 
 class APIConfig(pydantic.BaseModel):
@@ -12,7 +13,7 @@ class APIConfig(pydantic.BaseModel):
     http_server: HTTPServer
     database: Database
     request_for_messages: MessageRequest
-    security: Security
+    security: _SecurityConfig
 
 
 class Logging(pydantic.BaseModel):
@@ -33,14 +34,6 @@ class Logging(pydantic.BaseModel):
 class HTTPServer(pydantic.BaseModel):
     base_uri: pydantic.AnyUrl
     port: pydantic.PositiveInt
-
-
-class Security(pydantic.BaseModel):
-    keycloak_url: pydantic.AnyUrl
-    client_id: str
-    client_secret_key: str
-    scope: str
-    realm: str
 
 
 class MessageRequest(pydantic.BaseModel):

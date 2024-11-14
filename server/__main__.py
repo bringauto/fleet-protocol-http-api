@@ -26,6 +26,8 @@ from server.logs import configure_logging, LOGGER_NAME
 
 
 COMPONENT_NAME = "Fleet Protocol HTTP API"
+SPECIFICATION_DIR = os.path.join(".", "server", "fleetv2_http_api", "openapi")
+APP_NAME = "Fleet v2 HTTP API"
 
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -72,10 +74,6 @@ def _retrieve_keycloak_public_key(keycloak_url: str, realm: str) -> str:
         return ""
 
 
-SPECIFICATION_DIR = os.path.join(".", "server", "fleetv2_http_api", "openapi")
-APP_NAME = "Fleet v2 HTTP API"
-
-
 def run_server(port: int = 8080) -> None:
     """Run the Fleet Protocol v2 HTTP API server."""
     app = connexion.App(APP_NAME.lower().replace(" ", "-"), specification_dir=SPECIFICATION_DIR)
@@ -97,14 +95,7 @@ if __name__ == "__main__":
     set_car_wait_timeout_s(config.request_for_messages.timeout_in_seconds)
     set_status_wait_timeout_s(config.request_for_messages.timeout_in_seconds)
     set_command_wait_timeout_s(config.request_for_messages.timeout_in_seconds)
-    init_security(
-        keycloak_url=str(config.security.keycloak_url),
-        client_id=config.security.client_id,
-        secret_key=config.security.client_secret_key,
-        scope=config.security.scope,
-        realm=config.security.realm,
-        callback=str(config.http_server.base_uri),
-    )
+    init_security(config.security, str(config.http_server.base_uri))
     set_auth_params(
         public_key=_retrieve_keycloak_public_key(
             keycloak_url=str(config.security.keycloak_url), realm=config.security.realm

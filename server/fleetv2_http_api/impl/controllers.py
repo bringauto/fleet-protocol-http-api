@@ -5,6 +5,7 @@ import re
 
 from flask import redirect, Response  # type: ignore
 from werkzeug import Response as WerkzeugResponse  # type: ignore
+from keycloak import KeycloakOpenID  # type: ignore
 
 from server.enums import MessageType  # type: ignore
 from server.fleetv2_http_api.models import Payload, DeviceId, Message, Module, Car  # type: ignore
@@ -23,22 +24,29 @@ from server.database.cache import (  # type: ignore
     is_car_connected as _is_car_connected,
 )
 from server.database.time import timestamp as _timestamp  # type: ignore
-from server.fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
-from server.fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
-from server.fleetv2_http_api.impl.security import SecurityObj  # type: ignore
-from server.logs import LOGGER_NAME
+from server.fleetv2_http_api.impl.message_wait import MessageWaitObjManager as _MessageWaitObjManager  # type: ignore
+from server.fleetv2_http_api.impl.car_wait import CarWaitObjManager as _CarWaitObjManager  # type: ignore
+from server.fleetv2_http_api.impl.security import (  # type: ignore
+    SecurityObj as _SecurityObj,
+    SecurityObjImpl as _SecurityObjImpl,
+    SecurityConfig as _SecurityConfig,
+    KeycloakClient as _KeycloakClient,
+    empty_security_obj as _empty_security_obj,
+    OAuthAuthenticationNotSet as _OAuthAuthenticationNotSet,
+)
+from server.logs import LOGGER_NAME as _LOGGER_NAME
 
 
-logger = logging.getLogger(LOGGER_NAME)
+logger = logging.getLogger(_LOGGER_NAME)
 
 
 _NAME_PATTERN = "^[0-9a-z_]+$"
 
 
-_status_wait_manager = MessageWaitObjManager()
-_cmd_wait_manager = MessageWaitObjManager()
-_car_wait_manager = CarWaitObjManager()
-_security = SecurityObj()
+_status_wait_manager = _MessageWaitObjManager()
+_cmd_wait_manager = _MessageWaitObjManager()
+_car_wait_manager = _CarWaitObjManager()
+_security: _SecurityObj = _empty_security_obj
 
 
 def set_status_wait_timeout_s(timeout_s: float) -> None:
@@ -59,10 +67,31 @@ def get_command_wait_timeout_s() -> float:
     return _cmd_wait_manager.timeout_ms * 0.001
 
 
-def init_security(
-    keycloak_url: str, client_id: str, secret_key: str, scope: str, realm: str, callback: str
-) -> None:
-    _security.set_config(keycloak_url, client_id, secret_key, scope, realm, callback)
+def init_security(config: Any, base_uri: str) -> None:
+    client = _get_keycloak_openid_client(config)
+    init_security_with_client(config, base_uri, client)
+
+
+def init_security_with_client(config: Any, base_uri: str, client: _KeycloakClient) -> None:
+    global _security
+    _security = _SecurityObjImpl(config, base_uri, client)
+    if not _security.is_not_empty():
+        raise RuntimeError("Using empty security object - Keycloak authentication is not set up.")
+
+
+def deinit_security() -> None:
+    global _security
+    _security = _empty_security_obj
+
+
+def _get_keycloak_openid_client(config: _SecurityConfig) -> KeycloakOpenID:
+    client = KeycloakOpenID(
+        server_url=config.keycloak_url,
+        client_id=config.client_id,
+        realm_name=config.realm,
+        client_secret_key=config.client_secret_key,
+    )
+    return client
 
 
 def set_car_wait_timeout_s(timeout_s: float) -> None:
@@ -84,21 +113,36 @@ def login(device: Optional[str] = None) -> WerkzeugResponse | Response | tuple[d
     if device == "":
         try:
             auth_json = _security.device_get_authentication()
+            return _log_info_and_respond(auth_json, 200, "Device authentication initialized.")
+        except _OAuthAuthenticationNotSet as e:
+            msg = "Cannot get device authentication. Keycloak authentication is not set on the HTTP API."
+            _log_debug(str(e))
+            return _log_info_and_respond(msg, 500, msg)
         except Exception as e:
             msg = "Problem reaching oAuth service."
             _log_debug(str(e))
             return _log_info_and_respond(msg, 500, msg)
-        return _log_info_and_respond(auth_json, 200, "Device authentication initialized.")
+
     elif device != None:
         try:
             token = _security.device_token_get(device)  # type: ignore
             return _log_info_and_respond(token, 200, "Device authenticated, jwt token generated.")
+        except _OAuthAuthenticationNotSet as e:
+            msg = "Cannot get device authentication. Keycloak authentication is not set on the HTTP API."
+            _log_debug(str(e))
+            return _log_info_and_respond(msg, 500, msg)
         except Exception as e:
             msg = "Invalid device code or device still authenticating."
             _log_debug(str(e))
             return _log_info_and_respond(msg, 400, msg)
     try:
         return redirect(_security.get_authentication_url())
+    except _OAuthAuthenticationNotSet as e:
+        msg = (
+            "Cannot get device authentication. Keycloak authentication is not set on the HTTP API."
+        )
+        _log_debug(str(e))
+        return _log_info_and_respond(msg, 500, msg)
     except Exception as e:
         msg = "Problem reaching oAuth service."
         _log_debug(str(e))
@@ -127,11 +171,16 @@ def token_get(
     :rtype: dict
     """
     try:
-        token = _security.token_get(state, session_state, iss, code)  # type: ignore
-    except:
-        msg = "Problem getting token from oAuth service."
+        token = _security.token_get(state, iss, code)  # type: ignore
+        return _log_info_and_respond(token, 200, "Jwt token generated.")
+    except _OAuthAuthenticationNotSet as e:
+        msg = "Cannot get token. Keycloak authentication is not set on the HTTP API."
+        _log_debug(str(e))
         return _log_info_and_respond(msg, 500, msg)
-    return _log_info_and_respond(token, 200, "Jwt token generated.")
+    except Exception as e:
+        msg = "Problem getting token from oAuth service."
+        _log_debug(str(e))
+        return _log_info_and_respond(msg, 500, msg)
 
 
 def token_refresh(refresh_token: str) -> tuple[dict, int]:
@@ -146,8 +195,13 @@ def token_refresh(refresh_token: str) -> tuple[dict, int]:
     """
     try:
         token = _security.token_refresh(refresh_token)
-    except:
+    except _OAuthAuthenticationNotSet as e:
+        msg = "Cannot refresh token. Keycloak authentication is not set on the HTTP API."
+        _log_debug(str(e))
+        return _log_info_and_respond(msg, 500, msg)
+    except Exception as e:
         msg = "Problem getting token from oAuth service."
+        _log_debug(str(e))
         return _log_info_and_respond(msg, 500, msg)
     return _log_info_and_respond(token, 200, "Jwt token refreshed.")
 
