@@ -5,6 +5,8 @@ import jwt
 
 _public_key: str
 _client_id: str
+
+
 def set_auth_params(public_key: str, client_id: str) -> None:
     global _public_key
     _public_key = "-----BEGIN PUBLIC KEY-----\n" + public_key + "\n-----END PUBLIC KEY-----"
@@ -25,10 +27,10 @@ def info_from_AdminAuth(api_key, *args) -> Dict:
     """
     admin = get_admin(api_key)
     if admin == None:
-        return None # type: ignore
+        return None  # type: ignore
     else:
         assert admin is not None
-        return {'id': admin.id,'name': admin.name}
+        return {"id": admin.id, "name": admin.name}
 
 
 def info_from_oAuth2AuthCode(token) -> Dict | None:
@@ -44,15 +46,15 @@ def info_from_oAuth2AuthCode(token) -> Dict | None:
     :rtype: dict | None
     """
     try:
-        decoded_token = jwt.decode(token, _public_key, algorithms=['RS256'], audience='account')
+        decoded_token = jwt.decode(token, _public_key, algorithms=["RS256"], audience="account")
     except:
         return None
 
     for origin in decoded_token["allowed-origins"]:
         if origin == _client_id:
-            return {'scopes': {}, 'uid': ''}
+            return {"scopes": {}, "uid": ""}
 
-    return None # type: ignore
+    return None  # type: ignore
 
 
 def validate_scope_oAuth2AuthCode(required_scopes, token_scopes):
@@ -67,6 +69,5 @@ def validate_scope_oAuth2AuthCode(required_scopes, token_scopes):
     :rtype: bool
     """
     # looks for scopes returned by the function above
-    #return set(required_scopes).issubset(set(token_scopes))
+    # return set(required_scopes).issubset(set(token_scopes))
     return True
-

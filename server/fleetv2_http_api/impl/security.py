@@ -6,6 +6,14 @@ from urllib.parse import urlparse
 import pydantic
 
 
+class GetTokenStateMismatch(Exception):
+    pass
+
+
+class GetTokenIssuerMismatch(Exception):
+    pass
+
+
 class KeycloakClient(Protocol):
     """Protocol class for Keycloak OpenID client. Used for type hinting to allow for both
     real implementation using KeycloakOpenID and mock implementation used in tests.
@@ -45,7 +53,7 @@ class SecurityObj(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def token_get(self, state: str, session_state: str, iss: str, code: str) -> dict:
+    def token_get(self, state: str, iss: str, code: str) -> dict:
         pass
 
     @abc.abstractmethod
@@ -68,32 +76,31 @@ class SecurityObjEmpty(SecurityObj):
         pass
 
     def get_authentication_url(self) -> str:
-        raise self.OAuthAuthenticationNotSet(
+        raise OAuthAuthenticationNotSet(
             "Cannot get authentication URL. Keycloak authentication is not set"
         )
 
     def device_get_authentication(self) -> dict:
-        raise self.OAuthAuthenticationNotSet(
+        raise OAuthAuthenticationNotSet(
             "Cannot get device authentication. Keycloak authentication is not set"
         )
 
-    def token_get(self, state: str, session_state: str, iss: str, code: str) -> dict:
-        raise self.OAuthAuthenticationNotSet(
+    def token_get(self, state: str, iss: str, code: str) -> dict:
+        raise OAuthAuthenticationNotSet(
             "Cannot get token. Keycloak authentication is not set",
         )
 
     def device_token_get(self, device_code: str) -> dict:
-        raise self.OAuthAuthenticationNotSet(
+        raise OAuthAuthenticationNotSet(
             "Cannot get device token. Keycloak authentication is not set"
         )
 
     def token_refresh(self, refresh_token: str) -> dict:
-        raise self.OAuthAuthenticationNotSet(
-            "Cannot refresh token. Keycloak authentication is not set"
-        )
+        raise OAuthAuthenticationNotSet("Cannot refresh token. Keycloak authentication is not set")
 
-    class OAuthAuthenticationNotSet(Exception):
-        pass
+
+class OAuthAuthenticationNotSet(Exception):
+    pass
 
 
 empty_security_obj = SecurityObjEmpty(
@@ -109,6 +116,9 @@ empty_security_obj = SecurityObjEmpty(
 
 
 class SecurityObjImpl(SecurityObj):
+
+    STATE = "state"
+
     def __init__(
         self, config: SecurityConfig, base_uri: str, keycloak_client: KeycloakClient
     ) -> None:
@@ -118,7 +128,7 @@ class SecurityObjImpl(SecurityObj):
         self._scope = config.scope
         self._realm_name = config.realm
         self._callback = base_uri + "/token_get"
-        self._state = "state"
+        self._state = SecurityObjImpl.STATE
         self._client = keycloak_client
 
     def get_authentication_url(self) -> str:
@@ -133,13 +143,13 @@ class SecurityObjImpl(SecurityObj):
         auth_url_device = self._client.device()
         return auth_url_device
 
-    def token_get(self, state: str, session_state: str, iss: str, code: str) -> dict:
+    def token_get(self, state: str, iss: str, code: str) -> dict:
         """Get token from keycloak using a code returned by keycloak."""
         if state != self._state:
-            raise Exception("Invalid state")
+            raise GetTokenStateMismatch("Invalid state")
 
-        if urlparse(iss).geturl() != str(self._keycloak_url) + "/realms/" + self._realm_name:
-            raise Exception("Invalid issuer")
+        if self.issuer_url(iss) != self._expected_issuer():
+            raise GetTokenStateMismatch("Invalid issuer")
 
         token = self._client.token(
             grant_type="authorization_code",
@@ -161,3 +171,12 @@ class SecurityObjImpl(SecurityObj):
         """Get a new token from keycloak using the refresh token."""
         token = self._client.refresh_token(refresh_token=refresh_token)
         return token
+
+    def _expected_issuer(self) -> str:
+        """Get expected issuer URL."""
+        return self.issuer_url(str(self._keycloak_url) + "/realms/" + self._realm_name)
+
+    @staticmethod
+    def issuer_url(issuer: str) -> str:
+        """Parse issuer URL from keycloak configuration."""
+        return urlparse(issuer).geturl()

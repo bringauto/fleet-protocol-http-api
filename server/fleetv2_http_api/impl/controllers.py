@@ -24,28 +24,28 @@ from server.database.cache import (  # type: ignore
     is_car_connected as _is_car_connected,
 )
 from server.database.time import timestamp as _timestamp  # type: ignore
-from server.fleetv2_http_api.impl.message_wait import MessageWaitObjManager  # type: ignore
-from server.fleetv2_http_api.impl.car_wait import CarWaitObjManager  # type: ignore
+from server.fleetv2_http_api.impl.message_wait import MessageWaitObjManager as _MessageWaitObjManager  # type: ignore
+from server.fleetv2_http_api.impl.car_wait import CarWaitObjManager as _CarWaitObjManager  # type: ignore
 from server.fleetv2_http_api.impl.security import (  # type: ignore
-    SecurityObj,
-    SecurityObjImpl,
-    SecurityConfig,
-    KeycloakClient,
-    empty_security_obj,
+    SecurityObj as _SecurityObj,
+    SecurityObjImpl as _SecurityObjImpl,
+    SecurityConfig as _SecurityConfig,
+    KeycloakClient as _KeycloakClient,
+    empty_security_obj as _empty_security_obj,
 )
-from server.logs import LOGGER_NAME
+from server.logs import LOGGER_NAME as _LOGGER_NAME
 
 
-logger = logging.getLogger(LOGGER_NAME)
+logger = logging.getLogger(_LOGGER_NAME)
 
 
 _NAME_PATTERN = "^[0-9a-z_]+$"
 
 
-_status_wait_manager = MessageWaitObjManager()
-_cmd_wait_manager = MessageWaitObjManager()
-_car_wait_manager = CarWaitObjManager()
-_security: SecurityObj = empty_security_obj
+_status_wait_manager = _MessageWaitObjManager()
+_cmd_wait_manager = _MessageWaitObjManager()
+_car_wait_manager = _CarWaitObjManager()
+_security: _SecurityObj = _empty_security_obj
 
 
 def set_status_wait_timeout_s(timeout_s: float) -> None:
@@ -71,15 +71,15 @@ def init_security(config: Any, base_uri: str) -> None:
     init_security_with_client(config, base_uri, client)
 
 
-def init_security_with_client(config: Any, base_uri: str, client: KeycloakClient) -> None:
+def init_security_with_client(config: Any, base_uri: str, client: _KeycloakClient) -> None:
     global _security
-    _security = SecurityObjImpl(config, base_uri, client)
+    _security = _SecurityObjImpl(config, base_uri, client)
     assert (
         _security.is_not_empty()
     ), "Using empty security object - keycloak authentication is not set up."
 
 
-def _get_keycloak_openid_client(config: SecurityConfig) -> KeycloakOpenID:
+def _get_keycloak_openid_client(config: _SecurityConfig) -> KeycloakOpenID:
     client = KeycloakOpenID(
         server_url=config.keycloak_url,
         client_id=config.client_id,
@@ -151,7 +151,7 @@ def token_get(
     :rtype: dict
     """
     try:
-        token = _security.token_get(state, session_state, iss, code)  # type: ignore
+        token = _security.token_get(state, iss, code)  # type: ignore
     except:
         msg = "Problem getting token from oAuth service."
         return _log_info_and_respond(msg, 500, msg)
