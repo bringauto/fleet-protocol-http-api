@@ -2,6 +2,7 @@ from __future__ import annotations
 import abc
 from typing import Protocol
 from urllib.parse import urlparse
+import uuid
 
 import pydantic
 
@@ -117,8 +118,6 @@ empty_security_obj = SecurityObjEmpty(
 
 class SecurityObjImpl(SecurityObj):
 
-    STATE = "state"
-
     def __init__(
         self, config: SecurityConfig, base_uri: str, keycloak_client: KeycloakClient
     ) -> None:
@@ -128,7 +127,7 @@ class SecurityObjImpl(SecurityObj):
         self._scope = config.scope
         self._realm_name = config.realm
         self._callback = base_uri + "/token_get"
-        self._state = SecurityObjImpl.STATE
+        self._state = uuid.uuid4().hex
         self._client = keycloak_client
 
     def get_authentication_url(self) -> str:

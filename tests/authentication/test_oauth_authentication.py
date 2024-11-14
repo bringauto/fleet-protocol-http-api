@@ -11,7 +11,11 @@ from server.fleetv2_http_api.impl.security import (
     GetTokenStateMismatch,
     GetTokenIssuerMismatch,
 )
-from server.fleetv2_http_api.impl.controllers import init_security_with_client, login, deinit_security
+from server.fleetv2_http_api.impl.controllers import (
+    init_security_with_client,
+    login,
+    deinit_security,
+)
 
 
 TEST_TOKEN_HEADER = {"alg": "RS256", "typ": "JWT", "kid": "test"}
@@ -56,7 +60,7 @@ class KeycloakClientTest:
     def device(self) -> dict:
         return {}
 
-    def token(self, grant_type: str, device_code: str, redirect_uri: str) -> dict:
+    def token(self, grant_type: str, code: str, redirect_uri: str) -> dict:
         return TEST_TOKEN
 
 
@@ -93,7 +97,7 @@ class Test_Security_Obj(unittest.TestCase):
     def test_getting_token_without_matching_issuer_raises_exception(self) -> None:
         security_obj = SecurityObjImpl(self.config, "https://somebasicuri", self.client_test)
         with self.assertRaises(GetTokenIssuerMismatch):
-            security_obj.token_get(SecurityObjImpl.STATE, "", "")
+            security_obj.token_get(security_obj._state, "", "")
 
     def test_getting_token_without_matching_state_raises_exception(self) -> None:
         security_obj = SecurityObjImpl(self.config, "https://somebasicuri", self.client_test)
@@ -103,7 +107,7 @@ class Test_Security_Obj(unittest.TestCase):
     def test_getting_token_with_matching_state_and_issuer_returns_token(self) -> None:
         security_obj = SecurityObjImpl(self.config, "https://somebasicuri", self.client_test)
         expected_issuer = str(self.config.keycloak_url) + "/realms/" + str(self.config.realm)
-        token = security_obj.token_get(SecurityObjImpl.STATE, expected_issuer, "")
+        token = security_obj.token_get(security_obj._state, expected_issuer, "")
         self.assertIsNotNone(token)
 
 
