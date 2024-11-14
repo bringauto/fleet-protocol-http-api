@@ -168,10 +168,15 @@ def token_get(
     """
     try:
         token = _security.token_get(state, iss, code)  # type: ignore
-    except:
-        msg = "Problem getting token from oAuth service."
+        return _log_info_and_respond(token, 200, "Jwt token generated.")
+    except _OAuthAuthenticationNotSet as e:
+        msg = "Cannot get token. Keycloak authentication is not set on the HTTP API."
+        _log_debug(str(e))
         return _log_info_and_respond(msg, 500, msg)
-    return _log_info_and_respond(token, 200, "Jwt token generated.")
+    except Exception as e:
+        msg = "Problem getting token from oAuth service."
+        _log_debug(str(e))
+        return _log_info_and_respond(msg, 500, msg)
 
 
 def token_refresh(refresh_token: str) -> tuple[dict, int]:
@@ -186,8 +191,13 @@ def token_refresh(refresh_token: str) -> tuple[dict, int]:
     """
     try:
         token = _security.token_refresh(refresh_token)
-    except:
+    except _OAuthAuthenticationNotSet as e:
+        msg = "Cannot refresh token. Keycloak authentication is not set on the HTTP API."
+        _log_debug(str(e))
+        return _log_info_and_respond(msg, 500, msg)
+    except Exception as e:
         msg = "Problem getting token from oAuth service."
+        _log_debug(str(e))
         return _log_info_and_respond(msg, 500, msg)
     return _log_info_and_respond(token, 200, "Jwt token refreshed.")
 
