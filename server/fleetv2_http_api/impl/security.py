@@ -7,6 +7,9 @@ import pydantic
 
 
 class KeycloakClient(Protocol):
+    """Protocol class for Keycloak OpenID client. Used for type hinting to allow for both
+    real implementation using KeycloakOpenID and mock implementation used in tests.
+    """
 
     def auth_url(self, redirect_uri: str, scope: str, state: str) -> str: ...
     def device(self) -> dict: ...
@@ -15,6 +18,8 @@ class KeycloakClient(Protocol):
 
 
 class SecurityConfig(pydantic.BaseModel):
+    """Configuration for keycloak authentication."""
+
     keycloak_url: pydantic.AnyUrl
     client_id: str
     client_secret_key: str
@@ -23,6 +28,7 @@ class SecurityConfig(pydantic.BaseModel):
 
 
 class SecurityObj(abc.ABC):
+    """Class for handling keycloak authentication."""
 
     @abc.abstractmethod
     def __init__(
@@ -58,6 +64,7 @@ class SecurityObj(abc.ABC):
 class SecurityObjEmpty(SecurityObj):
 
     def __init__(self, config: SecurityConfig, base_uri: str, *args, **kwargs) -> None:
+        """Empty implementation of SecurityObj. Used when keycloak authentication is not set."""
         pass
 
     def get_authentication_url(self) -> str:
@@ -90,14 +97,14 @@ class SecurityObjEmpty(SecurityObj):
 
 
 empty_security_obj = SecurityObjEmpty(
-    SecurityConfig(
+    config=SecurityConfig(
         keycloak_url=pydantic.AnyUrl("https://empty"),
         scope="",
         client_id="",
         client_secret_key="",
         realm="",
     ),
-    "",
+    base_uri="",
 )
 
 
