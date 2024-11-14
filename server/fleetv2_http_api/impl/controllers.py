@@ -75,9 +75,8 @@ def init_security(config: Any, base_uri: str) -> None:
 def init_security_with_client(config: Any, base_uri: str, client: _KeycloakClient) -> None:
     global _security
     _security = _SecurityObjImpl(config, base_uri, client)
-    assert (
-        _security.is_not_empty()
-    ), "Using empty security object - keycloak authentication is not set up."
+    if not _security.is_not_empty():
+        raise RuntimeError("Using empty security object - Keycloak authentication is not set up.")
 
 
 def deinit_security() -> None:
