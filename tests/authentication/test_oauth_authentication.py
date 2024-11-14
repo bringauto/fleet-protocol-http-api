@@ -11,6 +11,7 @@ from server.fleetv2_http_api.impl.security import (
     GetTokenStateMismatch,
     GetTokenIssuerMismatch,
 )
+from server.fleetv2_http_api.impl.controllers import init_security_with_client, login
 
 
 TEST_TOKEN_HEADER = {"alg": "RS256", "typ": "JWT", "kid": "test"}
@@ -77,7 +78,7 @@ class Test_Security_Obj(unittest.TestCase):
         with self.assertRaises(OAuthAuthenticationNotSet):
             empty_security_obj.device_get_authentication()
         with self.assertRaises(OAuthAuthenticationNotSet):
-            empty_security_obj.token_get("", "", "", "")
+            empty_security_obj.token_get("", "", "")
         with self.assertRaises(OAuthAuthenticationNotSet):
             empty_security_obj.device_token_get("")
 
@@ -104,6 +105,37 @@ class Test_Security_Obj(unittest.TestCase):
         expected_issuer = str(self.config.keycloak_url) + "/realms/" + str(self.config.realm)
         token = security_obj.token_get(SecurityObjImpl.STATE, expected_issuer, "")
         self.assertIsNotNone(token)
+
+
+class Test_Security_Endpoints(unittest.TestCase):
+
+    def setUp(self):
+        self.client_test = KeycloakClientTest()
+        self.config = SecurityConfig(
+            keycloak_url="https://empty",
+            scope="test",
+            client_id="test",
+            realm="test",
+            client_secret_key="test",
+        )
+
+    def test_calling_login_without_initializing_security_yields_500_error(self):
+        response = login()
+        self.assertEqual(response[1], 500)
+
+    def test_calling_login_with_device_without_initializing_security_yields_500_error(self):
+        response = login("some_device")
+        self.assertEqual(response[1], 500)
+
+    def test_calling_login_after_initializing_security_yields_302_code(self):
+        init_security_with_client(self.config, "https://somebasicuri", self.client_test)
+        response = login()
+        self.assertEqual(response.status_code, 302)
+
+    def test_calling_login_after_initializing_security_with_device_yields_302_code(self):
+        init_security_with_client(self.config, "https://somebasicuri", self.client_test)
+        response = login("some_device")
+        self.assertEqual(response[1], 200)
 
 
 if __name__ == "__main__":  # pragma :no cover

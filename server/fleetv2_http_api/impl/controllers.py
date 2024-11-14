@@ -32,6 +32,7 @@ from server.fleetv2_http_api.impl.security import (  # type: ignore
     SecurityConfig as _SecurityConfig,
     KeycloakClient as _KeycloakClient,
     empty_security_obj as _empty_security_obj,
+    OAuthAuthenticationNotSet as _OAuthAuthenticationNotSet,
 )
 from server.logs import LOGGER_NAME as _LOGGER_NAME
 
@@ -108,21 +109,36 @@ def login(device: Optional[str] = None) -> WerkzeugResponse | Response | tuple[d
     if device == "":
         try:
             auth_json = _security.device_get_authentication()
+            return _log_info_and_respond(auth_json, 200, "Device authentication initialized.")
+        except _OAuthAuthenticationNotSet as e:
+            msg = "Cannot get device authentication. Keycloak authentication is not set on the HTTP API."
+            _log_debug(str(e))
+            return _log_info_and_respond(msg, 500, msg)
         except Exception as e:
             msg = "Problem reaching oAuth service."
             _log_debug(str(e))
             return _log_info_and_respond(msg, 500, msg)
-        return _log_info_and_respond(auth_json, 200, "Device authentication initialized.")
+
     elif device != None:
         try:
             token = _security.device_token_get(device)  # type: ignore
             return _log_info_and_respond(token, 200, "Device authenticated, jwt token generated.")
+        except _OAuthAuthenticationNotSet as e:
+            msg = "Cannot get device authentication. Keycloak authentication is not set on the HTTP API."
+            _log_debug(str(e))
+            return _log_info_and_respond(msg, 500, msg)
         except Exception as e:
             msg = "Invalid device code or device still authenticating."
             _log_debug(str(e))
             return _log_info_and_respond(msg, 400, msg)
     try:
         return redirect(_security.get_authentication_url())
+    except _OAuthAuthenticationNotSet as e:
+        msg = (
+            "Cannot get device authentication. Keycloak authentication is not set on the HTTP API."
+        )
+        _log_debug(str(e))
+        return _log_info_and_respond(msg, 500, msg)
     except Exception as e:
         msg = "Problem reaching oAuth service."
         _log_debug(str(e))

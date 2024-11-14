@@ -149,7 +149,7 @@ class SecurityObjImpl(SecurityObj):
             raise GetTokenStateMismatch("Invalid state")
 
         if self.issuer_url(iss) != self._expected_issuer():
-            raise GetTokenStateMismatch("Invalid issuer")
+            raise GetTokenIssuerMismatch("Invalid issuer")
 
         token = self._client.token(
             grant_type="authorization_code",
