@@ -7,6 +7,10 @@ The HTTP API is described by the `openapi.yaml` according to [OpenAPI Specificat
 
 These files are included in the `server/.openapi-generator-ignore`. This file also must include itself.
 
+## Doc
+
+Formal specification can be found as part of [HTTP API] document.
+
 ## Requirements
 
 Python 3.10.12+
@@ -198,3 +202,6 @@ openapi-generator-cli generate -g python-flask -i ../openapi.yaml -o . -p=packag
 ```
 
 If you have trouble with running the generator, visit [docs](https://openapi-generator.tech/docs/installation/).
+
+
+[HTTP API]: https://github.com/bringauto/fleet-protocol-http-api
