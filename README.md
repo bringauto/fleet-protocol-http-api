@@ -204,4 +204,4 @@ openapi-generator-cli generate -g python-flask -i ../openapi.yaml -o . -p=packag
 If you have trouble with running the generator, visit [docs](https://openapi-generator.tech/docs/installation/).
 
 
-[HTTP API]: https://github.com/bringauto/fleet-protocol-http-api
+[HTTP API]: https://ref.bringautofleet.com/r/protocol/http-api/1.0.0/http-api
