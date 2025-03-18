@@ -39,6 +39,11 @@ class SecurityConfig(pydantic.BaseModel):
 class SecurityObj(abc.ABC):
     """Class for handling keycloak authentication."""
 
+    @classmethod
+    def is_defined(cls) -> bool:
+        """Check if the security object is defined."""
+        return hasattr(cls, "instance")
+
     @abc.abstractmethod
     def __init__(
         self, config: SecurityConfig, base_uri: str, openid_client: KeycloakClient
@@ -78,26 +83,28 @@ class SecurityObjEmpty(SecurityObj):
 
     def get_authentication_url(self) -> str:
         raise OAuthAuthenticationNotSet(
-            "Cannot get authentication URL. Keycloak authentication is not set"
+            "Cannot get authentication URL. Keycloak authentication is not set. Security object is empty."
         )
 
     def device_get_authentication(self) -> dict:
         raise OAuthAuthenticationNotSet(
-            "Cannot get device authentication. Keycloak authentication is not set"
+            "Cannot get device authentication. Keycloak authentication is not set.  Security object is empty."
         )
 
     def token_get(self, state: str, iss: str, code: str) -> dict:
         raise OAuthAuthenticationNotSet(
-            "Cannot get token. Keycloak authentication is not set",
+            "Cannot get token. Keycloak authentication is not set.  Security object is empty.",
         )
 
     def device_token_get(self, device_code: str) -> dict:
         raise OAuthAuthenticationNotSet(
-            "Cannot get device token. Keycloak authentication is not set"
+            "Cannot get device token. Keycloak authentication is not set.  Security object is empty."
         )
 
     def token_refresh(self, refresh_token: str) -> dict:
-        raise OAuthAuthenticationNotSet("Cannot refresh token. Keycloak authentication is not set")
+        raise OAuthAuthenticationNotSet(
+            "Cannot refresh token. Keycloak authentication is not set.  Security object is empty."
+        )
 
 
 class OAuthAuthenticationNotSet(Exception):

@@ -65,7 +65,7 @@ def _set_up_database_jobs(config: CleanupTiming) -> None:
 def _retrieve_keycloak_public_key(keycloak_url: str, realm: str) -> str:
     """Retrieve the public key from the Keycloak server."""
     try:
-        response = requests.get(keycloak_url + "/realms/" + realm)
+        response = requests.get(keycloak_url.rstrip("/") + "/realms/" + realm)
         response.raise_for_status()
         logger.info("Retrieved public key from Keycloak server.")
         return response.json()["public_key"]

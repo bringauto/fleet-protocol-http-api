@@ -46,7 +46,6 @@ _NAME_PATTERN = "^[0-9a-z_]+$"
 _status_wait_manager = _MessageWaitObjManager()
 _cmd_wait_manager = _MessageWaitObjManager()
 _car_wait_manager = _CarWaitObjManager()
-_security: _SecurityObj = _empty_security_obj
 
 
 def set_status_wait_timeout_s(timeout_s: float) -> None:
@@ -75,8 +74,22 @@ def init_security(config: Any, base_uri: str) -> None:
 def init_security_with_client(config: Any, base_uri: str, client: _KeycloakClient) -> None:
     global _security
     _security = _SecurityObjImpl(config, base_uri, client)
+
+    assert _security.is_not_empty(), "Security object is empty after initialization."
+
     if not _security.is_not_empty():
         raise RuntimeError("Using empty security object - Keycloak authentication is not set up.")
+    else:
+        logger.debug("Security object initialized")
+
+
+def _get_security() -> _SecurityObj:
+    global _security
+    try:
+        return _security
+    except NameError:
+        _security = _empty_security_obj
+        return _security
 
 
 def deinit_security() -> None:
@@ -112,7 +125,7 @@ def login(device: Optional[str] = None) -> WerkzeugResponse | Response | tuple[d
     """
     if device == "":
         try:
-            auth_json = _security.device_get_authentication()
+            auth_json = _get_security().device_get_authentication()
             return _log_info_and_respond(auth_json, 200, "Device authentication initialized.")
         except _OAuthAuthenticationNotSet as e:
             msg = "Cannot get device authentication. Keycloak authentication is not set on the HTTP API."
@@ -125,7 +138,7 @@ def login(device: Optional[str] = None) -> WerkzeugResponse | Response | tuple[d
 
     elif device != None:
         try:
-            token = _security.device_token_get(device)  # type: ignore
+            token = _get_security().device_token_get(device)  # type: ignore
             return _log_info_and_respond(token, 200, "Device authenticated, jwt token generated.")
         except _OAuthAuthenticationNotSet as e:
             msg = "Cannot get device authentication. Keycloak authentication is not set on the HTTP API."
@@ -136,7 +149,7 @@ def login(device: Optional[str] = None) -> WerkzeugResponse | Response | tuple[d
             _log_debug(str(e))
             return _log_info_and_respond(msg, 400, msg)
     try:
-        return redirect(_security.get_authentication_url())
+        return redirect(_get_security().get_authentication_url())
     except _OAuthAuthenticationNotSet as e:
         msg = (
             "Cannot get device authentication. Keycloak authentication is not set on the HTTP API."
@@ -171,7 +184,7 @@ def token_get(
     :rtype: dict
     """
     try:
-        token = _security.token_get(state, iss, code)  # type: ignore
+        token = _get_security().token_get(state, iss, code)  # type: ignore
         return _log_info_and_respond(token, 200, "Jwt token generated.")
     except _OAuthAuthenticationNotSet as e:
         msg = "Cannot get token. Keycloak authentication is not set on the HTTP API."
@@ -194,7 +207,7 @@ def token_refresh(refresh_token: str) -> tuple[dict, int]:
     :rtype: dict
     """
     try:
-        token = _security.token_refresh(refresh_token)
+        token = _get_security().token_refresh(refresh_token)
     except _OAuthAuthenticationNotSet as e:
         msg = "Cannot refresh token. Keycloak authentication is not set on the HTTP API."
         _log_debug(str(e))
