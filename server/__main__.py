@@ -1,25 +1,21 @@
 import sys
-
-sys.path.append("server")
 import logging
-import requests  # type: ignore
 import os
 
+sys.path.append("server")
+
+import requests  # type: ignore
 import connexion  # type: ignore
-from fleetv2_http_api import encoder  # type: ignore
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
 
+from .fleetv2_http_api import encoder  # type: ignore
 from .config import CleanupTiming
 from server.database.database_controller import remove_old_messages, set_message_retention_period  # type: ignore
 from server.database.cache import clear_connected_cars  # type: ignore
 from server.database.connection import set_db_connection  # type: ignore
 from server.database.time import timestamp  # type: ignore
-from server.fleetv2_http_api.impl.controllers import (  # type: ignore
-    set_car_wait_timeout_s,
-    set_status_wait_timeout_s,
-    set_command_wait_timeout_s,
-    init_security,
-)
+
+import server.fleetv2_http_api.impl.controllers as api_controllers  # type: ignore
 from server.fleetv2_http_api.controllers.security_controller import set_auth_params  # type: ignore
 import server.database.script_args as script_args  # type: ignore
 from server.logs import configure_logging, LOGGER_NAME
@@ -65,7 +61,7 @@ def _set_up_database_jobs(config: CleanupTiming) -> None:
 def _retrieve_keycloak_public_key(keycloak_url: str, realm: str) -> str:
     """Retrieve the public key from the Keycloak server."""
     try:
-        response = requests.get(keycloak_url + "/realms/" + realm)
+        response = requests.get(keycloak_url.rstrip("/") + "/realms/" + realm)
         response.raise_for_status()
         logger.info("Retrieved public key from Keycloak server.")
         return response.json()["public_key"]
@@ -92,10 +88,10 @@ if __name__ == "__main__":
     configure_logging(COMPONENT_NAME, config)
     _connect_to_database(vals)
     _set_up_database_jobs(config.database.cleanup.timing_in_seconds)
-    set_car_wait_timeout_s(config.request_for_messages.timeout_in_seconds)
-    set_status_wait_timeout_s(config.request_for_messages.timeout_in_seconds)
-    set_command_wait_timeout_s(config.request_for_messages.timeout_in_seconds)
-    init_security(config.security, str(config.http_server.base_uri))
+    api_controllers.set_car_wait_timeout_s(config.request_for_messages.timeout_in_seconds)
+    api_controllers.set_status_wait_timeout_s(config.request_for_messages.timeout_in_seconds)
+    api_controllers.set_command_wait_timeout_s(config.request_for_messages.timeout_in_seconds)
+    api_controllers.init_oauth(config.security, str(config.http_server.base_uri))
     set_auth_params(
         public_key=_retrieve_keycloak_public_key(
             keycloak_url=str(config.security.keycloak_url), realm=config.security.realm

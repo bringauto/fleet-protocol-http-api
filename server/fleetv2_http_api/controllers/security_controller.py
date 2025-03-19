@@ -3,6 +3,7 @@ from typing import Dict
 from server.database.security import get_admin
 import jwt
 
+
 _public_key: str
 _client_id: str
 

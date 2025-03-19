@@ -21,7 +21,7 @@ from server.database.database_controller import (
     list_messages,
     cleanup_device_commands_and_warn_before_future_commands,
     remove_old_messages,
-    Message_DB,
+    MessageDB,
     MessageBase,
 )
 from tests._utils.logs import clear_logs
@@ -34,7 +34,7 @@ class Test_Creating_And_Reading_MessageBase_Objects(unittest.TestCase):
         car_name = "test_car"
         device_id = DeviceId(module_id=45, type=2, role="role1", name="device1")
         sdevice_id = serialized_device_id(device_id)
-        message_db = Message_DB(
+        message_db = MessageDB(
             timestamp=100,
             serialized_device_id=sdevice_id,
             module_id=device_id.module_id,
@@ -110,7 +110,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         device_id_2 = DeviceId(module_id=45, type=2, role="role1", name="device2")
         sdevice_id_2 = serialized_device_id(device_id_1)
 
-        message1 = Message_DB(
+        message1 = MessageDB(
             timestamp=1,
             serialized_device_id=sdevice_id_1,
             module_id=device_id_1.module_id,
@@ -121,7 +121,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
             payload_encoding=EncodingType.BASE64,
             payload_data={"key1": "value1"},
         )
-        message2 = Message_DB(
+        message2 = MessageDB(
             timestamp=7,
             serialized_device_id=sdevice_id_2,
             module_id=device_id_2.module_id,
@@ -156,7 +156,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         send_messages_to_database(
             "test_company",
             "test_car",
-            Message_DB(
+            MessageDB(
                 timestamp=0,
                 serialized_device_id=sdevice_id,
                 module_id=device_id.module_id,
@@ -172,7 +172,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         send_messages_to_database(
             "test_company",
             "test_car",
-            Message_DB(
+            MessageDB(
                 timestamp=MessageBase.data_retention_period_ms() + 100,
                 serialized_device_id=sdevice_id,
                 module_id=device_id.module_id,
@@ -188,7 +188,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         send_messages_to_database(
             "test_company",
             "test_car",
-            Message_DB(
+            MessageDB(
                 timestamp=MessageBase.data_retention_period_ms() + 150,
                 serialized_device_id=sdevice_id,
                 module_id=device_id.module_id,
@@ -212,9 +212,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
         self.assertEqual(len(warnings), 2)
         # Check that the device commands were cleaned up
         messages = list_messages(
-            company_name="test_company",
-            car_name="test_car",
-            message_type=(MessageType.COMMAND,)
+            company_name="test_company", car_name="test_car", message_type=(MessageType.COMMAND,)
         )
         self.assertEqual(len(messages), 0)
 
@@ -222,7 +220,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
     def test_remove_old_messages(self, mock_time_in_ms: Mock):
         device_id = DeviceId(module_id=45, type=2, role="role1", name="device1")
         sdevice_id = serialized_device_id(device_id)
-        message1 = Message_DB(
+        message1 = MessageDB(
             timestamp=0,
             serialized_device_id=sdevice_id,
             module_id=device_id.module_id,
@@ -233,7 +231,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
             payload_encoding=EncodingType.JSON,
             payload_data={"key1": "value1"},
         )
-        message2 = Message_DB(
+        message2 = MessageDB(
             timestamp=50,
             serialized_device_id=sdevice_id,
             module_id=device_id.module_id,
@@ -255,9 +253,7 @@ class Test_Sending_And_Clearing_Messages(unittest.TestCase):
 
         # Check that the old messages were removed from the database
         messages = list_messages(
-            company_name="company1",
-            car_name="car1",
-            message_type=(MessageType.STATUS,)
+            company_name="company1", car_name="car1", message_type=(MessageType.STATUS,)
         )
         self.assertEqual(len(messages), 1)
 
@@ -295,7 +291,7 @@ class Test_Send_And_Read_Message(unittest.TestCase):
         device_id = DeviceId(module_id=45, type=2, role="role1", name="device1")
         sdevice_id = serialized_device_id(device_id)
 
-        message_1 = Message_DB(
+        message_1 = MessageDB(
             timestamp=100,
             serialized_device_id=sdevice_id,
             module_id=device_id.module_id,
@@ -306,7 +302,7 @@ class Test_Send_And_Read_Message(unittest.TestCase):
             payload_encoding=EncodingType.BASE64,
             payload_data={"content": "..."},
         )
-        message_2 = Message_DB(
+        message_2 = MessageDB(
             timestamp=150,
             serialized_device_id=sdevice_id,
             module_id=device_id.module_id,
@@ -326,14 +322,10 @@ class Test_Send_And_Read_Message(unittest.TestCase):
         read_messages = list_messages("test_company", "test_car", (MessageType.STATUS,))
         self.assertEqual(len(read_messages), 2)
         # read only the last status
-        read_messages = list_messages(
-            "test_company", "test_car", (MessageType.STATUS,), since=150
-        )
+        read_messages = list_messages("test_company", "test_car", (MessageType.STATUS,), since=150)
         self.assertEqual(len(read_messages), 1)
         # read only statuses after timestamp 120
-        read_messages = list_messages(
-            "test_company", "test_car", (MessageType.STATUS,), since=120
-        )
+        read_messages = list_messages("test_company", "test_car", (MessageType.STATUS,), since=120)
         self.assertEqual(len(read_messages), 1)
         self.assertEqual(read_messages[0].timestamp, 150)
 

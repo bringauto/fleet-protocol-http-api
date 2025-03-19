@@ -20,7 +20,7 @@ from server.database.connection import (
     Base,
     get_connection_source as _get_connection_source,
     set_db_connection as _set_db_connection,
-    set_test_db_connection as _set_test_db_connection
+    set_test_db_connection as _set_test_db_connection,
 )
 from server.database.cache import (  # type: ignore
     add_car,
@@ -31,8 +31,6 @@ from server.database.cache import (  # type: ignore
     clear_connected_cars as _clear_connected_cars,
 )
 from server.fleetv2_http_api.models.device_id import DeviceId  # type: ignore
-
-
 from ..logs import LOGGER_NAME
 
 
@@ -75,7 +73,7 @@ class MessageBase(Base):
 
     @staticmethod
     def from_message(
-        company_name: str, car_name: str, message: Message_DB, order: int = 0
+        company_name: str, car_name: str, message: MessageDB, order: int = 0
     ) -> MessageBase:
         return MessageBase(
             timestamp=message.timestamp,
@@ -93,7 +91,7 @@ class MessageBase(Base):
         )
 
     @staticmethod
-    def from_messages(company_name: str, car_name: str, *messages: Message_DB) -> list[MessageBase]:
+    def from_messages(company_name: str, car_name: str, *messages: MessageDB) -> list[MessageBase]:
         bases: list[MessageBase] = list()
         for k in range(len(messages)):
             bases.append(
@@ -101,8 +99,8 @@ class MessageBase(Base):
             )
         return bases
 
-    def to_message(self) -> Message_DB:
-        return Message_DB(
+    def to_message(self) -> MessageDB:
+        return MessageDB(
             timestamp=self.timestamp,
             module_id=self.module_id,
             device_type=self.device_type,
@@ -116,7 +114,7 @@ class MessageBase(Base):
 
 
 @dataclasses.dataclass
-class Message_DB:
+class MessageDB:
     """Object defining the structure of messages sent to and retrieved from the database."""
 
     timestamp: int
@@ -153,7 +151,7 @@ def get_available_devices_from_database() -> None:
 
 
 def send_messages_to_database(
-    company_name: str, car_name: str, *messages: Message_DB
+    company_name: str, car_name: str, *messages: MessageDB
 ) -> tuple[str, int]:
     """Send a list of messages to the database, returns number of succesfully sent messages (int)."""
     try:
@@ -166,7 +164,7 @@ def send_messages_to_database(
     except _IntegrityError:
         return (
             "Some of the messages are identical to those sent previously, including their timestamps.",
-            400
+            400,
         )
     except _DatabaseNotAccessible:
         return "Database not accessible.", 503
@@ -183,7 +181,7 @@ def _get_message_for_n_messages_succesfully_sent(number_of_sent_messages: int) -
 
 def list_messages(
     company_name: str, car_name: str, message_type: tuple[str, ...], since: int = 0
-) -> list[Message_DB]:  # noqa:
+) -> list[MessageDB]:  # noqa:
     """Return a list of messages of the given type, optionally filtered by the given parameters.
     If all is not None, then all messages of the given type are returned.
 
@@ -191,7 +189,7 @@ def list_messages(
     less or equal to since are returned. Otherwise, the newest message is returned.
     """
 
-    statuses: list[Message_DB] = list()
+    statuses: list[MessageDB] = list()
     with Session(_get_connection_source()) as session:
         table = MessageBase.__table__
         selection = select(MessageBase)

@@ -1,43 +1,42 @@
 {
-    "logging": {
-        "console": {
-            "level": "info",
-            "use": true
-        },
-        "file": {
-            "level": "info",
-            "use": true,
-            "path": "./log/"
-        }
+  "logging": {
+    "console": {
+      "level": "debug",
+      "use": true
     },
-    "http_server": {
-        "base_uri": "https://test-api.bringautofleet.com/v2/protocol",
-        "port": 8080
-    },
-    "database": {
-        "server": {
-            "location": "localhost",
-            "port": 5432,
-            "username": "postgres",
-            "password": "1234",
-            "database_name": "protocol_api"
-        },
-        "cleanup": {
-            "timing_in_seconds": {
-                "retention_period": 1200,
-                "cleanup_period": 60
-
-            }
-        }
-    },
-    "request_for_messages": {
-        "timeout_in_seconds": 5
-    },
-    "security": {
-        "keycloak_url": "https://keycloak.bringauto.com",
-        "client_id": "",
-        "client_secret_key": "",
-        "scope": "",
-        "realm": ""
+    "file": {
+      "level": "info",
+      "use": true,
+      "path": "./log/"
     }
+  },
+  "http_server": {
+    "base_uri": "https://test-api.bringautofleet.com/v2/protocol",
+    "port": 8080
+  },
+  "database": {
+    "server": {
+      "location": "localhost",
+      "port": 5432,
+      "username": "postgres",
+      "password": "1234",
+      "database_name": "protocol_api"
+    },
+    "cleanup": {
+      "timing_in_seconds": {
+        "retention_period": 1200,
+        "cleanup_period": 60
+      }
+    }
+  },
+  "request_for_messages": {
+    "timeout_in_seconds": 5
+  },
+  "security": {
+    "keycloak_url": "https://keycloak.bringauto.com",
+    "client_id": "",
+    "client_secret_key": "",
+    "scope": "",
+    "realm": ""
+  }
 }

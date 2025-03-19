@@ -16,9 +16,12 @@ class MessageWaitObjManager:
         self._wait_dict: dict[str, dict[str, list[MessageWaitObj]]] = dict()
 
     @property
-    def timeout_ms(self) -> int: return self._timeout_ms
+    def timeout_ms(self) -> int:
+        return self._timeout_ms
 
-    def add_response_content_and_stop_waiting(self, company: str, car: str, reponse_content: list[Message]) -> None:
+    def add_response_content_and_stop_waiting(
+        self, company: str, car: str, reponse_content: list[Message]
+    ) -> None:
         """Make the next wait object in the queue to respond with specified 'reponse_content' and remove it from the queue."""
         wait_objs = self._get_wait_objects_for_given_car(company, car)
         if wait_objs:
@@ -29,9 +32,9 @@ class MessageWaitObjManager:
         """Create a new wait object and adds it to the wait queue for given company and car."""
         wait_obj = MessageWaitObj(company, car_name, self._timeout_ms)
 
-        if not company in self._wait_dict:
+        if company not in self._wait_dict:
             self._wait_dict[company] = dict()
-        if not car_name in self._wait_dict[company]:
+        if car_name not in self._wait_dict[company]:
             self._wait_dict[company][car_name] = list()
 
         self._wait_dict[company][car_name].append(wait_obj)
@@ -66,14 +69,15 @@ class MessageWaitObjManager:
 
         return msgs
 
-    def _send_content_to_all_wait_objs(self, wait_objs: list[MessageWaitObj], reponse_content: list[Message]) -> None:
+    def _send_content_to_all_wait_objs(
+        self, wait_objs: list[MessageWaitObj], reponse_content: list[Message]
+    ) -> None:
         for wait_obj in wait_objs:
             wait_obj.add_reponse_content_and_stop_waiting(reponse_content)
 
     def _get_wait_objects_for_given_car(self, company: str, car: str) -> list[MessageWaitObj]:
-        if company in self._wait_dict:
-            if car in self._wait_dict[company]:
-                return self._wait_dict[company][car]
+        if company in self._wait_dict and car in self._wait_dict[company]:
+            return self._wait_dict[company][car]
         return list()
 
     def _remove_wait_obj_list(self, company: str, car: str) -> None:
@@ -96,9 +100,12 @@ class MessageWaitObj:
         self._condition = threading.Condition()
 
     @property
-    def company(self) -> str: return self._company
+    def company(self) -> str:
+        return self._company
+
     @property
-    def car_name(self) -> str: return self._car_name
+    def car_name(self) -> str:
+        return self._car_name
 
     def add_reponse_content_and_stop_waiting(self, content: list[Message]) -> None:
         self._response_content = content.copy()
@@ -108,10 +115,10 @@ class MessageWaitObj:
     def wait_and_get_response(self) -> list[Message]:
         """Wait for the response object to be set and then return it."""
         with self._condition:
-            self._condition.wait(timeout=self._timeout_ms/1000)
+            self._condition.wait(timeout=self._timeout_ms / 1000)
         return self._response_content
 
     @staticmethod
     def timestamp() -> int:
         """Unix timestamp in milliseconds."""
-        return int(time.time()*1000)
+        return int(time.time() * 1000)

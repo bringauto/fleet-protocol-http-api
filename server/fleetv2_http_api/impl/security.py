@@ -1,9 +1,9 @@
 from __future__ import annotations
 import abc
-from typing import Protocol
-from urllib.parse import urlparse
+from typing import Protocol, Any
 import uuid
 
+from urllib.parse import urlparse
 import pydantic
 
 
@@ -39,6 +39,11 @@ class SecurityConfig(pydantic.BaseModel):
 class SecurityObj(abc.ABC):
     """Class for handling keycloak authentication."""
 
+    @classmethod
+    def is_defined(cls) -> bool:
+        """Check if the security object is defined."""
+        return hasattr(cls, "instance")
+
     @abc.abstractmethod
     def __init__(
         self, config: SecurityConfig, base_uri: str, openid_client: KeycloakClient
@@ -65,9 +70,9 @@ class SecurityObj(abc.ABC):
     def token_refresh(self, refresh_token: str) -> dict:
         pass
 
-    def is_not_empty(self) -> bool:
+    def is_empty(self) -> bool:
         """Check if the security object is not empty and has all keycloak authentication information."""
-        return self is not empty_security_obj
+        return self is _empty_security_obj
 
 
 class SecurityObjEmpty(SecurityObj):
@@ -77,36 +82,38 @@ class SecurityObjEmpty(SecurityObj):
         pass
 
     def get_authentication_url(self) -> str:
-        raise OAuthAuthenticationNotSet(
-            "Cannot get authentication URL. Keycloak authentication is not set"
+        raise UninitializedOAuth(
+            "Cannot get authentication URL. Keycloak authentication is not set. Security object is empty."
         )
 
     def device_get_authentication(self) -> dict:
-        raise OAuthAuthenticationNotSet(
-            "Cannot get device authentication. Keycloak authentication is not set"
+        raise UninitializedOAuth(
+            "Cannot get device authentication. Keycloak authentication is not set.  Security object is empty."
         )
 
     def token_get(self, state: str, iss: str, code: str) -> dict:
-        raise OAuthAuthenticationNotSet(
-            "Cannot get token. Keycloak authentication is not set",
+        raise UninitializedOAuth(
+            "Cannot get token. Keycloak authentication is not set.  Security object is empty.",
         )
 
     def device_token_get(self, device_code: str) -> dict:
-        raise OAuthAuthenticationNotSet(
-            "Cannot get device token. Keycloak authentication is not set"
+        raise UninitializedOAuth(
+            "Cannot get device token. Keycloak authentication is not set.  Security object is empty."
         )
 
     def token_refresh(self, refresh_token: str) -> dict:
-        raise OAuthAuthenticationNotSet("Cannot refresh token. Keycloak authentication is not set")
+        raise UninitializedOAuth(
+            "Cannot refresh token. Keycloak authentication is not set.  Security object is empty."
+        )
 
 
-class OAuthAuthenticationNotSet(Exception):
+class UninitializedOAuth(Exception):
     pass
 
 
-empty_security_obj = SecurityObjEmpty(
+_empty_security_obj = SecurityObjEmpty(
     config=SecurityConfig(
-        keycloak_url="https://empty",
+        keycloak_url=pydantic.AnyUrl("https://empty.com"),
         scope="",
         client_id="",
         client_secret_key="",
@@ -123,10 +130,10 @@ class SecurityObjImpl(SecurityObj):
     ) -> None:
         """Set configuration for keycloak authentication and initialize KeycloakOpenID."""
 
-        self._keycloak_url = config.keycloak_url
+        self._keycloak_url = str(config.keycloak_url)
         self._scope = config.scope
         self._realm_name = config.realm
-        self._callback = base_uri + "/token_get"
+        self._callback = str(base_uri) + "/token_get"
         self._state = uuid.uuid4().hex
         self._client = keycloak_client
 
@@ -179,3 +186,18 @@ class SecurityObjImpl(SecurityObj):
     def issuer_url(issuer: str) -> str:
         """Parse issuer URL from keycloak configuration."""
         return urlparse(issuer).geturl()
+
+
+security: SecurityObj = _empty_security_obj
+
+
+def init_oauth(config: Any, base_uri: str, client: KeycloakClient) -> None:
+    global security
+    security = SecurityObjImpl(config, base_uri, client)
+    if security.is_empty():
+        raise RuntimeError("Security object is empty after initialization.")
+
+
+def deinit_oauth() -> None:
+    global security
+    security = _empty_security_obj

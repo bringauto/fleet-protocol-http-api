@@ -11,7 +11,7 @@ from server.enums import MessageType  # type: ignore
 from server.fleetv2_http_api.models import Payload, DeviceId, Message, Module, Car  # type: ignore
 from server.database.database_controller import (  # type: ignore
     send_messages_to_database,
-    Message_DB,
+    MessageDB,
     cleanup_device_commands_and_warn_before_future_commands,
 )
 from server.database.database_controller import list_messages as _list_messages
@@ -26,15 +26,10 @@ from server.database.cache import (  # type: ignore
 from server.database.time import timestamp as _timestamp  # type: ignore
 from server.fleetv2_http_api.impl.message_wait import MessageWaitObjManager as _MessageWaitObjManager  # type: ignore
 from server.fleetv2_http_api.impl.car_wait import CarWaitObjManager as _CarWaitObjManager  # type: ignore
-from server.fleetv2_http_api.impl.security import (  # type: ignore
-    SecurityObj as _SecurityObj,
-    SecurityObjImpl as _SecurityObjImpl,
-    SecurityConfig as _SecurityConfig,
-    KeycloakClient as _KeycloakClient,
-    empty_security_obj as _empty_security_obj,
-    OAuthAuthenticationNotSet as _OAuthAuthenticationNotSet,
-)
+
+import server.fleetv2_http_api.impl.security as _msecurity  # type: ignore
 from server.logs import LOGGER_NAME as _LOGGER_NAME
+from server.config import SecurityConfig as _SecurityConfig
 
 
 logger = logging.getLogger(_LOGGER_NAME)
@@ -46,7 +41,6 @@ _NAME_PATTERN = "^[0-9a-z_]+$"
 _status_wait_manager = _MessageWaitObjManager()
 _cmd_wait_manager = _MessageWaitObjManager()
 _car_wait_manager = _CarWaitObjManager()
-_security: _SecurityObj = _empty_security_obj
 
 
 def set_status_wait_timeout_s(timeout_s: float) -> None:
@@ -67,29 +61,20 @@ def get_command_wait_timeout_s() -> float:
     return _cmd_wait_manager.timeout_ms * 0.001
 
 
-def init_security(config: Any, base_uri: str) -> None:
+def init_oauth(config: _SecurityConfig, base_uri: str) -> None:
+    """Initialize OAuth with the given configuration and base URI."""
     client = _get_keycloak_openid_client(config)
-    init_security_with_client(config, base_uri, client)
+    _msecurity.init_oauth(config, base_uri, client)
+    if _msecurity.security.is_empty():
+        logger.warning("Keycloak authentication has not been initialized.")
 
 
-def init_security_with_client(config: Any, base_uri: str, client: _KeycloakClient) -> None:
-    global _security
-    _security = _SecurityObjImpl(config, base_uri, client)
-    if not _security.is_not_empty():
-        raise RuntimeError("Using empty security object - Keycloak authentication is not set up.")
-
-
-def deinit_security() -> None:
-    global _security
-    _security = _empty_security_obj
-
-
-def _get_keycloak_openid_client(config: _SecurityConfig) -> KeycloakOpenID:
+def _get_keycloak_openid_client(config: _msecurity.SecurityConfig) -> KeycloakOpenID:
     client = KeycloakOpenID(
-        server_url=config.keycloak_url,
-        client_id=config.client_id,
-        realm_name=config.realm,
-        client_secret_key=config.client_secret_key,
+        server_url=str(config.keycloak_url),
+        client_id=str(config.client_id),
+        realm_name=str(config.realm),
+        client_secret_key=str(config.client_secret_key),
     )
     return client
 
@@ -112,9 +97,9 @@ def login(device: Optional[str] = None) -> WerkzeugResponse | Response | tuple[d
     """
     if device == "":
         try:
-            auth_json = _security.device_get_authentication()
+            auth_json = _msecurity.security.device_get_authentication()
             return _log_info_and_respond(auth_json, 200, "Device authentication initialized.")
-        except _OAuthAuthenticationNotSet as e:
+        except _msecurity.UninitializedOAuth as e:
             msg = "Cannot get device authentication. Keycloak authentication is not set on the HTTP API."
             _log_debug(str(e))
             return _log_info_and_respond(msg, 500, msg)
@@ -125,10 +110,10 @@ def login(device: Optional[str] = None) -> WerkzeugResponse | Response | tuple[d
 
     elif device != None:
         try:
-            token = _security.device_token_get(device)  # type: ignore
+            token = _msecurity.security.device_token_get(device)  # type: ignore
             return _log_info_and_respond(token, 200, "Device authenticated, jwt token generated.")
-        except _OAuthAuthenticationNotSet as e:
-            msg = "Cannot get device authentication. Keycloak authentication is not set on the HTTP API."
+        except _msecurity.UninitializedOAuth as e:
+            msg = "Cannot get device token. Keycloak authentication is not set on the HTTP API."
             _log_debug(str(e))
             return _log_info_and_respond(msg, 500, msg)
         except Exception as e:
@@ -136,16 +121,14 @@ def login(device: Optional[str] = None) -> WerkzeugResponse | Response | tuple[d
             _log_debug(str(e))
             return _log_info_and_respond(msg, 400, msg)
     try:
-        return redirect(_security.get_authentication_url())
-    except _OAuthAuthenticationNotSet as e:
-        msg = (
-            "Cannot get device authentication. Keycloak authentication is not set on the HTTP API."
-        )
+        return redirect(_msecurity.security.get_authentication_url())
+    except _msecurity.UninitializedOAuth as e:
+        msg = "Cannot get authentication URL. Keycloak authentication is not set on the HTTP API."
         _log_debug(str(e))
         return _log_info_and_respond(msg, 500, msg)
     except Exception as e:
         msg = "Problem reaching oAuth service."
-        _log_debug(str(e))
+        _log_debug("(Device is None): " + str(e))
         return _log_info_and_respond(msg, 500, msg)
 
 
@@ -171,9 +154,9 @@ def token_get(
     :rtype: dict
     """
     try:
-        token = _security.token_get(state, iss, code)  # type: ignore
+        token = _msecurity.security.token_get(state, iss, code)  # type: ignore
         return _log_info_and_respond(token, 200, "Jwt token generated.")
-    except _OAuthAuthenticationNotSet as e:
+    except _msecurity.UninitializedOAuth as e:
         msg = "Cannot get token. Keycloak authentication is not set on the HTTP API."
         _log_debug(str(e))
         return _log_info_and_respond(msg, 500, msg)
@@ -194,8 +177,8 @@ def token_refresh(refresh_token: str) -> tuple[dict, int]:
     :rtype: dict
     """
     try:
-        token = _security.token_refresh(refresh_token)
-    except _OAuthAuthenticationNotSet as e:
+        token = _msecurity.security.token_refresh(refresh_token)
+    except _msecurity.UninitializedOAuth as e:
         msg = "Cannot refresh token. Keycloak authentication is not set on the HTTP API."
         _log_debug(str(e))
         return _log_info_and_respond(msg, 500, msg)
@@ -401,7 +384,7 @@ def send_commands(
         response = _car_availability(company_name, car_name)
         if response[1] != 200:
             return response
-        msg = f"Empty list of commands was sent to the API; no commands were sent to the device."
+        msg = "Empty list of commands was sent to the API; no commands were sent to the device."
         return _log_info_and_respond(msg, 200, msg)
     errors = _check_sent_commands(company_name, car_name, messages)
     if errors[0] != "":
@@ -437,7 +420,7 @@ def send_statuses(
     messages = _message_list_from_request_body(body)
 
     if messages == []:
-        msg = f"Empty list of statuses was sent to the API; no statuses were sent to the device."
+        msg = "Empty list of statuses was sent to the API; no statuses were sent to the device."
         return _log_info_and_respond(msg, 200, msg)
     errors = _check_messages((MessageType.STATUS, MessageType.STATUS_ERROR), *messages)
     if errors[0] != "":
@@ -456,7 +439,7 @@ def send_statuses(
 def _message_list_from_request_body(body: list[dict | Message]) -> list[Message]:
     messages: list[Message] = list()
     for item in body:
-        messages.append(Message.from_dict(item) if type(item) == dict else item)
+        messages.append(Message.from_dict(item) if isinstance(item, dict) else item)
     return messages
 
 
@@ -507,7 +490,7 @@ def _check_messages(expected_message_types: tuple[str, ...], *messages: Message)
 
     errors: str = ""
     errors = _check_message_types(expected_message_types, *messages)
-    if not errors.strip() == "":
+    if errors.strip() != "":
         return errors, 400
     else:
         return "", 200
@@ -573,7 +556,7 @@ def _handle_first_status_and_return_warnings(
     )
 
 
-def _message_from_db(message_db: Message_DB) -> Message:
+def _message_from_db(message_db: MessageDB) -> Message:
     """Convert Message_DB to Message."""
     return Message(
         timestamp=message_db.timestamp,
@@ -591,13 +574,13 @@ def _message_from_db(message_db: Message_DB) -> Message:
     )
 
 
-def _message_db_list(messages: list[Message]) -> list[Message_DB]:
+def _message_db_list(messages: list[Message]) -> list[MessageDB]:
     """Convert list of messages to list of Message_DB."""
     for m in messages:
         if isinstance(m.payload.message_type, MessageType):
             m.payload.message_type = m.payload.message_type.value
     return [
-        Message_DB(
+        MessageDB(
             timestamp=message.timestamp,
             serialized_device_id=_serialized_device_id(message.device_id),
             module_id=message.device_id.module_id,
@@ -643,7 +626,7 @@ def _response_for_request_for_disconnected_cars_commands(
     )
 
 
-def _update_messages_timestamp(messages: Iterable[Message_DB]) -> int:
+def _update_messages_timestamp(messages: Iterable[MessageDB]) -> int:
     timestamp_now = _timestamp()
     for message in messages:
         message.timestamp = timestamp_now

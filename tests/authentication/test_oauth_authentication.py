@@ -6,16 +6,14 @@ sys.path.append(".")
 from server.fleetv2_http_api.impl.security import (
     SecurityConfig,
     SecurityObjImpl,
-    empty_security_obj,
-    OAuthAuthenticationNotSet,
+    _empty_security_obj,
+    init_oauth,
+    deinit_oauth,
+    UninitializedOAuth,
     GetTokenStateMismatch,
     GetTokenIssuerMismatch,
 )
-from server.fleetv2_http_api.impl.controllers import (
-    init_security_with_client,
-    login,
-    deinit_security,
-)
+from server.fleetv2_http_api.impl.controllers import login
 
 
 TEST_TOKEN_HEADER = {"alg": "RS256", "typ": "JWT", "kid": "test"}
@@ -77,14 +75,14 @@ class Test_Security_Obj(unittest.TestCase):
         )
 
     def test_security_obj_empty_raises_exception(self):
-        with self.assertRaises(OAuthAuthenticationNotSet):
-            empty_security_obj.get_authentication_url()
-        with self.assertRaises(OAuthAuthenticationNotSet):
-            empty_security_obj.device_get_authentication()
-        with self.assertRaises(OAuthAuthenticationNotSet):
-            empty_security_obj.token_get("", "", "")
-        with self.assertRaises(OAuthAuthenticationNotSet):
-            empty_security_obj.device_token_get("")
+        with self.assertRaises(UninitializedOAuth):
+            _empty_security_obj.get_authentication_url()
+        with self.assertRaises(UninitializedOAuth):
+            _empty_security_obj.device_get_authentication()
+        with self.assertRaises(UninitializedOAuth):
+            _empty_security_obj.token_get("", "", "")
+        with self.assertRaises(UninitializedOAuth):
+            _empty_security_obj.device_token_get("")
 
     def test_authentication_url(self) -> None:
         security_obj = SecurityObjImpl(self.config, "https://somebasicuri", self.client_test)
@@ -122,7 +120,7 @@ class Test_Security_Endpoints(unittest.TestCase):
             realm="test",
             client_secret_key="test",
         )
-        deinit_security()
+        deinit_oauth()
 
     def test_calling_login_without_initializing_security_yields_500_error(self):
         response = login()
@@ -133,12 +131,12 @@ class Test_Security_Endpoints(unittest.TestCase):
         self.assertEqual(response[1], 500)
 
     def test_calling_login_after_initializing_security_yields_302_code(self):
-        init_security_with_client(self.config, "https://somebasicuri", self.client_test)
+        init_oauth(self.config, "https://somebasicuri", self.client_test)
         response = login()
         self.assertEqual(response.status_code, 302)
 
     def test_calling_login_after_initializing_security_with_device_yields_302_code(self):
-        init_security_with_client(self.config, "https://somebasicuri", self.client_test)
+        init_oauth(self.config, "https://somebasicuri", self.client_test)
         response = login("some_device")
         self.assertEqual(response[1], 200)
 
