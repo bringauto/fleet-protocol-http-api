@@ -198,6 +198,6 @@ def init_oauth(config: Any, base_uri: str, client: KeycloakClient) -> None:
         raise RuntimeError("Security object is empty after initialization.")
 
 
-def deinit_security() -> None:
+def deinit_oauth() -> None:
     global security
     security = _empty_security_obj
