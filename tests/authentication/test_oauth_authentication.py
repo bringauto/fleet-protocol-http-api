@@ -6,8 +6,8 @@ sys.path.append(".")
 from server.fleetv2_http_api.impl.security import (
     SecurityConfig,
     SecurityObjImpl,
-    empty_security_obj,
-    OAuthAuthenticationNotSet,
+    _empty_security_obj,
+    UninitializedOAuth,
     GetTokenStateMismatch,
     GetTokenIssuerMismatch,
 )
@@ -77,14 +77,14 @@ class Test_Security_Obj(unittest.TestCase):
         )
 
     def test_security_obj_empty_raises_exception(self):
-        with self.assertRaises(OAuthAuthenticationNotSet):
-            empty_security_obj.get_authentication_url()
-        with self.assertRaises(OAuthAuthenticationNotSet):
-            empty_security_obj.device_get_authentication()
-        with self.assertRaises(OAuthAuthenticationNotSet):
-            empty_security_obj.token_get("", "", "")
-        with self.assertRaises(OAuthAuthenticationNotSet):
-            empty_security_obj.device_token_get("")
+        with self.assertRaises(UninitializedOAuth):
+            _empty_security_obj.get_authentication_url()
+        with self.assertRaises(UninitializedOAuth):
+            _empty_security_obj.device_get_authentication()
+        with self.assertRaises(UninitializedOAuth):
+            _empty_security_obj.token_get("", "", "")
+        with self.assertRaises(UninitializedOAuth):
+            _empty_security_obj.device_token_get("")
 
     def test_authentication_url(self) -> None:
         security_obj = SecurityObjImpl(self.config, "https://somebasicuri", self.client_test)

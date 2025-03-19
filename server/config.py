@@ -5,7 +5,7 @@ import json
 
 
 LoggingLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-from .fleetv2_http_api.impl.security import SecurityConfig as _SecurityConfig
+from .fleetv2_http_api.impl.security import SecurityConfig as SecurityConfig
 
 
 class APIConfig(pydantic.BaseModel):
@@ -13,7 +13,7 @@ class APIConfig(pydantic.BaseModel):
     http_server: HTTPServer
     database: Database
     request_for_messages: MessageRequest
-    security: _SecurityConfig
+    security: SecurityConfig
 
 
 class Logging(pydantic.BaseModel):

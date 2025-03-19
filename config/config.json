@@ -1,7 +1,7 @@
 {
   "logging": {
     "console": {
-      "level": "info",
+      "level": "debug",
       "use": true
     },
     "file": {
