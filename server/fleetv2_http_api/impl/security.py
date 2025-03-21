@@ -180,7 +180,7 @@ class SecurityObjImpl(SecurityObj):
 
     def _expected_issuer(self) -> str:
         """Get expected issuer URL."""
-        return self.issuer_url(str(self._keycloak_url) + "/realms/" + self._realm_name)
+        return self.issuer_url(str(self._keycloak_url).rstrip("/") + "/realms/" + self._realm_name)
 
     @staticmethod
     def issuer_url(issuer: str) -> str:
