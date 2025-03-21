@@ -104,7 +104,7 @@ class Test_Security_Obj(unittest.TestCase):
 
     def test_getting_token_with_matching_state_and_issuer_returns_token(self) -> None:
         security_obj = SecurityObjImpl(self.config, "https://somebasicuri", self.client_test)
-        expected_issuer = str(self.config.keycloak_url) + "/realms/" + str(self.config.realm)
+        expected_issuer = str(self.config.keycloak_url).rstrip("/") + "/realms/" + str(self.config.realm)
         token = security_obj.token_get(security_obj._state, expected_issuer, "")
         self.assertIsNotNone(token)
 
