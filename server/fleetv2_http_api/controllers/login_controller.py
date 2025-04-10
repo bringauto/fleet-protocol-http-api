@@ -3,7 +3,7 @@ from typing import Dict
 from typing import Tuple
 from typing import Union
 
-from fleetv2_http_api import util
+from server.fleetv2_http_api import util
 
 
 def login(device=None):  # noqa: E501

@@ -2,7 +2,7 @@
 
 import connexion
 
-from fleetv2_http_api import encoder
+from server.fleetv2_http_api import encoder
 
 
 def main():
