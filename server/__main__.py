@@ -8,8 +8,8 @@ import requests  # type: ignore
 import connexion  # type: ignore
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
 
-from .fleetv2_http_api import encoder  # type: ignore
-from .config import CleanupTiming
+from server.fleetv2_http_api import encoder  # type: ignore
+from server.config import CleanupTiming
 from server.database.database_controller import remove_old_messages, set_message_retention_period  # type: ignore
 from server.database.cache import clear_connected_cars  # type: ignore
 from server.database.connection import set_db_connection  # type: ignore
@@ -80,7 +80,7 @@ def run_server(port: int = 8080) -> None:
     app.run(port=port)
 
 
-if __name__ == "__main__":
+def main() -> None:
     vals = script_args.request_and_get_script_arguments(
         "Run the Fleet Protocol v2 HTTP API server."
     )
@@ -99,3 +99,6 @@ if __name__ == "__main__":
         client_id=config.security.client_id,
     )
     run_server(config.http_server.port)
+
+if __name__ == "__main__":
+    main()
