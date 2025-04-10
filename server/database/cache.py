@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from copy import deepcopy
 from server.fleetv2_http_api.models.device_id import DeviceId  # type: ignore
-from .models import AdminDB  # type: ignore
+from server.database.models import AdminDB  # type: ignore
 
 
 _loaded_admins: list[AdminDB] = []

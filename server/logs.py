@@ -4,7 +4,7 @@ import os
 import logging.config
 
 
-from .config import APIConfig as _APIConfig, Logging as _Logging
+from server.config import APIConfig as _APIConfig, Logging as _Logging
 
 
 _DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
