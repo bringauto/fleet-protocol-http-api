@@ -80,7 +80,7 @@ def run_server(port: int = 8080) -> None:
     app.run(port=port)
 
 
-if __name__ == "__main__":
+def main() -> None:
     vals = script_args.request_and_get_script_arguments(
         "Run the Fleet Protocol v2 HTTP API server."
     )
@@ -99,3 +99,6 @@ if __name__ == "__main__":
         client_id=config.security.client_id,
     )
     run_server(config.http_server.port)
+
+if __name__ == "__main__":
+    main()
