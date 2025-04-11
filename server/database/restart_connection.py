@@ -4,15 +4,15 @@ import functools as _functools
 
 from sqlalchemy.exc import OperationalError
 
-from ..logs import LOGGER_NAME
-from .connection import (
+from server.logs import LOGGER_NAME
+from server.database.connection import (
     get_connection_source as _get_connection_source,
     set_db_connection as _set_db_connection,
     DatabaseNotAccessible as _CannotConnectToDatabase,
 )
-from .cache import (
+from server.database.cache import (
     clear_loaded_admins as _clear_loaded_admins,
-    clear_connected_cars as _clear_connected_cars
+    clear_connected_cars as _clear_connected_cars,
 )
 
 
@@ -26,7 +26,11 @@ def db_access_method(func: Callable) -> Callable:
     def wrapper(*args, **kwargs):
         try:
             response = func(*args, **kwargs)
-            if isinstance(response, tuple) and len(response) > 1 and (response[1]==503 or response[1] == 500):
+            if (
+                isinstance(response, tuple)
+                and len(response) > 1
+                and (response[1] == 503 or response[1] == 500)
+            ):
                 raise Exception
             return response
         except Exception:

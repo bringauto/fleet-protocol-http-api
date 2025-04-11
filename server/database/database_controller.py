@@ -12,7 +12,7 @@ from sqlalchemy.exc import (
 )
 import psycopg
 
-from ..database.connection import (
+from server.database.connection import (
     DatabaseNotAccessible as _DatabaseNotAccessible,
 )
 from server.enums import MessageType  # type: ignore
@@ -31,7 +31,7 @@ from server.database.cache import (  # type: ignore
     clear_connected_cars as _clear_connected_cars,
 )
 from server.fleetv2_http_api.models.device_id import DeviceId  # type: ignore
-from ..logs import LOGGER_NAME
+from server.logs import LOGGER_NAME
 
 
 _logger = _logging.getLogger(LOGGER_NAME)
