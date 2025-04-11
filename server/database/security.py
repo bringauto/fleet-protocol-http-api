@@ -15,7 +15,7 @@ from server.database.connection import (
 from server.database.restart_connection import db_access_method as _db_access_method
 from server.database.cache import get_loaded_admins, store_admin
 from server.database.models import AdminDB
-from ..logs import LOGGER_NAME
+from server.logs import LOGGER_NAME
 
 
 _logger = logging.getLogger(LOGGER_NAME)
