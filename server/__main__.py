@@ -1,14 +1,11 @@
-import sys
 import logging
-
-sys.path.append("server")
 
 import requests  # type: ignore
 import connexion  # type: ignore
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
 from sqlalchemy.orm import Session
 from importlib.resources import files as importlib_files
-from yaml import safe_load as load_yaml
+from yaml import safe_load as load_yaml # type: ignore
 
 from server.fleetv2_http_api import encoder  # type: ignore
 from server.config import CleanupTiming, DBFile
