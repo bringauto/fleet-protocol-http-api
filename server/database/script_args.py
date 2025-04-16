@@ -3,7 +3,7 @@ from typing import Type, Any
 import argparse
 import json
 
-from ..config import APIConfig
+from server.config import APIConfig, DBServer
 
 
 EMPTY_VALUE = None
@@ -116,11 +116,12 @@ def _parse_arguments(parser: argparse.ArgumentParser) -> ScriptArgs:
     args = parser.parse_args().__dict__
     config_dict = _load_config_file(args.pop("<config-file-path>"))
     config = APIConfig(**config_dict)
-    db_config = config_dict["database"]["server"]
 
-    for key in args:
-        if args[key] == EMPTY_VALUE:
-            args[key] = db_config[key]
+    if isinstance(config.database.server, DBServer):
+        db_config = config_dict["database"]["server"]
+        for key in args:
+            if args[key] == EMPTY_VALUE:
+                args[key] = db_config[key]
 
     return ScriptArgs(args, config)
 

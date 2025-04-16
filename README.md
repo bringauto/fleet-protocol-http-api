@@ -23,7 +23,7 @@ The configuration file is located in `config` directory. The file contains the f
   - `level` - logging level as a string (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`). Case-insensitive.
   - `use` - set to `True` to allow to print the logs, otherwise set to `False`.
 - `database` - settings for the database associated with the server.
-  - `server` - settings for the database server.
+  - `server` - settings for the database server. If only `path` is provided under `server`, the database used will be an sqlite file specified by the path.
     - `username`
     - `password`
     - `location` - location of the database (e.g., `localhost`).
