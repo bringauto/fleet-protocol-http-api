@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Literal
+from typing import Any, Literal, Union
 import pydantic
 import json
 
@@ -41,7 +41,7 @@ class MessageRequest(pydantic.BaseModel):
 
 
 class Database(pydantic.BaseModel):
-    server: DBServer
+    server: Union[DBServer, DBFile]
     cleanup: DatabaseCleanup
 
 
@@ -51,6 +51,10 @@ class DBServer(pydantic.BaseModel):
     location: str
     port: int
     database_name: str
+
+
+class DBFile(pydantic.BaseModel):
+    path: str
 
 
 class DatabaseCleanup(pydantic.BaseModel):

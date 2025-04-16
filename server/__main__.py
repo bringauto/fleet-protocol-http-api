@@ -7,13 +7,15 @@ sys.path.append("server")
 import requests  # type: ignore
 import connexion  # type: ignore
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
+from sqlalchemy.orm import Session
 
 from server.fleetv2_http_api import encoder  # type: ignore
-from server.config import CleanupTiming
+from server.config import CleanupTiming, DBFile
 from server.database.database_controller import remove_old_messages, set_message_retention_period  # type: ignore
 from server.database.cache import clear_connected_cars  # type: ignore
-from server.database.connection import set_db_connection  # type: ignore
+from server.database.connection import set_db_connection, set_test_db_connection, get_test_db_connection  # type: ignore
 from server.database.time import timestamp  # type: ignore
+from server.database.security import _AdminBase
 
 import server.fleetv2_http_api.impl.controllers as api_controllers  # type: ignore
 from server.fleetv2_http_api.controllers.security_controller import set_auth_params  # type: ignore
@@ -37,13 +39,24 @@ def _clean_up_messages() -> None:
 def _connect_to_database(vals: script_args.ScriptArgs) -> None:
     """Clear previously stored available devices and connect to the database."""
     clear_connected_cars()
-    set_db_connection(
-        dblocation=vals.argvals["location"],
-        port=vals.argvals["port"],
-        username=vals.argvals["username"],
-        password=vals.argvals["password"],
-        db_name=vals.argvals["database_name"],
-    )
+
+    if isinstance(vals.config.database.server, DBFile):
+        set_test_db_connection(db_name=vals.config.database.server.path)
+        source = get_test_db_connection(db_name=vals.config.database.server.path)
+        if source is None:
+            raise RuntimeError("Failed to create database connection.")
+        with Session(source) as session:
+            admin = _AdminBase(name="default_key", key="DefaultKey")
+            session.add(admin)
+            session.commit()
+    else:
+        set_db_connection(
+            dblocation=vals.argvals["location"],
+            port=vals.argvals["port"],
+            username=vals.argvals["username"],
+            password=vals.argvals["password"],
+            db_name=vals.argvals["database_name"],
+        )
 
 
 def _set_up_database_jobs(config: CleanupTiming) -> None:
