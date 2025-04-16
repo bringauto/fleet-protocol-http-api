@@ -1,6 +1,5 @@
 import sys
 import logging
-import os
 
 sys.path.append("server")
 
@@ -8,6 +7,8 @@ import requests  # type: ignore
 import connexion  # type: ignore
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
 from sqlalchemy.orm import Session
+from importlib.resources import files as importlib_files
+from yaml import safe_load as load_yaml
 
 from server.fleetv2_http_api import encoder  # type: ignore
 from server.config import CleanupTiming, DBFile
@@ -21,10 +22,10 @@ import server.fleetv2_http_api.impl.controllers as api_controllers  # type: igno
 from server.fleetv2_http_api.controllers.security_controller import set_auth_params  # type: ignore
 import server.database.script_args as script_args  # type: ignore
 from server.logs import configure_logging, LOGGER_NAME
+import server.fleetv2_http_api as server_package
 
 
 COMPONENT_NAME = "Fleet Protocol HTTP API"
-SPECIFICATION_DIR = os.path.join(".", "server", "fleetv2_http_api", "openapi")
 APP_NAME = "Fleet v2 HTTP API"
 
 
@@ -85,10 +86,12 @@ def _retrieve_keycloak_public_key(keycloak_url: str, realm: str) -> str:
 
 def run_server(port: int = 8080) -> None:
     """Run the Fleet Protocol v2 HTTP API server."""
-    app = connexion.App(APP_NAME.lower().replace(" ", "-"), specification_dir=SPECIFICATION_DIR)
+    app = connexion.App(APP_NAME.lower().replace(" ", "-"))
     app.app.json_encoder = encoder.JSONEncoder
     app.add_api(
-        "openapi.yaml", arguments={"title": "Fleet Protocol v2 HTTP API"}, pythonic_params=True
+        load_yaml(importlib_files(server_package).joinpath("openapi/openapi.yaml").read_text()),
+        arguments={"title": "Fleet Protocol v2 HTTP API"},
+        pythonic_params=True,
     )
     app.run(port=port)
 
