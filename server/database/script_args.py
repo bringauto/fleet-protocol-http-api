@@ -3,7 +3,7 @@ from typing import Type, Any
 import argparse
 import json
 
-from ..config import APIConfig
+from server.config import APIConfig
 
 
 EMPTY_VALUE = None

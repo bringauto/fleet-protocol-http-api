@@ -1,9 +1,8 @@
 openapi: 3.0.2
 
-
 info:
   title: Fleet v2 HTTP API
-  version: 2.8.5
+  version: 2.8.6
   description: HTTP-based API for Fleet Protocol v2 serving for communication between the External Server and the end users.
   contact:
     email: jiri.strouhal@bringauto.com
@@ -11,14 +10,13 @@ info:
     name: GPLv3
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
 
-
 servers:
   - url: /v2/protocol
 
 tags:
-- name: car
-- name: device
-- name: module
+  - name: car
+  - name: device
+  - name: module
 
 security:
   - AdminAuth: []
@@ -30,89 +28,85 @@ paths:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: login
       security: []
-      description:
-        "Login using keycloak. If empty device is specified, will generate a url and device code used to authenticate a device. Tries to get token if device code is specified."
+      description: "Login using keycloak. If empty device is specified, will generate a url and device code used to authenticate a device. Tries to get token if device code is specified."
       tags:
         - login
       responses:
-        '200':
+        "200":
           description: Returns either a standard keycloak token or a json used to authenticate a device.
-        '302':
+        "302":
           description: Redirect to keycloak authentication.
-        '500':
+        "500":
           description: Login failed due to internal server error.
       parameters:
-        - $ref: '#/components/parameters/Device'
+        - $ref: "#/components/parameters/Device"
 
   /token_get:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: token_get
       security: []
-      description:
-        "Callback endpoint for keycloak to receive jwt token."
+      description: "Callback endpoint for keycloak to receive jwt token."
       tags:
         - login
       responses:
-        '200':
+        "200":
           description: Returns a standard keycloak token.
-        '500':
+        "500":
           description: Login failed due to internal server error.
       parameters:
-        - $ref: '#/components/parameters/kcState'
-        - $ref: '#/components/parameters/kcSessionState'
-        - $ref: '#/components/parameters/kcIss'
-        - $ref: '#/components/parameters/kcCode'
+        - $ref: "#/components/parameters/kcState"
+        - $ref: "#/components/parameters/kcSessionState"
+        - $ref: "#/components/parameters/kcIss"
+        - $ref: "#/components/parameters/kcCode"
 
   /token_refresh:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: token_refresh
       security: []
-      description:
-        "Endpoint to receive jwt token from refresh token."
+      description: "Endpoint to receive jwt token from refresh token."
       tags:
         - login
       responses:
-        '200':
+        "200":
           description: Returns a new standard keycloak token.
-        '500':
+        "500":
           description: Token refresh failed due to internal server error.
       parameters:
-        - $ref: '#/components/parameters/RefreshToken'
+        - $ref: "#/components/parameters/RefreshToken"
 
   /cars:
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: available_cars
-      description:
-        "Return list of available cars for all companies registered in the database."
+      description: "Return list of available cars for all companies registered in the database."
       tags:
         - car
 
       responses:
-        '200':
+        "200":
           description: A list of available cars.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Car'
+                  $ref: "#/components/schemas/Car"
 
               example:
-                - company_name: 'company_x'
-                  car_name: 'basic_car'
-                - company_name: 'company_x'
-                  car_name: 'better_car'
-                - company_name: 'competing_company'
-                  car_name: 'even_better_car'
-        '500':
+                - company_name: "company_x"
+                  car_name: "basic_car"
+                - company_name: "company_x"
+                  car_name: "better_car"
+                - company_name: "competing_company"
+                  car_name: "even_better_car"
+        "500":
           description: Cannot display available cars due to internal server error.
 
       parameters:
-        - $ref: '#/components/parameters/Wait'
-        - $ref: '#/components/parameters/Since'
+        - $ref: "#/components/parameters/Wait"
+        - $ref: "#/components/parameters/Since"
 
   /available-devices/{company_name}/{car_name}:
     get:
@@ -127,84 +121,115 @@ paths:
       tags:
         - module
       responses:
-        '200':
+        "200":
           description: A list of available devices.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AvailableDevices'
+                $ref: "#/components/schemas/AvailableDevices"
 
-        '404':
+        "404":
           description: Cannot display available devices. Either company, car or module specified in the request does not exist.
-        '500':
+        "500":
           description: Cannot display available devices due to internal server error.
 
       parameters:
-      - $ref: '#/components/parameters/CompanyName'
-      - $ref: '#/components/parameters/CarName'
-      - $ref: "#/components/parameters/ModuleId"
-
+        - $ref: "#/components/parameters/CompanyName"
+        - $ref: "#/components/parameters/CarName"
+        - $ref: "#/components/parameters/ModuleId"
 
   /status/{company_name}/{car_name}:
     parameters:
-      - $ref: '#/components/parameters/CompanyName'
-      - $ref: '#/components/parameters/CarName'
+      - $ref: "#/components/parameters/CompanyName"
+      - $ref: "#/components/parameters/CarName"
 
     get:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: list_statuses
       description: It returns list of the Device Statuses.
       tags:
-      - device
+        - device
       responses:
-        '200':
+        "200":
           description: A list of device statuses.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Message'
+                  $ref: "#/components/schemas/Message"
               example:
                 [
                   {
                     "timestamp": 1700139157,
-                    device_id: {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
-                    payload: {message_type: "STATUS", encoding: "BASE64", data: "V2FpdGluZw=="}
+                    device_id:
+                      {
+                        module_id: 47,
+                        type: 2,
+                        role: "test_device",
+                        name: "Test Device",
+                      },
+                    payload:
+                      {
+                        message_type: "STATUS",
+                        encoding: "BASE64",
+                        data: "V2FpdGluZw==",
+                      },
                   },
                   {
                     "timestamp": 1700145485,
-                    device_id: {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
-                    payload: {message_type: "STATUS", encoding: "BASE64", data: "U3RpbGwgd29ya2luZw=="}
+                    device_id:
+                      {
+                        module_id: 47,
+                        type: 2,
+                        role: "test_device",
+                        name: "Test Device",
+                      },
+                    payload:
+                      {
+                        message_type: "STATUS",
+                        encoding: "BASE64",
+                        data: "U3RpbGwgd29ya2luZw==",
+                      },
                   },
                   {
                     "timestamp": 1700145490,
-                    device_id: {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
-                    payload: {message_type: "STATUS", encoding: "JSON", data: {"description": "Still working"}}
+                    device_id:
+                      {
+                        module_id: 47,
+                        type: 2,
+                        role: "test_device",
+                        name: "Test Device",
+                      },
+                    payload:
+                      {
+                        message_type: "STATUS",
+                        encoding: "JSON",
+                        data: { "description": "Still working" },
+                      },
                   },
                 ]
-        '404':
+        "404":
           description: The statuses cannot be displayed. Either company, car or device specified in the request does not exist.
-        '500':
+        "500":
           description: The statuses cannot be displayed due to internal server error.
 
       parameters:
-        - $ref: '#/components/parameters/Since'
-        - $ref: '#/components/parameters/Wait'
-
+        - $ref: "#/components/parameters/Since"
+        - $ref: "#/components/parameters/Wait"
 
     post:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: send_statuses
       description: Add statuses received from the Device.
       tags:
-      - device
+        - device
       responses:
-        '200':
+        "200":
           description: The statuses have been sent.
-        '404':
+        "404":
           description: The statuses could not been sent. Either company, car or device specified in the request does not exist.
-        '500':
+        "500":
           description: The statuses could not been sent due to internal server error.
       requestBody:
         description: Statuses to be send by the device.
@@ -213,15 +238,25 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/Message'
+                $ref: "#/components/schemas/Message"
             example:
               [
                 {
-                  device_id: {module_id: 47, type: 0, role: "test_device", name: "Test Device"},
-                  payload: {message_type: "STATUS", encoding: "BASE64", data: "QnJpbmdBdXRv"}
+                  device_id:
+                    {
+                      module_id: 47,
+                      type: 0,
+                      role: "test_device",
+                      name: "Test Device",
+                    },
+                  payload:
+                    {
+                      message_type: "STATUS",
+                      encoding: "BASE64",
+                      data: "QnJpbmdBdXRv",
+                    },
                 },
               ]
-
 
   /command/{company_name}/{car_name}:
     get:
@@ -229,43 +264,54 @@ paths:
       operationId: list_commands
       description: Returns list of the Device Commands.
       tags:
-      - device
+        - device
       responses:
-        '200':
+        "200":
           description: A list of commands.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Message'
+                  $ref: "#/components/schemas/Message"
               example:
                 [
                   {
                     "timestamp": 1700139157,
-                    device_id: {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
-                    payload: {message_type: "COMMAND", encoding: "BASE64", data: "U2F5IGhlbGxv"}
+                    device_id:
+                      {
+                        module_id: 47,
+                        type: 2,
+                        role: "test_device",
+                        name: "Test Device",
+                      },
+                    payload:
+                      {
+                        message_type: "COMMAND",
+                        encoding: "BASE64",
+                        data: "U2F5IGhlbGxv",
+                      },
                   },
                 ]
-        '404':
+        "404":
           description: The commands cannot be displayed. Either company, car or device specified in the request does not exist.
-        '500':
+        "500":
           description: The commands cannot be displayed due to internal server error.
 
       parameters:
-        - $ref: '#/components/parameters/Since'
-        - $ref: '#/components/parameters/Wait'
+        - $ref: "#/components/parameters/Since"
+        - $ref: "#/components/parameters/Wait"
 
     parameters:
-      - $ref: '#/components/parameters/CompanyName'
-      - $ref: '#/components/parameters/CarName'
+      - $ref: "#/components/parameters/CompanyName"
+      - $ref: "#/components/parameters/CarName"
 
     post:
       x-openapi-router-controller: fleetv2_http_api.impl.controllers
       operationId: send_commands
       description: It adds new device Commands.
       tags:
-      - device
+        - device
       requestBody:
         description: Commands to be executed by the device.
         content:
@@ -273,23 +319,33 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/Message'
+                $ref: "#/components/schemas/Message"
             example:
               [
                 {
-                  device_id: {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
-                  payload: {message_type: "COMMAND", encoding: "BASE64", data: "U2F5IGhlbGxv"}
+                  device_id:
+                    {
+                      module_id: 47,
+                      type: 2,
+                      role: "test_device",
+                      name: "Test Device",
+                    },
+                  payload:
+                    {
+                      message_type: "COMMAND",
+                      encoding: "BASE64",
+                      data: "U2F5IGhlbGxv",
+                    },
                 },
               ]
 
       responses:
-        '200':
+        "200":
           description: The commands have been sent.
-        '404':
+        "404":
           description: The commands have not been sent. Either company, car or device specified in the request does not exist.'
-        '500':
+        "500":
           description: The commands have not been sent due to internal server error.
-
 
 components:
   securitySchemes:
@@ -308,11 +364,11 @@ components:
           refreshUrl: https://keycloak.bringauto.com/realms/bringauto/protocol/openid-connect/token
           scopes: {}
 
-
   parameters:
     Since:
       name: since
-      description: A Unix timestamp; if specified, the method returns all messages inclusivelly newer than the specified timestamp \
+      description:
+        A Unix timestamp; if specified, the method returns all messages inclusivelly newer than the specified timestamp \
         (i.e., messages with timestamp greater than or equal to the 'since' timestamp)
       in: query
       schema:
@@ -415,7 +471,6 @@ components:
         type: string
       example: eyJhbGciOiJIUzI1NiIsI...
 
-
   schemas:
     Message:
       description: Physical device or program located on the car.
@@ -429,17 +484,17 @@ components:
           type: integer
           example: 1699262836
         device_id:
-          $ref: '#/components/schemas/DeviceId'
+          $ref: "#/components/schemas/DeviceId"
         payload:
-          $ref: '#/components/schemas/Payload'
+          $ref: "#/components/schemas/Payload"
 
     AvailableDevices:
       description: List of Modules containint at least one device (specified by device Id) OR Module containing at least one device (specified by device Id).
       oneOf:
-      - type: array
-        items:
-          $ref: '#/components/schemas/Module'
-      - $ref: '#/components/schemas/Module'
+        - type: array
+          items:
+            $ref: "#/components/schemas/Module"
+        - $ref: "#/components/schemas/Module"
 
     Module:
       description: A module containing at least one device (specified by device Id).
@@ -457,11 +512,21 @@ components:
           description: List of Ids of devices contained in the module.
           type: array
           items:
-            $ref: '#/components/schemas/DeviceId'
+            $ref: "#/components/schemas/DeviceId"
           example:
             [
-              {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
-              {module_id: 47, type: 2, role: "test_device", name: "Test Device"},
+              {
+                module_id: 47,
+                type: 2,
+                role: "test_device",
+                name: "Test Device",
+              },
+              {
+                module_id: 47,
+                type: 2,
+                role: "test_device",
+                name: "Test Device",
+              },
             ]
 
     Car:
@@ -523,27 +588,25 @@ components:
         - data
       properties:
         message_type:
-          description: 'Type of the payload'
+          description: "Type of the payload"
           type: string
           pattern: ^(STATUS)|(COMMAND)|(STATUS_ERROR)$
         encoding:
-          description: 'Encoding of the payload'
+          description: "Encoding of the payload"
           type: string
           pattern: ^(JSON)|(BASE64)$
         data:
           description: 'Payload data in "JSON" or "BASE64" format, depending on the encoding.'
           oneOf:
-          - type: object
-          - type: array
-            items: {}
-          - type: string
-            format: base
+            - type: object
+            - type: array
+              items: {}
+            - type: string
+              format: base
       example:
         message_type: "STATUS"
         encoding: "BASE64"
         data: "QnJpbmdBdXRv"
-
-
 # Cleaning up the statuses/commands:
 #
 # - every command and status has a TIMESTAMP and a KEY denoting a device,
@@ -564,5 +627,4 @@ components:
 #   have to be deleted from the database. If the timestamp of such a command is GREATER, a warning
 #   should be raised/logged (it is an invalid timestamp value, because, as mentioned previously,
 #   no command could have been added after deleting the last status with the given device key)
-
 
