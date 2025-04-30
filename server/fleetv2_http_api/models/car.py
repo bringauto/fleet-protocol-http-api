@@ -2,9 +2,9 @@ from datetime import date, datetime  # noqa: F401
 
 from typing import List, Dict  # noqa: F401
 
-from server.fleetv2_http_api.models.base_model import Model
+from fleetv2_http_api.models.base_model import Model
 import re
-from server.fleetv2_http_api import util
+from fleetv2_http_api import util
 
 import re  # noqa: E501
 

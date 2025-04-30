@@ -5,7 +5,7 @@ import connexion  # type: ignore
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
 from sqlalchemy.orm import Session
 from importlib.resources import files as importlib_files
-from yaml import safe_load as load_yaml # type: ignore
+from yaml import safe_load as load_yaml  # type: ignore
 
 from server.fleetv2_http_api import encoder  # type: ignore
 from server.config import CleanupTiming, DBFile
@@ -17,7 +17,7 @@ from server.database.security import _AdminBase
 
 # The import here should be left as it is without the server. part. It must match the paths in the openapi.yaml file
 # to prevent duplicit imports.
-import fleetv2_http_api.impl.controllers as api_controllers  # type: ignore
+import server.fleetv2_http_api.impl.controllers as api_controllers  # type: ignore
 from server.fleetv2_http_api.controllers.security_controller import set_auth_params  # type: ignore
 import server.database.script_args as script_args  # type: ignore
 from server.logs import configure_logging, LOGGER_NAME
@@ -114,6 +114,7 @@ def main() -> None:
         client_id=config.security.client_id,
     )
     run_server(config.http_server.port)
+
 
 if __name__ == "__main__":
     main()

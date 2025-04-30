@@ -2,7 +2,7 @@ import pprint
 
 import typing
 
-from server.fleetv2_http_api import util
+from fleetv2_http_api import util
 
 T = typing.TypeVar('T')
 
