@@ -1,0 +1,1 @@
+from server.__main__ import main
