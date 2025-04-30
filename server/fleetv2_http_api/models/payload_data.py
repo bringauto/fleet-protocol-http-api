@@ -2,8 +2,8 @@ from datetime import date, datetime  # noqa: F401
 
 from typing import List, Dict  # noqa: F401
 
-from fleetv2_http_api.models.base_model import Model
-from fleetv2_http_api import util
+from server.fleetv2_http_api.models.base_model import Model
+from server.fleetv2_http_api import util
 
 
 class PayloadData(Model):
@@ -13,17 +13,13 @@ class PayloadData(Model):
     """
 
     def __init__(self):  # noqa: E501
-        """PayloadData - a model defined in OpenAPI
+        """PayloadData - a model defined in OpenAPI"""
+        self.openapi_types = {}
 
-        """
-        self.openapi_types = {
-        }
-
-        self.attribute_map = {
-        }
+        self.attribute_map = {}
 
     @classmethod
-    def from_dict(cls, dikt) -> 'PayloadData':
+    def from_dict(cls, dikt) -> "PayloadData":
         """Returns the dict as a model
 
         :param dikt: A dict.
