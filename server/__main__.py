@@ -15,7 +15,9 @@ from server.database.cache import clear_connected_cars  # type: ignore
 from server.database.connection import set_db_connection  # type: ignore
 from server.database.time import timestamp  # type: ignore
 
-import server.fleetv2_http_api.impl.controllers as api_controllers  # type: ignore
+# The import here should be left as it is without the server. part. It must match the paths in the openapi.yaml file
+# to prevent duplicit imports.
+import fleetv2_http_api.impl.controllers as api_controllers  # type: ignore
 from server.fleetv2_http_api.controllers.security_controller import set_auth_params  # type: ignore
 import server.database.script_args as script_args  # type: ignore
 from server.logs import configure_logging, LOGGER_NAME
