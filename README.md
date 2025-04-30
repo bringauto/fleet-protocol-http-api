@@ -29,6 +29,7 @@ The configuration file is located in `config` directory. The file contains the f
     - `location` - location of the database (e.g., `localhost`).
     - `port` - port number.
     - `database-name` - database name.
+    - `path` - only use this parameter if an sqlite db is needed (no other fields can be used in `server` in that case). The value should be a path to a database file (e.g., `/home/user/test.db`). The file will be created if it doesn't exist.
   - `cleanup` - contains the following keys:
     - `timing_in_seconds`
       - `retention_period`- number of seconds after which each message can be deleted after it has been posted to the server.
