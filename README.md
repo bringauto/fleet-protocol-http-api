@@ -7,6 +7,10 @@ The HTTP API is described by the `openapi.yaml` according to [OpenAPI Specificat
 
 These files are included in the `server/.openapi-generator-ignore`. This file also must include itself.
 
+## Doc
+
+Formal specification can be found as part of [HTTP API] document.
+
 ## Requirements
 
 Python 3.10.12+
@@ -23,12 +27,13 @@ The configuration file is located in `config` directory. The file contains the f
   - `level` - logging level as a string (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`). Case-insensitive.
   - `use` - set to `True` to allow to print the logs, otherwise set to `False`.
 - `database` - settings for the database associated with the server.
-  - `server` - settings for the database server.
+  - `server` - settings for the database server. If only `path` is provided under `server`, the database used will be an sqlite file specified by the path.
     - `username`
     - `password`
     - `location` - location of the database (e.g., `localhost`).
     - `port` - port number.
     - `database-name` - database name.
+    - `path` - only use this parameter if an sqlite db is needed (no other fields can be used in `server` in that case, otherwise connection to postgresql will we attempted). The value should be a path to a database file (e.g., `/home/user/test.db`). The file will be created if it doesn't exist.
   - `cleanup` - contains the following keys:
     - `timing_in_seconds`
       - `retention_period`- number of seconds after which each message can be deleted after it has been posted to the server.
@@ -198,3 +203,6 @@ openapi-generator-cli generate -g python-flask -i ../openapi.yaml -o . -p=packag
 ```
 
 If you have trouble with running the generator, visit [docs](https://openapi-generator.tech/docs/installation/).
+
+
+[HTTP API]: https://ref.bringautofleet.com/r/protocol/http-api/1.0.0/http-api

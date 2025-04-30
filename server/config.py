@@ -7,6 +7,7 @@ from server.fleetv2_http_api.impl.security import SecurityConfig as SecurityConf
 
 
 LoggingLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+from server.fleetv2_http_api.impl.security import SecurityConfig as SecurityConfig
 
 
 class APIConfig(pydantic.BaseModel):
@@ -42,7 +43,7 @@ class MessageRequest(pydantic.BaseModel):
 
 
 class Database(pydantic.BaseModel):
-    server: DBServer
+    server: DBServer | DBFile
     cleanup: DatabaseCleanup
 
 
@@ -52,6 +53,10 @@ class DBServer(pydantic.BaseModel):
     location: str
     port: int
     database_name: str
+
+
+class DBFile(pydantic.BaseModel):
+    path: str
 
 
 class DatabaseCleanup(pydantic.BaseModel):

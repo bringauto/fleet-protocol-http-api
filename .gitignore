@@ -9,10 +9,13 @@ example.db
 /*.db
 !test_server.sh
 !regen.sh
+*.egg-info
+build
+dist
+*.pyz
 
 /uml
 test_db
-
 
 fleet_protocol_api.egg-info
 /server.egg_info

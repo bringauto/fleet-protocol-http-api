@@ -1,19 +1,19 @@
-import sys
 import logging
-import os
-
-sys.path.append("server")
 
 import requests  # type: ignore
 import connexion  # type: ignore
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
+from sqlalchemy.orm import Session
+from importlib.resources import files as importlib_files
+from yaml import safe_load as load_yaml # type: ignore
 
 from server.fleetv2_http_api import encoder  # type: ignore
-from server.config import CleanupTiming
+from server.config import CleanupTiming, DBFile
 from server.database.database_controller import remove_old_messages, set_message_retention_period  # type: ignore
 from server.database.cache import clear_connected_cars  # type: ignore
-from server.database.connection import set_db_connection  # type: ignore
+from server.database.connection import set_db_connection, set_test_db_connection, get_test_db_connection  # type: ignore
 from server.database.time import timestamp  # type: ignore
+from server.database.security import _AdminBase
 
 # The import here should be left as it is without the server. part. It must match the paths in the openapi.yaml file
 # to prevent duplicit imports.
@@ -21,10 +21,10 @@ import fleetv2_http_api.impl.controllers as api_controllers  # type: ignore
 from server.fleetv2_http_api.controllers.security_controller import set_auth_params  # type: ignore
 import server.database.script_args as script_args  # type: ignore
 from server.logs import configure_logging, LOGGER_NAME
+import server.fleetv2_http_api as server_package
 
 
 COMPONENT_NAME = "Fleet Protocol HTTP API"
-SPECIFICATION_DIR = os.path.join(".", "server", "fleetv2_http_api", "openapi")
 APP_NAME = "Fleet v2 HTTP API"
 
 
@@ -39,13 +39,24 @@ def _clean_up_messages() -> None:
 def _connect_to_database(vals: script_args.ScriptArgs) -> None:
     """Clear previously stored available devices and connect to the database."""
     clear_connected_cars()
-    set_db_connection(
-        dblocation=vals.argvals["location"],
-        port=vals.argvals["port"],
-        username=vals.argvals["username"],
-        password=vals.argvals["password"],
-        db_name=vals.argvals["database_name"],
-    )
+
+    if isinstance(vals.config.database.server, DBFile):
+        set_test_db_connection(db_name=vals.config.database.server.path)
+        source = get_test_db_connection(db_name=vals.config.database.server.path)
+        if source is None:
+            raise RuntimeError("Failed to create database connection.")
+        with Session(source) as session:
+            admin = _AdminBase(name="default_key", key="DefaultKey")
+            session.add(admin)
+            session.commit()
+    else:
+        set_db_connection(
+            dblocation=vals.argvals["location"],
+            port=vals.argvals["port"],
+            username=vals.argvals["username"],
+            password=vals.argvals["password"],
+            db_name=vals.argvals["database_name"],
+        )
 
 
 def _set_up_database_jobs(config: CleanupTiming) -> None:
@@ -74,15 +85,17 @@ def _retrieve_keycloak_public_key(keycloak_url: str, realm: str) -> str:
 
 def run_server(port: int = 8080) -> None:
     """Run the Fleet Protocol v2 HTTP API server."""
-    app = connexion.App(APP_NAME.lower().replace(" ", "-"), specification_dir=SPECIFICATION_DIR)
+    app = connexion.App(APP_NAME.lower().replace(" ", "-"))
     app.app.json_encoder = encoder.JSONEncoder
     app.add_api(
-        "openapi.yaml", arguments={"title": "Fleet Protocol v2 HTTP API"}, pythonic_params=True
+        load_yaml(importlib_files(server_package).joinpath("openapi/openapi.yaml").read_text()),
+        arguments={"title": "Fleet Protocol v2 HTTP API"},
+        pythonic_params=True,
     )
     app.run(port=port)
 
 
-if __name__ == "__main__":
+def main() -> None:
     vals = script_args.request_and_get_script_arguments(
         "Run the Fleet Protocol v2 HTTP API server."
     )
@@ -101,3 +114,6 @@ if __name__ == "__main__":
         client_id=config.security.client_id,
     )
     run_server(config.http_server.port)
+
+if __name__ == "__main__":
+    main()

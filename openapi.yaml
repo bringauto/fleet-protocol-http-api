@@ -2,7 +2,7 @@ openapi: 3.0.2
 
 info:
   title: Fleet v2 HTTP API
-  version: 2.8.6
+  version: 2.9.1
   description: HTTP-based API for Fleet Protocol v2 serving for communication between the External Server and the end users.
   contact:
     email: jiri.strouhal@bringauto.com
@@ -25,7 +25,7 @@ security:
 paths:
   /login:
     get:
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
       operationId: login
       security: []
       description: "Login using keycloak. If empty device is specified, will generate a url and device code used to authenticate a device. Tries to get token if device code is specified."
@@ -43,7 +43,7 @@ paths:
 
   /token_get:
     get:
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
       operationId: token_get
       security: []
       description: "Callback endpoint for keycloak to receive jwt token."
@@ -62,7 +62,7 @@ paths:
 
   /token_refresh:
     get:
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
       operationId: token_refresh
       security: []
       description: "Endpoint to receive jwt token from refresh token."
@@ -78,7 +78,7 @@ paths:
 
   /cars:
     get:
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
       operationId: available_cars
       description: "Return list of available cars for all companies registered in the database."
       tags:
@@ -110,7 +110,7 @@ paths:
 
   /available-devices/{company_name}/{car_name}:
     get:
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
       operationId: available-devices
       description:
         Return device Ids for all devices available for contained in the specified car.<br>
@@ -144,7 +144,7 @@ paths:
       - $ref: "#/components/parameters/CarName"
 
     get:
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
       operationId: list_statuses
       description: It returns list of the Device Statuses.
       tags:
@@ -219,7 +219,7 @@ paths:
         - $ref: "#/components/parameters/Wait"
 
     post:
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
       operationId: send_statuses
       description: Add statuses received from the Device.
       tags:
@@ -260,7 +260,7 @@ paths:
 
   /command/{company_name}/{car_name}:
     get:
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
       operationId: list_commands
       description: Returns list of the Device Commands.
       tags:
@@ -307,7 +307,7 @@ paths:
       - $ref: "#/components/parameters/CarName"
 
     post:
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
       operationId: send_commands
       description: It adds new device Commands.
       tags:

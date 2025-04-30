@@ -1,7 +1,7 @@
 import datetime
 
 import typing
-from fleetv2_http_api import typing_utils
+from server.fleetv2_http_api import typing_utils
 
 
 def _deserialize(data, klass):
