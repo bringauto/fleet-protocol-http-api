@@ -8,7 +8,7 @@ info:
     name: GPLv3
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
   title: Fleet v2 HTTP API
-  version: 2.8.5
+  version: 2.9.0
 servers:
 - url: /v2/protocol
 security:
@@ -71,7 +71,7 @@ paths:
           description: Cannot display available devices due to internal server error.
       tags:
       - module
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
   /cars:
     get:
       description: Return list of available cars for all companies registered in the
@@ -123,7 +123,7 @@ paths:
           description: Cannot display available cars due to internal server error.
       tags:
       - car
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
   /command/{company_name}/{car_name}:
     get:
       description: Returns list of the Device Commands.
@@ -201,7 +201,7 @@ paths:
           description: The commands cannot be displayed due to internal server error.
       tags:
       - device
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
     post:
       description: It adds new device Commands.
       operationId: send_commands
@@ -254,7 +254,7 @@ paths:
           description: The commands have not been sent due to internal server error.
       tags:
       - device
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
   /login:
     get:
       description: "Login using keycloak. If empty device is specified, will generate\
@@ -282,7 +282,7 @@ paths:
       security: []
       tags:
       - login
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
   /status/{company_name}/{car_name}:
     get:
       description: It returns list of the Device Statuses.
@@ -381,7 +381,7 @@ paths:
           description: The statuses cannot be displayed due to internal server error.
       tags:
       - device
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
     post:
       description: Add statuses received from the Device.
       operationId: send_statuses
@@ -434,7 +434,7 @@ paths:
           description: The statuses could not been sent due to internal server error.
       tags:
       - device
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
   /token_get:
     get:
       description: Callback endpoint for keycloak to receive jwt token.
@@ -484,7 +484,7 @@ paths:
       security: []
       tags:
       - login
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
   /token_refresh:
     get:
       description: Endpoint to receive jwt token from refresh token.
@@ -507,7 +507,7 @@ paths:
       security: []
       tags:
       - login
-      x-openapi-router-controller: fleetv2_http_api.impl.controllers
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
 components:
   parameters:
     Since:
@@ -805,7 +805,7 @@ components:
       in: query
       name: api_key
       type: apiKey
-      x-apikeyInfoFunc: fleetv2_http_api.controllers.security_controller.info_from_AdminAuth
+      x-apikeyInfoFunc: server.fleetv2_http_api.controllers.security_controller.info_from_AdminAuth
     oAuth2AuthCode:
       description: oAuth2 authorization
       flows:
@@ -815,5 +815,5 @@ components:
           scopes: {}
           tokenUrl: https://keycloak.bringauto.com/realms/bringauto/protocol/openid-connect/token
       type: oauth2
-      x-tokenInfoFunc: fleetv2_http_api.controllers.security_controller.info_from_oAuth2AuthCode
-      x-scopeValidateFunc: fleetv2_http_api.controllers.security_controller.validate_scope_oAuth2AuthCode
+      x-tokenInfoFunc: server.fleetv2_http_api.controllers.security_controller.info_from_oAuth2AuthCode
+      x-scopeValidateFunc: server.fleetv2_http_api.controllers.security_controller.validate_scope_oAuth2AuthCode

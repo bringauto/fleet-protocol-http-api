@@ -1,3 +1,1 @@
-import sys
-
-sys.path.append("server")
+from server.__main__ import main

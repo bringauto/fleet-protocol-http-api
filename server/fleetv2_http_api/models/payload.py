@@ -2,12 +2,12 @@ from datetime import date, datetime  # noqa: F401
 
 from typing import List, Dict  # noqa: F401
 
-from fleetv2_http_api.models.base_model import Model
-from fleetv2_http_api.models.payload_data import PayloadData
+from server.fleetv2_http_api.models.base_model import Model
+from server.fleetv2_http_api.models.payload_data import PayloadData
 import re
-from fleetv2_http_api import util
+from server.fleetv2_http_api import util
 
-from fleetv2_http_api.models.payload_data import PayloadData  # noqa: E501
+from server.fleetv2_http_api.models.payload_data import PayloadData  # noqa: E501
 import re  # noqa: E501
 
 class Payload(Model):
