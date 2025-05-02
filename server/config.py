@@ -3,9 +3,10 @@ from typing import Any, Literal
 import pydantic
 import json
 
+from server.fleetv2_http_api.impl.security import SecurityConfig as SecurityConfig
+
 
 LoggingLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-from server.fleetv2_http_api.impl.security import SecurityConfig as SecurityConfig
 
 
 class APIConfig(pydantic.BaseModel):

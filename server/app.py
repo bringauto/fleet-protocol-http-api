@@ -3,6 +3,7 @@ from typing import Any
 import os
 
 from flask.testing import FlaskClient as _FlaskClient  # type: ignore
+from flask import Flask as _Flask  # type: ignore
 import connexion as _connexion  # type: ignore
 from sqlalchemy.orm import Session as _Session
 
@@ -33,12 +34,17 @@ def get_app() -> _connexion.FlaskApp:
 class TestApp:
     def __init__(self, base_url: str, api_key: str = "", db_location: str = "") -> None:
         self._app = get_app()
-        self._flask_app = self._TestFlaskApp(api_key, self._app.app, base_url)
+        self._flask: _Flask = self._app.app
+        self._flask_app = self._TestFlaskApp(api_key, self._flask, base_url)
         self._db_location = db_location
 
     @property
     def app(self) -> _TestFlaskApp:
         return self._flask_app
+
+    @property
+    def flask(self) -> _Flask:
+        return self._flask
 
     def clear_all(self) -> None:
         if self._db_location != "" and os.path.isfile(self._db_location):
@@ -46,7 +52,7 @@ class TestApp:
         _clear_device_ids()
 
     class _TestFlaskApp:
-        def __init__(self, api_key, flask_app, base_url: str, *args, **kwargs) -> None:
+        def __init__(self, api_key, flask_app: _Flask, base_url: str, *args, **kwargs) -> None:
             self._app = flask_app
             self._api_key = api_key
             self._base_url = base_url
