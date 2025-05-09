@@ -8,7 +8,7 @@ info:
     name: GPLv3
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
   title: Fleet v2 HTTP API
-  version: 2.9.0
+  version: 2.9.1
 servers:
 - url: /v2/protocol
 security:
@@ -805,7 +805,7 @@ components:
       in: query
       name: api_key
       type: apiKey
-      x-apikeyInfoFunc: server.fleetv2_http_api.controllers.security_controller.info_from_AdminAuth
+      x-apikeyInfoFunc: fleetv2_http_api.controllers.security_controller.info_from_AdminAuth
     oAuth2AuthCode:
       description: oAuth2 authorization
       flows:
@@ -815,5 +815,5 @@ components:
           scopes: {}
           tokenUrl: https://keycloak.bringauto.com/realms/bringauto/protocol/openid-connect/token
       type: oauth2
-      x-tokenInfoFunc: server.fleetv2_http_api.controllers.security_controller.info_from_oAuth2AuthCode
-      x-scopeValidateFunc: server.fleetv2_http_api.controllers.security_controller.validate_scope_oAuth2AuthCode
+      x-tokenInfoFunc: fleetv2_http_api.controllers.security_controller.info_from_oAuth2AuthCode
+      x-scopeValidateFunc: fleetv2_http_api.controllers.security_controller.validate_scope_oAuth2AuthCode

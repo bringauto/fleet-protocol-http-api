@@ -3,8 +3,8 @@ from typing import Dict
 from typing import Tuple
 from typing import Union
 
-from server.fleetv2_http_api.models.message import Message  # noqa: E501
-from server.fleetv2_http_api import util
+from fleetv2_http_api.models.message import Message  # noqa: E501
+from fleetv2_http_api import util
 
 
 def list_commands(company_name, car_name, since=None, wait=None):  # noqa: E501
