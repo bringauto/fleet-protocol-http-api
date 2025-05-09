@@ -3,7 +3,7 @@ from typing import Dict
 from typing import Tuple
 from typing import Union
 
-from fleetv2_http_api import util
+from server.fleetv2_http_api import util
 
 
 def login(device=None):  # noqa: E501
@@ -16,7 +16,7 @@ def login(device=None):  # noqa: E501
 
     :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return "do some magic!"
 
 
 def token_get(state=None, session_state=None, iss=None, code=None):  # noqa: E501
@@ -35,7 +35,7 @@ def token_get(state=None, session_state=None, iss=None, code=None):  # noqa: E50
 
     :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return "do some magic!"
 
 
 def token_refresh(refresh_token):  # noqa: E501
@@ -48,4 +48,4 @@ def token_refresh(refresh_token):  # noqa: E501
 
     :rtype: Union[None, Tuple[None, int], Tuple[None, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return "do some magic!"
