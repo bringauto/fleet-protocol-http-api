@@ -1,7 +1,9 @@
 from typing import Dict
 
-from server.database.security import get_admin
 import jwt
+import connexion as _connexion
+
+from server.database.security import get_admin
 
 
 _public_key: str
@@ -15,6 +17,20 @@ def set_auth_params(public_key: str, client_id: str) -> None:
     _client_id = client_id
 
 
+def _raise_for_simultaneous_jwt_and_api_key() -> None:
+    request = _connexion.request
+    api_key_used = "api_key" in request.query_string.decode()
+    jwt_used = "Authorization" in request.headers and request.headers["Authorization"].startswith(
+        "Bearer "
+    )
+    if api_key_used and jwt_used:
+        raise _connexion.exceptions.AuthenticationProblem(
+            status=401,
+            detail="Cannot use both API key and JWT token for authentication.",
+            title="Authentication error",
+        )
+
+
 def info_from_AdminAuth(api_key, *args) -> Dict:
     """
     Check and retrieve authentication information from api_key.
@@ -26,6 +42,9 @@ def info_from_AdminAuth(api_key, *args) -> Dict:
     :return: Information attached to provided api_key or None if api_key is invalid or does not allow access to called API
     :rtype: dict | None
     """
+
+    _raise_for_simultaneous_jwt_and_api_key()
+
     admin = get_admin(api_key)
     if admin == None:
         return None  # type: ignore
@@ -46,6 +65,9 @@ def info_from_oAuth2AuthCode(token) -> Dict | None:
     :return: Decoded token information or None if token is invalid
     :rtype: dict | None
     """
+
+    _raise_for_simultaneous_jwt_and_api_key()
+
     try:
         decoded_token = jwt.decode(token, _public_key, algorithms=["RS256"], audience="account")
     except:
