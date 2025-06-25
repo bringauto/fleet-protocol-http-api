@@ -19,4 +19,4 @@ def available_cars(wait=None, since=None):  # noqa: E501
 
     :rtype: Union[List[Car], Tuple[List[Car], int], Tuple[List[Car], int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return "do some magic!"
