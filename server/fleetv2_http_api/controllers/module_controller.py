@@ -3,8 +3,8 @@ from typing import Dict
 from typing import Tuple
 from typing import Union
 
-from server.fleetv2_http_api.models.available_devices import AvailableDevices  # noqa: E501
-from server.fleetv2_http_api import util
+from fleetv2_http_api.models.available_devices import AvailableDevices  # noqa: E501
+from fleetv2_http_api import util
 
 
 def available_devices(company_name, car_name, module_id=None):  # noqa: E501
@@ -21,4 +21,4 @@ def available_devices(company_name, car_name, module_id=None):  # noqa: E501
 
     :rtype: Union[AvailableDevices, Tuple[AvailableDevices, int], Tuple[AvailableDevices, int, Dict[str, str]]
     """
-    return "do some magic!"
+    return 'do some magic!'
