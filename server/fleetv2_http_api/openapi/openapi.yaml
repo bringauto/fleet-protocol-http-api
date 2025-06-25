@@ -795,11 +795,11 @@ components:
       properties:
         message_type:
           description: Type of the payload
-          pattern: ^(STATUS)|(COMMAND)|(STATUS_ERROR)$
+          pattern: ^(STATUS|COMMAND|STATUS_ERROR)$
           type: string
         encoding:
           description: Encoding of the payload
-          pattern: ^(JSON)|(BASE64)$
+          pattern: ^(JSON|BASE64)$
           type: string
         data:
           $ref: "#/components/schemas/Payload_data"
@@ -826,7 +826,7 @@ components:
       in: query
       name: api_key
       type: apiKey
-      x-apikeyInfoFunc: server.fleetv2_http_api.controllers.security_controller.info_from_AdminAuth
+      x-apikeyInfoFunc: fleetv2_http_api.controllers.security_controller.info_from_AdminAuth
     oAuth2AuthCode:
       description: oAuth2 authorization
       flows:
@@ -836,5 +836,5 @@ components:
           scopes: {}
           tokenUrl: https://keycloak.bringauto.com/realms/bringauto/protocol/openid-connect/token
       type: oauth2
-      x-tokenInfoFunc: server.fleetv2_http_api.controllers.security_controller.info_from_oAuth2AuthCode
-      x-scopeValidateFunc: server.fleetv2_http_api.controllers.security_controller.validate_scope_oAuth2AuthCode
+      x-tokenInfoFunc: fleetv2_http_api.controllers.security_controller.info_from_oAuth2AuthCode
+      x-scopeValidateFunc: fleetv2_http_api.controllers.security_controller.validate_scope_oAuth2AuthCode

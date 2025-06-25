@@ -73,10 +73,17 @@ class Payload(Model):
         if message_type is None:
             raise ValueError("Invalid value for `message_type`, must not be `None`")  # noqa: E501
         if message_type is not None and not re.search(
+<<<<<<< HEAD
             r"^(STATUS)|(COMMAND)|(STATUS_ERROR)$", message_type
         ):  # noqa: E501
             raise ValueError(
                 "Invalid value for `message_type`, must be a follow pattern or equal to `/^(STATUS)|(COMMAND)|(STATUS_ERROR)$/`"
+=======
+            r"^(STATUS|COMMAND|STATUS_ERROR)$", message_type
+        ):  # noqa: E501
+            raise ValueError(
+                "Invalid value for `message_type`, must be a follow pattern or equal to `/^(STATUS|COMMAND|STATUS_ERROR)$/`"
+>>>>>>> @{-1}
             )  # noqa: E501
 
         self._message_type = message_type
@@ -103,9 +110,15 @@ class Payload(Model):
         """
         if encoding is None:
             raise ValueError("Invalid value for `encoding`, must not be `None`")  # noqa: E501
+<<<<<<< HEAD
         if encoding is not None and not re.search(r"^(JSON)|(BASE64)$", encoding):  # noqa: E501
             raise ValueError(
                 "Invalid value for `encoding`, must be a follow pattern or equal to `/^(JSON)|(BASE64)$/`"
+=======
+        if encoding is not None and not re.search(r"^(JSON|BASE64)$", encoding):  # noqa: E501
+            raise ValueError(
+                "Invalid value for `encoding`, must be a follow pattern or equal to `/^(JSON|BASE64)$/`"
+>>>>>>> @{-1}
             )  # noqa: E501
 
         self._encoding = encoding
