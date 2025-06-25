@@ -2,6 +2,11 @@ from __future__ import annotations
 from typing import Any
 import time
 import threading
+import logging
+
+from server.logs import LOGGER_NAME
+
+_logger = logging.getLogger(LOGGER_NAME)
 
 
 class CarWaitObjManager:
@@ -10,6 +15,7 @@ class CarWaitObjManager:
     _default_timeout_ms: int = 5000
 
     def __init__(self, timeout_ms: int = _default_timeout_ms) -> None:
+        _logger.debug(f"Creating CarWaitObjManager with timeout {timeout_ms} ms.")
         CarWaitObjManager._check_nonnegative_timeout(timeout_ms)
         self._timeout_ms = timeout_ms
         self._wait_list: list[CarWaitObj] = list()
@@ -30,6 +36,7 @@ class CarWaitObjManager:
     def set_timeout(self, timeout_ms: int) -> None:
         """Set the timeout for wait objects in milliseconds."""
         self._check_nonnegative_timeout(timeout_ms)
+        _logger.debug(f"Setting CarWaitObjManager timeout to {timeout_ms} ms.")
         self._timeout_ms = timeout_ms
 
     def wait_and_get_reponse(self) -> list[Any]:
@@ -49,6 +56,7 @@ class CarWaitObj:
 
     def __init__(self, timeout_ms: int) -> None:
         self._response_content: list[Any] = list()
+        _logger.debug(f"Creating CarWaitObj with timeout {timeout_ms} ms.")
         self._timeout_ms = timeout_ms
         self._condition = threading.Condition()
 
