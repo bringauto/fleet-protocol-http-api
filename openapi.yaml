@@ -590,11 +590,11 @@ components:
         message_type:
           description: "Type of the payload"
           type: string
-          pattern: ^(STATUS)|(COMMAND)|(STATUS_ERROR)$
+          pattern: ^(STATUS|COMMAND|STATUS_ERROR)$
         encoding:
           description: "Encoding of the payload"
           type: string
-          pattern: ^(JSON)|(BASE64)$
+          pattern: ^(JSON|BASE64)$
         data:
           description: 'Payload data in "JSON" or "BASE64" format, depending on the encoding.'
           oneOf:
