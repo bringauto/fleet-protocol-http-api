@@ -1,8 +1,12 @@
 from typing import Optional, Callable
 import tenacity
+import logging
 
 from sqlalchemy import create_engine, Engine, Integer, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.exc import OperationalError
+
+from server.logs import LOGGER_NAME
 
 
 N_RETRIES = 3
@@ -10,6 +14,8 @@ RETRY_DELAY_SECONDS = 2
 
 
 _connection_source: Optional[Engine] = None
+_database_accessible: bool = False
+_logger = logging.getLogger(LOGGER_NAME)
 
 
 class DatabaseNotAccessible(Exception):
@@ -60,8 +66,19 @@ def get_connection_source() -> Engine:
     reraise=True,
 )
 def _test_connection_engine(engine: Engine) -> None:
-    with engine.begin() as _:
+    global _database_accessible
+    try:
+        with engine.begin() as _:
+            pass
+        _database_accessible = True
         return
+    except OperationalError as e:
+        if _database_accessible:
+            _logger.error("Lost connection to the database. Operational error: %s", e)
+        _database_accessible = False
+        raise DatabaseNotAccessible(
+            "Could not connect to the database. Operational error: " + str(e)
+        ) from e
 
 
 def unset_connection_source() -> None:

@@ -8,7 +8,7 @@ from server.logs import LOGGER_NAME
 from server.database.connection import (
     get_connection_source as _get_connection_source,
     set_db_connection as _set_db_connection,
-    DatabaseNotAccessible as _CannotConnectToDatabase,
+    DatabaseNotAccessible as _DatabaseNotAccessible,
 )
 from server.database.cache import (
     clear_loaded_admins as _clear_loaded_admins,
@@ -40,8 +40,8 @@ def db_access_method(func: Callable) -> Callable:
             try:
                 restart_connection_source()
                 return func(*args, **kwargs)
-            except _CannotConnectToDatabase:
-                _logger.warning("Cannot connect to the database. Database is not accessible.")
+            except _DatabaseNotAccessible:
+                _logger.warning("Database is not accessible.")
                 return None
             except OperationalError:
                 _logger.warning("Database is not accessible.")
