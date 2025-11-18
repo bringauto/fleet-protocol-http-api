@@ -67,6 +67,7 @@ def _set_up_database_jobs(config: CleanupTiming) -> None:
         func=_clean_up_messages,
         trigger="interval",
         seconds=config.cleanup_period,
+        replace_existing=True,
     )
     scheduler.start()
 
