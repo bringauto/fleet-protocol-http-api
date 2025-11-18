@@ -41,10 +41,10 @@ def db_access_method(func: Callable) -> Callable:
                 restart_connection_source()
                 return func(*args, **kwargs)
             except _CannotConnectToDatabase:
-                _logger.error("Cannot connect to the database. Database is not accessible.")
+                _logger.warning("Cannot connect to the database. Database is not accessible.")
                 return None
             except OperationalError:
-                _logger.error("Database is not accessible.")
+                _logger.warning("Database is not accessible.")
                 return None
 
     return wrapper

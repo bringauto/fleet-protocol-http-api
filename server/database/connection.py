@@ -1,7 +1,12 @@
 from typing import Optional, Callable
+import tenacity
 
 from sqlalchemy import create_engine, Engine, Integer, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+N_RETRIES = 3
+RETRY_DELAY_SECONDS = 2
 
 
 _connection_source: Optional[Engine] = None
@@ -41,8 +46,22 @@ def get_connection_source() -> Engine:
     if _connection_source is None:
         raise ConnectionSourceNotSet()
     else:
-        assert isinstance(_connection_source, Engine)
+        _test_connection_engine(_connection_source)
         return _connection_source
+
+
+@tenacity.retry(
+    stop=tenacity.stop_after_attempt(N_RETRIES),
+    wait=tenacity.wait_exponential_jitter(
+        initial=RETRY_DELAY_SECONDS,
+        max=5 * RETRY_DELAY_SECONDS,
+        exp_base=1.5,
+    ),
+    reraise=True,
+)
+def _test_connection_engine(engine: Engine) -> None:
+    with engine.begin() as _:
+        return
 
 
 def unset_connection_source() -> None:
