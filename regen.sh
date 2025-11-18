@@ -5,4 +5,4 @@ npx @openapitools/openapi-generator-cli generate -i ../openapi.yaml -g python-fl
 popd
 
 # Fix imports
-find server/fleetv2_http_api -type f -name "*.py" -exec sed -i 's/from fleetv2_http_api/from server.fleetv2_http_api/g' {} +
+find server/fleetv2_http_api -type f \( -name "*.py" -o -name "*.yaml" \) -exec sed -i 's/ fleetv2_http_api/ server.fleetv2_http_api/g' {} +
