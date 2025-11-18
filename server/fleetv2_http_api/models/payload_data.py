@@ -13,13 +13,17 @@ class PayloadData(Model):
     """
 
     def __init__(self):  # noqa: E501
-        """PayloadData - a model defined in OpenAPI"""
-        self.openapi_types = {}
+        """PayloadData - a model defined in OpenAPI
 
-        self.attribute_map = {}
+        """
+        self.openapi_types = {
+        }
+
+        self.attribute_map = {
+        }
 
     @classmethod
-    def from_dict(cls, dikt) -> "PayloadData":
+    def from_dict(cls, dikt) -> 'PayloadData':
         """Returns the dict as a model
 
         :param dikt: A dict.

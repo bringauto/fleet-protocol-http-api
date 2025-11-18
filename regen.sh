@@ -3,3 +3,6 @@
 pushd server
 npx @openapitools/openapi-generator-cli generate -i ../openapi.yaml -g python-flask -o . --additional-properties=packageName=fleetv2_http_api
 popd
+
+# Fix imports
+find server/fleetv2_http_api -type f -name "*.py" -exec sed -i 's/from fleetv2_http_api/from server.fleetv2_http_api/g' {} +

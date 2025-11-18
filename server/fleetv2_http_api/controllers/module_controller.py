@@ -21,4 +21,4 @@ def available_devices(company_name, car_name, module_id=None):  # noqa: E501
 
     :rtype: Union[AvailableDevices, Tuple[AvailableDevices, int], Tuple[AvailableDevices, int, Dict[str, str]]
     """
-    return "do some magic!"
+    return 'do some magic!'

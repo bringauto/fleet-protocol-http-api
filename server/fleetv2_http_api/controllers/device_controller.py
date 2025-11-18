@@ -23,7 +23,7 @@ def list_commands(company_name, car_name, since=None, wait=None):  # noqa: E501
 
     :rtype: Union[List[Message], Tuple[List[Message], int], Tuple[List[Message], int, Dict[str, str]]
     """
-    return "do some magic!"
+    return 'do some magic!'
 
 
 def list_statuses(company_name, car_name, since=None, wait=None):  # noqa: E501
@@ -42,7 +42,7 @@ def list_statuses(company_name, car_name, since=None, wait=None):  # noqa: E501
 
     :rtype: Union[List[Message], Tuple[List[Message], int], Tuple[List[Message], int, Dict[str, str]]
     """
-    return "do some magic!"
+    return 'do some magic!'
 
 
 def send_commands(company_name, car_name, message=None):  # noqa: E501
@@ -61,7 +61,7 @@ def send_commands(company_name, car_name, message=None):  # noqa: E501
     """
     if connexion.request.is_json:
         message = [Message.from_dict(d) for d in connexion.request.get_json()]  # noqa: E501
-    return "do some magic!"
+    return 'do some magic!'
 
 
 def send_statuses(company_name, car_name, message=None):  # noqa: E501
@@ -80,4 +80,4 @@ def send_statuses(company_name, car_name, message=None):  # noqa: E501
     """
     if connexion.request.is_json:
         message = [Message.from_dict(d) for d in connexion.request.get_json()]  # noqa: E501
-    return "do some magic!"
+    return 'do some magic!'
