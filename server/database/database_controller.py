@@ -283,9 +283,7 @@ def remove_old_messages(current_timestamp: int) -> None:
     except psycopg.errors.UndefinedTable:
         _logger.debug("The database table does not exist yet, no messages to clean up.")
     except _DatabaseNotAccessible:
-        _logger.debug("Database is not accessible, do nothing")
-    except _OperationalError as e:
-        _logger.error(f"Cannot clean up old messages. Operational error: {e}")
+        _logger.warning("Cannot clean up old messages. Database is not accessible.")
     except Exception as e:
         _logger.error(f"Cannot clean up old messages. Error: {e}")
 

@@ -56,7 +56,6 @@ class CarWaitObj:
 
     def __init__(self, timeout_ms: int) -> None:
         self._response_content: list[Any] = list()
-        _logger.debug(f"Creating CarWaitObj with timeout {timeout_ms} ms.")
         self._timeout_ms = timeout_ms
         self._condition = threading.Condition()
 

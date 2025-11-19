@@ -2,23 +2,22 @@ openapi: 3.0.2
 info:
   contact:
     email: jiri.strouhal@bringauto.com
-  description:
-    HTTP-based API for Fleet Protocol v2 serving for communication between
+  description: HTTP-based API for Fleet Protocol v2 serving for communication between
     the External Server and the end users.
   license:
     name: GPLv3
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
   title: Fleet v2 HTTP API
-  version: 2.9.2
+  version: 2.9.3
 servers:
-  - url: /v2/protocol
+- url: /v2/protocol
 security:
-  - AdminAuth: []
-  - oAuth2AuthCode: []
+- AdminAuth: []
+- oAuth2AuthCode: []
 tags:
-  - name: car
-  - name: device
-  - name: module
+- name: car
+- name: device
+- name: module
 paths:
   /available-devices/{company_name}/{car_name}:
     get:
@@ -27,218 +26,161 @@ paths:
         If a module Id is specified, only a single such object is returned. <br> Otherwise, a list of such objects is returned, one for each module contained in the car. <br>
       operationId: available_devices
       parameters:
-        - description: "Name of the company, following a pattern ^[0-9a-z_]+$."
-          example: test_company
-          explode: false
-          in: path
-          name: company_name
-          required: true
-          schema:
-            pattern: "^[0-9a-z_]+$"
-            type: string
-          style: simple
-        - description: "Name of the Car, following a pattern ^[0-9a-z_]+$."
-          example: test_car
-          explode: false
-          in: path
-          name: car_name
-          required: true
-          schema:
-            pattern: "^[a-z0-9_]+$"
-            type: string
-          style: simple
-        - description: "An Id of module, an unsigned integer."
-          example: 47
-          explode: true
-          in: query
-          name: module_id
-          required: false
-          schema:
-            minimum: 0
-            nullable: true
-            type: integer
-          style: form
+      - description: "Name of the company, following a pattern ^[0-9a-z_]+$."
+        example: test_company
+        explode: false
+        in: path
+        name: company_name
+        required: true
+        schema:
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: "Name of the Car, following a pattern ^[0-9a-z_]+$."
+        example: test_car
+        explode: false
+        in: path
+        name: car_name
+        required: true
+        schema:
+          pattern: "^[a-z0-9_]+$"
+          type: string
+        style: simple
+      - description: "An Id of module, an unsigned integer."
+        example: 47
+        explode: true
+        in: query
+        name: module_id
+        required: false
+        schema:
+          minimum: 0
+          nullable: true
+          type: integer
+        style: form
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AvailableDevices"
+                $ref: '#/components/schemas/AvailableDevices'
           description: A list of available devices.
         "404":
-          description:
-            "Cannot display available devices. Either company, car or module\
+          description: "Cannot display available devices. Either company, car or module\
             \ specified in the request does not exist."
         "500":
           description: Cannot display available devices due to internal server error.
       tags:
-        - module
+      - module
       x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
   /cars:
     get:
-      description:
-        Return list of available cars for all companies registered in the
+      description: Return list of available cars for all companies registered in the
         database.
       operationId: available_cars
       parameters:
-        - description:
-            "An empty parameter. If specified, the method waits for predefined\
-            \ period of time, until some data to be sent in response are available."
-          example: false
-          explode: true
-          in: query
-          name: wait
-          required: false
-          schema:
-            default: false
-            nullable: true
-            type: boolean
-          style: form
-        - description:
-            "A Unix timestamp; if specified, the method returns all messages\
-            \ inclusivelly newer than the specified timestamp \\ (i.e., messages with\
-            \ timestamp greater than or equal to the 'since' timestamp)"
-          example: 1699262836
-          explode: true
-          in: query
-          name: since
-          required: false
-          schema:
-            default: 0
-            nullable: true
-            type: integer
-          style: form
+      - description: "An empty parameter. If specified, the method waits for predefined\
+          \ period of time, until some data to be sent in response are available."
+        example: false
+        explode: true
+        in: query
+        name: wait
+        required: false
+        schema:
+          default: false
+          nullable: true
+          type: boolean
+        style: form
+      - description: "A Unix timestamp; if specified, the method returns all messages\
+          \ inclusivelly newer than the specified timestamp \\ (i.e., messages with\
+          \ timestamp greater than or equal to the 'since' timestamp)"
+        example: 1699262836
+        explode: true
+        in: query
+        name: since
+        required: false
+        schema:
+          default: 0
+          nullable: true
+          type: integer
+        style: form
       responses:
         "200":
           content:
             application/json:
               example:
-                - company_name: company_x
-                  car_name: basic_car
-                - company_name: company_x
-                  car_name: better_car
-                - company_name: competing_company
-                  car_name: even_better_car
+              - company_name: company_x
+                car_name: basic_car
+              - company_name: company_x
+                car_name: better_car
+              - company_name: competing_company
+                car_name: even_better_car
               schema:
                 items:
-                  $ref: "#/components/schemas/Car"
+                  $ref: '#/components/schemas/Car'
                 type: array
           description: A list of available cars.
         "500":
           description: Cannot display available cars due to internal server error.
       tags:
-        - car
+      - car
       x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
   /command/{company_name}/{car_name}:
     get:
       description: Returns list of the Device Commands.
       operationId: list_commands
       parameters:
-        - description: "Name of the company, following a pattern ^[0-9a-z_]+$."
-          example: test_company
-          explode: false
-          in: path
-          name: company_name
-          required: true
-          schema:
-            pattern: "^[0-9a-z_]+$"
-            type: string
-          style: simple
-        - description: "Name of the Car, following a pattern ^[0-9a-z_]+$."
-          example: test_car
-          explode: false
-          in: path
-          name: car_name
-          required: true
-          schema:
-            pattern: "^[a-z0-9_]+$"
-            type: string
-          style: simple
-        - description:
-            "A Unix timestamp; if specified, the method returns all messages\
-            \ inclusivelly newer than the specified timestamp \\ (i.e., messages with\
-            \ timestamp greater than or equal to the 'since' timestamp)"
-          example: 1699262836
-          explode: true
-          in: query
-          name: since
-          required: false
-          schema:
-            default: 0
-            nullable: true
-            type: integer
-          style: form
-        - description:
-            "An empty parameter. If specified, the method waits for predefined\
-            \ period of time, until some data to be sent in response are available."
-          example: false
-          explode: true
-          in: query
-          name: wait
-          required: false
-          schema:
-            default: false
-            nullable: true
-            type: boolean
-          style: form
+      - description: "Name of the company, following a pattern ^[0-9a-z_]+$."
+        example: test_company
+        explode: false
+        in: path
+        name: company_name
+        required: true
+        schema:
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: "Name of the Car, following a pattern ^[0-9a-z_]+$."
+        example: test_car
+        explode: false
+        in: path
+        name: car_name
+        required: true
+        schema:
+          pattern: "^[a-z0-9_]+$"
+          type: string
+        style: simple
+      - description: "A Unix timestamp; if specified, the method returns all messages\
+          \ inclusivelly newer than the specified timestamp \\ (i.e., messages with\
+          \ timestamp greater than or equal to the 'since' timestamp)"
+        example: 1699262836
+        explode: true
+        in: query
+        name: since
+        required: false
+        schema:
+          default: 0
+          nullable: true
+          type: integer
+        style: form
+      - description: "An empty parameter. If specified, the method waits for predefined\
+          \ period of time, until some data to be sent in response are available."
+        example: false
+        explode: true
+        in: query
+        name: wait
+        required: false
+        schema:
+          default: false
+          nullable: true
+          type: boolean
+        style: form
       responses:
         "200":
           content:
             application/json:
               example:
-                - timestamp: 1700139157
-                  device_id:
-                    module_id: 47
-                    type: 2
-                    role: test_device
-                    name: Test Device
-                  payload:
-                    message_type: COMMAND
-                    encoding: BASE64
-                    data: U2F5IGhlbGxv
-              schema:
-                items:
-                  $ref: "#/components/schemas/Message"
-                type: array
-          description: A list of commands.
-        "404":
-          description:
-            "The commands cannot be displayed. Either company, car or device\
-            \ specified in the request does not exist."
-        "500":
-          description: The commands cannot be displayed due to internal server error.
-      tags:
-        - device
-      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
-    post:
-      description: It adds new device Commands.
-      operationId: send_commands
-      parameters:
-        - description: "Name of the company, following a pattern ^[0-9a-z_]+$."
-          example: test_company
-          explode: false
-          in: path
-          name: company_name
-          required: true
-          schema:
-            pattern: "^[0-9a-z_]+$"
-            type: string
-          style: simple
-        - description: "Name of the Car, following a pattern ^[0-9a-z_]+$."
-          example: test_car
-          explode: false
-          in: path
-          name: car_name
-          required: true
-          schema:
-            pattern: "^[a-z0-9_]+$"
-            type: string
-          style: simple
-      requestBody:
-        content:
-          application/json:
-            example:
-              - device_id:
+              - timestamp: 1700139157
+                device_id:
                   module_id: 47
                   type: 2
                   role: test_device
@@ -247,44 +189,91 @@ paths:
                   message_type: COMMAND
                   encoding: BASE64
                   data: U2F5IGhlbGxv
+              schema:
+                items:
+                  $ref: '#/components/schemas/Message'
+                type: array
+          description: A list of commands.
+        "404":
+          description: "The commands cannot be displayed. Either company, car or device\
+            \ specified in the request does not exist."
+        "500":
+          description: The commands cannot be displayed due to internal server error.
+      tags:
+      - device
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
+    post:
+      description: It adds new device Commands.
+      operationId: send_commands
+      parameters:
+      - description: "Name of the company, following a pattern ^[0-9a-z_]+$."
+        example: test_company
+        explode: false
+        in: path
+        name: company_name
+        required: true
+        schema:
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: "Name of the Car, following a pattern ^[0-9a-z_]+$."
+        example: test_car
+        explode: false
+        in: path
+        name: car_name
+        required: true
+        schema:
+          pattern: "^[a-z0-9_]+$"
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            example:
+            - device_id:
+                module_id: 47
+                type: 2
+                role: test_device
+                name: Test Device
+              payload:
+                message_type: COMMAND
+                encoding: BASE64
+                data: U2F5IGhlbGxv
             schema:
               items:
-                $ref: "#/components/schemas/Message"
+                $ref: '#/components/schemas/Message'
               type: array
         description: Commands to be executed by the device.
       responses:
         "200":
           description: The commands have been sent.
         "404":
-          description:
-            "The commands have not been sent. Either company, car or device\
+          description: "The commands have not been sent. Either company, car or device\
             \ specified in the request does not exist.'"
         "500":
           description: The commands have not been sent due to internal server error.
       tags:
-        - device
+      - device
       x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
   /login:
     get:
-      description:
-        "Login using keycloak. If empty device is specified, will generate\
+      description: "Login using keycloak. If empty device is specified, will generate\
         \ a url and device code used to authenticate a device. Tries to get token\
         \ if device code is specified."
       operationId: login
       parameters:
-        - description: Device code used for assisted authentication.
-          example: e-VZfSM_-_TyPElL3i94...
-          explode: true
-          in: query
-          name: device
-          required: false
-          schema:
-            type: string
-          style: form
+      - description: Device code used for assisted authentication.
+        example: e-VZfSM_-_TyPElL3i94...
+        explode: true
+        in: query
+        name: device
+        required: false
+        schema:
+          type: string
+        style: form
       responses:
         "200":
-          description:
-            Returns either a standard keycloak token or a json used to
+          description: Returns either a standard keycloak token or a json used to
             authenticate a device.
         "302":
           description: Redirect to keycloak authentication.
@@ -292,205 +281,201 @@ paths:
           description: Login failed due to internal server error.
       security: []
       tags:
-        - login
+      - login
       x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
   /status/{company_name}/{car_name}:
     get:
       description: It returns list of the Device Statuses.
       operationId: list_statuses
       parameters:
-        - description: "Name of the company, following a pattern ^[0-9a-z_]+$."
-          example: test_company
-          explode: false
-          in: path
-          name: company_name
-          required: true
-          schema:
-            pattern: "^[0-9a-z_]+$"
-            type: string
-          style: simple
-        - description: "Name of the Car, following a pattern ^[0-9a-z_]+$."
-          example: test_car
-          explode: false
-          in: path
-          name: car_name
-          required: true
-          schema:
-            pattern: "^[a-z0-9_]+$"
-            type: string
-          style: simple
-        - description:
-            "A Unix timestamp; if specified, the method returns all messages\
-            \ inclusivelly newer than the specified timestamp \\ (i.e., messages with\
-            \ timestamp greater than or equal to the 'since' timestamp)"
-          example: 1699262836
-          explode: true
-          in: query
-          name: since
-          required: false
-          schema:
-            default: 0
-            nullable: true
-            type: integer
-          style: form
-        - description:
-            "An empty parameter. If specified, the method waits for predefined\
-            \ period of time, until some data to be sent in response are available."
-          example: false
-          explode: true
-          in: query
-          name: wait
-          required: false
-          schema:
-            default: false
-            nullable: true
-            type: boolean
-          style: form
+      - description: "Name of the company, following a pattern ^[0-9a-z_]+$."
+        example: test_company
+        explode: false
+        in: path
+        name: company_name
+        required: true
+        schema:
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: "Name of the Car, following a pattern ^[0-9a-z_]+$."
+        example: test_car
+        explode: false
+        in: path
+        name: car_name
+        required: true
+        schema:
+          pattern: "^[a-z0-9_]+$"
+          type: string
+        style: simple
+      - description: "A Unix timestamp; if specified, the method returns all messages\
+          \ inclusivelly newer than the specified timestamp \\ (i.e., messages with\
+          \ timestamp greater than or equal to the 'since' timestamp)"
+        example: 1699262836
+        explode: true
+        in: query
+        name: since
+        required: false
+        schema:
+          default: 0
+          nullable: true
+          type: integer
+        style: form
+      - description: "An empty parameter. If specified, the method waits for predefined\
+          \ period of time, until some data to be sent in response are available."
+        example: false
+        explode: true
+        in: query
+        name: wait
+        required: false
+        schema:
+          default: false
+          nullable: true
+          type: boolean
+        style: form
       responses:
         "200":
           content:
             application/json:
               example:
-                - timestamp: 1700139157
-                  device_id:
-                    module_id: 47
-                    type: 2
-                    role: test_device
-                    name: Test Device
-                  payload:
-                    message_type: STATUS
-                    encoding: BASE64
-                    data: V2FpdGluZw==
-                - timestamp: 1700145485
-                  device_id:
-                    module_id: 47
-                    type: 2
-                    role: test_device
-                    name: Test Device
-                  payload:
-                    message_type: STATUS
-                    encoding: BASE64
-                    data: U3RpbGwgd29ya2luZw==
-                - timestamp: 1700145490
-                  device_id:
-                    module_id: 47
-                    type: 2
-                    role: test_device
-                    name: Test Device
-                  payload:
-                    message_type: STATUS
-                    encoding: JSON
-                    data:
-                      description: Still working
-              schema:
-                items:
-                  $ref: "#/components/schemas/Message"
-                type: array
-          description: A list of device statuses.
-        "404":
-          description:
-            "The statuses cannot be displayed. Either company, car or device\
-            \ specified in the request does not exist."
-        "500":
-          description: The statuses cannot be displayed due to internal server error.
-      tags:
-        - device
-      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
-    post:
-      description: Add statuses received from the Device.
-      operationId: send_statuses
-      parameters:
-        - description: "Name of the company, following a pattern ^[0-9a-z_]+$."
-          example: test_company
-          explode: false
-          in: path
-          name: company_name
-          required: true
-          schema:
-            pattern: "^[0-9a-z_]+$"
-            type: string
-          style: simple
-        - description: "Name of the Car, following a pattern ^[0-9a-z_]+$."
-          example: test_car
-          explode: false
-          in: path
-          name: car_name
-          required: true
-          schema:
-            pattern: "^[a-z0-9_]+$"
-            type: string
-          style: simple
-      requestBody:
-        content:
-          application/json:
-            example:
-              - device_id:
+              - timestamp: 1700139157
+                device_id:
                   module_id: 47
-                  type: 0
+                  type: 2
                   role: test_device
                   name: Test Device
                 payload:
                   message_type: STATUS
                   encoding: BASE64
-                  data: QnJpbmdBdXRv
+                  data: V2FpdGluZw==
+              - timestamp: 1700145485
+                device_id:
+                  module_id: 47
+                  type: 2
+                  role: test_device
+                  name: Test Device
+                payload:
+                  message_type: STATUS
+                  encoding: BASE64
+                  data: U3RpbGwgd29ya2luZw==
+              - timestamp: 1700145490
+                device_id:
+                  module_id: 47
+                  type: 2
+                  role: test_device
+                  name: Test Device
+                payload:
+                  message_type: STATUS
+                  encoding: JSON
+                  data:
+                    description: Still working
+              schema:
+                items:
+                  $ref: '#/components/schemas/Message'
+                type: array
+          description: A list of device statuses.
+        "404":
+          description: "The statuses cannot be displayed. Either company, car or device\
+            \ specified in the request does not exist."
+        "500":
+          description: The statuses cannot be displayed due to internal server error.
+      tags:
+      - device
+      x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
+    post:
+      description: Add statuses received from the Device.
+      operationId: send_statuses
+      parameters:
+      - description: "Name of the company, following a pattern ^[0-9a-z_]+$."
+        example: test_company
+        explode: false
+        in: path
+        name: company_name
+        required: true
+        schema:
+          pattern: "^[0-9a-z_]+$"
+          type: string
+        style: simple
+      - description: "Name of the Car, following a pattern ^[0-9a-z_]+$."
+        example: test_car
+        explode: false
+        in: path
+        name: car_name
+        required: true
+        schema:
+          pattern: "^[a-z0-9_]+$"
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            example:
+            - device_id:
+                module_id: 47
+                type: 0
+                role: test_device
+                name: Test Device
+              payload:
+                message_type: STATUS
+                encoding: BASE64
+                data: QnJpbmdBdXRv
             schema:
               items:
-                $ref: "#/components/schemas/Message"
+                $ref: '#/components/schemas/Message'
               type: array
         description: Statuses to be send by the device.
       responses:
         "200":
           description: The statuses have been sent.
         "404":
-          description:
-            "The statuses could not been sent. Either company, car or device\
+          description: "The statuses could not been sent. Either company, car or device\
             \ specified in the request does not exist."
         "500":
           description: The statuses could not been sent due to internal server error.
       tags:
-        - device
+      - device
       x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
   /token_get:
     get:
       description: Callback endpoint for keycloak to receive jwt token.
       operationId: token_get
       parameters:
-        - description: State returned by keycloak authentication.
-          example: your_state_info
-          explode: true
-          in: query
-          name: state
-          required: false
-          schema:
-            type: string
-          style: form
-        - description: Session state returned by keycloak authentication.
-          example: 167e141d-2f55-4d...
-          explode: true
-          in: query
-          name: session_state
-          required: false
-          schema:
-            type: string
-          style: form
-        - description: Code issuer returned by keycloak authentication.
-          example: http%3A%2F%2Flocalhost%3A8081%2Frealms%2Fmaster
-          explode: true
-          in: query
-          name: iss
-          required: false
-          schema:
-            type: string
-          style: form
-        - description: Code used for jwt token generation returned by keycloak authentication.
-          example: 5dea27d2-4b2d-48...
-          explode: true
-          in: query
-          name: code
-          required: false
-          schema:
-            type: string
-          style: form
+      - description: State returned by keycloak authentication.
+        example: your_state_info
+        explode: true
+        in: query
+        name: state
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Session state returned by keycloak authentication.
+        example: 167e141d-2f55-4d...
+        explode: true
+        in: query
+        name: session_state
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Code issuer returned by keycloak authentication.
+        example: http%3A%2F%2Flocalhost%3A8081%2Frealms%2Fmaster
+        explode: true
+        in: query
+        name: iss
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Code used for jwt token generation returned by keycloak authentication.
+        example: 5dea27d2-4b2d-48...
+        explode: true
+        in: query
+        name: code
+        required: false
+        schema:
+          type: string
+        style: form
       responses:
         "200":
           description: Returns a standard keycloak token.
@@ -498,22 +483,22 @@ paths:
           description: Login failed due to internal server error.
       security: []
       tags:
-        - login
+      - login
       x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
   /token_refresh:
     get:
       description: Endpoint to receive jwt token from refresh token.
       operationId: token_refresh
       parameters:
-        - description: Refresh token used for jwt token generation.
-          example: eyJhbGciOiJIUzI1NiIsI...
-          explode: true
-          in: query
-          name: refresh_token
-          required: true
-          schema:
-            type: string
-          style: form
+      - description: Refresh token used for jwt token generation.
+        example: eyJhbGciOiJIUzI1NiIsI...
+        explode: true
+        in: query
+        name: refresh_token
+        required: true
+        schema:
+          type: string
+        style: form
       responses:
         "200":
           description: Returns a new standard keycloak token.
@@ -521,13 +506,12 @@ paths:
           description: Token refresh failed due to internal server error.
       security: []
       tags:
-        - login
+      - login
       x-openapi-router-controller: server.fleetv2_http_api.impl.controllers
 components:
   parameters:
     Since:
-      description:
-        "A Unix timestamp; if specified, the method returns all messages\
+      description: "A Unix timestamp; if specified, the method returns all messages\
         \ inclusivelly newer than the specified timestamp \\ (i.e., messages with\
         \ timestamp greater than or equal to the 'since' timestamp)"
       example: 1699262836
@@ -553,8 +537,7 @@ components:
         type: integer
       style: form
     Wait:
-      description:
-        "An empty parameter. If specified, the method waits for predefined\
+      description: "An empty parameter. If specified, the method waits for predefined\
         \ period of time, until some data to be sent in response are available."
       example: false
       explode: true
@@ -669,36 +652,35 @@ components:
           title: timestamp
           type: integer
         device_id:
-          $ref: "#/components/schemas/DeviceId"
+          $ref: '#/components/schemas/DeviceId'
         payload:
-          $ref: "#/components/schemas/Payload"
+          $ref: '#/components/schemas/Payload'
       required:
-        - device_id
-        - payload
+      - device_id
+      - payload
       title: Message
       type: object
     AvailableDevices:
-      description:
-        List of Modules containint at least one device (specified by device
+      description: List of Modules containint at least one device (specified by device
         Id) OR Module containing at least one device (specified by device Id).
       oneOf:
-        - items:
-            $ref: "#/components/schemas/Module"
-          type: array
-        - $ref: "#/components/schemas/Module"
+      - items:
+          $ref: '#/components/schemas/Module'
+        type: array
+      - $ref: '#/components/schemas/Module'
       title: AvailableDevices
     Module:
       description: A module containing at least one device (specified by device Id).
       example:
         device_list:
-          - module_id: 47
-            type: 2
-            role: test_device
-            name: Test Device
-          - module_id: 47
-            type: 2
-            role: test_device
-            name: Test Device
+        - module_id: 47
+          type: 2
+          role: test_device
+          name: Test Device
+        - module_id: 47
+          type: 2
+          role: test_device
+          name: Test Device
         module_id: 47
       properties:
         module_id:
@@ -710,21 +692,21 @@ components:
         device_list:
           description: List of Ids of devices contained in the module.
           example:
-            - module_id: 47
-              type: 2
-              role: test_device
-              name: Test Device
-            - module_id: 47
-              type: 2
-              role: test_device
-              name: Test Device
+          - module_id: 47
+            type: 2
+            role: test_device
+            name: Test Device
+          - module_id: 47
+            type: 2
+            role: test_device
+            name: Test Device
           items:
-            $ref: "#/components/schemas/DeviceId"
+            $ref: '#/components/schemas/DeviceId'
           title: device_list
           type: array
       required:
-        - device_list
-        - module_id
+      - device_list
+      - module_id
       title: Module
       type: object
     Car:
@@ -746,8 +728,8 @@ components:
           title: car_name
           type: string
       required:
-        - car_name
-        - company_name
+      - car_name
+      - company_name
       title: Car
       type: object
     DeviceId:
@@ -767,8 +749,7 @@ components:
           minimum: 0
           type: integer
         role:
-          description:
-            "String description of the device role. It follows pattern\
+          description: "String description of the device role. It follows pattern\
             \ ^[a-z0-9_]+$."
           format: utf-8
           pattern: "^[a-z0-9_]+$"
@@ -778,15 +759,14 @@ components:
           format: utf-8
           type: string
       required:
-        - module_id
-        - name
-        - role
-        - type
+      - module_id
+      - name
+      - role
+      - type
       title: DeviceId
       type: object
     Payload:
-      description:
-        "Payload of the message, containing message type (status or command),\
+      description: "Payload of the message, containing message type (status or command),\
         \ encoding and data."
       example:
         message_type: STATUS
@@ -802,23 +782,22 @@ components:
           pattern: ^(JSON|BASE64)$
           type: string
         data:
-          $ref: "#/components/schemas/Payload_data"
+          $ref: '#/components/schemas/Payload_data'
       required:
-        - data
-        - encoding
-        - message_type
+      - data
+      - encoding
+      - message_type
       title: Payload
       type: object
     Payload_data:
-      description:
-        "Payload data in \"JSON\" or \"BASE64\" format, depending on the\
+      description: "Payload data in \"JSON\" or \"BASE64\" format, depending on the\
         \ encoding."
       oneOf:
-        - type: object
-        - items: {}
-          type: array
-        - format: base
-          type: string
+      - type: object
+      - items: {}
+        type: array
+      - format: base
+        type: string
       title: Payload_data
   securitySchemes:
     AdminAuth:
