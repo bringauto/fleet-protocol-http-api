@@ -17,7 +17,7 @@ from server.fleetv2_http_api.impl.controllers import (  # type: ignore
     set_status_wait_timeout_s,
 )
 
-from server.fleetv2_http_api.encoder import JSONEncoder  # type: ignore
+from server.fleetv2_http_api.encoder import CustomJSONProvider  # type: ignore
 from server.database.security import _AdminBase as _AdminBase  # type: ignore
 
 # Keep the following import to make all the tables be created by the get_test_app function
@@ -26,8 +26,9 @@ from server.database.cache import clear_connected_cars as _clear_device_ids  # t
 
 def get_app() -> _connexion.FlaskApp:
     app = _connexion.App(__name__, specification_dir="fleetv2_http_api/openapi/")
-    app.app.json_encoder = JSONEncoder
     app.add_api("openapi.yaml")
+    # Flask 2.3+ uses json provider instead of json_encoder
+    app.app.json = CustomJSONProvider(app.app)
     return app
 
 

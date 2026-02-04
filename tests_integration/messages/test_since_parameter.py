@@ -157,11 +157,21 @@ class Test_Setting_Wait_To_True_When_All_Statuses_Are_Filtered_Out_By_Since_Para
     def test_thread_waits_for_status_with_newer_timestamp_than_since_parameter(
         self, mock_timestamp: Mock
     ):
-        with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
-            future = executor.submit(c.get, "/status/test_company/test_car?since=50&wait=True")
+        status_5 = self.status_5
+
+        def get_status():
+            with self.app.app.test_client() as c:
+                return c.get("/status/test_company/test_car?since=50&wait=True")
+
+        def post_status():
+            with self.app.app.test_client() as c:
+                return c.post("/status/test_company/test_car", json=[status_5])
+
+        with _Executor(max_workers=2) as executor:
+            future = executor.submit(get_status)
             mock_timestamp.return_value = 60
             time.sleep(0.01)
-            executor.submit(c.post, "/status/test_company/test_car", json=[self.status_5])
+            executor.submit(post_status)
             response = future.result()
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.json[0]["timestamp"], 60)  # type: ignore
@@ -170,11 +180,21 @@ class Test_Setting_Wait_To_True_When_All_Statuses_Are_Filtered_Out_By_Since_Para
     def test_sending_status_with_timestamp_older_than_since_parameter_will_not_resume_waiting_thread(
         self, mock_timestamp: Mock
     ):
-        with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
-            future = executor.submit(c.get, "/status/test_company/test_car?since=100&wait=True")
+        status_5 = self.status_5
+
+        def get_status():
+            with self.app.app.test_client() as c:
+                return c.get("/status/test_company/test_car?since=100&wait=True")
+
+        def post_status():
+            with self.app.app.test_client() as c:
+                return c.post("/status/test_company/test_car", json=[status_5])
+
+        with _Executor(max_workers=2) as executor:
+            future = executor.submit(get_status)
             mock_timestamp.return_value = 80
             time.sleep(0.01)
-            executor.submit(c.post, "/status/test_company/test_car", json=[self.status_5])
+            executor.submit(post_status)
             response = future.result()
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.json, [])
@@ -220,11 +240,21 @@ class Test_Setting_Wait_To_True_When_All_Commands_Are_Filtered_Out_By_Since_Para
     def test_thread_waits_for_command_with_newer_timestamp_than_since_parameter(
         self, mock_timestamp: Mock
     ):
-        with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
-            future = executor.submit(c.get, "/command/test_company/test_car?since=50&wait=True")
+        command_4 = self.command_4
+
+        def get_command():
+            with self.app.app.test_client() as c:
+                return c.get("/command/test_company/test_car?since=50&wait=True")
+
+        def post_command():
+            with self.app.app.test_client() as c:
+                return c.post("/command/test_company/test_car", json=[command_4])
+
+        with _Executor(max_workers=2) as executor:
+            future = executor.submit(get_command)
             mock_timestamp.return_value = 55
             time.sleep(0.01)
-            executor.submit(c.post, "/command/test_company/test_car", json=[self.command_4])
+            executor.submit(post_command)
             response = future.result()
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.json[0]["timestamp"], 55)  # type: ignore
@@ -233,11 +263,21 @@ class Test_Setting_Wait_To_True_When_All_Commands_Are_Filtered_Out_By_Since_Para
     def test_sending_command_with_timestamp_older_than_since_parameter_will_not_resume_waiting_thread(
         self, mock_timestamp: Mock
     ):
-        with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
-            future = executor.submit(c.get, "/command/test_company/test_car?since=100&wait=True")
+        command_4 = self.command_4
+
+        def get_command():
+            with self.app.app.test_client() as c:
+                return c.get("/command/test_company/test_car?since=100&wait=True")
+
+        def post_command():
+            with self.app.app.test_client() as c:
+                return c.post("/command/test_company/test_car", json=[command_4])
+
+        with _Executor(max_workers=2) as executor:
+            future = executor.submit(get_command)
             mock_timestamp.return_value = 80
             time.sleep(0.01)
-            executor.submit(c.post, "/command/test_company/test_car", json=[self.command_4])
+            executor.submit(post_command)
             response = future.result()
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.json, [])

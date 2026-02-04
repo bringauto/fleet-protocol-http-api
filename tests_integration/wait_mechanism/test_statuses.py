@@ -26,24 +26,36 @@ class Test_Waiting_For_Statuses_To_Become_Available(unittest.TestCase):
         self.status_error = Message(device_id=self.deviceA_id, payload=self.error_payload)
 
     def test_awaited_statuses_are_returned_if_some_status_is_sent_in_other_thread(self):
-        with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
-            future = executor.submit(c.get, "/status/test_company/test_car?wait=True")
+        def get_status():
+            with self.app.app.test_client() as c:
+                return c.get("/status/test_company/test_car?wait=True")
+
+        def post_status():
+            with self.app.app.test_client() as c:
+                return c.post("/status/test_company/test_car", json=[self.statusA, self.status_error])
+
+        with _Executor(max_workers=2) as executor:
+            future = executor.submit(get_status)
             time.sleep(0.1)
-            executor.submit(c.post, "/status/test_company/test_car", json=[self.statusA, self.status_error])
+            executor.submit(post_status)
             response = future.result()
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.json), 2)
             self.assertEqual(response.json[0]["device_id"], self.deviceA_id.to_dict())
 
     def test_all_relevant_statuses_sent_in_one_thread_are_returned_in_second_waiting_thread(self):
-        with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
-            future = executor.submit(c.get, "/status/test_company/test_car?wait=True")
+        def get_status():
+            with self.app.app.test_client() as c:
+                return c.get("/status/test_company/test_car?wait=True")
+
+        def post_status():
+            with self.app.app.test_client() as c:
+                return c.post("/status/test_company/test_car", json=[self.statusA, self.statusB, self.status_error])
+
+        with _Executor(max_workers=2) as executor:
+            future = executor.submit(get_status)
             time.sleep(0.1)
-            executor.submit(
-                c.post,
-                "/status/test_company/test_car",
-                json=[self.statusA, self.statusB, self.status_error],
-            )
+            executor.submit(post_status)
             response = future.result()
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.json), 3)
@@ -51,8 +63,12 @@ class Test_Waiting_For_Statuses_To_Become_Available(unittest.TestCase):
             self.assertEqual(response.json[1]["device_id"], self.deviceB_id.to_dict())
 
     def test_404_code_and_empty_list_of_statuses_is_returned_after_timeout_is_exceeded(self):
-        with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
-            future = executor.submit(c.get, "/status/test_company/test_car?wait=True")
+        def get_status():
+            with self.app.app.test_client() as c:
+                return c.get("/status/test_company/test_car?wait=True")
+
+        with _Executor(max_workers=2) as executor:
+            future = executor.submit(get_status)
             response = future.result()
             self.assertEqual(response.status_code, 404)
             self.assertEqual(response.json, [])
@@ -76,32 +92,60 @@ class Test_Waiting_Request_Ignores_Statuses_Send_To_Other_Cars(unittest.TestCase
         self.status_error = Message(device_id=self.deviceA_id, payload=self.error_payload )
 
     def test_status_for_other_car_than_awaited_is_not_send_to_waiting_thread(self):
-        with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
-            future = executor.submit(c.get, "/status/company/car_x?wait=True")
+        def get_status():
+            with self.app.app.test_client() as c:
+                return c.get("/status/company/car_x?wait=True")
+
+        def post_status():
+            with self.app.app.test_client() as c:
+                return c.post("/status/company/car_y", json=[self.statusA, self.statusB, self.status_error])
+
+        with _Executor(max_workers=2) as executor:
+            future = executor.submit(get_status)
             time.sleep(0.1)
-            executor.submit(c.post, "/status/company/car_y", json=[self.statusA, self.statusB, self.status_error])
+            executor.submit(post_status)
             response = future.result()
             self.assertEqual(response.status_code, 404)
             self.assertEqual(len(response.json), 0)
 
     def test_status_for_other_company_than_awaited_is_not_send_to_waiting_thread(self):
-        with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
-            future = executor.submit(c.get, "/status/company_x/car?wait=True")
+        def get_status():
+            with self.app.app.test_client() as c:
+                return c.get("/status/company_x/car?wait=True")
+
+        def post_status():
+            with self.app.app.test_client() as c:
+                return c.post("/status/company_y/car", json=[self.statusA, self.statusB])
+
+        with _Executor(max_workers=2) as executor:
+            future = executor.submit(get_status)
             time.sleep(0.1)
-            executor.submit(c.post, "/status/company_y/car", json=[self.statusA, self.statusB])
+            executor.submit(post_status)
             response = future.result()
             self.assertEqual(response.status_code, 404)
             self.assertEqual(len(response.json), 0)
 
     def test_waiting_thread_responds_after_relevant_status_is_sent(self):
-        with _Executor(max_workers=2) as executor, self.app.app.test_client() as c:
-            future = executor.submit(c.get, "/status/company/car?wait=True")
+        def get_status():
+            with self.app.app.test_client() as c:
+                return c.get("/status/company/car?wait=True")
+
+        def post_other_car():
+            with self.app.app.test_client() as c:
+                return c.post("/status/company/some_other_car", json=[self.statusA])
+
+        def post_car():
+            with self.app.app.test_client() as c:
+                return c.post("/status/company/car", json=[self.statusB])
+
+        with _Executor(max_workers=2) as executor:
+            future = executor.submit(get_status)
             time.sleep(0.05)
             # This status does not trigger response from the waiting thread
-            executor.submit(c.post, "/status/company/some_other_car", json=[self.statusA])
+            executor.submit(post_other_car)
             time.sleep(0.05)
             # This status triggers response from the waiting thread
-            executor.submit(c.post, "/status/company/car", json=[self.statusB])
+            executor.submit(post_car)
             response = future.result()
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.json), 1)
