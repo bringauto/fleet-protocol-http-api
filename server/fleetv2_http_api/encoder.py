@@ -6,23 +6,23 @@ from flask.json.provider import DefaultJSONProvider
 from server.fleetv2_http_api.models.base_model import Model
 
 
-def _serialize(obj: Any, include_nulls: bool = False) -> Any:
+def _serialize(obj: Any) -> Any:
     """Recursively serialize Model objects and Enums to JSON-compatible types."""
     if isinstance(obj, Model):
         result = {}
         for attr in obj.openapi_types:
             value = getattr(obj, attr)
-            if value is None and not include_nulls:
+            if value is None:
                 continue
             key = obj.attribute_map[attr]
-            result[key] = _serialize(value, include_nulls)
+            result[key] = _serialize(value)
         return result
     elif isinstance(obj, Enum):
         return obj.value
     elif isinstance(obj, list):
-        return [_serialize(item, include_nulls) for item in obj]
+        return [_serialize(item) for item in obj]
     elif isinstance(obj, dict):
-        return {k: _serialize(v, include_nulls) for k, v in obj.items()}
+        return {k: _serialize(v) for k, v in obj.items()}
     return obj
 
 
