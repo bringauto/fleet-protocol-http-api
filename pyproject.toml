@@ -1,6 +1,7 @@
 [project]
 name = "server"
 version = "2.9.4"
+requires-python = ">=3.10"
 
 
 [tool.setuptools.packages.find]
