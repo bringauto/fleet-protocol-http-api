@@ -23,3 +23,6 @@ fleet_protocol_api.egg-info
 /server/build
 /server/.openapi-generator
 /server/fleetv2_http_api.egg-info
+
+# JetBrains
+.idea/

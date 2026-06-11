@@ -87,7 +87,8 @@ def _retrieve_keycloak_public_key(keycloak_url: str, realm: str) -> str:
 def run_server(port: int = 8080) -> None:
     """Run the Fleet Protocol v2 HTTP API server."""
     app = connexion.App(APP_NAME.lower().replace(" ", "-"))
-    app.app.json_encoder = encoder.JSONEncoder
+    app.app.json_provider_class = encoder.CustomJSONProvider
+    app.app.json = encoder.CustomJSONProvider(app.app)
     app.add_api(
         load_yaml(importlib_files(server_package).joinpath("openapi/openapi.yaml").read_text()),
         arguments={"title": "Fleet Protocol v2 HTTP API"},
