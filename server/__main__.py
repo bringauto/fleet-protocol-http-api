@@ -1,5 +1,6 @@
 import logging
 
+import gunicorn.app.base  # type: ignore
 import requests  # type: ignore
 import connexion  # type: ignore
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
@@ -84,6 +85,20 @@ def _retrieve_keycloak_public_key(keycloak_url: str, realm: str) -> str:
         return ""
 
 
+class _GunicornApp(gunicorn.app.base.BaseApplication):  # type: ignore[misc]
+    def __init__(self, wsgi_app: connexion.App, options: dict) -> None:
+        self._wsgi_app = wsgi_app
+        self._options = options
+        super().__init__()
+
+    def load_config(self) -> None:
+        for key, value in self._options.items():
+            self.cfg.set(key, value)
+
+    def load(self) -> connexion.App:
+        return self._wsgi_app
+
+
 def run_server(port: int = 8080) -> None:
     """Run the Fleet Protocol v2 HTTP API server."""
     app = connexion.App(APP_NAME.lower().replace(" ", "-"))
@@ -94,7 +109,13 @@ def run_server(port: int = 8080) -> None:
         arguments={"title": "Fleet Protocol v2 HTTP API"},
         pythonic_params=True,
     )
-    app.run(port=port)
+    _GunicornApp(app, {
+        "bind": f"0.0.0.0:{port}",
+        "workers": 1,
+        "threads": 8,
+        "worker_class": "gthread",
+        "timeout": 120,
+    }).run()
 
 
 def main() -> None:
