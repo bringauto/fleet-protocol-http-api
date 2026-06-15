@@ -1,6 +1,7 @@
 from typing import Optional, Callable
 import tenacity
 import logging
+import time
 
 from sqlalchemy import create_engine, Engine, Integer, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -52,7 +53,13 @@ def get_connection_source() -> Engine:
     if _connection_source is None:
         raise ConnectionSourceNotSet()
     else:
+        t0 = time.monotonic()
         _test_connection_engine(_connection_source)
+        elapsed_ms = (time.monotonic() - t0) * 1000
+        if elapsed_ms > 50:
+            _logger.warning("get_connection_source: _test_connection_engine took %.1f ms (>50 ms)", elapsed_ms)
+        else:
+            _logger.debug("get_connection_source: _test_connection_engine took %.1f ms", elapsed_ms)
         return _connection_source
 
 
@@ -68,8 +75,14 @@ def get_connection_source() -> Engine:
 def _test_connection_engine(engine: Engine) -> None:
     global _database_accessible
     try:
+        t0 = time.monotonic()
         with engine.begin() as _:
             pass
+        elapsed_ms = (time.monotonic() - t0) * 1000
+        if elapsed_ms > 10:
+            _logger.warning("_test_connection_engine: engine.begin() took %.1f ms (>10 ms)", elapsed_ms)
+        else:
+            _logger.debug("_test_connection_engine: engine.begin() took %.1f ms", elapsed_ms)
         _database_accessible = True
         return
     except OperationalError as e:
@@ -169,7 +182,7 @@ def _new_connection_source(
 
     try:
         url = _engine_url(dialect, dbapi, username, password, dblocation, db_name)
-        engine = create_engine(url, *args, **kwargs)
+        engine = create_engine(url, pool_pre_ping=True, *args, **kwargs)
         if engine is None:
             raise InvalidConnectionArguments(
                 "Could not create new connection source ("

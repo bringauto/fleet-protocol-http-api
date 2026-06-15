@@ -31,20 +31,25 @@ def db_access_method(func: Callable) -> Callable:
                 and len(response) > 1
                 and (response[1] == 503 or response[1] == 500)
             ):
+                _logger.warning(
+                    "db_access_method[%s]: got HTTP %s response, triggering connection restart + retry",
+                    func.__name__, response[1],
+                )
                 raise Exception
             return response
         except Exception:
             _logger.warning(
-                "Restarting connection source due to a probable deletion of database tables."
+                "db_access_method[%s]: restarting connection source due to error",
+                func.__name__,
             )
             try:
                 restart_connection_source()
                 return func(*args, **kwargs)
             except _DatabaseNotAccessible:
-                _logger.warning("Database is not accessible.")
+                _logger.warning("db_access_method[%s]: database not accessible after restart", func.__name__)
                 return None
             except OperationalError:
-                _logger.warning("Database is not accessible.")
+                _logger.warning("db_access_method[%s]: database not accessible after restart", func.__name__)
                 return None
 
     return wrapper

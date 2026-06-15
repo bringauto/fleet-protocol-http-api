@@ -3,6 +3,7 @@ from typing import ClassVar, Any
 import dataclasses
 import copy
 import logging as _logging
+import time as _time
 
 from sqlalchemy.orm import Mapped, mapped_column, Session
 from sqlalchemy import Integer, String, JSON, select, insert, delete, BigInteger, and_, or_
@@ -155,12 +156,28 @@ def send_messages_to_database(
 ) -> tuple[str, int]:
     """Send a list of messages to the database, returns number of succesfully sent messages (int)."""
     try:
-        with _get_connection_source().begin() as conn:
+        t0 = _time.monotonic()
+        conn_source = _get_connection_source()
+        t1 = _time.monotonic()
+        with conn_source.begin() as conn:
             stmt = insert(MessageBase.__table__)  # type: ignore
             msg_base = MessageBase.from_messages(company_name, car_name, *messages)
             data_list = [msg.__dict__ for msg in msg_base]
             conn.execute(stmt, data_list)
-            return _get_message_for_n_messages_succesfully_sent(len(messages)), 200
+        t2 = _time.monotonic()
+        get_src_ms = (t1 - t0) * 1000
+        insert_ms = (t2 - t1) * 1000
+        total_ms = (t2 - t0) * 1000
+        _logger.debug(
+            "send_messages_to_database: get_connection=%.1f ms, INSERT=%.1f ms, total=%.1f ms",
+            get_src_ms, insert_ms, total_ms,
+        )
+        if total_ms > 100:
+            _logger.warning(
+                "send_messages_to_database SLOW: get_connection=%.1f ms, INSERT=%.1f ms, total=%.1f ms",
+                get_src_ms, insert_ms, total_ms,
+            )
+        return _get_message_for_n_messages_succesfully_sent(len(messages)), 200
     except _IntegrityError:
         return (
             "Some of the messages are identical to those sent previously, including their timestamps.",

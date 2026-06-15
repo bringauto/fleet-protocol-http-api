@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Optional, Any, Iterable, Collection
 import logging
 import re
+import time
 
 from flask import redirect, Response  # type: ignore
 from werkzeug import Response as WerkzeugResponse  # type: ignore
@@ -415,6 +416,7 @@ def send_statuses(
 
     :rtype: Union[None, tuple[None, int], tuple[None, int, dict[str, str]]
     """
+    t_start = time.monotonic()
     _validate_name_string(company_name, "Company name")
     _validate_name_string(car_name, "Car name")
     messages = _message_list_from_request_body(body)
@@ -428,10 +430,30 @@ def send_statuses(
         return _log_info_and_respond(errors[0], errors[1], msg)
 
     _update_messages_timestamp(messages)
+
+    t_notify = time.monotonic()
     _status_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
     _car_wait_manager.add_response_content_and_stop_waiting([Car(company_name, car_name)])
+    t_db = time.monotonic()
     response_msg = send_messages_to_database(company_name, car_name, *_message_db_list(messages))
+    t_first_status = time.monotonic()
     cmd_warnings = _check_and_handle_first_status(company_name, car_name, messages)
+    t_end = time.monotonic()
+
+    notify_ms = (t_db - t_notify) * 1000
+    db_ms = (t_first_status - t_db) * 1000
+    first_status_ms = (t_end - t_first_status) * 1000
+    total_ms = (t_end - t_start) * 1000
+    logger.debug(
+        "send_statuses %s/%s: notify=%.1f ms, db=%.1f ms, first_status=%.1f ms, total=%.1f ms",
+        company_name, car_name, notify_ms, db_ms, first_status_ms, total_ms,
+    )
+    if total_ms > 100:
+        logger.warning(
+            "send_statuses SLOW %s/%s: notify=%.1f ms, db=%.1f ms, first_status=%.1f ms, total=%.1f ms",
+            company_name, car_name, notify_ms, db_ms, first_status_ms, total_ms,
+        )
+
     msg, code = response_msg[0] + cmd_warnings, response_msg[1]
     return _log_info_and_respond(msg, code, msg)
 
