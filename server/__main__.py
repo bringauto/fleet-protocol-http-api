@@ -115,6 +115,7 @@ def run_server(port: int = 8080) -> None:
         "threads": 8,
         "worker_class": "gthread",
         "timeout": 120,
+        "keepalive": 65,
     }).run()
 
 
