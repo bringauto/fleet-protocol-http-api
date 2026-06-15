@@ -392,11 +392,17 @@ def send_commands(
         msg = "; ".join(errors[0].split("\n"))
         return _log_info_and_respond(errors[0], errors[1], msg)
 
-    _update_messages_timestamp(messages)
+    t_store = time.monotonic()
+    ts = _update_messages_timestamp(messages)
+    logger.info(f"send_commands: [{car_name}] storing {len(messages)} command(s) ts={ts}")
     _cmd_wait_manager.add_response_content_and_stop_waiting(company_name, car_name, messages)
+    notify_ms = (time.monotonic() - t_store) * 1000
+    logger.debug(f"send_commands: [{car_name}] notified wait_manager in {notify_ms:.1f}ms")
     commands_to_db = _message_db_list(messages)
     msg, code = send_messages_to_database(company_name, car_name, *commands_to_db)
-    return _log_info_and_respond(msg, code, msg)
+    db_ms = (time.monotonic() - t_store) * 1000
+    logger.debug(f"send_commands: [{car_name}] DB write done in {db_ms:.1f}ms code={code}")
+    return _log_info_and_respond(msg, code)
 
 
 @_db_access_method
@@ -618,15 +624,21 @@ def _response_for_request_for_connected_cars_commands(
 ) -> tuple[list[Message], int]:
 
     car = f"car '{car_name}' of '{company}'"
+    t0 = time.monotonic()
     db_commands = _list_messages(company, car_name, (MessageType.COMMAND,), since)
+    db_ms = (time.monotonic() - t0) * 1000
     if db_commands:
         cmds = [_message_from_db(m) for m in db_commands]
-        return _log_info_and_respond(body=cmds, code=200, log_msg=f"Commands for {car}")
+        return _log_info_and_respond(body=cmds, code=200, log_msg=f"Commands for {car} (db={db_ms:.1f}ms n={len(cmds)})")
     elif wait:
+        logger.debug(f"list_commands: [{car_name}] long-poll start since={since} (db_empty {db_ms:.1f}ms)")
+        t1 = time.monotonic()
         cmds = _cmd_wait_manager.wait_and_get_reponse(company, car_name)
+        wait_ms = (time.monotonic() - t1) * 1000
         if cmds and cmds[-1].timestamp >= since:
-            return _log_info_and_respond(cmds, 200, f"Awaited commands for {car}")
-    return _log_info_and_respond([], 200, f"No commands for {car}.")
+            return _log_info_and_respond(cmds, 200, f"Awaited commands for {car} (wait={wait_ms:.1f}ms n={len(cmds)})")
+        logger.debug(f"list_commands: [{car_name}] long-poll timeout after {wait_ms:.1f}ms")
+    return _log_info_and_respond([], 200, f"No commands for {car}. (db={db_ms:.1f}ms)")
 
 
 def _response_for_request_for_disconnected_cars_commands(
