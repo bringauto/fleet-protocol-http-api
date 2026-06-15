@@ -52,15 +52,7 @@ def get_connection_source() -> Engine:
     global _connection_source
     if _connection_source is None:
         raise ConnectionSourceNotSet()
-    else:
-        t0 = time.monotonic()
-        _test_connection_engine(_connection_source)
-        elapsed_ms = (time.monotonic() - t0) * 1000
-        if elapsed_ms > 50:
-            _logger.warning("get_connection_source: _test_connection_engine took %.1f ms (>50 ms)", elapsed_ms)
-        else:
-            _logger.debug("get_connection_source: _test_connection_engine took %.1f ms", elapsed_ms)
-        return _connection_source
+    return _connection_source
 
 
 @tenacity.retry(

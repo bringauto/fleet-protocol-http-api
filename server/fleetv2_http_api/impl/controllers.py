@@ -475,11 +475,7 @@ def _available_module(company_name: str, car_name: str, module_id: int) -> Modul
 def _check_and_handle_first_status(company: str, car: str, messages: list[Message]) -> str:
     command_removal_warnings = ""
     if not _is_car_connected(company, car):
-        response = list_statuses(company, car, wait=False, since=0)
-        if response[1] == 200:
-            timestamp = min([msg.timestamp for msg in response[0]])
-        else:
-            timestamp = min([msg.timestamp for msg in messages])
+        timestamp = min([msg.timestamp for msg in messages])
         _add_car(company, car, timestamp)
 
     for msg in messages:
